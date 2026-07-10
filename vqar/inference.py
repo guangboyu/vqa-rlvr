@@ -17,6 +17,7 @@ import os
 import re
 
 os.environ.setdefault("VLLM_ATTENTION_BACKEND", "FLASH_ATTN")
+os.environ.setdefault("VLLM_USE_FLASHINFER_SAMPLER", "0")
 
 _ANSWER_TAG = re.compile(r"<answer>(.*?)</answer>", re.DOTALL)
 
