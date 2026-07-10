@@ -1,0 +1,46 @@
+[project]
+name = "vqa-rlvr"
+version = "0.1.0"
+description = "Post-training Qwen3-VL for visual question answering: QLoRA SFT + GRPO-based RLVR on a single RTX 4090, benchmarked on VQAv2 / GQA / CLEVR"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Guangbo Yu", email = "ygbuestc@gmail.com" }]
+requires-python = ">=3.12"
+dependencies = [
+    "torch",
+    "transformers>=4.57",
+    "trl>=1.8",
+    "peft>=0.19",
+    "bitsandbytes>=0.45",
+    "datasets>=3.0",
+    "accelerate>=1.0",
+    "vllm>=0.16,<=0.23",  # TRL 1.8's supported window for GRPO colocate mode
+    "qwen-vl-utils",
+    "wandb",
+    "anthropic",
+    "pillow",
+]
+
+[dependency-groups]
+dev = ["pytest>=8.0", "ruff>=0.8"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["vqar"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.uv]
+# vllm pins torch/transformers tightly; let the resolver arbitrate.

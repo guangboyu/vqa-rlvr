@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Large / local-only artifacts
+data/
+checkpoints/
+wandb/
+results/preds/
+.judge_cache/
+
+# Personal study notes (not part of the release)
+learn/
+
+# Secrets & misc
+.env
+*.log
