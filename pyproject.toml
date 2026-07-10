@@ -8,6 +8,9 @@ authors = [{ name = "Guangbo Yu", email = "ygbuestc@gmail.com" }]
 requires-python = ">=3.12"
 dependencies = [
     "torch",
+    # Direct deps (though only vllm needs them) so tool.uv.sources can pin them to cu128.
+    "torchvision",
+    "torchaudio",
     "transformers>=4.57",
     "trl>=1.8",
     "peft>=0.19",
@@ -42,5 +45,14 @@ select = ["E", "F", "I", "W", "UP", "B"]
 testpaths = ["tests"]
 addopts = "-q"
 
-[tool.uv]
-# vllm pins torch/transformers tightly; let the resolver arbitrate.
+# The WSL2 NVIDIA driver exposes CUDA 12.8; default PyPI torch 2.11 is a CUDA 13.0
+# build that fails at torch.cuda init. Pin the torch family to the cu128 index.
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu128" }
+torchvision = { index = "pytorch-cu128" }
+torchaudio = { index = "pytorch-cu128" }
