@@ -45,14 +45,16 @@ select = ["E", "F", "I", "W", "UP", "B"]
 testpaths = ["tests"]
 addopts = "-q"
 
-# The WSL2 NVIDIA driver exposes CUDA 12.8; default PyPI torch 2.11 is a CUDA 13.0
-# build that fails at torch.cuda init. Pin the torch family to the cu128 index.
+# The WSL2 NVIDIA driver exposes CUDA 12.8; the default PyPI builds of torch 2.11 and
+# vllm 0.23 are CUDA 13 and fail at runtime. CUDA 12.x minor-version compatibility lets
+# cu129 builds run on the 12.8 driver, so the whole stack is pinned to cu129.
 [[tool.uv.index]]
-name = "pytorch-cu128"
-url = "https://download.pytorch.org/whl/cu128"
+name = "pytorch-cu129"
+url = "https://download.pytorch.org/whl/cu129"
 explicit = true
 
 [tool.uv.sources]
-torch = { index = "pytorch-cu128" }
-torchvision = { index = "pytorch-cu128" }
-torchaudio = { index = "pytorch-cu128" }
+torch = { index = "pytorch-cu129" }
+torchvision = { index = "pytorch-cu129" }
+torchaudio = { index = "pytorch-cu129" }
+vllm = { url = "https://github.com/vllm-project/vllm/releases/download/v0.23.0/vllm-0.23.0+cu129-cp38-abi3-manylinux_2_28_x86_64.whl" }
