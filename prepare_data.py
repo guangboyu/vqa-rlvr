@@ -10,9 +10,14 @@ Usage:
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 
-from vqar import data
+# Parallel-chunk downloads + fail fast on stalled connections (must precede datasets import).
+os.environ.setdefault("HF_HUB_ENABLE_HF_TRANSFER", "1")
+os.environ.setdefault("HF_HUB_DOWNLOAD_TIMEOUT", "30")
+
+from vqar import data  # noqa: E402
 
 DATA_DIR = Path(__file__).parent / "data"
 

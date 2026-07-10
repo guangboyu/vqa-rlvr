@@ -22,6 +22,7 @@ dependencies = [
     "wandb",
     "anthropic",
     "pillow",
+    "hf-transfer>=0.1.9",
 ]
 
 [dependency-groups]
