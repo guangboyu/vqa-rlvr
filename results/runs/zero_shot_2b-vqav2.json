@@ -1,0 +1,45 @@
+{
+  "run_id": "zero_shot_2b-vqav2",
+  "timestamp": "2026-07-11T04:56:34+00:00",
+  "git_sha": "da523ca",
+  "model": {
+    "base": "Qwen/Qwen3-VL-2B-Instruct",
+    "preset": "zero_shot_2b"
+  },
+  "eval": {
+    "dataset": "vqav2",
+    "subset": "vqav2_eval",
+    "n": 5000,
+    "limit": null,
+    "prompt_template": "short"
+  },
+  "gen": {
+    "backend": "vllm",
+    "temperature": 0.0,
+    "max_tokens": 64,
+    "max_model_len": 4096
+  },
+  "metrics": {
+    "overall": 0.77984,
+    "by_answer_type": {
+      "number": 0.7148148148148148,
+      "other": 0.6917874396135266,
+      "yes/no": 0.9224877783813145
+    }
+  },
+  "config": {
+    "name": "zero_shot_2b",
+    "model": "Qwen/Qwen3-VL-2B-Instruct",
+    "backend": "vllm",
+    "template": "short",
+    "datasets": [
+      "vqav2",
+      "gqa",
+      "clevr",
+      "textvqa"
+    ],
+    "max_tokens": 64,
+    "max_model_len": 4096,
+    "gpu_memory_utilization": 0.8
+  }
+}
