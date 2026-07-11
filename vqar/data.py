@@ -111,16 +111,21 @@ def load_vqav2_eval(n: int, seed: int) -> Dataset:
 
 
 def _gqa_generate(instructions: list[dict], images: Dataset) -> Iterator[dict]:
-    image_index = {img_id: i for i, img_id in enumerate(images["id"])}
+    """Stream the image table once; per-QA random access into a 72k-row arrow table
+    with large binary cells is pathologically slow (~3 rows/s)."""
+    by_image: dict[str, list[dict]] = {}
     for row in instructions:
-        yield {
-            "dataset": "gqa",
-            "qid": row["id"],
-            "image": images[image_index[row["imageId"]]]["image"],
-            "question": row["question"],
-            "answers": [row["answer"]],
-            "answer_type": row["types"]["structural"],
-        }
+        by_image.setdefault(row["imageId"], []).append(row)
+    for img_row in images:
+        for row in by_image.get(img_row["id"], ()):
+            yield {
+                "dataset": "gqa",
+                "qid": row["id"],
+                "image": img_row["image"],
+                "question": row["question"],
+                "answers": [row["answer"]],
+                "answer_type": row["types"]["structural"],
+            }
 
 
 def _gqa_images(config: str, split: str) -> Dataset:
