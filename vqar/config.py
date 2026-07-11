@@ -33,12 +33,17 @@ EVAL_PRESETS: dict[str, EvalPreset] = {
     p.name: p
     for p in [
         EvalPreset(name="zero_shot_2b", model=MODEL_2B),
-        EvalPreset(name="zero_shot_8b", model=MODEL_8B),
+        # 17GB of bf16 weights: give vLLM most of the card or KV-cache allocation fails
+        EvalPreset(name="zero_shot_8b", model=MODEL_8B, gpu_memory_utilization=0.88),
         EvalPreset(
             name="zero_shot_2b_reasoning", model=MODEL_2B, template="reasoning", max_tokens=512
         ),
         EvalPreset(
-            name="zero_shot_8b_reasoning", model=MODEL_8B, template="reasoning", max_tokens=512
+            name="zero_shot_8b_reasoning",
+            model=MODEL_8B,
+            template="reasoning",
+            max_tokens=512,
+            gpu_memory_utilization=0.88,
         ),
     ]
 }
