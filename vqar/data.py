@@ -110,22 +110,29 @@ def load_vqav2_eval(n: int, seed: int) -> Dataset:
     return _build(_vqav2_eval_generate, rows=rows)
 
 
-def _gqa_generate(instructions: list[dict], images: Dataset) -> Iterator[dict]:
-    """Stream the image table once; per-QA random access into a 72k-row arrow table
-    with large binary cells is pathologically slow (~3 rows/s)."""
-    by_image: dict[str, list[dict]] = {}
+def _gqa_image_payloads(images: Dataset, needed: set[str]) -> dict[str, dict]:
+    """One sequential pass collecting {bytes, path} payloads for the needed ids.
+
+    Runs OUTSIDE from_generator on purpose: iterating a Dataset inside a builder
+    callback falls off the fast formatting path (~1s/row; profiled via faulthandler).
+    """
+    payloads: dict[str, dict] = {}
+    for row in images:
+        if row["id"] in needed:
+            payloads[row["id"]] = row["image"]
+    return payloads
+
+
+def _gqa_generate(instructions: list[dict], payloads: dict[str, dict]) -> Iterator[dict]:
     for row in instructions:
-        by_image.setdefault(row["imageId"], []).append(row)
-    for img_row in images:
-        for row in by_image.get(img_row["id"], ()):
-            yield {
-                "dataset": "gqa",
-                "qid": row["id"],
-                "image": img_row["image"],
-                "question": row["question"],
-                "answers": [row["answer"]],
-                "answer_type": row["types"]["structural"],
-            }
+        yield {
+            "dataset": "gqa",
+            "qid": row["id"],
+            "image": payloads[row["imageId"]],
+            "question": row["question"],
+            "answers": [row["answer"]],
+            "answer_type": row["types"]["structural"],
+        }
 
 
 def _gqa_images(config: str, split: str) -> Dataset:
@@ -149,17 +156,22 @@ def load_gqa_train(n_sft: int, n_rl: int, seed: int) -> tuple[Dataset, Dataset]:
             rl_rows.append(row)
             if len(rl_rows) >= n_rl:
                 break
+    needed = {row["imageId"] for row in sft_rows + rl_rows}
+    payloads = _gqa_image_payloads(images, needed)
     return (
-        _build(_gqa_generate, instructions=sft_rows, images=images),
-        _build(_gqa_generate, instructions=rl_rows, images=images),
+        _build(_gqa_generate, instructions=sft_rows, payloads=payloads),
+        _build(_gqa_generate, instructions=rl_rows, payloads=payloads),
     )
 
 
 def load_gqa_eval() -> Dataset:
     """Full official testdev_balanced split (12,578 questions)."""
-    instructions = load_dataset("lmms-lab/GQA", "testdev_balanced_instructions", split="testdev")
+    instructions = list(
+        load_dataset("lmms-lab/GQA", "testdev_balanced_instructions", split="testdev")
+    )
     images = _gqa_images("testdev_balanced_images", "testdev")
-    return _build(_gqa_generate, instructions=list(instructions), images=images)
+    payloads = _gqa_image_payloads(images, {row["imageId"] for row in instructions})
+    return _build(_gqa_generate, instructions=instructions, payloads=payloads)
 
 
 def _clevr_generate(rows: Dataset, start: int, count: int, tag: str) -> Iterator[dict]:
