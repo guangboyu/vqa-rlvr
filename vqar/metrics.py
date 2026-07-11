@@ -119,6 +119,6 @@ def exact_match(prediction: str, gt_answers: list[str]) -> float:
 
 def score(dataset: str, prediction: str, gt_answers: list[str]) -> float:
     """Dispatch to the right metric for a dataset. Returns a value in [0, 1]."""
-    if dataset == "vqav2":
+    if dataset in ("vqav2", "textvqa"):  # both officially use 10-annotator VQA accuracy
         return vqa_accuracy(prediction, gt_answers)
     return exact_match(prediction, gt_answers)

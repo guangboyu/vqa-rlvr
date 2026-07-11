@@ -63,9 +63,14 @@ def generate_vllm(llm, conversations: list[list[dict]], max_tokens: int) -> list
 def load_vllm(model: str, max_model_len: int, gpu_memory_utilization: float):
     from vllm import LLM
 
+    from vqar.config import MAX_PIXELS
+
     return LLM(
         model=model,
         max_model_len=max_model_len,
         gpu_memory_utilization=gpu_memory_utilization,
         limit_mm_per_prompt={"image": 1},
+        # Same pixel budget as training; also keeps large images (TextVQA is >1MP)
+        # from exceeding max_model_len in vision tokens.
+        mm_processor_kwargs={"max_pixels": MAX_PIXELS},
     )

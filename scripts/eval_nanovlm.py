@@ -97,12 +97,17 @@ def main() -> None:
         ds = load_from_disk(str(ROOT / "data" / EVAL_SUBSETS[dataset]))
         if args.limit:
             ds = ds.select(range(min(args.limit, len(ds))))
-        scores = []
+        records = []
         for start in range(0, len(ds), args.batch_size):
             batch = [ds[i] for i in range(start, min(start + args.batch_size, len(ds)))]
             texts = generate_batch(model, cfg, tokenizer, image_processor, batch, device)
             for row, text in zip(batch, texts, strict=True):
-                scores.append(score(dataset, extract_answer(text), row["answers"]))
+                pred = extract_answer(text)
+                records.append(
+                    {"qid": row["qid"], "prediction": pred, "raw": text,
+                     "score": score(dataset, pred, row["answers"]), "answers": row["answers"]}
+                )
+        scores = [r["score"] for r in records]
         result = {
             "run_id": f"zero_shot_nanovlm-{dataset}",
             "timestamp": datetime.now(UTC).isoformat(timespec="seconds"),
@@ -120,6 +125,11 @@ def main() -> None:
         }
         out = runs_dir / f"{result['run_id']}.json"
         out.write_text(json.dumps(result, indent=2))
+        preds_dir = ROOT / "results" / "preds"
+        preds_dir.mkdir(parents=True, exist_ok=True)
+        with (preds_dir / f"{result['run_id']}.jsonl").open("w") as f:
+            for r in records:
+                f.write(json.dumps(r) + "\n")
         print(f"{dataset}: overall={result['metrics']['overall']:.4f} n={len(scores)} -> {out}")
 
 
