@@ -1,7 +1,7 @@
 {
   "run_id": "zero_shot_2b-clevr",
   "timestamp": "2026-07-10T21:44:10+00:00",
-  "git_sha": "36bec64",
+  "git_sha": "0e58672",
   "model": {
     "base": "Qwen/Qwen3-VL-2B-Instruct",
     "preset": "zero_shot_2b"

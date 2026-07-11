@@ -53,9 +53,11 @@ class TestVqaAccuracy:
         answers = ["two"] * 9 + ["three"]
         assert vqa_accuracy("2", answers) > 0.9
 
-    def test_no_normalization_when_unanimous(self):
-        # Official quirk: unanimous answers are compared raw.
-        assert vqa_accuracy("2", ["two"] * 10) == 0.0
+    def test_normalization_applied_even_when_unanimous(self):
+        # Deliberate deviation from the 2016 code, matching lmms-eval: "Yes" must
+        # match a unanimous ["yes"]*10 (capitalized zero-shot answers are not errors).
+        assert vqa_accuracy("2", ["two"] * 10) == 1.0
+        assert vqa_accuracy("Yes", ["yes"] * 10) == 1.0
 
 
 class TestExactMatch:

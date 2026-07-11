@@ -1,15 +1,15 @@
 {
-  "run_id": "zero_shot_2b_reasoning-clevr",
-  "timestamp": "2026-07-10T21:48:14+00:00",
+  "run_id": "zero_shot_2b_reasoning-vqav2",
+  "timestamp": "2026-07-11T05:00:34+00:00",
   "git_sha": "0e58672",
   "model": {
     "base": "Qwen/Qwen3-VL-2B-Instruct",
     "preset": "zero_shot_2b_reasoning"
   },
   "eval": {
-    "dataset": "clevr",
-    "subset": "clevr_test",
-    "n": 3000,
+    "dataset": "vqav2",
+    "subset": "vqav2_eval",
+    "n": 5000,
     "limit": null,
     "prompt_template": "reasoning"
   },
@@ -20,9 +20,11 @@
     "max_model_len": 4096
   },
   "metrics": {
-    "overall": 0.8823333333333333,
+    "overall": 0.6492,
     "by_answer_type": {
-      "number": 0.8823333333333333
+      "number": 0.6167407407407408,
+      "other": 0.5079710144927536,
+      "yes/no": 0.8516567083107007
     }
   },
   "config": {

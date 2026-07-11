@@ -1,9 +1,15 @@
 """VQA metrics.
 
-`vqa_accuracy` is a faithful port of the official VQA v2 evaluation
-(GT-Vision-Lab/VQA, vqaEval.py): answer normalization (punctuation, number words,
-articles, contractions) plus the 10-annotator leave-one-out accuracy
+`vqa_accuracy` ports the official VQA v2 evaluation (GT-Vision-Lab/VQA,
+vqaEval.py): answer normalization (punctuation, number words, articles,
+contractions) plus the 10-annotator leave-one-out accuracy
 ``mean_over_annotators(min(#matches_among_other_9 / 3, 1))``.
+
+One deliberate deviation, matching lmms-eval: normalization is applied
+*unconditionally*. The 2016 code only normalized when annotators disagreed, which
+zeroes e.g. prediction "Yes" against a unanimous ["yes"]*10 — an artifact for
+zero-shot instruct models that capitalize. Modern harnesses (lmms-eval's vqav2
+task) always normalize both sides; we follow them for comparability.
 
 GQA / CLEVR / TextVQA-style single-answer datasets use normalized exact match
 with the same normalizer.
@@ -94,13 +100,9 @@ def normalize_answer(text: str) -> str:
 
 
 def vqa_accuracy(prediction: str, gt_answers: list[str]) -> float:
-    """Official VQA v2 accuracy for one question against its 10 annotator answers."""
-    prediction = prediction.replace("\n", " ").replace("\t", " ").strip()
-    gt_answers = [a.replace("\n", " ").replace("\t", " ").strip() for a in gt_answers]
-    # The official eval only normalizes when annotators disagree.
-    if len(set(gt_answers)) > 1:
-        gt_answers = [_process_digit_article(_process_punctuation(a)) for a in gt_answers]
-        prediction = _process_digit_article(_process_punctuation(prediction))
+    """VQA v2 accuracy for one question against its 10 annotator answers."""
+    prediction = normalize_answer(prediction)
+    gt_answers = [normalize_answer(a) for a in gt_answers]
     accs = []
     for i in range(len(gt_answers)):
         others = gt_answers[:i] + gt_answers[i + 1 :]
