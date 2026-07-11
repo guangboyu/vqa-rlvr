@@ -1,0 +1,24 @@
+{
+  "run_id": "zero_shot_nanovlm-vqav2",
+  "timestamp": "2026-07-11T06:14:35+00:00",
+  "git_sha": "37f3fd5",
+  "model": {
+    "base": "lusxvr/nanoVLM-460M-8k",
+    "preset": "zero_shot_nanovlm"
+  },
+  "eval": {
+    "dataset": "vqav2",
+    "subset": "vqav2_eval",
+    "n": 5000,
+    "limit": null,
+    "prompt_template": "short"
+  },
+  "gen": {
+    "backend": "nanovlm",
+    "temperature": 0.0,
+    "max_tokens": 48
+  },
+  "metrics": {
+    "overall": 0.67438
+  }
+}
