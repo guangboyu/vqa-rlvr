@@ -11,15 +11,22 @@ import argparse
 import hashlib
 import json
 import os
+import shutil
 from pathlib import Path
+
+DATA_DIR = Path(__file__).parent / "data"
+BUILD_CACHE = DATA_DIR / ".build"
 
 # Parallel-chunk downloads + fail fast on stalled connections (must precede datasets import).
 os.environ.setdefault("HF_HUB_ENABLE_HF_TRANSFER", "1")
 os.environ.setdefault("HF_HUB_DOWNLOAD_TIMEOUT", "30")
+# Route ALL arrow builds (extraction, from_generator, shuffle indices) to a scratch
+# cache wiped after each stage. Interrupted runs otherwise accumulate multi-GB
+# partial builds in ~/.cache (this once filled the disk). Hub downloads still land
+# in the resumable hub cache.
+os.environ["HF_DATASETS_CACHE"] = str(BUILD_CACHE)
 
 from vqar import data  # noqa: E402
-
-DATA_DIR = Path(__file__).parent / "data"
 
 # Subset sizes and seeds are fixed project-wide; change = new benchmark version.
 SIZES = {
@@ -61,20 +68,24 @@ def main() -> None:
     args = parser.parse_args()
 
     DATA_DIR.mkdir(exist_ok=True)
+    shutil.rmtree(BUILD_CACHE, ignore_errors=True)  # scratch from a killed prior run
     manifest_path = DATA_DIR / "manifest.json"
     manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
     manifest.setdefault("sizes", {}).update(
         {k: v for k, v in SIZES.items() if args.only in (None, k)}
     )
 
-    for name, ds in build(args.only).items():
-        out = DATA_DIR / name
-        ds.save_to_disk(str(out))
-        manifest.setdefault("subsets", {})[name] = {
-            "n": len(ds),
-            "qids_sha": hashlib.sha256(",".join(ds["qid"]).encode()).hexdigest(),
-        }
-        print(f"{name}: {len(ds)} examples -> {out}")
+    try:
+        for name, ds in build(args.only).items():
+            out = DATA_DIR / name
+            ds.save_to_disk(str(out))
+            manifest.setdefault("subsets", {})[name] = {
+                "n": len(ds),
+                "qids_sha": hashlib.sha256(",".join(ds["qid"]).encode()).hexdigest(),
+            }
+            print(f"{name}: {len(ds)} examples -> {out}")
+    finally:
+        shutil.rmtree(BUILD_CACHE, ignore_errors=True)  # scratch is per-run, never kept
 
     manifest_path.write_text(json.dumps(manifest, indent=2))
     print(f"manifest -> {manifest_path}")
