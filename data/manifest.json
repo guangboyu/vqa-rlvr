@@ -1,0 +1,68 @@
+{
+  "sizes": {
+    "clevr": {
+      "rl": 8000,
+      "val": 3000,
+      "test": 3000,
+      "seed": 42
+    },
+    "vqav2": {
+      "sft": 20000,
+      "rl": 8000,
+      "eval": 5000,
+      "train_seed": 42,
+      "eval_seed": 0
+    },
+    "gqa": {
+      "sft": 20000,
+      "rl": 8000,
+      "train_seed": 42
+    },
+    "textvqa": {
+      "eval": 2000,
+      "eval_seed": 0
+    }
+  },
+  "subsets": {
+    "clevr_test": {
+      "n": 3000,
+      "qids_sha": "925119ccc210ddeea1f4f2f840b31db2d093b71002656cdaee3f17972915619d"
+    },
+    "clevr_val": {
+      "n": 3000,
+      "qids_sha": "8f28044067db9993575364d2ce0e2eea301befc801f570fbdc8386886d8cf140"
+    },
+    "clevr_rl": {
+      "n": 8000,
+      "qids_sha": "7205b579da121e92e79ab3d9765d10bcb32f45e85011460d91e4ef4a5fd4639c"
+    },
+    "vqav2_sft": {
+      "n": 20000,
+      "qids_sha": "2163e8fa64fbd878ca5d750665e8e3c98b9de79404220d428162fe9c7127cb8e"
+    },
+    "vqav2_rl": {
+      "n": 8000,
+      "qids_sha": "9962aaca519990abc6e5ee2a7e86b787ff9c0d9f81ea96045bc5a3676431bb3a"
+    },
+    "vqav2_eval": {
+      "n": 5000,
+      "qids_sha": "7b93c42a039734f47bb72e104abae962d6114f5fbdbfb05ca71dce267d24a3f0"
+    },
+    "gqa_sft": {
+      "n": 20000,
+      "qids_sha": "0a6f6086a393ae2239b9d5897074deb364112ce07edb4f5e344336a73a03401a"
+    },
+    "gqa_rl": {
+      "n": 8000,
+      "qids_sha": "7b3f5857dd8d6ff8a61cd2166178a69c2ae21d907368228a123b9c6dbde9509c"
+    },
+    "gqa_eval": {
+      "n": 12578,
+      "qids_sha": "7f5cbd3ddc7fd9414982546f5200bba92924c7532a507b695f57887b653460c1"
+    },
+    "textvqa_eval": {
+      "n": 2000,
+      "qids_sha": "06fe623dd201040ba8dfa98f35efb44bedabaa5eb7a56f6c897ff2c950ebd6b5"
+    }
+  }
+}

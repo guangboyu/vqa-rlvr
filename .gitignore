@@ -6,8 +6,8 @@ __pycache__/
 .ruff_cache/
 *.egg-info/
 
-# Large / local-only artifacts
-data/
+# Large / local-only artifacts (data/* not data/ so the manifest can be re-included)
+data/*
 checkpoints/
 wandb/
 results/preds/
@@ -19,3 +19,6 @@ learn/
 # Secrets & misc
 .env
 *.log
+
+# The manifest defines the benchmark (sizes, seeds, qid fingerprints) — versioned.
+!data/manifest.json
