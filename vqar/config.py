@@ -89,6 +89,85 @@ SFT_PRESETS: dict[str, SFTPreset] = {
 }
 
 
+@dataclass(frozen=True)
+class GRPOPreset:
+    name: str
+    model: str  # base HF id or an SFT adapter dir (checkpoints/sft_2b) to continue from
+    subsets: tuple[str, ...]  # RL prompt pools, e.g. ("clevr_rl",)
+    quantize_4bit: bool
+    learning_rate: float
+    num_generations: int  # group size G
+    per_device_batch_size: int
+    gradient_accumulation: int
+    max_steps: int
+    max_completion_length: int = 640  # >512: kill the truncation tail seen in M1
+    rewards: tuple[str, ...] = ("correctness", "format")
+    reward_weights: tuple[float, ...] = (1.0, 0.2)
+    kl_beta: float = 0.0  # modern GRPO practice; one 0.04 sanity run in the sandbox
+    vllm_gpu_memory_utilization: float = 0.3
+    lora_r: int = 16
+    lora_alpha: int = 32
+    lora_targets: tuple[str, ...] = (
+        "q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"
+    )
+    seed: int = 42
+
+
+GRPO_PRESETS: dict[str, GRPOPreset] = {
+    p.name: p
+    for p in [
+        GRPOPreset(
+            name="grpo_2b_clevr",  # the verifier sandbox: pipeline must show rising reward
+            model="checkpoints/merged/sft_2b",
+            subsets=("clevr_rl",),
+            quantize_4bit=False,
+            learning_rate=1e-5,
+            num_generations=8,
+            per_device_batch_size=8,
+            gradient_accumulation=4,
+            max_steps=400,
+        ),
+        GRPOPreset(
+            name="grpo_2b_main",
+            model="checkpoints/merged/sft_2b",
+            subsets=("vqav2_rl", "gqa_rl"),
+            quantize_4bit=False,
+            learning_rate=1e-5,
+            num_generations=8,
+            per_device_batch_size=8,
+            gradient_accumulation=4,
+            max_steps=500,
+        ),
+        GRPOPreset(
+            name="grpo_8b_clevr",  # OOM stress test before the 8B main run
+            model="checkpoints/merged/sft_8b",
+            subsets=("clevr_rl",),
+            quantize_4bit=True,
+            learning_rate=5e-6,
+            num_generations=6,
+            per_device_batch_size=6,
+            gradient_accumulation=8,
+            max_steps=300,
+            max_completion_length=512,
+            vllm_gpu_memory_utilization=0.25,
+        ),
+        GRPOPreset(
+            name="grpo_8b_main",
+            model="checkpoints/merged/sft_8b",
+            subsets=("vqav2_rl", "gqa_rl"),
+            quantize_4bit=True,
+            learning_rate=5e-6,
+            num_generations=6,
+            per_device_batch_size=6,
+            gradient_accumulation=8,
+            max_steps=300,
+            max_completion_length=512,
+            vllm_gpu_memory_utilization=0.25,
+        ),
+    ]
+}
+
+
 def dump(preset) -> dict:
     """Serialize any preset dataclass to a plain dict for results JSONs and W&B."""
     return asdict(preset)

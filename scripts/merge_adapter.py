@@ -29,7 +29,8 @@ def main() -> None:
 
     adapter_dir = Path(args.adapter)
     run_config = json.loads((adapter_dir / "run_config.json").read_text())
-    base_id = run_config["preset"]["model"]
+    # GRPO checkpoints record the resolved policy base; SFT ones use the preset model.
+    base_id = run_config.get("policy_model") or run_config["preset"]["model"]
     out = Path(args.out) if args.out else ROOT / "checkpoints" / "merged" / adapter_dir.name
 
     base = AutoModelForImageTextToText.from_pretrained(base_id, dtype=torch.bfloat16)
