@@ -1,0 +1,43 @@
+{
+  "run_id": "zero_shot_8b_reasoning-clevr",
+  "timestamp": "2026-07-11T05:46:11+00:00",
+  "git_sha": "682afe7",
+  "model": {
+    "base": "Qwen/Qwen3-VL-8B-Instruct",
+    "preset": "zero_shot_8b_reasoning"
+  },
+  "eval": {
+    "dataset": "clevr",
+    "subset": "clevr_test",
+    "n": 3000,
+    "limit": null,
+    "prompt_template": "reasoning"
+  },
+  "gen": {
+    "backend": "vllm",
+    "temperature": 0.0,
+    "max_tokens": 512,
+    "max_model_len": 4096
+  },
+  "metrics": {
+    "overall": 0.968,
+    "by_answer_type": {
+      "number": 0.968
+    }
+  },
+  "config": {
+    "name": "zero_shot_8b_reasoning",
+    "model": "Qwen/Qwen3-VL-8B-Instruct",
+    "backend": "vllm",
+    "template": "reasoning",
+    "datasets": [
+      "vqav2",
+      "gqa",
+      "clevr",
+      "textvqa"
+    ],
+    "max_tokens": 512,
+    "max_model_len": 4096,
+    "gpu_memory_utilization": 0.88
+  }
+}
