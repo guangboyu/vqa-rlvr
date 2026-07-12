@@ -1,0 +1,45 @@
+{
+  "run_id": "sft_2b_reasoning-vqav2",
+  "timestamp": "2026-07-12T01:34:35+00:00",
+  "git_sha": "634f9e5",
+  "model": {
+    "base": "checkpoints/merged/sft_2b",
+    "preset": "zero_shot_2b_reasoning"
+  },
+  "eval": {
+    "dataset": "vqav2",
+    "subset": "vqav2_eval",
+    "n": 5000,
+    "limit": null,
+    "prompt_template": "reasoning"
+  },
+  "gen": {
+    "backend": "vllm",
+    "temperature": 0.0,
+    "max_tokens": 512,
+    "max_model_len": 4096
+  },
+  "metrics": {
+    "overall": 0.71824,
+    "by_answer_type": {
+      "number": 0.6690370370370371,
+      "other": 0.6300322061191627,
+      "yes/no": 0.8552960347637153
+    }
+  },
+  "config": {
+    "name": "zero_shot_2b_reasoning",
+    "model": "Qwen/Qwen3-VL-2B-Instruct",
+    "backend": "vllm",
+    "template": "reasoning",
+    "datasets": [
+      "vqav2",
+      "gqa",
+      "clevr",
+      "textvqa"
+    ],
+    "max_tokens": 512,
+    "max_model_len": 4096,
+    "gpu_memory_utilization": 0.8
+  }
+}
