@@ -14,9 +14,12 @@ import warnings
 from vqar.judge import Judge, JudgeBudgetExceeded
 from vqar.metrics import score
 
-# <think> reasoning </think> then a short final answer, nothing after it.
-_FORMAT = re.compile(r"^\s*<think>.+?</think>\s*<answer>[^<>]{1,80}</answer>\s*$", re.DOTALL)
 _ANSWER_TAG = re.compile(r"<answer>(.*?)</answer>", re.DOTALL)
+# Reasoning followed by one short, terminal <answer> tag. Deliberately NOT literal
+# <think> tags: Qwen3-VL writes its chain of thought as plain prose and never samples
+# literal think tags, so a think-tag reward is unearnable (flat 0 over 400 GRPO steps
+# from BOTH the base and SFT policies). Reward the behavior, not magic tokens.
+_MIN_REASONING_CHARS = 100
 
 
 def _text(completion) -> str:
@@ -42,12 +45,23 @@ def correctness_reward(prompts, completions, answers, dataset, **kwargs) -> list
     return out
 
 
-def format_reward(prompts, completions, **kwargs) -> list[float]:
-    """1.0 for a well-formed <think>...</think><answer>...</answer> completion.
+def _well_formed(text: str) -> bool:
+    text = text.strip()
+    if text.count("<answer>") != 1 or not text.endswith("</answer>"):
+        return False  # exactly one answer tag, nothing after it
+    reasoning, _, tail = text.partition("<answer>")
+    answer = tail.removesuffix("</answer>").strip()
+    # Substantive reasoning first; short clean answer (no tag-stuffing or dumping).
+    return (
+        len(reasoning.strip()) >= _MIN_REASONING_CHARS
+        and 1 <= len(answer) <= 80
+        and "<" not in answer
+    )
 
-    The answer slot is length-capped so dumping candidate answers into it scores 0.
-    """
-    return [1.0 if _FORMAT.match(_text(completion)) else 0.0 for completion in completions]
+
+def format_reward(prompts, completions, **kwargs) -> list[float]:
+    """1.0 for reasoning prose followed by one short, terminal <answer> tag."""
+    return [1.0 if _well_formed(_text(completion)) else 0.0 for completion in completions]
 
 
 def make_judge_reward(judge: Judge):

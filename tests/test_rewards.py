@@ -3,7 +3,11 @@ from types import SimpleNamespace
 from vqar.judge import Judge
 from vqar.rewards import correctness_reward, format_reward, make_judge_reward
 
-GOOD = "<think>I count three cubes and one sphere.</think>\n<answer>4</answer>"
+GOOD = (
+    "Let me count the objects step by step. There are three cubes on the left and "
+    "one metallic sphere behind them, so the total number of items is four.\n"
+    "<answer>4</answer>"
+)
 
 
 def completion(text):
@@ -41,7 +45,7 @@ class TestFormat:
     def test_well_formed(self):
         assert format_reward(prompts=None, completions=[completion(GOOD)]) == [1.0]
 
-    def test_missing_think(self):
+    def test_bare_answer_without_reasoning(self):
         assert format_reward(
             prompts=None, completions=[completion("<answer>4</answer>")]
         ) == [0.0]
@@ -51,7 +55,11 @@ class TestFormat:
         assert format_reward(prompts=None, completions=[completion(bad)]) == [0.0]
 
     def test_answer_dump_rejected(self):
-        bad = f"<think>hm</think><answer>{'4 or maybe 5 ' * 20}</answer>"
+        bad = f"{'I think it could be several values. ' * 5}<answer>{'4 or maybe 5 ' * 20}</answer>"
+        assert format_reward(prompts=None, completions=[completion(bad)]) == [0.0]
+
+    def test_multiple_answer_tags_rejected(self):
+        bad = f"{'Reasoning about the scene here. ' * 5}<answer>3</answer><answer>4</answer>"
         assert format_reward(prompts=None, completions=[completion(bad)]) == [0.0]
 
 
