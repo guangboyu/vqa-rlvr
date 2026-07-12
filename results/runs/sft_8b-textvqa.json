@@ -1,0 +1,43 @@
+{
+  "run_id": "sft_8b-textvqa",
+  "timestamp": "2026-07-12T04:49:04+00:00",
+  "git_sha": "65212e4",
+  "model": {
+    "base": "checkpoints/merged/sft_8b",
+    "preset": "zero_shot_8b"
+  },
+  "eval": {
+    "dataset": "textvqa",
+    "subset": "textvqa_eval",
+    "n": 2000,
+    "limit": null,
+    "prompt_template": "short"
+  },
+  "gen": {
+    "backend": "vllm",
+    "temperature": 0.0,
+    "max_tokens": 64,
+    "max_model_len": 4096
+  },
+  "metrics": {
+    "overall": 0.8446,
+    "by_answer_type": {
+      "all": 0.8446
+    }
+  },
+  "config": {
+    "name": "zero_shot_8b",
+    "model": "Qwen/Qwen3-VL-8B-Instruct",
+    "backend": "vllm",
+    "template": "short",
+    "datasets": [
+      "vqav2",
+      "gqa",
+      "clevr",
+      "textvqa"
+    ],
+    "max_tokens": 64,
+    "max_model_len": 4096,
+    "gpu_memory_utilization": 0.88
+  }
+}

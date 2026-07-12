@@ -86,7 +86,9 @@ SFT_PRESETS: dict[str, SFTPreset] = {
             name="sft_8b",
             model=MODEL_8B,
             quantize_4bit=True,
-            learning_rate=1e-4,
+            # 1e-4 (the 2B recipe) visibly damaged the 8B: counting regressed and
+            # instruction-following eroded (see learn/M2.md error analysis).
+            learning_rate=5e-5,
             per_device_batch_size=2,
             gradient_accumulation=16,
         ),

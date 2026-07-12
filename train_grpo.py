@@ -160,7 +160,6 @@ def main() -> None:
         learning_rate=preset.learning_rate,
         max_steps=max_steps,
         max_completion_length=preset.max_completion_length,
-        max_prompt_length=None,  # never truncate image tokens
         temperature=1.0,
         beta=kl_beta,
         reward_weights=list(weights),
@@ -168,6 +167,7 @@ def main() -> None:
         vllm_mode="colocate",
         vllm_enable_sleep_mode=True,
         vllm_gpu_memory_utilization=preset.vllm_gpu_memory_utilization,
+        vllm_max_model_length=2048,  # ~850 image tokens + prompt + completion
         bf16=True,
         gradient_checkpointing=True,
         gradient_checkpointing_kwargs={"use_reentrant": False},
