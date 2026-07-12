@@ -1,0 +1,43 @@
+{
+  "run_id": "zero_shot_2b_reasoning-textvqa",
+  "timestamp": "2026-07-11T14:48:16+00:00",
+  "git_sha": "dceca4b",
+  "model": {
+    "base": "Qwen/Qwen3-VL-2B-Instruct",
+    "preset": "zero_shot_2b_reasoning"
+  },
+  "eval": {
+    "dataset": "textvqa",
+    "subset": "textvqa_eval",
+    "n": 2000,
+    "limit": null,
+    "prompt_template": "reasoning"
+  },
+  "gen": {
+    "backend": "vllm",
+    "temperature": 0.0,
+    "max_tokens": 512,
+    "max_model_len": 4096
+  },
+  "metrics": {
+    "overall": 0.702,
+    "by_answer_type": {
+      "all": 0.702
+    }
+  },
+  "config": {
+    "name": "zero_shot_2b_reasoning",
+    "model": "Qwen/Qwen3-VL-2B-Instruct",
+    "backend": "vllm",
+    "template": "reasoning",
+    "datasets": [
+      "vqav2",
+      "gqa",
+      "clevr",
+      "textvqa"
+    ],
+    "max_tokens": 512,
+    "max_model_len": 4096,
+    "gpu_memory_utilization": 0.8
+  }
+}

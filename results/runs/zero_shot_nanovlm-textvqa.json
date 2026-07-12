@@ -1,7 +1,7 @@
 {
   "run_id": "zero_shot_nanovlm-textvqa",
-  "timestamp": "2026-07-11T10:55:02+00:00",
-  "git_sha": "9801348",
+  "timestamp": "2026-07-11T15:05:22+00:00",
+  "git_sha": "dceca4b",
   "model": {
     "base": "lusxvr/nanoVLM-460M-8k",
     "preset": "zero_shot_nanovlm"
@@ -19,6 +19,6 @@
     "max_tokens": 48
   },
   "metrics": {
-    "overall": 0.6455
+    "overall": 0.59725
   }
 }
