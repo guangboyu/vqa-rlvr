@@ -1,7 +1,7 @@
 {
   "run_id": "sft_8b_reasoning-clevr",
-  "timestamp": "2026-07-12T05:21:42+00:00",
-  "git_sha": "65212e4",
+  "timestamp": "2026-07-12T09:48:40+00:00",
+  "git_sha": "0460b1c",
   "model": {
     "base": "checkpoints/merged/sft_8b",
     "preset": "zero_shot_8b_reasoning"
@@ -20,9 +20,9 @@
     "max_model_len": 4096
   },
   "metrics": {
-    "overall": 0.9163333333333333,
+    "overall": 0.9616666666666667,
     "by_answer_type": {
-      "number": 0.9163333333333333
+      "number": 0.9616666666666667
     }
   },
   "config": {

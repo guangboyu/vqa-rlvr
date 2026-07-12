@@ -11,12 +11,12 @@ config change, not a code change.
 import re
 import warnings
 
-from vqar.inference import extract_answer
 from vqar.judge import Judge, JudgeBudgetExceeded
 from vqar.metrics import score
 
 # <think> reasoning </think> then a short final answer, nothing after it.
 _FORMAT = re.compile(r"^\s*<think>.+?</think>\s*<answer>[^<>]{1,80}</answer>\s*$", re.DOTALL)
+_ANSWER_TAG = re.compile(r"<answer>(.*?)</answer>", re.DOTALL)
 
 
 def _text(completion) -> str:
@@ -25,12 +25,21 @@ def _text(completion) -> str:
     return completion[0]["content"]  # conversational format
 
 
+def _strict_answer(text: str) -> str | None:
+    """RL-side extraction is STRICT: no <answer> tag, no reward. The eval-side
+    fallback (score the raw text) let the CLEVR sandbox policy drift to bare
+    digits — RL happily discards formats that aren't load-bearing for reward."""
+    matches = _ANSWER_TAG.findall(text)
+    return matches[-1].strip() if matches else None
+
+
 def correctness_reward(prompts, completions, answers, dataset, **kwargs) -> list[float]:
     """Verifiable per-dataset match: official VQA accuracy / normalized EM (in [0, 1])."""
-    return [
-        score(ds, extract_answer(_text(completion)), golds)
-        for completion, golds, ds in zip(completions, answers, dataset, strict=True)
-    ]
+    out = []
+    for completion, golds, ds in zip(completions, answers, dataset, strict=True):
+        pred = _strict_answer(_text(completion))
+        out.append(0.0 if pred is None else score(ds, pred, golds))
+    return out
 
 
 def format_reward(prompts, completions, **kwargs) -> list[float]:
@@ -50,7 +59,10 @@ def make_judge_reward(judge: Judge):
     def judge_reward(prompts, completions, answers, dataset, question, **kwargs) -> list[float]:
         out = []
         for completion, golds, ds, q in zip(completions, answers, dataset, question, strict=True):
-            pred = extract_answer(_text(completion))
+            pred = _strict_answer(_text(completion))
+            if pred is None:
+                out.append(0.0)
+                continue
             base = score(ds, pred, golds)
             if base > 0 or state["budget_exhausted"] or not pred:
                 out.append(base)

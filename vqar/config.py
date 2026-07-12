@@ -124,8 +124,19 @@ GRPO_PRESETS: dict[str, GRPOPreset] = {
     p.name: p
     for p in [
         GRPOPreset(
-            name="grpo_2b_clevr",  # the verifier sandbox: pipeline must show rising reward
+            name="grpo_2b_clevr",  # SFT-start arm: documented format-collapse case
             model="checkpoints/merged/sft_2b",
+            subsets=("clevr_rl",),
+            quantize_4bit=False,
+            learning_rate=1e-5,
+            num_generations=8,
+            per_device_batch_size=8,
+            gradient_accumulation=4,
+            max_steps=400,
+        ),
+        GRPOPreset(
+            name="grpo_2b_clevr_base",  # R1-Zero-style sandbox: base model emits <think>
+            model=MODEL_2B,  # zero-shot, so format reward is alive from step 0
             subsets=("clevr_rl",),
             quantize_4bit=False,
             learning_rate=1e-5,

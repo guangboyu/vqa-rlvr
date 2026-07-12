@@ -1,7 +1,7 @@
 {
   "run_id": "sft_8b-vqav2",
-  "timestamp": "2026-07-12T04:38:38+00:00",
-  "git_sha": "65212e4",
+  "timestamp": "2026-07-12T09:03:55+00:00",
+  "git_sha": "0460b1c",
   "model": {
     "base": "checkpoints/merged/sft_8b",
     "preset": "zero_shot_8b"
@@ -20,10 +20,10 @@
     "max_model_len": 4096
   },
   "metrics": {
-    "overall": 0.8299200000000001,
+    "overall": 0.8295600000000001,
     "by_answer_type": {
-      "number": 0.768,
-      "other": 0.7568438003220612,
+      "number": 0.7703703703703704,
+      "other": 0.7554750402576489,
       "yes/no": 0.9512221618685497
     }
   },

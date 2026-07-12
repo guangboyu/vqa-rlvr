@@ -1,15 +1,15 @@
 {
-  "run_id": "sft_8b_reasoning-vqav2",
-  "timestamp": "2026-07-12T09:24:02+00:00",
+  "run_id": "grpo_2b_clevr_reasoning-clevr",
+  "timestamp": "2026-07-12T06:10:27+00:00",
   "git_sha": "0460b1c",
   "model": {
-    "base": "checkpoints/merged/sft_8b",
-    "preset": "zero_shot_8b_reasoning"
+    "base": "checkpoints/merged/grpo_2b_clevr",
+    "preset": "zero_shot_2b_reasoning"
   },
   "eval": {
-    "dataset": "vqav2",
-    "subset": "vqav2_eval",
-    "n": 5000,
+    "dataset": "clevr",
+    "subset": "clevr_test",
+    "n": 3000,
     "limit": null,
     "prompt_template": "reasoning"
   },
@@ -20,16 +20,14 @@
     "max_model_len": 4096
   },
   "metrics": {
-    "overall": 0.70236,
+    "overall": 0.9983333333333333,
     "by_answer_type": {
-      "number": 0.7653333333333334,
-      "other": 0.5606280193236715,
-      "yes/no": 0.8705051602390005
+      "number": 0.9983333333333333
     }
   },
   "config": {
-    "name": "zero_shot_8b_reasoning",
-    "model": "Qwen/Qwen3-VL-8B-Instruct",
+    "name": "zero_shot_2b_reasoning",
+    "model": "Qwen/Qwen3-VL-2B-Instruct",
     "backend": "vllm",
     "template": "reasoning",
     "datasets": [
@@ -40,6 +38,6 @@
     ],
     "max_tokens": 512,
     "max_model_len": 4096,
-    "gpu_memory_utilization": 0.88
+    "gpu_memory_utilization": 0.8
   }
 }

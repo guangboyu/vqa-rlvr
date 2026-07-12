@@ -1,7 +1,7 @@
 {
   "run_id": "sft_8b-gqa",
-  "timestamp": "2026-07-12T04:44:30+00:00",
-  "git_sha": "65212e4",
+  "timestamp": "2026-07-12T09:09:49+00:00",
+  "git_sha": "0460b1c",
   "model": {
     "base": "checkpoints/merged/sft_8b",
     "preset": "zero_shot_8b"
@@ -20,13 +20,13 @@
     "max_model_len": 4096
   },
   "metrics": {
-    "overall": 0.6380187629193831,
+    "overall": 0.6363491811098744,
     "by_answer_type": {
-      "choose": 0.8600531443755536,
-      "compare": 0.6808149405772496,
-      "logical": 0.8130892956184138,
-      "query": 0.484643644379133,
-      "verify": 0.838809946714032
+      "choose": 0.8573959255978743,
+      "compare": 0.6910016977928692,
+      "logical": 0.8136439267886856,
+      "query": 0.48229243203526817,
+      "verify": 0.8348134991119005
     }
   },
   "config": {

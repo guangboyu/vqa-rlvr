@@ -1,7 +1,7 @@
 {
   "run_id": "sft_8b_reasoning-textvqa",
-  "timestamp": "2026-07-12T05:27:22+00:00",
-  "git_sha": "65212e4",
+  "timestamp": "2026-07-12T09:54:37+00:00",
+  "git_sha": "0460b1c",
   "model": {
     "base": "checkpoints/merged/sft_8b",
     "preset": "zero_shot_8b_reasoning"
@@ -20,9 +20,9 @@
     "max_model_len": 4096
   },
   "metrics": {
-    "overall": 0.73925,
+    "overall": 0.7542000000000001,
     "by_answer_type": {
-      "all": 0.73925
+      "all": 0.7542000000000001
     }
   },
   "config": {
