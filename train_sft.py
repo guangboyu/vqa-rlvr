@@ -31,18 +31,20 @@ DEV_SLICE = 500  # held-out examples for eval-loss monitoring
 
 
 def to_sft_columns(batch: dict) -> dict:
-    """Map unified examples to TRL's VLM contract: messages + a single image.
+    """Map unified examples to TRL's VLM prompt-completion contract.
 
-    TRL structures plain-string messages itself and injects the image before the
-    first user turn (trl.data_utils.prepare_multimodal_messages).
+    Prompt-completion (not messages) on purpose: TRL masks the entire prompt —
+    including the image pad tokens — so loss lands only on the answer. In messages
+    mode the collator trained on image pads for this model (loss ~15, random-level).
+    TRL injects the image before the first user turn and applies the chat template.
     """
     return {
-        "messages": [
-            [
-                {"role": "user", "content": PROMPT_SHORT.format(question=q)},
-                {"role": "assistant", "content": answers[0]},
-            ]
-            for q, answers in zip(batch["question"], batch["answers"], strict=True)
+        "prompt": [
+            [{"role": "user", "content": PROMPT_SHORT.format(question=q)}]
+            for q in batch["question"]
+        ],
+        "completion": [
+            [{"role": "assistant", "content": answers[0]}] for answers in batch["answers"]
         ],
         "image": batch["image"],
     }
@@ -112,6 +114,9 @@ def main() -> None:
         save_total_limit=2,
         dataloader_num_workers=2,  # WSL2: keep worker memory low
         dataloader_pin_memory=False,
+        # The messages/image columns are produced on the fly by with_transform from
+        # question/answers/image; the Trainer must not strip its inputs beforehand.
+        remove_unused_columns=False,
         seed=preset.seed,
         report_to=[] if args.no_wandb else ["wandb"],
         run_name=preset.name,
