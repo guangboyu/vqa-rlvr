@@ -1,0 +1,6 @@
+{
+  "run_id": "grpo_8b_main-placeholder",
+  "status": "not_run",
+  "reason": "OOM: GRPO colocate needs vLLM's own bf16 copy of the 8B (~17GB) alongside the training-resident QLoRA model; exceeds 24GB. Runs unchanged on a >=48GB GPU (planned cloud run). TRL 1.8 exposes no quantized-rollout passthrough.",
+  "planned_command": "uv run python train_grpo.py --preset grpo_8b_main"
+}
