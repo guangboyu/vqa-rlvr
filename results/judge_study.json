@@ -1,0 +1,29 @@
+{
+  "results": [
+    {
+      "run_id": "grpo_2b_main_sft_reasoning-vqav2",
+      "em_accuracy": 0.6909,
+      "sampled_misses": 400,
+      "judge_rescue_rate": 0.435,
+      "judge_corrected_accuracy": 0.8017,
+      "control_agreement_on_em_hits": 0.99
+    },
+    {
+      "run_id": "grpo_2b_main_sft_reasoning-gqa",
+      "em_accuracy": 0.5431,
+      "sampled_misses": 400,
+      "judge_rescue_rate": 0.2325,
+      "judge_corrected_accuracy": 0.6493,
+      "control_agreement_on_em_hits": 1.0
+    },
+    {
+      "run_id": "zero_shot_2b-vqav2",
+      "em_accuracy": 0.7802,
+      "sampled_misses": 400,
+      "judge_rescue_rate": 0.2825,
+      "judge_corrected_accuracy": 0.8214,
+      "control_agreement_on_em_hits": 0.95
+    }
+  ],
+  "judge_spend_usd": 0.1113
+}
