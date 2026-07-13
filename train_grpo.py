@@ -15,6 +15,7 @@ import argparse
 import json
 import os
 import subprocess
+from dataclasses import replace
 from pathlib import Path
 
 from vqar import config
@@ -237,6 +238,8 @@ def main() -> None:
     parser.add_argument("--max-steps", type=int, default=None)
     parser.add_argument("--grad-accum", type=int, default=None)
     parser.add_argument("--batch-size", type=int, default=None)
+    parser.add_argument("--subsets-override", nargs="+", default=None,
+                        help="train on specific RL subsets (transfer-matrix arms)")
     parser.add_argument("--kl-beta", type=float, default=None)
     parser.add_argument("--run-name", default=None)
     parser.add_argument("--dry-run", action="store_true")
@@ -244,6 +247,8 @@ def main() -> None:
     args = parser.parse_args()
 
     preset = config.GRPO_PRESETS[args.preset]
+    if args.subsets_override:
+        preset = replace(preset, subsets=tuple(args.subsets_override))
     rewards = tuple(args.rewards) if args.rewards else preset.rewards
     weights = tuple(args.reward_weights) if args.reward_weights else preset.reward_weights
     if args.rewards and not args.reward_weights:
