@@ -18,7 +18,7 @@ import subprocess
 from pathlib import Path
 
 from vqar import config
-from vqar.data import PROMPT_REASONING
+from vqar.data import PROMPT_REASONING, cap_pixels
 
 os.environ.setdefault("WANDB_PROJECT", "vqa-rlvr")
 
@@ -33,7 +33,7 @@ def to_grpo_columns(batch: dict) -> dict:
             [{"role": "user", "content": PROMPT_REASONING.format(question=q)}]
             for q in batch["question"]
         ],
-        "image": batch["image"],
+        "image": [cap_pixels(img) for img in batch["image"]],
         "question": batch["question"],
         "answers": batch["answers"],
         "dataset": batch["dataset"],

@@ -17,7 +17,9 @@ testdev_balanced; CLEVR: held-out shards of the R1-V set never used for training
 from collections.abc import Iterator
 
 from datasets import Dataset, Features, Image, Sequence, Value, load_dataset
+from PIL import Image as PILImage
 
+from vqar.config import MAX_PIXELS
 from vqar.inference import extract_answer
 
 PROMPT_SHORT = "{question}\nAnswer the question using a single word or phrase."
@@ -41,6 +43,22 @@ FEATURES = Features(
 
 def _build(gen, **gen_kwargs) -> Dataset:
     return Dataset.from_generator(gen, features=FEATURES, gen_kwargs=gen_kwargs)
+
+
+def cap_pixels(image: PILImage.Image, max_pixels: int = MAX_PIXELS) -> PILImage.Image:
+    """Resize down to the project pixel budget (aspect preserved).
+
+    Applied in the TRAINING transforms rather than via processor config: in GRPO
+    colocate mode, vLLM preprocesses images with its own default processor, so a
+    runtime-patched training processor disagrees with it on image token counts and
+    Qwen3-VL's M-RoPE indexing crashes (shape mismatch in get_rope_index). Capping
+    the pixels in the data makes every consumer see the same image.
+    """
+    w, h = image.size
+    if w * h <= max_pixels:
+        return image
+    scale = (max_pixels / (w * h)) ** 0.5
+    return image.resize((max(1, int(w * scale)), max(1, int(h * scale))), PILImage.LANCZOS)
 
 
 def _clean_cauldron_answer(text: str) -> str:

@@ -22,7 +22,7 @@ from transformers import AutoModelForImageTextToText, AutoProcessor, BitsAndByte
 from trl import SFTConfig, SFTTrainer
 
 from vqar import config
-from vqar.data import PROMPT_SHORT
+from vqar.data import PROMPT_SHORT, cap_pixels
 
 os.environ.setdefault("WANDB_PROJECT", "vqa-rlvr")
 
@@ -46,7 +46,7 @@ def to_sft_columns(batch: dict) -> dict:
         "completion": [
             [{"role": "assistant", "content": answers[0]}] for answers in batch["answers"]
         ],
-        "image": batch["image"],
+        "image": [cap_pixels(img) for img in batch["image"]],
     }
 
 
