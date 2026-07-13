@@ -60,6 +60,16 @@ class Judge:
         if self._client is None:
             import anthropic
 
+            # The key lives in the project .env, NOT the shell environment — a
+            # globally exported ANTHROPIC_API_KEY makes Claude Code sessions bill
+            # the API instead of the owner's subscription.
+            if not os.environ.get("ANTHROPIC_API_KEY"):
+                env_file = Path(__file__).parent.parent / ".env"
+                if env_file.exists():
+                    for line in env_file.read_text().splitlines():
+                        key, _, value = line.partition("=")
+                        if key.strip() == "ANTHROPIC_API_KEY" and value.strip():
+                            os.environ["ANTHROPIC_API_KEY"] = value.strip()
             self._client = anthropic.Anthropic()
         return self._client
 

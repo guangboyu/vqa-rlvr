@@ -1,0 +1,43 @@
+{
+  "run_id": "grpo_2b_main_sft-clevr",
+  "timestamp": "2026-07-13T20:17:38+00:00",
+  "git_sha": "18c84d9",
+  "model": {
+    "base": "checkpoints/merged/grpo_2b_main_sft",
+    "preset": "zero_shot_2b"
+  },
+  "eval": {
+    "dataset": "clevr",
+    "subset": "clevr_test",
+    "n": 3000,
+    "limit": null,
+    "prompt_template": "short"
+  },
+  "gen": {
+    "backend": "vllm",
+    "temperature": 0.0,
+    "max_tokens": 64,
+    "max_model_len": 4096
+  },
+  "metrics": {
+    "overall": 0.9976666666666667,
+    "by_answer_type": {
+      "number": 0.9976666666666667
+    }
+  },
+  "config": {
+    "name": "zero_shot_2b",
+    "model": "Qwen/Qwen3-VL-2B-Instruct",
+    "backend": "vllm",
+    "template": "short",
+    "datasets": [
+      "vqav2",
+      "gqa",
+      "clevr",
+      "textvqa"
+    ],
+    "max_tokens": 64,
+    "max_model_len": 4096,
+    "gpu_memory_utilization": 0.8
+  }
+}

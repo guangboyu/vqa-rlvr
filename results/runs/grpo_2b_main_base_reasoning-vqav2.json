@@ -1,0 +1,45 @@
+{
+  "run_id": "grpo_2b_main_base_reasoning-vqav2",
+  "timestamp": "2026-07-13T18:12:44+00:00",
+  "git_sha": "18c84d9",
+  "model": {
+    "base": "checkpoints/merged/grpo_2b_main_base",
+    "preset": "zero_shot_2b_reasoning"
+  },
+  "eval": {
+    "dataset": "vqav2",
+    "subset": "vqav2_eval",
+    "n": 5000,
+    "limit": null,
+    "prompt_template": "reasoning"
+  },
+  "gen": {
+    "backend": "vllm",
+    "temperature": 0.0,
+    "max_tokens": 512,
+    "max_model_len": 4096
+  },
+  "metrics": {
+    "overall": 0.6954199999999999,
+    "by_answer_type": {
+      "number": 0.6557037037037038,
+      "other": 0.5473027375201288,
+      "yes/no": 0.9098316132536665
+    }
+  },
+  "config": {
+    "name": "zero_shot_2b_reasoning",
+    "model": "Qwen/Qwen3-VL-2B-Instruct",
+    "backend": "vllm",
+    "template": "reasoning",
+    "datasets": [
+      "vqav2",
+      "gqa",
+      "clevr",
+      "textvqa"
+    ],
+    "max_tokens": 512,
+    "max_model_len": 4096,
+    "gpu_memory_utilization": 0.8
+  }
+}
