@@ -74,8 +74,9 @@ def build_model(preset: config.SFTPreset):
     model = AutoModelForImageTextToText.from_pretrained(
         preset.model, dtype=torch.bfloat16, quantization_config=quantization
     )
+    # Pixel budget enforced in the data (cap_pixels), not processor config — keeps
+    # every consumer's preprocessing identical (see train_grpo.py).
     processor = AutoProcessor.from_pretrained(preset.model)
-    processor.image_processor.size["longest_edge"] = config.MAX_PIXELS  # pixel-area cap
     return model, processor
 
 

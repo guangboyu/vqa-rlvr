@@ -137,8 +137,10 @@ def main() -> None:
     max_steps = args.max_steps or preset.max_steps
     kl_beta = args.kl_beta if args.kl_beta is not None else preset.kl_beta
 
+    # No processor size overrides: colocated vLLM preprocesses with the model's
+    # default config, and any asymmetry vs the training processor breaks Qwen3-VL's
+    # M-RoPE indexing. The pixel budget is enforced in the data (cap_pixels).
     processor = AutoProcessor.from_pretrained(model_path)
-    processor.image_processor.size["longest_edge"] = config.MAX_PIXELS
 
     model_kwargs = dict(dtype=torch.bfloat16)
     if preset.quantize_4bit:
