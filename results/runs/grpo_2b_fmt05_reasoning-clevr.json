@@ -1,0 +1,43 @@
+{
+  "run_id": "grpo_2b_fmt05_reasoning-clevr",
+  "timestamp": "2026-07-13T22:53:59+00:00",
+  "git_sha": "de4a261",
+  "model": {
+    "base": "checkpoints/merged/grpo_2b_fmt05",
+    "preset": "zero_shot_2b_reasoning"
+  },
+  "eval": {
+    "dataset": "clevr",
+    "subset": "clevr_test",
+    "n": 3000,
+    "limit": null,
+    "prompt_template": "reasoning"
+  },
+  "gen": {
+    "backend": "vllm",
+    "temperature": 0.0,
+    "max_tokens": 512,
+    "max_model_len": 4096
+  },
+  "metrics": {
+    "overall": 0.8676666666666667,
+    "by_answer_type": {
+      "number": 0.8676666666666667
+    }
+  },
+  "config": {
+    "name": "zero_shot_2b_reasoning",
+    "model": "Qwen/Qwen3-VL-2B-Instruct",
+    "backend": "vllm",
+    "template": "reasoning",
+    "datasets": [
+      "vqav2",
+      "gqa",
+      "clevr",
+      "textvqa"
+    ],
+    "max_tokens": 512,
+    "max_model_len": 4096,
+    "gpu_memory_utilization": 0.8
+  }
+}
