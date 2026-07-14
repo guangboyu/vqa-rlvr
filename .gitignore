@@ -22,3 +22,6 @@ learn/
 
 # The manifest defines the benchmark (sizes, seeds, qid fingerprints) — versioned.
 !data/manifest.json
+
+# Personal resume material (not part of the release)
+experience_temp.md

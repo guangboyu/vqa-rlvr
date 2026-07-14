@@ -23,6 +23,8 @@ def main() -> None:
     rows: dict[str, dict[str, float]] = defaultdict(dict)
     for path in sorted(RUNS.glob("*.json")):
         run = json.loads(path.read_text())
+        if "eval" not in run:  # placeholder record (e.g. OOM not-run)
+            continue
         dataset = run["eval"]["dataset"]
         model_id = run["run_id"].removesuffix(f"-{dataset}")
         rows[model_id][dataset] = run["metrics"]["overall"]
