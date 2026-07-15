@@ -62,6 +62,15 @@ train_grpo.py        TRL GRPOTrainer · vLLM colocated rollouts + sleep mode
 merge_adapter.py ──► evaluate.py   vLLM batch eval → results/runs/*.json
 ```
 
+## Live demo — VQA Arena
+
+A local web app (FastAPI + React) that runs all three 2B checkpoints side by side
+on one 4090 — upload an image, ask a question, and watch base / SFT / RLVR stream
+their answers concurrently, plus an interactive results dashboard. See
+[`demo/`](demo/).
+
+![VQA Arena](demo/assets/arena.png)
+
 ## Trained adapters
 
 | Adapter | HF Hub |

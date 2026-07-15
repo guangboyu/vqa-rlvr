@@ -5053,6 +5053,11 @@ dependencies = [
 ]
 
 [package.dev-dependencies]
+demo = [
+    { name = "fastapi" },
+    { name = "python-multipart" },
+    { name = "uvicorn" },
+]
 dev = [
     { name = "pytest" },
     { name = "ruff" },
@@ -5078,6 +5083,11 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
+demo = [
+    { name = "fastapi", specifier = ">=0.115" },
+    { name = "python-multipart", specifier = ">=0.0.9" },
+    { name = "uvicorn", specifier = ">=0.30" },
+]
 dev = [
     { name = "pytest", specifier = ">=8.0" },
     { name = "ruff", specifier = ">=0.8" },

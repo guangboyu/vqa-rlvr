@@ -26,6 +26,11 @@ dependencies = [
 ]
 
 [dependency-groups]
+demo = [
+    "fastapi>=0.115",
+    "python-multipart>=0.0.9",
+    "uvicorn>=0.30",
+]
 dev = ["pytest>=8.0", "ruff>=0.8"]
 
 [build-system]
@@ -41,6 +46,9 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "W", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+"demo/backend/*" = ["B008"]  # FastAPI's File(...)/Form(...) defaults are idiomatic
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
