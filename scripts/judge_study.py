@@ -64,7 +64,14 @@ def main() -> None:
     rng = random.Random(0)
     results = [study(run_id, args.sample, judge, rng) for run_id in args.runs]
     out = ROOT / "results" / "judge_study.json"
-    payload = {"results": results, "judge_spend_usd": round(judge.spend(), 4)}
+    merged: dict[str, dict] = {}
+    if out.exists():  # merge with prior studies rather than clobbering them
+        merged = {r["run_id"]: r for r in json.loads(out.read_text())["results"]}
+    merged.update({r["run_id"]: r for r in results})
+    payload = {
+        "results": sorted(merged.values(), key=lambda r: r["run_id"]),
+        "judge_spend_usd": round(judge.spend(), 4),
+    }
     out.write_text(json.dumps(payload, indent=2))
     for r in results:
         print(r)
