@@ -1,5 +1,10 @@
 # vqa-rlvr
 
+[![Adapters](https://img.shields.io/badge/%F0%9F%A4%97%20HF%20Hub-4%20adapters-yellow)](https://huggingface.co/omnifish123)
+[![W&B](https://img.shields.io/badge/W%26B-vqa--rlvr-gold)](https://wandb.ai/ygbuestc-uci/vqa-rlvr)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.12-blue)](pyproject.toml)
+
 **Post-training Qwen3-VL for visual question answering on a single RTX 4090 —
 QLoRA SFT + GRPO reinforcement learning with verifiable rewards, benchmarked across
 VQAv2 / GQA / CLEVR / TextVQA.**
@@ -57,6 +62,15 @@ train_grpo.py        TRL GRPOTrainer · vLLM colocated rollouts + sleep mode
 merge_adapter.py ──► evaluate.py   vLLM batch eval → results/runs/*.json
 ```
 
+## Trained adapters
+
+| Adapter | HF Hub |
+|---|---|
+| 2B SFT (LoRA) | [vqa-rlvr-sft-2b](https://huggingface.co/omnifish123/vqa-rlvr-sft-2b) |
+| 8B SFT (QLoRA) | [vqa-rlvr-sft-8b](https://huggingface.co/omnifish123/vqa-rlvr-sft-8b) |
+| 2B GRPO (RL from base) | [vqa-rlvr-grpo-2b-main-base](https://huggingface.co/omnifish123/vqa-rlvr-grpo-2b-main-base) |
+| 2B SFT→GRPO | [vqa-rlvr-grpo-2b-main-sft](https://huggingface.co/omnifish123/vqa-rlvr-grpo-2b-main-sft) |
+
 ## Quickstart
 
 ```bash
@@ -87,7 +101,8 @@ The `uv.lock` pins a working torch/transformers/TRL/vLLM combination (cu129).
 - **Rollouts** run through vLLM's chat API via TRL's `rollout_func` so prompt
   construction has a single source of truth — TRL 1.8's built-in path hands vLLM
   pre-tokenized ids whose image-token expansion must exactly match vLLM's own
-  preprocessing, and silently corrupts prompts when it doesn't.
+  preprocessing, and silently corrupts prompts when it doesn't (reported upstream:
+  [huggingface/trl#6401](https://github.com/huggingface/trl/issues/6401)).
 - **Eval**: greedy, both a `short` template and a `reasoning` (CoT) template for
   every checkpoint; predictions persisted for error analysis and offline re-scoring.
 - **Judge**: Claude Haiku 4.5 via the Batches API, sqlite-cached, hard $10 budget
