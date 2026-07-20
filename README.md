@@ -47,6 +47,49 @@ hand-typed. See [`results/`](results/) for per-run JSONs with git SHAs and full
 configs, and [`results/crosscheck.md`](results/crosscheck.md) for the lmms-eval
 validation of our harness (59.5 vs 58.7±1.6 on GQA).
 
+## Erratum: VQAv2 training-reward defect (2026-07-16)
+
+**What happened.** The correctness reward used during GRPO training dispatched VQAv2
+examples to the official 10-annotator leave-one-out VQA accuracy. Our RL training
+subset (`vqav2_rl`, built from the_cauldron) stores exactly **one** gold answer per
+question — and leave-one-out over a single annotator compares each prediction against
+an empty answer set, returning **0.0 for every prediction**. As a result, in all GRPO
+runs whose training mix included `vqav2_rl`, VQAv2 examples contributed **zero
+correctness signal**: the correctness gradient came entirely from GQA (and CLEVR,
+where used), while VQAv2 examples contributed only format-reward gradient (or, in the
+correctness-only arm, no gradient at all).
+
+**What is NOT affected.** All *evaluation* numbers: evaluation uses the 10-annotator
+lmms-lab VQAv2 data, where the official metric behaves correctly. The bug affected the
+training reward only.
+
+**What IS affected.** The *interpretation* of training arms that included `vqav2_rl`
+(table below). In particular, `grpo_2b_vqav2only` trained with an entirely inert
+correctness reward (format-only training in effect), and the reward-weight ablation
+arms trained on a mix in which half the examples carried no correctness signal.
+Headline eval results stand as behavioral observations of the trained checkpoints;
+claims about *why* the reward mix produced them should be read with this defect in
+mind. **Re-validated (2026-07-16):** the headline behavior reproduces on the fixed
+reward — correctness-only GRPO from the base model deletes CoT even more completely
+(12.7% vs 23.5% retention on VQAv2) with slightly higher EM (74.7 vs 72.9), so the
+deletion finding is robust to the defect; the reward-mix interpretation caveats above
+still apply to the v1 arms.
+
+**The fix.** `vqar/metrics.py::vqa_accuracy` now falls back to normalized exact match
+when fewer than two reference answers are provided (leave-one-out is undefined there);
+regression tests cover the 1-gold and 10-gold cases. Repro of the old behavior:
+`score("vqav2", "yes", ["yes"])` returned `0.0` before the fix; it returns `1.0` now.
+
+| Run | Training mix | Correctness signal actually received | Status |
+|---|---|---|---|
+| `grpo_2b_main_base` (headline) | vqav2_rl + gqa_rl | GQA only (VQAv2 half inert) | affected |
+| `grpo_2b_main_sft` | vqav2_rl + gqa_rl | GQA only | affected |
+| `grpo_2b_fmt0` (w=0 ablation) | vqav2_rl + gqa_rl | GQA only; VQAv2 groups zero-advantage | affected |
+| `grpo_2b_fmt05` (w=0.5 ablation) | vqav2_rl + gqa_rl | GQA only | affected |
+| `grpo_2b_vqav2only` (transfer row) | vqav2_rl | **None — format-only training in effect** | most affected |
+| `grpo_2b_gqaonly` | gqa_rl | GQA (exact match — correct) | not affected |
+| `grpo_2b_clevr*`, `grpo_8b_clevr` | clevr | CLEVR (exact match — correct) | not affected |
+
 ## Pipeline
 
 ```text

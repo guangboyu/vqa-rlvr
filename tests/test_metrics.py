@@ -80,3 +80,29 @@ class TestScoreDispatch:
 
     def test_clevr_numeric(self):
         assert score("clevr", "four", ["4"]) == 1.0
+
+
+class TestSingleReferenceFallback:
+    """Single-gold inputs must not be zeroed by leave-one-out (v1 training bug).
+
+    vqav2_rl (the_cauldron) stores exactly one gold answer; the 10-annotator
+    leave-one-out metric returns 0.0 for ANY prediction there, which silently
+    killed the correctness reward on the VQAv2 half of every v1 GRPO mix.
+    """
+
+    def test_single_gold_exact_pred_scores_one(self):
+        assert score("vqav2", "yes", ["yes"]) == 1.0
+
+    def test_single_gold_wrong_pred_scores_zero(self):
+        assert score("vqav2", "no", ["yes"]) == 0.0
+
+    def test_single_gold_normalized_match(self):
+        assert score("vqav2", "The black one.", ["black 1"]) == 1.0
+
+    def test_ten_golds_still_official_metric(self):
+        # 3 of 10 annotators said "cat": leave-one-out partial credit, not EM.
+        golds = ["cat"] * 3 + ["dog"] * 7
+        assert 0.0 < score("vqav2", "cat", golds) < 1.0
+
+    def test_textvqa_single_gold_fallback(self):
+        assert score("textvqa", "42", ["42"]) == 1.0

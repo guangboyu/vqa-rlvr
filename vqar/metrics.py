@@ -100,7 +100,15 @@ def normalize_answer(text: str) -> str:
 
 
 def vqa_accuracy(prediction: str, gt_answers: list[str]) -> float:
-    """VQA v2 accuracy for one question against its 10 annotator answers."""
+    """VQA v2 accuracy for one question against its 10 annotator answers.
+
+    Leave-one-out requires multiple annotators: with a single reference answer
+    ``others`` is empty and EVERY prediction scores 0.0 — which silently zeroed
+    the correctness reward for all single-gold vqav2_rl training examples in v1
+    runs. Single-reference inputs therefore fall back to normalized exact match.
+    """
+    if len(gt_answers) < 2:
+        return exact_match(prediction, gt_answers)
     prediction = normalize_answer(prediction)
     gt_answers = [normalize_answer(a) for a in gt_answers]
     accs = []
