@@ -1,22 +1,9 @@
 # What the current implementation establishes
 
 Validation date: 2026-09-13. These implementation checks preceded the
-[corrected baseline campaign](baselines.md), whose four 2B arms are now complete.
-Historical predictions remain intact. New split selection, official scoring,
-and training fixes have separate provenance.
-
-## Starting branch
-
-Continue from `research/v2-topconf`. Its SFT, GRPO, and evaluation core is largely
-shared with `main`; it also contains the OPD, verifier, image-intervention, and
-corrected pilot evidence needed for useful lessons. `main` is smaller and easier
-to browse, but omits much of this material. The research branch also missed the
-README reward erratum present on `main`; it has now been restored.
-
-For research, the strongest next step is a well-defined image-dependent task and
-calibrated evaluation. For public usefulness, prioritize a runnable 24 GB example,
-recorded failures, precise metric explanations, and reproducible tables. Extra
-functions and larger models alone offer no reliable route to more stars.
+[corrected campaign](method.md) and check that its training and evaluation paths
+compute what they are meant to. Historical predictions remain intact; the split selection,
+official scoring, and training fixes each have their own provenance.
 
 ## Training checks
 
@@ -36,7 +23,7 @@ the separate baseline campaign measures behavior after one SFT epoch and 300
 GRPO updates, without claiming convergence.
 
 The actual GPU check inventory and numbers are recorded in
-[`results/validation.json`](../results/validation.json). A path without a completed
+[`results/validation.json`](../../results/validation.json). A path without a completed
 GPU check there must not be described as GPU-validated.
 
 ### The multimodal padding defect
@@ -106,7 +93,7 @@ pretraining exposure, or patient identity.
   SFT and RL may reuse a question; GRPO generates fresh on-policy responses.
   Both RL arms use the same pool and seed. SFT adds prior exposure and compute,
   which are reported separately. The completed GPU smoke checks used v1; their
-  numerical conclusions are separate from the completed four-arm v2 comparison.
+  numerical conclusions are separate from the corrected campaign's four 2B arms.
 - CLEVR's 8,000 training, 3,000 validation, and 3,000 test examples are locally
   image-disjoint. They are a counting-subset partition, not a general CLEVR split.
 
@@ -139,28 +126,28 @@ The samples are random draws, not the eight most probable complete sequences.
 
 | Arm and decoding | Responses | Mean tokens | Valid answer tags | Long-explanation proxy |
 |---|---:|---:|---:|---:|
-| Base, greedy | 20 | 134.7 | 19 | 18 |
+| Instruct, greedy | 20 | 134.7 | 19 | 18 |
 | SFT, greedy | 20 | 9.7 | 5 | 1 |
-| Base, eight samples | 160 | 127.5 | 155 | 147 |
+| Instruct, eight samples | 160 | 127.5 | 155 | 147 |
 | SFT, eight samples | 160 | 13.6 | 55 | 9 |
 
 The proxy means more than 100 characters before an opening answer tag. It does
 not establish substantive or correct reasoning. SFT produced such samples for
 six of twenty questions; two of the nine samples received full normalized answer
 credit, and one lacked a closing answer tag. Some explanatory behavior remains,
-but this does not establish reliable recovery through RL. Base-to-GRPO remains
+but this does not establish reliable recovery through RL. Instruct → GRPO remains
 the straightforward control. A reasoning-oriented SFT mixture is a later,
 separately evaluated objective choice.
 
 The fixed set is too small for general model rankings. In particular, mean
-normalized answer credit was 61.0% for base greedy and 49.5% for SFT greedy, while
+normalized answer credit was 61.0% for Instruct greedy and 49.5% for SFT greedy, while
 original scoring gave 41.0% and 49.5%. This illustrates why score definitions and
-sampling protocols must accompany a result. One base greedy response hit the
+sampling protocols must accompany a result. One Instruct greedy response hit the
 512-token limit. No repeated training seeds were added.
 
-[All 360 responses](../results/sft-samples/predictions.jsonl),
-[summary counts](../results/sft-samples/analysis.json), and
-[run and merge metadata](../results/sft-samples/summary.json) are included.
+[All 360 responses](../../results/sft-samples/predictions.jsonl),
+[summary counts](../../results/sft-samples/analysis.json), and
+[run and merge metadata](../../results/sft-samples/summary.json) are included.
 The sampling script that produced them is kept in the research archive, not in this tree.
 
 The measured comparison took 215 seconds after loading on an RTX 4090. An fp32
@@ -197,13 +184,27 @@ These details can change scores for capitalization, punctuation, and articles.
 The older normalized scorer remains available for historical comparisons and
 training rewards; it is not silently relabeled official.
 
+## Reproducing generations
+
+The current harness reproduces the corrected campaign's saved short-prompt outputs exactly:
+on the first 32 test questions of each of the four datasets, all 32 raw responses match.
+Reasoning-prompt outputs, greedy but up to 512 tokens long, do not repeat run to run on
+the local RTX 4090. Two runs of the same code on the same 32 questions share 8 to
+12 identical responses per dataset, the earlier evaluation code behaves the same way, and
+`VLLM_BATCH_INVARIANT=1` does not remove the difference. Over five runs, smoke-tier VQAv2
+official accuracy under the reasoning prompt ranged from 0.503 to 0.553 on those 32
+questions. The regression test therefore rescores saved predictions rather than generating
+again, and a reasoning-prompt difference smaller than this spread is not evidence of a
+change.
+
 ## Reading the research evidence
 
-The corrected P1 result does not support a metric ranking reversal. P2's 143 paired
-examples show an empty-reasoning change of −2.32 percentage points, with a 90%
-interval of [−5.5, +0.8]; this does not establish equivalence within one, two, or
-three points. Swapped reasoning remains load-bearing in that intervention.
-P3 is inconclusive under the corrected published retention proxy.
+The corrected P1 result does not support a metric ranking reversal. In P2, replacing the
+reasoning with an empty one changes accuracy by −2.32 percentage points (90% interval
+[−5.48, +0.84], n = 487), which does not establish equivalence within one, two, or three
+points. In the 143 pairs without answer leakage, swapping in a different reasoning text
+changes 63.6% of answers, so in that intervention the answers depend on the reasoning. P3 is
+inconclusive under the corrected published retention proxy.
 
 The image audit evaluated 2,300 probes on ten models, not all 4,300 prepared battery
 items. No detected degradation under its short-prompt protocol does not establish
@@ -218,9 +219,9 @@ and should not be treated as a random sample.
 ## Lessons to run without another training campaign
 
 - Reproduce the single-reference reward edge case with
-  `uv run --frozen pytest tests/test_metrics.py tests/test_rewards.py`.
-- Compare official and normalized scores on the same saved predictions in
-  `docs/supplementary/results.md`; inspect an example in the gallery.
+  `uv run --frozen pytest tests/test_metrics.py -k SingleReference`.
+- Compare official and normalized scores on the same saved predictions in the
+  [results](results.md); inspect an example in the gallery.
 - Inspect `run_config.json` and `run_summary.json` after a two-update GRPO check.
   Count prompt groups, response tokens, zero-variance rewards, and actual updates.
 - Read `train_opd.py` alongside the token-level checks in `results/validation.json`.

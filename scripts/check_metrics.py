@@ -1,7 +1,8 @@
 """Compare saved predictions with pinned dataset-author accuracy implementations.
 
 Usage: python -m scripts.check_metrics --sources-dir path/to/evaluators
-The directory must contain vqav2.py, textvqa.py, and GQA's eval.py. See docs/validation.md.
+The directory must contain vqav2.py, textvqa.py, and GQA's eval.py.
+See docs/supplementary/validation.md.
 """
 
 import argparse

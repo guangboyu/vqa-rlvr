@@ -43,7 +43,7 @@ All four paths completed two updates on both an RTX PRO 6000 Blackwell and an
 A100 80GB PCIe. SFT loss and gradients, GRPO prompt IDs and group advantages,
 and both teachers' token log-probabilities matched independent checks. SFT also
 completed its dev evaluation. Source hashes, probes, and Slurm job IDs are in
-[`results/validation.json`](../results/validation.json).
+[`results/validation.json`](../../results/validation.json).
 
 | Workload | RTX PRO 6000 peak | A100 peak |
 |---|---:|---:|
@@ -76,7 +76,7 @@ training examples alongside the original RL sources. Dev and evaluation images
 are excluded from both stages. `check_data` validates the versioned split files in
 `data/splits/` (one per dataset) and leaves the source datasets intact; a newly
 registered dataset gets its own file. Historical runs that predate the held-out
-splits reproduce from the archived July code, not from this tree.
+splits reproduce from the July code in the repository history, not from this tree.
 
 ## Small GPU checks
 
@@ -112,10 +112,10 @@ not promised to generate bitwise-identical responses. Completion markers protect
 against incomplete saves, not disk failure. Multi-hour Slurm runs still need the
 bounded successor mechanism in the site's operating manual.
 
-Evaluation writes atomic batches under `results/progress/`. If interrupted, rerun
-its original command with `--resume`; model, data, scoring, decoding, and source
-identity must match. Completed batches are reused. Final prediction files retain
-output-token counts and stop reasons. For a small paired image-sensitivity check,
-use the same `--limit` and separate run IDs with `--image-mode original`, `black`,
-or `swapped`. A swap uses a different image from that fixed evaluation subset;
-this measures prediction sensitivity, not causal isolation of the image encoder.
+Evaluation writes atomic batches beside each cell's record. If interrupted, rerun the
+same command: completed batches are reused when the model, protocol, and data identity
+match, and a mismatch is refused rather than mixed in. Prediction files keep output-token
+counts and stop reasons. For a paired image-sensitivity check, evaluate the original
+cell, then the same tier with `--image-mode black` or `--image-mode swapped`. A swap uses
+another image from the same evaluation subset; this measures prediction sensitivity, not
+causal isolation of the image encoder.

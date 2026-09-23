@@ -17,7 +17,7 @@ from vqar.eval.record import RunRecord
 from vqar.registry import DATASETS
 
 ROOT = Path(__file__).resolve().parent.parent.parent
-MARKED_FILES = ("README.md", "docs/supplementary/results.md")
+MARKED_FILES = ("README.md", "docs/supplementary/results.md", "docs/supplementary/history.md")
 BLOCK = re.compile(r"(<!-- report:(?P<name>[\w-]+) -->\n)(?P<body>.*?)(<!-- /report:(?P=name) -->)",
                    re.DOTALL)
 PROMPT_ORDER = ("short", "reasoning")

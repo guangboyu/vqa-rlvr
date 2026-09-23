@@ -1,60 +1,22 @@
-# Visual QA post-training, with the failures included
+# What RL adds to a vision-language model's answers
 
-A hands-on study of short-answer SFT, GRPO, and on-policy distillation for
-Qwen vision-language models. The aim is to make each training choice understandable:
-what receives a gradient, what a score measures, and when an apparent improvement
-fails a closer check.
+A hands-on study of short-answer SFT, GRPO with a verifiable reward, and on-policy
+distillation for Qwen3-VL at 2B and 8B, on VQAv2, GQA, CLEVR counting, and far-OOD
+TextVQA. Every model is evaluated on the same fixed test questions under two prompt
+templates, a short answer and step-by-step reasoning, and scored twice, with the dataset
+authors' evaluator and with a normalized matcher. Reading the two prompts side by side
+separates what each training method changes: **RL wins back accuracy that the reasoning
+prompt costs, and only SFT raises the short-answer ceiling.**
 
-Start with the **2B model on a 24 GB GPU**, or use the separate **80/96 GB profiles**
-for existing 8B recipes. The recorded demo runs without a GPU.
+The 2B pipeline runs on one 24 GB GPU; separate 80/96 GB profiles run the 8B recipes. The
+recorded demo runs without a GPU.
 
-## Explore without training
+## Results
 
-```bash
-uv sync --frozen --group demo
-cd demo/frontend
-npm ci
-npm run build
-cd ../..
-uv run --frozen uvicorn demo.backend.app:app --host 127.0.0.1 --port 8000
-```
-
-Open `http://127.0.0.1:8000`. The gallery shows recorded successes and counterexamples;
-the dashboard distinguishes official scoring from historical normalized scoring.
-See [demo setup](demo/README.md) for optional live inference.
-
-![Recorded VQA examples](demo/assets/gallery.png)
-
-## Run the small pipeline
-
-Use Python 3.12 and the committed lockfile. Downloads require network access and
-substantial disk space. Preparing data is separate from training:
-
-```bash
-uv run --frozen python prepare_data.py
-uv run --frozen python -m scripts.check_data
-uv run --frozen python train_sft.py --preset sft_2b --hardware 24gb \
-  --max-steps 2 --save-steps 1 --run-dir runs/sft-smoke --no-wandb
-uv run --frozen python train_grpo.py --preset grpo_2b_main --hardware 24gb \
-  --model Qwen/Qwen3-VL-2B-Instruct --max-steps 2 \
-  --save-steps 1 --run-dir runs/grpo-smoke --no-wandb
-```
-
-These two-step runs check execution, not model quality. They train separate SFT and
-base-to-GRPO controls. Every completed run then evaluates each saved adapter on the dev
-tier with both prompts, which produces its learning curve; add `--no-dev-eval` to skip
-that step. [Hardware instructions](docs/hardware.md) cover larger models,
-resolved run metadata, and checkpoint resumption. [Validation notes](docs/validation.md)
-explain the verified behavior and remaining limits.
-The [full comparison walkthrough](docs/baselines.md) covers shared SFT/RL training
-data, the four 2B arms, the 8B confirmation, the selected OPD comparison, and
-matched evaluation under both prompts.
-
-## Corrected 2B results
-
-Dataset-author (official) accuracy, %, with the normalized scorer in parentheses;
-greedy decoding, one training seed. Both 2B GRPO arms use the same 1,200 training
-questions in the same order for 300 updates.
+Official accuracy (%), with the normalized scorer in parentheses, on the full test subsets:
+5,000 VQAv2, 12,578 GQA, 3,000 CLEVR counting, and 2,000 TextVQA questions. Greedy
+decoding, one training seed per arm. The short prompt asks for a single word or phrase; the
+reasoning prompt asks for step-by-step thinking and a tagged final answer.
 
 <!-- report:matrix -->
 | Arm | Prompt | VQAv2 | GQA | CLEVR counting | TextVQA (far-OOD) |
@@ -75,160 +37,123 @@ questions in the same order for 300 updates.
 | Instruct 8B → GRPO | reasoning | 77.37 (78.63) | 59.43 (59.82) | 97.30 (97.30) | 80.78 (80.80) |
 <!-- /report:matrix -->
 
-SFT improves three datasets; adding this short GRPO run changes its short-answer
-scores by less than 0.1 percentage points each. Under the reasoning prompt,
-SFT→GRPO improves VQAv2, counting, and TextVQA but loses GQA accuracy. Every arm
-scores higher with the short prompt on every dataset. Output length and formatting
-explain part of the behavior; a longer answer alone is not evidence of better reasoning.
+**1. RL recovers reasoning-prompt accuracy.** Under the reasoning prompt, 300 GRPO updates
+from Instruct raise official accuracy by 6.7 points on VQAv2, 8.8 on GQA, and 4.6 on
+TextVQA at 2B, and by 13.7, 12.6, and 5.5 at 8B. The normalized scorer confirms gains
+beyond answer formatting (2B: +4.3, +2.1, +4.6; 8B: +9.9, +7.6, +5.5). At 8B the
+reasoning prompt ends within 3.8 points of the short prompt on VQAv2, down from 17.5.
 
-The [8B confirmation](docs/baselines.md#8b-confirmation) shows the same caution:
-GRPO improves reasoning-prompt scores with much shorter responses, but changes
-short-prompt accuracy by at most 0.13 percentage points.
+**2. No arm passes its own short-answer ceiling.** In all 28 arm and dataset pairs, the
+short prompt scores higher than the reasoning prompt, under both scorers. GRPO and OPD
+leave short-prompt accuracy where it was: within 0.26 points on VQAv2 and GQA, and 0.6 on
+any dataset (official).
 
-The [selected OPD comparison](docs/baselines.md#selected-opd-comparison) also shows
-how scoring changes the interpretation: official GQA reasoning accuracy rises
-from 36.13% to 51.35%, largely through answer casing, while normalized accuracy
-changes from 51.95% to 51.58%. Its short-answer scores remain close to Instruct.
+**3. SFT is what moves the ceiling.** One epoch of short-answer SFT raises short-prompt
+official accuracy by 2.0 points on VQAv2 and 2.9 on GQA, and GRPO after SFT keeps that
+gain (within 0.1 points) while adding reasoning-prompt accuracy on CLEVR counting (+5.7)
+and TextVQA (+5.5), under both scorers.
 
-The dashboard includes both prompts, two scoring variants, response lengths, and
-fixed image interventions. [Results and interpretation](docs/baselines.md#recorded-2b-results)
-include the complete tables and actual training exposure. Raw predictions, adapters,
-and frozen source snapshots are kept in a local evidence bundle.
+The scorer matters under the reasoning prompt. The authors' evaluators compare some
+answers case-sensitively (VQAv2 when all annotators agree, GQA always), and for Instruct
+2B lowercasing the answers closes nearly all of the official-to-normalized gap: 9.6 of 9.6
+points on VQAv2 and 14.7 of 15.8 on GQA. Both numbers are always reported side by side.
 
-## What the methods teach
+The [results](docs/supplementary/results.md) page has the full tables: response length and
+answer tags, truncation, casing, image interventions, what each RL run trained on, training
+diagnostics, and a learnability pre-check of the RL pool.
 
-| Arm | Supervision | Question |
-|---|---|---|
-| Short-answer SFT | Answer and end-of-turn tokens | How does direct answer supervision change visible responses? |
-| GRPO | Dataset correctness, optionally format | Can sampled responses improve with a verifiable outcome reward? |
-| External OPD | Frozen teacher log-probabilities on student responses | Is trajectory-level teacher supervision useful here? |
-| Gold-conditioned self-teacher | Frozen base model, with the reference answer added only to its prompt | Does this additional information provide a useful learning signal? |
+## What was trained
 
-SFT does not supervise reasoning demonstrations. Shorter visible outputs do not prove
-that internal reasoning was erased. Likewise, a long `<think>` block does not prove
-correct reasoning. The gold-conditioned teacher has extra information; comparisons
-with an external teacher do not isolate teacher size.
+| Arm | Supervision |
+|---|---|
+| SFT | one epoch on 39,458 VQAv2 and GQA short answers |
+| Instruct → GRPO, SFT → GRPO | 300 GRPO updates with the correctness reward: the tagged answer, scored by the normalized matcher |
+| Instruct → gold-conditioned OPD | 300 updates of token-level feedback from the frozen Instruct model, shown the reference answer |
 
-Here, "base" means the released Qwen3-VL **Instruct** checkpoint before our VQA
-fine-tuning. It already received upstream post-training.
+All RL arms drew exactly the same 1,200 questions in the same order from a 55,438-question
+pool, eight sampled responses per question. SFT → GRPO adds the SFT epoch on top, so it
+measures the value of SFT before the same RL. No dev or test image appears in any training
+pool; the split files in `data/splits/` list every row and `check_data` verifies it. The
+[method](docs/supplementary/method.md) has the full recipe and the commands that
+reproduce each arm.
 
-The pinned GRPO implementation uses DAPO token loss reduction, group reward scaling,
-weighted-sum-then-normalize rewards, token policy ratios, symmetric clipping at 0.2,
-and default KL coefficient zero. vLLM sampling correction uses `sequence_mask` with
-an upper ratio bound of 3. **Dynamic resampling of zero-variance groups is not enabled.**
-This is not the complete DAPO recipe. Settings are explicit in
-[`vqar/config.py`](vqar/config.py) and saved with each new run.
+## Evaluation
 
-Even the correctness-only reward requires a complete `<answer>...</answer>` tag;
-it has no additional format bonus. Within the tag, training uses normalized answer
-matching, with single-reference handling. Evaluation also accepts untagged answers
-and reports the dataset-author metric separately from normalized matching.
-
-At batch size 8, accumulation 4, and group size 8, one update uses 32 responses from
-four prompt groups. Three hundred updates mean 9,600 sampled responses and 1,200
-prompt draws from the current 55,438-question RL pool. Equal update counts do not
-imply equal token counts or GPU time.
-
-SFT and RL share training examples. The manifest reserves 39,458 SFT training
-examples and 506 development examples, then includes the SFT training examples
-in both RL arms' shared pool. Development and evaluation images are excluded
-from both stages. Comparing base-to-RL with SFT-to-RL measures the benefit of
-adding SFT before the same RL training, including SFT's additional exposure and compute.
-
-## Evaluation and reproducibility
-
-| Dataset | Materialized evaluation questions | Primary scoring |
+| Dataset | Test questions | Official scorer |
 |---|---:|---|
-| VQAv2 | 5,000 | Original VQA ten-annotator accuracy and normalization |
-| GQA | 12,578 | Original exact answer match |
-| CLEVR counting subset | 3,000 test; 3,000 validation | Exact counting answer |
-| TextVQA | 2,000 | MMF/EvalAI answer processing and ten-annotator accuracy |
+| VQAv2 | 5,000 | VQA ten-annotator accuracy with its answer processing |
+| GQA | 12,578 | exact answer match |
+| CLEVR counting | 3,000 | exact count |
+| TextVQA (far-OOD) | 2,000 | MMF/EvalAI answer processing, ten-annotator accuracy |
 
-These are the repository's materialized subsets, not submissions to every official
-benchmark server. CLEVR uses a local partition of a counting subset. GQA's broader
-consistency, validity, plausibility, distribution, and attention-based grounding
-suite is not reproduced by an accuracy-only score.
+These are fixed subsets materialized by this repository, not benchmark-server
+submissions; GQA's consistency and grounding metrics are outside an accuracy score. The
+official scorers reproduce the authors' evaluator code on 626,074 saved predictions from
+89 runs with no per-question mismatch ([validation](docs/supplementary/validation.md)).
 
-`evaluate.py` scores every prediction with both variants: `official` (the dataset
-authors' evaluator, the primary column) and `normalized` (the historical rule, shown
-beside it). Training rewards retain their separate, documented rules. Every table
-comes from the stored evaluation records; regenerate them, and the dashboard's data,
-with:
+`evaluate.py` runs one model under a declared protocol (dataset, role, tier, prompt,
+decoding, image mode) and writes a record with both scorer variants and every prediction.
+A cell that already has a record is skipped, and an interrupted one resumes. Every table
+in this repository, and the dashboard, is generated from those records:
 
 ```bash
 uv run --frozen python -m scripts.report
 ```
 
-The new scorers matched the authors' evaluator code on **626,074 saved predictions
-across 89 runs**, with zero per-question mismatches. For GQA this validates the
-author's accuracy expression, not its full evaluation suite. Source versions and
-reproduction steps are in [validation notes](docs/validation.md).
+## Try it
 
-[`results/diagnostics.json`](results/diagnostics.json) keeps the July runs' official
-scores with source hashes, as recorded. Original `results/*.json` and
-`results/preds/` remain historical artifacts. Do not combine their scores across
-metric variants without labeling the change.
+Browse recorded examples and the results dashboard, no GPU needed:
 
-## Lessons from the existing experiments
+```bash
+uv sync --frozen --group demo
+cd demo/frontend && npm ci && npm run build && cd ../..
+uv run --frozen uvicorn demo.backend.app:app --host 127.0.0.1 --port 8000
+```
 
-- **A reward can run successfully while providing no useful signal.** Before the
-  July 16 VQAv2 single-reference fix, the old leave-one-out reward returned zero
-  for single-answer training examples. Affected runs cannot establish the value
-  of a working VQAv2 correctness reward. Rescoring predictions cannot repair training.
-- **Question-disjoint is not image-disjoint.** The materialized training pools
-  overlap VQAv2 evaluation on 47 exact images, covering 53 evaluation questions.
-  The old SFT dev set also shares 317 of its 487 unique images with training.
-  This establishes pool overlap; individual checkpoint exposure depends on the
-  actual samples consumed. New runs use filtered pools and a whole-image dev split.
-- **Padding affects multimodal meaning.** A right-padded processor paired with
-  left-padded GRPO rollout tokens can shift image markers. The previous fallback
-  could replace image positions with 1D text positions. The fix aligns padding
-  and retains the native Qwen position computation.
-- **Precision is part of the implementation.** NF4 student weights corrupted the
-  historical TRL/vLLM synchronization path. Those RL configurations now fail
-  clearly at launch. The 24 GB 2B bf16 route and 8B QLoRA SFT remain available.
-- **Interesting hypotheses can fail.** The proposed metric ranking reversal did
-  not replicate. The corrected reasoning-deletion study did not establish tight
-  equivalence. The corrected static-predictor pilot remains inconclusive.
+Open `http://127.0.0.1:8000`. The [demo notes](demo/README.md) cover live inference with
+the three 2B models on a 24 GB GPU.
 
-The public-checkpoint image interventions found no detected grounding degradation
-under that protocol. Image sensitivity alone neither establishes correct grounding
-nor isolates the image encoder's causal contribution. The learned verifier still
-needs real held-out human calibration before becoming a trusted training reward.
+![Recorded VQA examples](demo/assets/gallery.png)
 
-## Existing adapters
+The [tutorial](docs/tutorial.md) runs the 2B pipeline on one 24 GB GPU: data, split check,
+evaluation, the learnability pre-check, two-step SFT and GRPO runs with their dev-tier
+learning curves, and the tables. The [hardware notes](docs/supplementary/hardware.md)
+cover the 80/96 GB profiles, resumption, and measured memory.
 
-These published adapters correspond to historical runs. The reward, data-overlap,
-and position-alignment limitations above apply; they have not been silently replaced.
+## History and corrections
+
+The first campaign, in July 2026, trained GRPO with a VQAv2 reward that paid nothing on
+single-reference training questions, and its training pools shared 47 images with the
+VQAv2 test subset. The corrected campaign fixes both and supplies every number above. The
+[history](docs/supplementary/history.md) keeps the July results as labeled history, the
+full erratum for the reward defect, and a ledger of every published claim with its status
+after the corrected campaign: replicated, qualified, not replicated, retracted, or open.
+
+The adapters published in July come from those runs. All four were trained on the July
+pools, and the two GRPO adapters also carry the reward defect:
 
 | Adapter | Download |
 |---|---|
 | 2B SFT | [vqa-rlvr-sft-2b](https://huggingface.co/omnifish123/vqa-rlvr-sft-2b) |
 | 8B SFT | [vqa-rlvr-sft-8b](https://huggingface.co/omnifish123/vqa-rlvr-sft-8b) |
-| 2B GRPO from base | [vqa-rlvr-grpo-2b-main-base](https://huggingface.co/omnifish123/vqa-rlvr-grpo-2b-main-base) |
+| 2B GRPO from Instruct | [vqa-rlvr-grpo-2b-main-base](https://huggingface.co/omnifish123/vqa-rlvr-grpo-2b-main-base) |
 | 2B SFT then GRPO | [vqa-rlvr-grpo-2b-main-sft](https://huggingface.co/omnifish123/vqa-rlvr-grpo-2b-main-sft) |
-
-To evaluate a newly trained adapter, merge it into its recorded base, then evaluate
-it. Each (model, dataset, prompt) cell writes one record under `results/records/`;
-a cell that already has a record is skipped:
-
-```bash
-uv run --frozen python scripts/merge_adapter.py runs/grpo-smoke/checkpoints \
-  --out checkpoints/merged/grpo-smoke
-uv run --frozen python evaluate.py --model checkpoints/merged/grpo-smoke \
-  --label grpo-smoke --prompts short reasoning --tier smoke
-```
 
 ## Repository map
 
-- `train_sft.py`, `train_grpo.py`, `train_opd.py`: training entrypoints.
-- `vqar/`: configurations, data, split selection, rewards, and scoring.
-- `evaluate.py`, `scripts/`: evaluation and artifact-derived diagnostics.
-- `demo/`: recorded examples, results dashboard, and optional live comparison.
-- `tests/`: CPU checks; GitHub Actions runs them without installing PyTorch.
-
-Repeated training seeds and new medical-domain training are outside this validation
-milestone. Existing replications remain usable when identified as such.
+- `train_sft.py`, `train_grpo.py`, `train_opd.py`: training entry points on shared
+  plumbing in `vqar/training.py` and `vqar/rl.py`; presets and hardware profiles in
+  `vqar/config.py`.
+- `vqar/registry.py`: datasets, their roles and scorers, and prompt templates, registered
+  once.
+- `vqar/eval/`: the evaluation harness, records, the experiment matrix, and the report
+  builder.
+- `evaluate.py`, `scripts/`: evaluation, data checks, the learnability pre-check,
+  reports, and the gallery.
+- `data/splits/`, `experiments.toml`, `results/records/`: the split files, the declared
+  arms and protocols, and the evaluation records behind every table.
+- `demo/`: recorded examples, the results dashboard, and optional live comparison.
+- `tests/`: CPU tests; GitHub Actions runs them without PyTorch.
 
 ## Acknowledgments
 

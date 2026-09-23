@@ -1,7 +1,8 @@
 """Merge a LoRA/QLoRA adapter into its bf16 base model for vLLM serving.
 
-vLLM's dynamic LoRA loading is broken for Qwen3-VL (vllm#28640), so every
-checkpoint is merged before evaluation. QLoRA adapters merge into the *bf16*
+Reported evaluations score merged models, so a record's weights hash names exactly what
+was evaluated; the dev-tier learning curves serve adapters through vLLM's LoRA support
+instead (scripts/evaluate_checkpoints.py). QLoRA adapters merge into the *bf16*
 base — standard practice, with a small quantization mismatch we accept
 consistently across all checkpoints.
 

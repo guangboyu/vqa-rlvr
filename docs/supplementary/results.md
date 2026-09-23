@@ -3,12 +3,16 @@
 Every table on this page is generated from the stored evaluation records by
 `python -m scripts.report`; a test fails if a committed copy drifts from the records.
 Scores are percentages on the materialized test subsets with greedy decoding and one
-training seed. The official column uses the dataset authors' evaluators; the normalized
-scorer, which also defines the training reward, appears beside it.
+training seed per arm. The official scorer is the dataset authors' evaluator and is the
+primary number; the normalized scorer, which also defines the training reward, appears
+beside it. The [method](method.md) describes the arms and how to rerun them.
 
 ## Prompt template × scorer variant
 
-Official accuracy, with the normalized scorer in parentheses.
+Official accuracy, with the normalized scorer in parentheses. The short prompt asks for "a
+single word or phrase" within 64 tokens; the reasoning prompt asks the model to think step
+by step inside `<think>` tags and then give only the final answer inside `<answer>` tags,
+within 512 tokens.
 
 <!-- report:matrix -->
 | Arm | Prompt | VQAv2 | GQA | CLEVR counting | TextVQA (far-OOD) |
@@ -29,7 +33,34 @@ Official accuracy, with the normalized scorer in parentheses.
 | Instruct 8B → GRPO | reasoning | 77.37 (78.63) | 59.43 (59.82) | 97.30 (97.30) | 80.78 (80.80) |
 <!-- /report:matrix -->
 
-## Retention under the reasoning prompt
+**RL recovers reasoning-prompt accuracy.** Under the reasoning prompt, 300 GRPO updates
+from Instruct 2B raise official accuracy by 6.7 points on VQAv2, 8.8 on GQA, and 4.6 on
+far-OOD TextVQA; the normalized scorer gives +4.3, +2.1, and +4.6, so the gains go beyond
+answer formatting. At 8B the same recipe gives +13.7, +12.6, and +5.5 official (+9.9,
++7.6, +5.5 normalized) and brings reasoning-prompt accuracy within 3.8 points of the short
+prompt on VQAv2 and 2.4 on GQA, from 17.5 and 14.8. CLEVR counting, which is not in the
+RL mix, moves by −1.0 points at 2B and +0.3 at 8B. Gold-conditioned OPD, trained on the same
+sampled questions, raises official reasoning-prompt accuracy by 13.6 points on VQAv2 and
+3.0 on TextVQA (+4.6 and +3.0 normalized); its 15.2-point official gain on GQA is almost
+entirely answer casing (−0.4 normalized).
+
+**No arm passes its short-answer ceiling.** Every arm scores higher with the short prompt
+than with the reasoning prompt on every dataset, under both scorers: 28 of 28 arm and
+dataset pairs, with the smallest gap 1.6 points (SFT → GRPO on CLEVR counting, official).
+RL leaves the ceiling where it was. After GRPO or OPD, short-prompt official accuracy
+moves by at most 0.26 points on VQAv2 and GQA and at most 0.6 on any dataset.
+
+**SFT moves the ceiling.** One epoch of short-answer SFT raises short-prompt official
+accuracy by 2.0 points on VQAv2 and 2.9 on GQA, the two datasets it trains on, and by 1.7
+on CLEVR counting; far-OOD TextVQA moves by −0.7. GRPO after SFT keeps that ceiling
+(within 0.1 points) and adds reasoning-prompt accuracy over SFT on CLEVR counting (+5.7)
+and TextVQA (+5.5). On GQA it gives up 2.9 points, and the normalized scorer shows the
+same decline (57.00 → 54.86), so casing does not explain it. Aggregates hide opposite
+movements by question type: under official scoring, VQAv2 yes/no rises from 82.88 to
+88.08 while "other" falls from 57.40 to 55.96, and GQA query questions fall from 41.75 to
+36.68.
+
+## Response behavior under the reasoning prompt
 
 Mean output tokens · share of responses that close an `<answer>` tag.
 
@@ -44,6 +75,13 @@ Mean output tokens · share of responses that close an `<answer>` tag.
 | Instruct 8B | 118 · 99% | 104 · 99% | 193 · 99% | 109 · 99% |
 | Instruct 8B → GRPO | 9 · 100% | 9 · 100% | 83 · 99% | 12 · 100% |
 <!-- /report:behavior -->
+
+SFT on short answers shortens reasoning-prompt responses (VQAv2 148 → 21 tokens) and most
+of them lose the answer tag (95% → 40%). GRPO after SFT restores both: 102 tokens and 97%
+tags on VQAv2, with CLEVR counting going the other way (62 → 24 tokens) at higher
+accuracy. GRPO from Instruct keeps the length at 2B (148 → 141 tokens) and removes almost
+all of it at 8B (118 → 9 tokens) while accuracy rises. Visible reasoning length follows
+what the reward pays for; it is not by itself a measure of better answers.
 
 Responses cut off at the token budget · responses with an empty answer, same prompt.
 
@@ -61,9 +99,11 @@ Responses cut off at the token budget · responses with an empty answer, same pr
 
 ## Capitalization under the reasoning prompt
 
-The official evaluators keep case when annotators agree, so a capitalized answer can miss.
+The official evaluators compare some answers case-sensitively (VQAv2 when all annotators
+agree, GQA always), so a capitalized answer can miss.
 Lowercasing the answers before official scoring shows how much of the gap to the normalized
-scorer is casing.
+scorer is casing. For Instruct 2B it is nearly all of it: lowercasing closes 9.6 of the
+9.6-point VQAv2 gap and 14.7 of the 15.8-point GQA gap.
 
 <!-- report:casing -->
 | Arm | Dataset | Official | Official, lowercased answers | Normalized | Answers scored differently |
@@ -103,7 +143,8 @@ scorer is casing.
 Official score with the original image → with a black or swapped image, on the first 128
 test questions, and the share of normalized answers that changed. The references stay those
 of the original image, so the changed-image score measures agreement with them, not
-accuracy on the new image.
+accuracy on the new image. Every arm depends on the image: a black image changes 60–100% of
+answers and lowers scores by 18 to 98 points.
 
 <!-- report:interventions -->
 | Arm | Prompt | Image | VQAv2 | GQA | CLEVR counting | TextVQA (far-OOD) |
@@ -128,8 +169,12 @@ accuracy on the new image.
 
 ## What each RL run trained on
 
-The OPD run logs the same correctness reward for diagnosis; its learning signal is the
-teacher's token scores, so its reward columns do not drive its updates.
+All four RL runs completed 300 updates on exactly the same ordered 1,200 questions, 2.2%
+of the 55,438-question pool, with 9,600 sampled responses each. A group of eight responses
+with identical rewards has zero advantage, so it contributes no correctness gradient;
+optimizer momentum can still move the weights on such an update. The OPD run logs the same
+correctness reward for diagnosis; its learning signal is the teacher's token scores, so its
+reward columns do not drive its updates.
 
 <!-- report:exposure -->
 | Run | Updates | Questions | Responses | Groups with varied rewards (%) | Updates without reward variation | Mean reward |
@@ -140,10 +185,11 @@ teacher's token scores, so its reward columns do not drive its updates.
 | `opd2-self` | 300 | 1,200 | 9,600 | 49.25 | 21 | 0.588 |
 <!-- /report:exposure -->
 
-Training signals. The reward (mean of the first and of the last ten updates) and the share
-of prompt groups whose samples all scored the same (no gradient) come from every update's
-saved draws; entropy and completion length are the trainer's logs (every ten updates),
-first → last. KL is absent because these runs used no KL penalty.
+The next table follows each run's training signal. The reward (mean of the first and of
+the last ten updates) and the share of prompt groups whose samples all scored the same (no
+gradient) come from every update's saved draws; entropy and completion length are the
+trainer's logs (every ten updates), first → last. KL is absent because these runs used no
+KL penalty.
 
 <!-- report:diagnostics -->
 | Run | Reward (first → last 10 updates) | Dead groups (mean) | Entropy | Clip fraction (mean) | Completion tokens | Distinct prompts |
@@ -158,8 +204,10 @@ first → last. KL is absent because these runs used no KL penalty.
 
 Before an RL run, `python -m scripts.learnability` takes a seeded random sample of each
 dataset's RL pool, draws a group of eight responses per prompt from the starting model with
-the run's rollout settings, and scores them with the GRPO correctness reward. Only prompts whose responses are neither all
-right nor all wrong give GRPO a gradient.
+the run's rollout settings, and scores them with the GRPO correctness reward. Only prompts
+whose responses are neither all right nor all wrong give GRPO a gradient. The pre-check
+shows images at the evaluation resolution rather than the RL canvas, so it approximates the
+rate a run sees.
 
 <!-- report:learnability -->
 | Model | Dataset | Prompts | Samples each | Learnable (%) | Never correct (%) | Always correct (%) |
@@ -172,53 +220,14 @@ right nor all wrong give GRPO a gradient.
 ## Learning curves
 
 Each point evaluates a saved adapter on the dev tier through vLLM's LoRA serving rather
-than a merged copy; on 500 VQAv2 dev questions the two agreed on 496 answers.
+than a merged copy; on the first 500 VQAv2 test questions (short prompt) the two gave the
+same answer 496 times ([check](../../results/lora-serving-check.json)). The
+corrected campaign's runs predate this step; new runs add their points here once their
+dev records are copied into `results/records/`.
 
 <!-- report:curves -->
 No checkpoint dev evaluations have been recorded yet.
 <!-- /report:curves -->
 
-## History: July runs
-
-These runs used an inert VQAv2 reward and overlapping image pools; they are kept as
-labeled history and are not comparable with the tables above. Official (normalized),
-where the official rescoring exists.
-
-<!-- report:history -->
-| July run | Prompt | VQAv2 | GQA | CLEVR counting | TextVQA (far-OOD) |
-| --- | --- | ---: | ---: | ---: | ---: |
-| `grpo_2b_clevr_base_reasoning` | reasoning | 60.03 (68.05) | 43.58 (53.20) | 91.40 (91.40) | 75.50 (75.50) |
-| `grpo_2b_clevr_reasoning` | reasoning | — | — | 99.83 (99.83) | — |
-| `grpo_2b_fmt0` | short | 77.90 (77.94) | 59.56 (59.57) | — | — |
-| `grpo_2b_fmt05` | short | 78.12 (78.16) | 59.47 (59.48) | — | — |
-| `grpo_2b_fmt05_reasoning` | reasoning | 58.40 (67.76) | 39.47 (53.68) | 86.77 (86.77) | — |
-| `grpo_2b_fmt0_fixedreward` | short | 77.94 (77.98) | 59.46 (59.46) | — | — |
-| `grpo_2b_fmt0_fixedreward_reasoning` | reasoning | 72.77 (74.69) | 55.16 (56.51) | — | — |
-| `grpo_2b_fmt0_reasoning` | reasoning | 70.28 (72.86) | 54.14 (56.17) | 99.57 (99.57) | — |
-| `grpo_2b_gqaonly` | short | 78.05 (78.09) | 59.62 (59.63) | — | — |
-| `grpo_2b_gqaonly_reasoning` | reasoning | 60.29 (69.01) | 41.80 (53.76) | 86.60 (86.60) | 72.74 (72.74) |
-| `grpo_2b_main_base` | short | 77.75 (77.79) | 59.66 (59.66) | 98.47 (98.47) | 80.73 (80.73) |
-| `grpo_2b_main_base_reasoning` | reasoning | 62.84 (69.54) | 46.06 (53.86) | 83.90 (83.90) | 72.69 (72.70) |
-| `grpo_2b_main_sft` | short | 79.77 (79.79) | 62.29 (62.29) | 99.77 (99.77) | 79.55 (79.57) |
-| `grpo_2b_main_sft_reasoning` | reasoning | 64.03 (69.09) | 48.02 (54.31) | 87.13 (87.13) | 72.30 (72.30) |
-| `grpo_2b_vqav2only` | short | 77.93 (77.97) | 59.48 (59.48) | — | — |
-| `grpo_2b_vqav2only_reasoning` | reasoning | 59.95 (68.87) | 40.41 (53.08) | 87.23 (87.23) | 72.64 (72.64) |
-| `grpo_8b_fmt0` | short | 81.20 (81.24) | 61.73 (61.73) | — | — |
-| `grpo_8b_fmt0_reasoning` | reasoning | 77.22 (78.34) | 59.31 (59.75) | 98.27 (98.27) | 80.44 (80.47) |
-| `opd_2b_main` | short | 78.03 (78.07) | 59.41 (59.42) | 97.67 (97.67) | 80.46 (80.48) |
-| `opd_2b_main_reasoning` | reasoning | 55.86 (65.70) | 34.97 (51.03) | 88.13 (88.13) | 69.67 (69.69) |
-| `opd_self_2b_main` | short | 77.95 (77.99) | 59.58 (59.58) | 97.90 (97.90) | 80.42 (80.43) |
-| `opd_self_2b_main_reasoning` | reasoning | 67.81 (68.47) | 51.22 (51.46) | 86.27 (86.27) | 72.06 (72.08) |
-| `opd_self_2b_main_s43` | short | 77.86 (77.90) | 59.71 (59.71) | — | — |
-| `opd_self_2b_main_s43_reasoning` | reasoning | 67.85 (68.47) | 51.02 (51.26) | 86.83 (86.83) | 71.69 (71.70) |
-| `opd_self_8b_main` | short | 81.09 (81.11) | 61.73 (61.73) | — | — |
-| `opd_self_8b_main_reasoning` | reasoning | 73.06 (73.76) | 54.85 (55.37) | 97.10 (97.10) | 77.95 (77.95) |
-| `sft_2b` | short | 79.87 (79.89) | 62.26 (62.26) | 99.77 (99.77) | 79.60 (79.62) |
-| `sft_2b_reasoning` | reasoning | 71.64 (71.82) | 57.52 (57.88) | 99.80 (99.80) | 71.28 (71.30) |
-| `sft_8b` | short | 82.94 (82.96) | 63.63 (63.63) | 92.83 (92.83) | 85.00 (85.02) |
-| `sft_8b_reasoning` | reasoning | 69.70 (70.24) | 50.45 (50.79) | 96.17 (96.17) | 75.40 (75.42) |
-| `zero_shot_2b` | short | 77.98 (78.02) | 59.48 (59.49) | 97.70 (97.70) | 80.41 (80.43) |
-| `zero_shot_2b_reasoning` | reasoning | 55.02 (64.92) | 35.90 (51.90) | 88.23 (88.23) | 70.20 (70.20) |
-| `zero_shot_8b` | short | 81.19 (81.23) | 61.69 (61.69) | 99.63 (99.63) | 83.95 (83.97) |
-| `zero_shot_8b_reasoning` | reasoning | 62.95 (68.17) | 46.79 (52.35) | 96.80 (96.80) | 75.65 (75.65) |
-<!-- /report:history -->
+The July runs, which used a defective VQAv2 reward, are tabulated with the erratum in
+[history](history.md).
