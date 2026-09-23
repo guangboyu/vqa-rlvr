@@ -12,7 +12,8 @@ from pathlib import Path
 from statistics import mean
 
 from scripts.make_tables import load_matched_results
-from vqar.metrics import evaluation_score, normalize_answer
+from vqar.metrics import normalize_answer
+from vqar.registry import score
 
 
 def read_predictions(path, record):
@@ -24,7 +25,7 @@ def read_predictions(path, record):
         raise ValueError(f"{path}: question order differs from the result record")
     dataset = record["eval"]["dataset"]
     for row in rows:
-        expected = evaluation_score(dataset, row["prediction"], row["answers"], "official")
+        expected = score(dataset, row["prediction"], row["answers"], "official")
         if not math.isclose(row["score"], expected, abs_tol=1e-12):
             raise ValueError(f"{path}: saved score differs from official scoring")
     observed = mean(r["score"] for r in rows)
@@ -34,9 +35,9 @@ def read_predictions(path, record):
 
 
 def score_variants(dataset, rows):
-    normalized = [evaluation_score(dataset, r["prediction"], r["answers"], "normalized")
+    normalized = [score(dataset, r["prediction"], r["answers"], "normalized")
                   for r in rows]
-    lowercase = [evaluation_score(dataset, r["prediction"].lower(), r["answers"], "official")
+    lowercase = [score(dataset, r["prediction"].lower(), r["answers"], "official")
                  for r in rows]
     return {
         "normalized": mean(normalized),

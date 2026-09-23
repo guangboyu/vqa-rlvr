@@ -7,7 +7,7 @@ import statistics
 from pathlib import Path
 
 from vqar.inference import extract_answer
-from vqar.metrics import evaluation_score
+from vqar.registry import score as dataset_score
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -83,7 +83,7 @@ def make_gallery():
     rows = [{r["qid"]: r for r in map(json.loads, path.read_text().splitlines())} for path in paths]
 
     def score(row, variant="official"):
-        return evaluation_score("vqav2", extract_answer(row["raw"]), row["answers"], variant)
+        return dataset_score("vqav2", extract_answer(row["raw"]), row["answers"], variant)
 
     cases = [
         (

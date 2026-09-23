@@ -18,7 +18,7 @@ from pathlib import Path
 from datasets import load_from_disk
 
 from vqar.inference import extract_answer
-from vqar.metrics import evaluation_score
+from vqar.registry import score
 
 ROOT = Path(__file__).parent.parent
 RUNS = ROOT / "results" / "runs"
@@ -47,7 +47,7 @@ def rescore(run_id: str, metric: str = "official", output_dir: Path | None = Non
         if answers_of and answers_of.get(r["qid"]) != r["answers"]:
             raise ValueError(f"References disagree with materialized data: {r['qid']}")
         r["prediction"] = extract_answer(r["raw"])
-        r["score"] = evaluation_score(dataset, r["prediction"], r["answers"], metric)
+        r["score"] = score(dataset, r["prediction"], r["answers"], metric)
         records.append(r)
         by_type[type_of.get(r["qid"], "") or "all"].append(r["score"])
 

@@ -20,7 +20,8 @@ from transformers import AutoModelForImageTextToText, AutoProcessor, BitsAndByte
 from trl import SFTConfig, SFTTrainer
 
 from vqar import config
-from vqar.data import PROMPT_SHORT, cap_pixels
+from vqar.data import cap_pixels
+from vqar.registry import PROMPTS
 from vqar.splits import load_training_subsets, split_dev, split_provenance
 from vqar.training import last_complete_checkpoint, write_run_config, write_training_summary
 
@@ -40,7 +41,7 @@ def to_sft_columns(batch: dict) -> dict:
     """
     return {
         "prompt": [
-            [{"role": "user", "content": PROMPT_SHORT.format(question=q)}]
+            [{"role": "user", "content": PROMPTS["short"].text.format(question=q)}]
             for q in batch["question"]
         ],
         "completion": [

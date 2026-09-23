@@ -15,7 +15,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from vqar.inference import extract_answer
-from vqar.metrics import evaluation_score
+from vqar.registry import score
 
 
 def author_evaluators(directory: Path):
@@ -47,34 +47,32 @@ def author_evaluators(directory: Path):
     accuracy = ast.Module(body=loop.body[:4], type_ignores=[])
     gqa_code = compile(accuracy, "official/gqa-accuracy.py", "exec")
 
-    def evaluate(dataset, records):
-        if dataset == "vqav2":
-            qa = {
-                i: {
-                    "answers": [
-                        {"answer_id": j + 1, "answer": a} for j, a in enumerate(r["answers"])
-                    ],
-                    "question_type": "all",
-                    "answer_type": "all",
-                }
-                for i, r in enumerate(records)
+    def vqav2(records):
+        qa = {
+            i: {
+                "answers": [{"answer_id": j + 1, "answer": a} for j, a in enumerate(r["answers"])],
+                "question_type": "all",
+                "answer_type": "all",
             }
-            results = {i: {"answer": r["prediction"]} for i, r in enumerate(records)}
-            evaluator = vqa_class(
-                SimpleNamespace(qa=qa, getQuesIds=lambda: list(qa)),
-                SimpleNamespace(qa=results),
-                n=10,
-            )
-            with contextlib.redirect_stdout(io.StringIO()):
-                evaluator.evaluate()
-            return [evaluator.evalQA[i] / 100 for i in range(len(records))]
-        if dataset == "textvqa":
-            return [
-                textvqa.eval_pred_list(
-                    [{"pred_answer": r["prediction"], "gt_answers": r["answers"]}]
-                )
-                for r in records
-            ]
+            for i, r in enumerate(records)
+        }
+        results = {i: {"answer": r["prediction"]} for i, r in enumerate(records)}
+        evaluator = vqa_class(
+            SimpleNamespace(qa=qa, getQuesIds=lambda: list(qa)),
+            SimpleNamespace(qa=results),
+            n=10,
+        )
+        with contextlib.redirect_stdout(io.StringIO()):
+            evaluator.evaluate()
+        return [evaluator.evalQA[i] / 100 for i in range(len(records))]
+
+    def textvqa_scores(records):
+        return [
+            textvqa.eval_pred_list([{"pred_answer": r["prediction"], "gt_answers": r["answers"]}])
+            for r in records
+        ]
+
+    def gqa(records):
         scores = []
         for r in records:
             values = {
@@ -87,7 +85,8 @@ def author_evaluators(directory: Path):
             scores.append(values["score"])
         return scores
 
-    return evaluate
+    # Datasets whose authors published an evaluator we can run; CLEVR has none.
+    return {"vqav2": vqav2, "textvqa": textvqa_scores, "gqa": gqa}
 
 
 def main():
@@ -96,17 +95,17 @@ def main():
     parser.add_argument("--preds-dir", type=Path, default=Path("results/preds"))
     parser.add_argument("--output", type=Path, default=Path("results/metric_parity.json"))
     args = parser.parse_args()
-    evaluate = author_evaluators(args.sources_dir)
+    evaluators = author_evaluators(args.sources_dir)
     runs = []
     for path in sorted(args.preds_dir.glob("*.jsonl")):
         dataset = path.stem.rsplit("-", 1)[-1]
-        if dataset not in ("vqav2", "gqa", "textvqa"):
+        if dataset not in evaluators:
             continue
         records = [json.loads(line) for line in path.read_text().splitlines()]
         for record in records:
             record["prediction"] = extract_answer(record["raw"])
-        expected = evaluate(dataset, records)
-        actual = [evaluation_score(dataset, r["prediction"], r["answers"]) for r in records]
+        expected = evaluators[dataset](records)
+        actual = [score(dataset, r["prediction"], r["answers"], "official") for r in records]
         mismatches = sum(abs(a - b) > 1e-10 for a, b in zip(actual, expected, strict=True))
         runs.append(
             dict(

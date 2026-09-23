@@ -1,9 +1,7 @@
 from vqar.metrics import (
-    evaluation_score,
     exact_match,
     normalize_answer,
     official_vqa_accuracy,
-    score,
     textvqa_accuracy,
     vqa_accuracy,
 )
@@ -79,47 +77,10 @@ class TestExactMatch:
         assert exact_match("4 people", ["4"]) == 0.0  # judge-worthy miss
 
 
-class TestScoreDispatch:
-    def test_vqav2_uses_vqa_accuracy(self):
-        assert score("vqav2", "cat", ["cat"] * 10) == 1.0
-
-    def test_gqa_uses_exact_match(self):
-        assert score("gqa", "left", ["left"]) == 1.0
-
-    def test_clevr_numeric(self):
-        assert score("clevr", "four", ["4"]) == 1.0
-
-
-class TestSingleReferenceFallback:
-    """Single-gold inputs must not be zeroed by leave-one-out (v1 training bug).
-
-    vqav2_rl (the_cauldron) stores exactly one gold answer; the 10-annotator
-    leave-one-out metric returns 0.0 for ANY prediction there, which silently
-    killed the correctness reward on the VQAv2 half of every v1 GRPO mix.
-    """
-
-    def test_single_gold_exact_pred_scores_one(self):
-        assert score("vqav2", "yes", ["yes"]) == 1.0
-
-    def test_single_gold_wrong_pred_scores_zero(self):
-        assert score("vqav2", "no", ["yes"]) == 0.0
-
-    def test_single_gold_normalized_match(self):
-        assert score("vqav2", "The black one.", ["black 1"]) == 1.0
-
-    def test_ten_golds_still_official_metric(self):
-        # 3 of 10 annotators said "cat": leave-one-out partial credit, not EM.
-        golds = ["cat"] * 3 + ["dog"] * 7
-        assert 0.0 < score("vqav2", "cat", golds) < 1.0
-
-    def test_textvqa_single_gold_fallback(self):
-        assert score("textvqa", "42", ["42"]) == 1.0
-
-
 def test_official_vqa_keeps_unanimous_case_rule_separate():
     answers = ["yes"] * 10
     assert official_vqa_accuracy("Yes", answers) == 0.0
-    assert evaluation_score("vqav2", "Yes", answers, "normalized") == 1.0
+    assert vqa_accuracy("Yes", answers) == 1.0
 
 
 def test_official_vqa_normalizes_when_annotators_disagree():
@@ -128,8 +89,3 @@ def test_official_vqa_normalizes_when_annotators_disagree():
 
 def test_textvqa_uses_evalai_possessive_tokenization():
     assert textvqa_accuracy("dog's", ["dog 's"] * 10) == 1.0
-
-
-def test_gqa_author_accuracy_does_not_strip_articles():
-    assert evaluation_score("gqa", "the frisbee", ["frisbee"]) == 0.0
-    assert evaluation_score("gqa", "the frisbee", ["frisbee"], "normalized") == 1.0

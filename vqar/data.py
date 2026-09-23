@@ -1,4 +1,7 @@
-"""Dataset loaders: four sources → one unified schema, materialized by prepare_data.py.
+"""Dataset loaders: sources → one unified schema, materialized by prepare_data.py.
+
+`vqar.registry` declares each dataset (sources, sizes, roles, scorers) and calls these
+loaders to materialize its subsets.
 
 Unified example: {dataset, qid, image, question, answers: list[str], answer_type}.
 VQAv2 eval keeps all 10 annotator answers (required by the official metric);
@@ -21,27 +24,13 @@ from PIL import Image as PILImage
 
 from vqar.config import MAX_PIXELS
 from vqar.inference import extract_answer
-
-SOURCE_REVISIONS = {
-    "HuggingFaceM4/the_cauldron": "847a98a779b1652d65111daf20c972dfcd333605",
-    "lmms-lab/VQAv2": "32665d35052eb4a6d4414851c3c829a72754915a",
-    "lmms-lab/GQA": "a6e72d6e1b912da88af8b2f9eba05d5ea8ec2dd8",
-    "leonardPKU/clevr_cogen_a_train": "d5a8da66aa97c9c19ebe4075b7c7f777fef850a6",
-    "lmms-lab/textvqa": "9c0699cd19768ac5ab97568f6b3cbac4c0062884",
-}
+from vqar.registry import SOURCE_REVISIONS
 
 
 def _load_source(repo_id, *args, **kwargs):
     """Pin new materializations; historical downloads may predate these revisions."""
     return load_dataset(repo_id, *args, revision=SOURCE_REVISIONS[repo_id], **kwargs)
 
-
-PROMPT_SHORT = "{question}\nAnswer the question using a single word or phrase."
-PROMPT_REASONING = (
-    "{question}\n"
-    "First think step by step inside <think> </think> tags, then write only the final "
-    "answer inside <answer> </answer> tags."
-)
 
 FEATURES = Features(
     {

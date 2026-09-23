@@ -27,53 +27,30 @@ os.environ.setdefault("HF_HUB_DOWNLOAD_TIMEOUT", "30")
 # in the resumable hub cache.
 os.environ["HF_DATASETS_CACHE"] = str(BUILD_CACHE)
 
-from vqar import data  # noqa: E402
-
-# Subset sizes and seeds are fixed project-wide; change = new benchmark version.
-SIZES = {
-    "vqav2": {"sft": 20_000, "rl": 8_000, "eval": 5_000, "train_seed": 42, "eval_seed": 0},
-    "gqa": {"sft": 20_000, "rl": 8_000, "train_seed": 42},  # eval = full testdev_balanced
-    "clevr": {"rl": 8_000, "val": 3_000, "test": 3_000, "seed": 42},
-    "textvqa": {"eval": 2_000, "eval_seed": 0},
-}
+from vqar.registry import DATASETS, SOURCE_REVISIONS  # noqa: E402
 
 
-def build(only: str | None) -> dict:
+def materialize(names: list[str]) -> dict:
+    """Build every subset of the named datasets with their registered sizes and seeds."""
     subsets = {}
-    if only in (None, "vqav2"):
-        cfg = SIZES["vqav2"]
-        sft, rl = data.load_vqav2_train(cfg["sft"], cfg["rl"], cfg["train_seed"])
-        subsets["vqav2_sft"] = sft
-        subsets["vqav2_rl"] = rl
-        subsets["vqav2_eval"] = data.load_vqav2_eval(cfg["eval"], cfg["eval_seed"])
-    if only in (None, "gqa"):
-        cfg = SIZES["gqa"]
-        sft, rl = data.load_gqa_train(cfg["sft"], cfg["rl"], cfg["train_seed"])
-        subsets["gqa_sft"] = sft
-        subsets["gqa_rl"] = rl
-        subsets["gqa_eval"] = data.load_gqa_eval()
-    if only in (None, "clevr"):
-        cfg = SIZES["clevr"]
-        splits = data.load_clevr(cfg["rl"], cfg["val"], cfg["test"], cfg["seed"])
-        for name, ds in splits.items():
-            subsets[f"clevr_{name}"] = ds
-    if only in (None, "textvqa"):
-        cfg = SIZES["textvqa"]
-        subsets["textvqa_eval"] = data.load_textvqa_eval(cfg["eval"], cfg["eval_seed"])
+    for name in names:
+        spec = DATASETS[name]
+        subsets.update(spec.materialize(spec.sizes))
     return subsets
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--only", choices=["vqav2", "gqa", "clevr", "textvqa"], default=None)
+    parser.add_argument("--only", choices=sorted(DATASETS), default=None)
     parser.add_argument("--out-dir", type=Path, default=DATA_DIR)
     args = parser.parse_args()
     output_dir = args.out_dir
+    selected = [name for name in DATASETS if args.only in (None, name)]
     existing = [
         p.name
         for p in output_dir.glob("*")
         if p.is_dir()
-        and p.name.startswith(tuple(name + "_" for name in SIZES if args.only in (None, name)))
+        and p.name.startswith(tuple(name + "_" for name in selected))
     ]
     if existing:
         raise SystemExit(f"Already materialized: {existing}. Use check_data or a new --out-dir.")
@@ -83,16 +60,16 @@ def main() -> None:
     manifest_path = output_dir / "manifest.json"
     manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
     manifest.setdefault("sizes", {}).update(
-        {k: v for k, v in SIZES.items() if args.only in (None, k)}
+        {name: dict(DATASETS[name].sizes) for name in selected}
     )
 
     try:
-        for name, ds in build(args.only).items():
+        for name, ds in materialize(selected).items():
             out = output_dir / name
             ds.save_to_disk(str(out))
             manifest.setdefault("subsets", {})[name] = {
                 "n": len(ds),
-                "source_revisions": data.SOURCE_REVISIONS,
+                "source_revisions": SOURCE_REVISIONS,
                 "qids_sha": hashlib.sha256(",".join(ds["qid"]).encode()).hexdigest(),
             }
             print(f"{name}: {len(ds)} examples -> {out}")

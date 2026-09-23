@@ -76,7 +76,7 @@ def test_dev_evaluation_uses_manifest_images_and_checks_source_identity(tmp_path
         assert list(dev["qid"]) == [name + "-b"]
         assert set(dev["image_key"]) == {"dev-image"}
         assert provenance["version"] == VERSION
-    with pytest.raises(ValueError, match="only VQAv2 and GQA"):
+    with pytest.raises(ValueError, match="no CLEVR counting images"):
         load_subset("clevr", "dev", tmp_path)
     entries["gqa_sft"]["qids_sha256"] = "changed"
     path.write_text(json.dumps(manifest))

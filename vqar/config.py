@@ -7,6 +7,8 @@ Presets are added milestone by milestone (eval → sft → grpo).
 
 from dataclasses import asdict, dataclass, replace
 
+from vqar.registry import pools
+
 MODEL_2B = "Qwen/Qwen3-VL-2B-Instruct"
 MODEL_8B = "Qwen/Qwen3-VL-8B-Instruct"
 
@@ -42,8 +44,8 @@ HARDWARE_PROFILES = ("legacy", "24gb", "80gb", "96gb")
 class EvalPreset:
     name: str
     model: str  # HF model id or local path to a merged checkpoint
-    template: str = "short"  # "short" | "reasoning" (see vqar.data)
-    datasets: tuple[str, ...] = ("vqav2", "gqa", "clevr", "textvqa")
+    template: str = "short"  # a vqar.registry.PROMPTS name
+    datasets: tuple[str, ...] = ()  # empty: every registered dataset with a test role
     max_tokens: int = 64  # 256+ needed for the reasoning template
     max_model_len: int = 4096
     gpu_memory_utilization: float = 0.8
@@ -77,7 +79,7 @@ class SFTPreset:
     learning_rate: float
     per_device_batch_size: int
     gradient_accumulation: int
-    subsets: tuple[str, ...] = ("vqav2_sft", "gqa_sft")
+    subsets: tuple[str, ...] = pools("sft", "vqav2", "gqa")
     lora_r: int = 16
     lora_alpha: int = 32
     lora_dropout: float = 0.05
@@ -126,7 +128,7 @@ SFT_PRESETS: dict[str, SFTPreset] = {
 class GRPOPreset:
     name: str
     model: str  # base HF id or a merged SFT checkpoint dir to continue from
-    subsets: tuple[str, ...]  # RL prompt pools, e.g. ("clevr_rl",)
+    subsets: tuple[str, ...]  # RL prompt pools, e.g. pools("rl", "clevr")
     quantize_4bit: bool
     learning_rate: float
     num_generations: int  # group size G
@@ -158,7 +160,7 @@ GRPO_PRESETS: dict[str, GRPOPreset] = {
         GRPOPreset(
             name="grpo_2b_clevr_base",  # R1-Zero-style sandbox: base model emits <think>
             model=MODEL_2B,  # zero-shot, so format reward is alive from step 0
-            subsets=("clevr_rl",),
+            subsets=pools("rl", "clevr"),
             quantize_4bit=False,
             learning_rate=1e-5,
             num_generations=8,
@@ -171,7 +173,7 @@ GRPO_PRESETS: dict[str, GRPOPreset] = {
         GRPOPreset(
             name="grpo_2b_main",
             model=MODEL_2B,
-            subsets=("vqav2_rl", "gqa_rl"),
+            subsets=pools("rl", "vqav2", "gqa"),
             quantize_4bit=False,
             learning_rate=1e-5,
             num_generations=8,
@@ -187,7 +189,7 @@ GRPO_PRESETS: dict[str, GRPOPreset] = {
         GRPOPreset(
             name="grpo_8b_fmt0",
             model=MODEL_8B,
-            subsets=("vqav2_rl", "gqa_rl"),
+            subsets=pools("rl", "vqav2", "gqa"),
             quantize_4bit=False,
             learning_rate=1e-5,
             num_generations=8,
@@ -240,13 +242,14 @@ class OPDPreset:
 OPD_PRESETS: dict[str, OPDPreset] = {
     p.name: p
     for p in [
-        # Matched to the grpo_2b_fmt0_fixedreward arm: base-2B start, vqav2+gqa RL
-        # pools, 300 steps x 32 rollouts. Only the learning signal differs.
+        # Matched to the July correctness-only GRPO run (historical results name
+        # grpo_2b_fmt0_fixedreward): Instruct-2B start, VQAv2+GQA RL pools,
+        # 300 steps x 32 rollouts. Only the learning signal differs.
         OPDPreset(
             name="opd_2b_main",
             model=MODEL_2B,
             teacher=MODEL_8B,
-            subsets=("vqav2_rl", "gqa_rl"),
+            subsets=pools("rl", "vqav2", "gqa"),
             learning_rate=1e-5,
             num_generations=8,
             per_device_batch_size=8,
@@ -260,7 +263,7 @@ OPD_PRESETS: dict[str, OPDPreset] = {
             name="opd_self_2b_main",
             model=MODEL_2B,
             teacher="self",
-            subsets=("vqav2_rl", "gqa_rl"),
+            subsets=pools("rl", "vqav2", "gqa"),
             learning_rate=1e-5,
             num_generations=8,
             per_device_batch_size=8,
@@ -275,7 +278,7 @@ OPD_PRESETS: dict[str, OPDPreset] = {
             name="opd_self_8b_main",
             model=MODEL_8B,
             teacher="self",
-            subsets=("vqav2_rl", "gqa_rl"),
+            subsets=pools("rl", "vqav2", "gqa"),
             learning_rate=1e-5,
             num_generations=8,
             per_device_batch_size=8,

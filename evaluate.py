@@ -26,39 +26,21 @@ from datasets import Image, load_from_disk
 from PIL import Image as PILImage
 
 from vqar import config
-from vqar.data import PROMPT_REASONING, PROMPT_SHORT
 from vqar.inference import build_messages, extract_answer, generate_vllm_records, load_vllm
-from vqar.metrics import evaluation_score
+from vqar.registry import DATASETS, PROMPTS, datasets_with_role, score
 from vqar.splits import image_keys, load_training_subsets, split_dev, split_provenance
 
 ROOT = Path(__file__).parent
-EVAL_SUBSETS = {
-    "vqav2": "vqav2_eval",
-    "gqa": "gqa_eval",
-    "clevr": "clevr_test",
-    "textvqa": "textvqa_eval",
-}
-TEMPLATES = {"short": PROMPT_SHORT, "reasoning": PROMPT_REASONING}
-ANSWER_INSTRUCTION = (
-    "Then write the final answer as a single word or phrase inside <answer> </answer> tags."
-)
-TEMPLATES.update({
-    "direct": "{question}\nOutput an empty <think></think> block. " + ANSWER_INSTRUCTION,
-    "brief": "{question}\nGive at most one sentence of reasoning inside <think> </think> tags. "
-             + ANSWER_INSTRUCTION,
-    "stepwise": "{question}\nThink step by step inside <think> </think> tags. "
-                + ANSWER_INSTRUCTION,
-})
 
 
 def load_subset(dataset: str, split: str, data_dir: Path):
     """Use frozen dev images for prompt and checkpoint selection."""
     if split == "eval":
-        return load_from_disk(str(data_dir / EVAL_SUBSETS[dataset])), {}
-    if dataset not in ("vqav2", "gqa"):
-        raise ValueError("The frozen dev split contains only VQAv2 and GQA.")
+        return load_from_disk(str(data_dir / DATASETS[dataset].subsets["test"])), {}
     manifest = json.loads((data_dir / "split_manifest.json").read_text())
     spec = manifest["sft_dev"]
+    if DATASETS[dataset].subsets.get("sft") not in spec["subsets"]:
+        raise ValueError(f"The frozen dev split has no {DATASETS[dataset].display_name} images.")
     _, dev = split_dev(load_training_subsets(data_dir, spec["subsets"], spec["seed"]))
     selected = dev.select([i for i, name in enumerate(dev["dataset"]) if name == dataset])
     return selected, split_provenance(data_dir, legacy=False)
@@ -117,7 +99,7 @@ def swap_indices(keys):
 
 
 def evaluate_dataset(llm, preset, dataset, ds, records, progress, batch_size, metric, image_mode):
-    template = TEMPLATES[preset.template]
+    template = PROMPTS[preset.template].text
     donors = swap_indices(image_keys(ds)) if image_mode == "swapped" else None
     for start in range(len(records), len(ds), batch_size):
         rows = list(ds.select(range(start, min(start + batch_size, len(ds)))))
@@ -140,7 +122,7 @@ def evaluate_dataset(llm, preset, dataset, ds, records, progress, batch_size, me
             pred = extract_answer(text)
             batch.append({
                 "qid": row["qid"], "question": row["question"], "prediction": pred,
-                "raw": text, "score": evaluation_score(dataset, pred, row["answers"], metric),
+                "raw": text, "score": score(dataset, pred, row["answers"], metric),
                 "answers": row["answers"], "answer_type": row["answer_type"],
                 "image_qid": image_qid, **output,
             })
@@ -172,7 +154,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--preset", required=True, choices=sorted(config.EVAL_PRESETS))
     parser.add_argument("--model", default=None, help="override model path (merged checkpoint)")
-    parser.add_argument("--datasets", nargs="+", default=None, choices=sorted(EVAL_SUBSETS))
+    parser.add_argument("--datasets", nargs="+", default=None,
+                        choices=datasets_with_role("test"))
     parser.add_argument("--limit", type=int, default=None, help="cap examples per dataset")
     parser.add_argument("--run-id", default=None, help="results file prefix (default: preset)")
     parser.add_argument("--metric", choices=("official", "normalized"), default="official")
@@ -182,7 +165,7 @@ def main() -> None:
     parser.add_argument("--image-mode", choices=("original", "black", "swapped"),
                         default="original")
     parser.add_argument("--split", choices=("eval", "dev"), default="eval")
-    parser.add_argument("--template", choices=sorted(TEMPLATES), default=None)
+    parser.add_argument("--template", choices=sorted(PROMPTS), default=None)
     parser.add_argument("--max-tokens", type=int, default=None)
     parser.add_argument("--dry-run", action="store_true",
                         help="check data and settings without a GPU")
@@ -198,18 +181,26 @@ def main() -> None:
     model = args.model or preset.model
     suffix = f"_{args.split}_{preset.template}" if args.split != "eval" or args.template else ""
     run_id = args.run_id or f"{preset.name}_{args.metric}{suffix}"
-    datasets = args.datasets or (["vqav2", "gqa"] if args.split == "dev" else list(preset.datasets))
-    if args.split == "dev" and set(datasets) - {"vqav2", "gqa"}:
-        parser.error("the frozen dev split contains only VQAv2 and GQA")
-    if args.split == "dev" and "vqav2" in datasets and args.metric == "official":
-        parser.error("VQAv2 dev has single-reference answers; use --metric normalized")
+    dev_datasets = datasets_with_role("sft")  # the frozen dev split is carved from SFT pools
+    if args.split == "dev":
+        default = dev_datasets
+    else:
+        default = list(preset.datasets) or datasets_with_role("test")
+    datasets = args.datasets or default
+    if args.split == "dev" and set(datasets) - set(dev_datasets):
+        parser.error(f"the frozen dev split contains only {', '.join(dev_datasets)}")
+    for dataset in datasets:
+        if (args.split == "dev" and args.metric == "official"
+                and "dev" not in DATASETS[dataset].official_roles):
+            parser.error(f"{DATASETS[dataset].display_name} dev has single-reference answers; "
+                         "use --metric normalized")
 
     runs_dir = args.results_dir / "runs"
     preds_dir = args.results_dir / "preds"
     source_hashes = {
         name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
         for name in ("evaluate.py", "vqar/inference.py", "vqar/metrics.py", "vqar/config.py",
-                     "vqar/data.py", "vqar/splits.py", "uv.lock")
+                     "vqar/data.py", "vqar/registry.py", "vqar/splits.py", "uv.lock")
     }
     prepared = []
     for dataset in datasets:
@@ -230,7 +221,7 @@ def main() -> None:
             "metric": args.metric, "image_mode": args.image_mode, "batch_size": args.batch_size,
             "source_sha256": source_hashes,
             "split": args.split, "split_provenance": split_info,
-            "prompt_text": TEMPLATES[preset.template],
+            "prompt_text": PROMPTS[preset.template].text,
         }
         # JSON round-trip also normalizes tuples in preset fields for strict resume checks.
         identity = json.loads(json.dumps(identity))
@@ -265,13 +256,13 @@ def main() -> None:
             "model": {"base": model, "preset": preset.name},
             "eval": {
                 "dataset": dataset,
-                "subset": EVAL_SUBSETS[dataset] if args.split == "eval" else "sft_dev",
+                "subset": DATASETS[dataset].subsets["test"] if args.split == "eval" else "sft_dev",
                 "split": args.split,
                 "split_provenance": identity["split_provenance"],
                 "n": metrics["n"],
                 "limit": args.limit,
                 "prompt_template": preset.template,
-                "prompt_text": TEMPLATES[preset.template],
+                "prompt_text": PROMPTS[preset.template].text,
                 "metric_variant": args.metric,
                 "answer_extraction": "last_answer_tag_or_full_text",
                 "image_mode": args.image_mode,

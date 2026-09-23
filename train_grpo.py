@@ -17,7 +17,7 @@ from dataclasses import replace
 from pathlib import Path
 
 from vqar import config
-from vqar.data import PROMPT_REASONING
+from vqar.registry import PROMPTS
 from vqar.splits import load_training_subsets, split_provenance
 from vqar.training import (
     check_rl_precision,
@@ -53,7 +53,7 @@ def to_grpo_columns(batch: dict) -> dict:
     along as extra columns that TRL forwards to every reward function."""
     return {
         "prompt": [
-            [{"role": "user", "content": PROMPT_REASONING.format(question=q)}]
+            [{"role": "user", "content": PROMPTS["reasoning"].text.format(question=q)}]
             for q in batch["question"]
         ],
         "image": [to_uniform_canvas(img) for img in batch["image"]],

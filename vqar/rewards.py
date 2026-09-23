@@ -3,14 +3,14 @@
     fn(prompts=..., completions=..., completion_ids=..., **dataset_columns) -> list[float]
 
 Extra columns of the RL dataset (question, answers, dataset) arrive as kwargs, each a
-list aligned with completions. Rewards return raw 0/1 signals; relative weighting
+list aligned with completions. Rewards return raw signals in [0, 1]; relative weighting
 (e.g. format 0.2) is set via GRPOConfig.reward_weights, so ablating a reward is a
 config change, not a code change.
 """
 
 import re
 
-from vqar.metrics import score
+from vqar.registry import score
 
 _ANSWER_TAG = re.compile(r"<answer>(.*?)</answer>", re.DOTALL)
 # Reasoning followed by one short, terminal <answer> tag. Deliberately NOT literal
@@ -35,11 +35,11 @@ def _strict_answer(text: str) -> str | None:
 
 
 def correctness_reward(prompts, completions, answers, dataset, **kwargs) -> list[float]:
-    """Verifiable per-dataset match: official VQA accuracy / normalized EM (in [0, 1])."""
+    """Verifiable per-dataset match with the dataset's normalized scorer (in [0, 1])."""
     out = []
     for completion, golds, ds in zip(completions, answers, dataset, strict=True):
         pred = _strict_answer(_text(completion))
-        out.append(0.0 if pred is None else score(ds, pred, golds))
+        out.append(0.0 if pred is None else score(ds, pred, golds, "normalized"))
     return out
 
 

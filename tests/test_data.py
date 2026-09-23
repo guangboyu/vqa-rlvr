@@ -1,7 +1,7 @@
 import pytest
 from datasets import Dataset
 
-from vqar.data import PROMPT_REASONING, PROMPT_SHORT, _clean_cauldron_answer, _vqav2_assignments
+from vqar.data import _clean_cauldron_answer, _vqav2_assignments
 
 
 def rows_with_qa_counts(counts):
@@ -47,11 +47,3 @@ class TestAssignments:
         with pytest.raises(ValueError, match="exhausted"):
             _vqav2_assignments(rows, n_sft=3, n_rl=3)
 
-
-class TestTemplates:
-    def test_short_template_formats(self):
-        assert "single word" in PROMPT_SHORT.format(question="Q?")
-
-    def test_reasoning_template_has_tags(self):
-        rendered = PROMPT_REASONING.format(question="Q?")
-        assert "<think>" in rendered and "<answer>" in rendered

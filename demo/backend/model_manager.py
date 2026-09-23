@@ -12,14 +12,12 @@ from pathlib import Path
 
 from PIL import Image
 
-from vqar.data import PROMPT_REASONING, PROMPT_SHORT
+from vqar.registry import PROMPTS as TEMPLATES
 
 ROOT = Path(__file__).parent.parent.parent
 
-PROMPTS = {
-    "short": PROMPT_SHORT,
-    "reasoning": PROMPT_REASONING,
-}
+# The demo offers the two headline templates, not the diagnostic ones.
+PROMPTS = {name: p.text for name, p in TEMPLATES.items() if not p.diagnostic}
 
 
 @dataclass

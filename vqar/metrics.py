@@ -11,8 +11,9 @@ zeroes e.g. prediction "Yes" against a unanimous ["yes"]*10 — an artifact for
 zero-shot instruct models that capitalize. Modern harnesses (lmms-eval's vqav2
 task) always normalize both sides; we follow them for comparability.
 
-`score` retains this historical normalization for training rewards and old tables.
-`evaluation_score` selects the dataset-author protocol for new evaluations.
+These functions are scorers; `vqar.registry` assigns each dataset its official scorer
+(the dataset authors' evaluator) and its normalized scorer (this unconditional rule, also
+the RL reward).
 """
 
 import re
@@ -125,13 +126,6 @@ def exact_match(prediction: str, gt_answers: list[str]) -> float:
     return float(any(pred == normalize_answer(a) for a in gt_answers))
 
 
-def score(dataset: str, prediction: str, gt_answers: list[str]) -> float:
-    """Dispatch to the right metric for a dataset. Returns a value in [0, 1]."""
-    if dataset in ("vqav2", "textvqa"):  # both officially use 10-annotator VQA accuracy
-        return vqa_accuracy(prediction, gt_answers)
-    return exact_match(prediction, gt_answers)
-
-
 def official_vqa_accuracy(prediction: str, gt_answers: list[str]) -> float:
     """GT-Vision-Lab's evaluator, including its conditional normalization."""
     if len(gt_answers) != 10:
@@ -158,17 +152,6 @@ def textvqa_accuracy(prediction: str, gt_answers: list[str]) -> float:
     return vqa_accuracy(tokenize(prediction), [tokenize(answer) for answer in gt_answers])
 
 
-def evaluation_score(dataset: str, prediction: str, gt_answers: list[str],
-                     variant: str = "official") -> float:
-    """Dataset-author accuracy, or the explicitly named historical variant."""
-    if variant == "normalized":
-        return score(dataset, prediction, gt_answers)
-    if variant != "official":
-        raise ValueError(f"Unknown metric variant: {variant}")
-    if dataset == "vqav2":
-        return official_vqa_accuracy(prediction, gt_answers)
-    if dataset == "textvqa":
-        return textvqa_accuracy(prediction, gt_answers)
-    if dataset in ("gqa", "clevr"):
-        return float(prediction in gt_answers)
-    raise ValueError(f"No evaluation metric for {dataset}")
+def exact_string_match(prediction: str, gt_answers: list[str]) -> float:
+    """GQA's author accuracy: the raw prediction string must equal a reference."""
+    return float(prediction in gt_answers)

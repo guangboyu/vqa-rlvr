@@ -8,6 +8,7 @@ from pathlib import Path
 from datasets import load_from_disk
 
 from vqar.config import SFT_PRESETS
+from vqar.registry import DATASETS
 from vqar.splits import VERSION, image_keys, qid_hash, retained_indices, training_views
 
 
@@ -40,9 +41,10 @@ def main():
     for name, indices in kept.items():
         entries[name]["retained_indices"] = indices
         print(f"{name}: retain {len(indices)}/{len(keys[name])}", flush=True)
-    sft = SFT_PRESETS["sft_2b"]
-    sft_subsets = [name for name in sft.subsets if name in keys]
-    views = training_views(keys, kept, sft_subsets, seed=sft.seed)
+    # The frozen dev split is carved from every registered SFT pool.
+    sft_subsets = [spec.subsets["sft"] for spec in DATASETS.values()
+                   if spec.subsets.get("sft") in keys]
+    views = training_views(keys, kept, sft_subsets, seed=SFT_PRESETS["sft_2b"].seed)
     for name, parts in views["rl_views"].items():
         print(f"{name}: shared pool {sum(len(part['indices']) for part in parts)}", flush=True)
     result = dict(version=VERSION, subsets=entries, overlaps=overlaps, **views)
