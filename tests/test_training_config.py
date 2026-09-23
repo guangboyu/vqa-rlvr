@@ -73,23 +73,39 @@ def test_prompt_draw_log_preserves_rewards_and_records_resume_step(tmp_path):
                           qid=["a", "a"], scores=scores)
 
 
-@pytest.mark.parametrize("trainer, presets, name", [
-    ("train_grpo", config.GRPO_PRESETS, "grpo_2b_main"),
-    ("train_opd", config.OPD_PRESETS, "opd_self_2b_main"),
+@pytest.mark.parametrize("presets, name", [
+    (config.GRPO_PRESETS, "grpo_2b_main"),
+    (config.OPD_PRESETS, "opd_self_2b_main"),
 ])
-def test_rl_trainers_cannot_load_a_dataset_without_an_rl_role(trainer, presets, name):
-    import importlib
+def test_rl_trainers_cannot_load_a_dataset_without_an_rl_role(presets, name):
+    from vqar.rl import load_rl_dataset  # the loader GRPO and OPD share
 
-    load_rl_dataset = importlib.import_module(trainer).load_rl_dataset
     preset = replace(presets[name], datasets=("textvqa",))
     with pytest.raises(ValueError, match="textvqa has no rl role"):
         load_rl_dataset(preset)
 
 
 def test_sft_cannot_load_a_dataset_without_an_sft_role():
-    pytest.importorskip("trl")
     from train_sft import load_datasets
 
     preset = replace(config.SFT_PRESETS["sft_2b"], datasets=("clevr",))
     with pytest.raises(ValueError, match="clevr has no sft role"):
         load_datasets(preset)
+
+
+def test_trainers_share_the_rl_loader_and_rollout():
+    import train_grpo
+    import train_opd
+    from vqar import rl
+
+    for trainer in (train_grpo, train_opd):
+        assert trainer.load_rl_dataset is rl.load_rl_dataset
+        assert trainer.make_chat_rollout is rl.make_chat_rollout
+
+
+def test_lora_dropout_applies_only_to_the_sft_recipe():
+    pytest.importorskip("peft")
+    from vqar.training import lora_config
+
+    assert lora_config(config.SFT_PRESETS["sft_2b"]).lora_dropout == 0.05
+    assert lora_config(config.GRPO_PRESETS["grpo_2b_main"]).lora_dropout == 0.0

@@ -1,16 +1,122 @@
-"""Run provenance shared by the three training entrypoints."""
+"""What the three trainers share: arguments, presets, adapters, provenance, and the
+preemption-safe training loop."""
 
+import argparse
 import hashlib
 import importlib.metadata
 import json
+import os
 import subprocess
+from dataclasses import replace
 from functools import wraps
 from pathlib import Path
+
+from vqar import config
+
+ROOT = Path(__file__).resolve().parent.parent
+
+
+def add_common_arguments(parser: argparse.ArgumentParser, presets: dict,
+                         save_steps: int) -> None:
+    parser.add_argument("--preset", required=True, choices=sorted(presets))
+    parser.add_argument("--model", default=None, help="override the starting model")
+    parser.add_argument("--hardware", choices=config.HARDWARE_PROFILES, default="legacy")
+    parser.add_argument("--run-name", default=None)
+    parser.add_argument("--run-dir", type=Path, default=None,
+                        help="cluster mode: checkpoints + metrics.jsonl under this dir "
+                        "(auto-resumes from its last complete checkpoint)")
+    parser.add_argument("--save-steps", type=int, default=save_steps,
+                        help="checkpoint cadence; on free partitions size to <=15 min")
+    parser.add_argument("--save-total-limit", type=int, default=2,
+                        help="keep this many saved checkpoints; 0 keeps all")
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--no-wandb", action="store_true")
+
+
+def parse_arguments(parser: argparse.ArgumentParser):
+    args = parser.parse_args()
+    if args.save_total_limit < 0:
+        parser.error("--save-total-limit must be nonnegative")
+    return args
+
+
+def resolve_preset(presets: dict, args):
+    """The named preset with a model override, adjusted to the hardware profile."""
+    preset = presets[args.preset]
+    if args.model:
+        preset = replace(preset, model=args.model)
+    return config.for_hardware(preset, args.hardware)
+
+
+def checkpoint_dir(run_dir: Path | None, run_name: str) -> Path:
+    return run_dir / "checkpoints" if run_dir else ROOT / "checkpoints" / run_name
+
+
+def wandb_reporting(no_wandb: bool) -> list[str]:
+    """The Trainer's report_to list; enabling wandb also sets its default project name."""
+    if no_wandb:
+        return []
+    os.environ.setdefault("WANDB_PROJECT", "vqa-rlvr")
+    return ["wandb"]
+
+
+def load_kwargs(quantize_4bit: bool) -> dict:
+    """from_pretrained arguments: bf16 weights, or NF4 for QLoRA."""
+    import torch
+
+    kwargs = dict(dtype=torch.bfloat16)
+    if quantize_4bit:
+        kwargs["quantization_config"] = nf4_quantization()
+    return kwargs
+
+
+def nf4_quantization():
+    """QLoRA's 4-bit NF4 weights with bf16 compute."""
+    import torch
+    from transformers import BitsAndBytesConfig
+
+    return BitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.bfloat16,
+        bnb_4bit_use_double_quant=True,
+    )
+
+
+def lora_config(preset):
+    """LoRA on the language model's attention and MLP; the vision tower stays frozen."""
+    from peft import LoraConfig
+
+    kwargs = dict(r=preset.lora_r, lora_alpha=preset.lora_alpha,
+                  target_modules=list(preset.lora_targets), task_type="CAUSAL_LM")
+    if hasattr(preset, "lora_dropout"):  # only the SFT recipe sets dropout
+        kwargs["lora_dropout"] = preset.lora_dropout
+    return LoraConfig(**kwargs)
+
+
+def run_training(trainer, output: Path, run_dir: Path | None, log_draws: bool = False) -> None:
+    """Train with preemption safety: periodic and signal-triggered complete checkpoints,
+    metrics.jsonl in cluster mode, and resumption from the last complete save."""
+    from vqar.preemption import JsonlMetrics, PreemptCallback, install_signal_flag
+
+    install_signal_flag()
+    trainer.add_callback(PreemptCallback())
+    if run_dir:
+        trainer.add_callback(JsonlMetrics(str(run_dir / "metrics.jsonl")))
+        if log_draws:
+            log_prompt_draws(trainer, run_dir / "prompt_draws.jsonl")
+    last = last_complete_checkpoint(output)
+    if last:
+        print(f"resuming from {last}")
+    trainer.train(resume_from_checkpoint=last)
+    trainer.save_model(str(output))
+    write_training_summary(trainer, output)
+    print(f"adapter saved -> {output}")
 
 
 def write_run_config(output_dir: Path, record: dict, training_args) -> None:
     """Save resolved settings before training; reject an incompatible auto-resume."""
-    root = Path(__file__).resolve().parent.parent
+    root = ROOT
     path = output_dir / "run_config.json"
     record = json.loads(json.dumps(record))
     # Compare the experiment identity, including overrides, before adding provenance.
@@ -22,8 +128,8 @@ def write_run_config(output_dir: Path, record: dict, training_args) -> None:
     elif output_dir.exists() and any(output_dir.iterdir()):
         raise ValueError(f"{output_dir} has no run_config.json; use a fresh run directory.")
 
-    files = sorted(root.glob("train_*.py")) + sorted((root / "vqar").glob("*.py"))
-    files += [root / "uv.lock", root / "scripts/hf_preempt_callback.py"]
+    files = sorted(root.glob("train_*.py")) + sorted((root / "vqar").rglob("*.py"))
+    files += [root / "uv.lock"]
     hashes = {
         str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest()
         for p in files

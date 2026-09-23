@@ -4,7 +4,7 @@ import pytest
 
 pytest.importorskip("transformers")
 
-from scripts import hf_preempt_callback as checkpointing
+from vqar import preemption as checkpointing
 
 
 def test_elapsed_time_requests_save_and_completed_save_resets_timer(tmp_path, monkeypatch):

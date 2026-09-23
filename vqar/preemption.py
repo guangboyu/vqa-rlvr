@@ -1,4 +1,4 @@
-"""Preemption plumbing for HF Trainer / TRL trainers (SFTTrainer, DPOTrainer…).
+"""Preemption plumbing for HF Trainer / TRL trainers (SFT, GRPO, OPD).
 
 Trainer checkpoints contain optimizer, scheduler, RNG state, and global step.
 The callback marks a checkpoint complete only after Trainer finishes writing it.
@@ -6,7 +6,7 @@ Use vqar.training.last_complete_checkpoint to ignore interrupted saves.
 
 Periodic step and time intervals bound lost work. HPC3 free partitions can cancel instantly,
 so signal handling is only useful for time-limit warnings or manual termination.
-Long jobs also need the successor mechanism documented in hpc-env/AGENTS.md.
+Long jobs also need a successor job; scripts/train_hpc.sbatch arranges one.
 """
 
 import json

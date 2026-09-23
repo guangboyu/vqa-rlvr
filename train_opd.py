@@ -16,29 +16,24 @@ Usage:
 import argparse
 import copy
 import math
-import os
 from dataclasses import replace
-from pathlib import Path
 
-from train_grpo import (
-    dry_run,
-    load_rl_dataset,
-    make_chat_rollout,
-    resolve_model,
-)
 from vqar import config
+from vqar.rl import dry_run, grpo_config, load_rl_dataset, make_chat_rollout, resolve_model
 from vqar.splits import provenance
 from vqar.training import (
+    ROOT,
+    add_common_arguments,
     check_rl_precision,
-    last_complete_checkpoint,
-    log_prompt_draws,
+    checkpoint_dir,
+    load_kwargs,
+    lora_config,
+    parse_arguments,
+    resolve_preset,
+    run_training,
+    wandb_reporting,
     write_run_config,
-    write_training_summary,
 )
-
-os.environ.setdefault("WANDB_PROJECT", "vqa-rlvr")
-
-ROOT = Path(__file__).parent
 
 
 def check_teacher_compat(student_id: str, teacher_id: str, teacher_config) -> None:
@@ -210,30 +205,13 @@ def make_opd_trainer_cls():
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--preset", required=True, choices=sorted(config.OPD_PRESETS))
-    parser.add_argument("--model", default=None, help="override student model/checkpoint")
-    parser.add_argument("--hardware", choices=config.HARDWARE_PROFILES, default="legacy")
+    add_common_arguments(parser, config.OPD_PRESETS, save_steps=100)
     parser.add_argument("--teacher", default=None, help="override teacher model/checkpoint")
     parser.add_argument("--max-steps", type=int, default=None)
     parser.add_argument("--seed", type=int, default=None, help="seed replication arms")
-    parser.add_argument("--run-name", default=None)
-    parser.add_argument("--run-dir", default=None,
-                        help="cluster mode: checkpoints + metrics.jsonl under this dir "
-                        "(auto-resumes from its last checkpoint; see hpc-env/AGENTS.md)")
-    parser.add_argument("--save-steps", type=int, default=100,
-                        help="checkpoint cadence; on free partitions size to <=15 min")
-    parser.add_argument("--save-total-limit", type=int, default=2,
-                        help="keep this many saved checkpoints; 0 keeps all")
-    parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument("--no-wandb", action="store_true")
-    args = parser.parse_args()
-    if args.save_total_limit < 0:
-        parser.error("--save-total-limit must be nonnegative")
+    args = parse_arguments(parser)
 
-    preset = config.OPD_PRESETS[args.preset]
-    if args.model:
-        preset = replace(preset, model=args.model)
-    preset = config.for_hardware(preset, args.hardware)
+    preset = resolve_preset(config.OPD_PRESETS, args)
     if args.seed is not None:
         preset = replace(preset, seed=args.seed)
 
@@ -244,15 +222,9 @@ def main() -> None:
 
     check_rl_precision(preset)
 
-    import torch
-    from peft import LoraConfig
-    from transformers import (
-        AutoModelForImageTextToText,
-        AutoProcessor,
-        BitsAndBytesConfig,
-    )
-    from trl import GRPOConfig
+    from transformers import AutoModelForImageTextToText, AutoProcessor
 
+    from vqar.rewards import REWARDS
 
     run_name = args.run_name or preset.name
     student_path = resolve_model(args.model or preset.model)
@@ -265,109 +237,41 @@ def main() -> None:
     if teacher_ref == "self":
         teacher = None  # gold-conditioned base policy scores its own rollouts
     else:
-        teacher_kwargs = dict(dtype=torch.bfloat16, device_map={"": 0})
-        if preset.teacher_quantize_4bit:
-            teacher_kwargs["quantization_config"] = BitsAndBytesConfig(
-                load_in_4bit=True,
-                bnb_4bit_quant_type="nf4",
-                bnb_4bit_compute_dtype=torch.bfloat16,
-                bnb_4bit_use_double_quant=True,
-            )
-        teacher = AutoModelForImageTextToText.from_pretrained(teacher_path, **teacher_kwargs)
+        teacher = AutoModelForImageTextToText.from_pretrained(
+            teacher_path, device_map={"": 0}, **load_kwargs(preset.teacher_quantize_4bit)
+        )
         check_teacher_compat(student_path, teacher_path, teacher.config)
 
-    from vqar.rewards import REWARDS
-
-    student_kwargs = dict(dtype=torch.bfloat16)
-    if preset.quantize_4bit:
-        student_kwargs["quantization_config"] = BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=torch.bfloat16,
-            bnb_4bit_use_double_quant=True,
-        )
-
-    local_out = ROOT / "checkpoints" / run_name
-    output_dir = Path(args.run_dir) / "checkpoints" if args.run_dir else local_out
-    opd_config = GRPOConfig(
-        **config.RL_RECIPE,
-        output_dir=str(output_dir),
-        run_name=run_name,
-        model_init_kwargs=student_kwargs,
-        num_generations=preset.num_generations,
-        per_device_train_batch_size=preset.per_device_batch_size,
-        gradient_accumulation_steps=preset.gradient_accumulation,
-        learning_rate=preset.learning_rate,
-        max_steps=max_steps,
-        max_completion_length=preset.max_completion_length,
-        temperature=1.0,
+    output = checkpoint_dir(args.run_dir, run_name)
+    training_args = grpo_config(
+        preset, output, run_name, load_kwargs(preset.quantize_4bit), max_steps=max_steps,
         beta=0.0,
         reward_weights=[1.0],  # logging only; advantages are replaced by OPD
-        use_vllm=True,
-        vllm_mode="colocate",
-        vllm_enable_sleep_mode=True,
-        vllm_gpu_memory_utilization=preset.vllm_gpu_memory_utilization,
-        vllm_max_model_length=2048,
-        bf16=True,
-        gradient_checkpointing=True,
-        gradient_checkpointing_kwargs={"use_reentrant": False},
-        optim="paged_adamw_8bit" if preset.quantize_4bit else "adamw_torch",
-        logging_steps=10,
-        save_strategy="steps",
-        save_steps=args.save_steps,
-        save_total_limit=args.save_total_limit or None,
-        dataloader_num_workers=2,
-        dataloader_pin_memory=False,
-        seed=preset.seed,
-        report_to=[] if args.no_wandb else ["wandb"],
-        log_completions=True,
-        num_completions_to_print=2,
+        batch_size=preset.per_device_batch_size, grad_accum=preset.gradient_accumulation,
+        save_steps=args.save_steps, save_total_limit=args.save_total_limit,
+        report_to=wandb_reporting(args.no_wandb),
     )
-    peft_config = LoraConfig(
-        r=preset.lora_r,
-        lora_alpha=preset.lora_alpha,
-        target_modules=list(preset.lora_targets),
-        task_type="CAUSAL_LM",
-    )
-    write_run_config(output_dir, {
+    peft_config = lora_config(preset)
+    write_run_config(output, {
         "preset": config.dump(preset), "policy_model": student_path,
         "teacher_model": teacher_path,
         "teacher_log_softmax_dtype": "float32",
         "data": provenance(ROOT / "data", preset.datasets),
         "overrides": {"hardware": args.hardware, "max_steps": max_steps},
-    }, opd_config)
+    }, training_args)
     trainer_cls = make_opd_trainer_cls()
     trainer = trainer_cls(
         model=student_path,
         reward_funcs=[REWARDS["correctness"]],
-        args=opd_config,
+        args=training_args,
         train_dataset=load_rl_dataset(preset),
         processing_class=processor,
         peft_config=peft_config,
-        rollout_func=make_chat_rollout(preset),
+        rollout_func=make_chat_rollout(),
         teacher_model=teacher,
         teacher_chunk_size=preset.teacher_chunk_size,
     )
-
-    # Preemption contract (free HPC3 partitions CANCEL with no warning): periodic
-    # checkpoints above + signal-triggered save + metrics.jsonl + auto-resume.
-    # Harmless locally — a fresh output_dir has no checkpoint to resume from.
-
-    from scripts.hf_preempt_callback import JsonlMetrics, PreemptCallback, install_signal_flag
-
-    install_signal_flag()
-    trainer.add_callback(PreemptCallback())
-    if args.run_dir:
-        trainer.add_callback(JsonlMetrics(str(Path(args.run_dir) / "metrics.jsonl")))
-        log_prompt_draws(trainer, Path(args.run_dir) / "prompt_draws.jsonl")
-    last = last_complete_checkpoint(output_dir) if output_dir.is_dir() else None
-    if last:
-        print(f"resuming from {last}")
-    trainer.train(resume_from_checkpoint=last)
-    trainer.save_model(str(output_dir))
-    write_training_summary(trainer, output_dir)
-
-    print(f"adapter saved -> {output_dir}")
+    run_training(trainer, output, args.run_dir, log_draws=True)
 
 
 if __name__ == "__main__":

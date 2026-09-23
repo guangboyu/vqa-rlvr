@@ -10,24 +10,23 @@ Usage:
 """
 
 import argparse
-import os
-from dataclasses import replace
-from pathlib import Path
-
-import torch
-from peft import LoraConfig
-from transformers import AutoModelForImageTextToText, AutoProcessor, BitsAndBytesConfig
-from trl import SFTConfig, SFTTrainer
 
 from vqar import config
 from vqar.data import cap_pixels
 from vqar.registry import PROMPTS
 from vqar.splits import load_role, provenance
-from vqar.training import last_complete_checkpoint, write_run_config, write_training_summary
-
-os.environ.setdefault("WANDB_PROJECT", "vqa-rlvr")
-
-ROOT = Path(__file__).parent
+from vqar.training import (
+    ROOT,
+    add_common_arguments,
+    checkpoint_dir,
+    load_kwargs,
+    lora_config,
+    parse_arguments,
+    resolve_preset,
+    run_training,
+    wandb_reporting,
+    write_run_config,
+)
 
 
 def to_sft_columns(batch: dict) -> dict:
@@ -60,56 +59,36 @@ def load_datasets(preset: config.SFTPreset):
 
 
 def build_model(preset: config.SFTPreset):
-    quantization = (
-        BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=torch.bfloat16,
-            bnb_4bit_use_double_quant=True,
-        )
-        if preset.quantize_4bit
-        else None
-    )
+    from transformers import AutoModelForImageTextToText, AutoProcessor
+
     model = AutoModelForImageTextToText.from_pretrained(
-        preset.model, dtype=torch.bfloat16, quantization_config=quantization
+        preset.model, **load_kwargs(preset.quantize_4bit)
     )
     # Pixel budget enforced in the data (cap_pixels), not processor config — keeps
-    # every consumer's preprocessing identical (see train_grpo.py).
+    # every consumer's preprocessing identical (see vqar.rl).
     processor = AutoProcessor.from_pretrained(preset.model)
     return model, processor
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--preset", required=True, choices=sorted(config.SFT_PRESETS))
-    parser.add_argument("--model", default=None, help="override base model or pinned snapshot")
-    parser.add_argument("--hardware", choices=config.HARDWARE_PROFILES, default="legacy")
+    add_common_arguments(parser, config.SFT_PRESETS, save_steps=250)
     parser.add_argument("--max-steps", type=int, default=-1, help="cap steps (sanity runs)")
-    parser.add_argument("--run-name", default=None)
-    parser.add_argument("--run-dir", type=Path, default=None)
-    parser.add_argument("--save-steps", type=int, default=250)
-    parser.add_argument("--save-total-limit", type=int, default=2,
-                        help="keep this many saved checkpoints; 0 keeps all")
-    parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument("--no-wandb", action="store_true")
-    args = parser.parse_args()
-    if args.save_total_limit < 0:
-        parser.error("--save-total-limit must be nonnegative")
+    args = parse_arguments(parser)
 
-    preset = config.SFT_PRESETS[args.preset]
-    if args.model:
-        preset = replace(preset, model=args.model)
-    preset = config.for_hardware(preset, args.hardware)
+    preset = resolve_preset(config.SFT_PRESETS, args)
     train_ds, dev_ds = load_datasets(preset)
     if args.dry_run:
         print(f"hardware={args.hardware}; train={len(train_ds)}, dev={len(dev_ds)}")
         print(f"completion: {train_ds[0]['completion']}")
         return
 
+    from trl import SFTConfig, SFTTrainer
+
     run_name = args.run_name or preset.name
-    output_dir = args.run_dir / "checkpoints" if args.run_dir else ROOT / "checkpoints" / run_name
+    output = checkpoint_dir(args.run_dir, run_name)
     sft_config = SFTConfig(
-        output_dir=str(output_dir),
+        output_dir=str(output),
         per_device_train_batch_size=preset.per_device_batch_size,
         per_device_eval_batch_size=preset.per_device_batch_size,
         gradient_accumulation_steps=preset.gradient_accumulation,
@@ -136,17 +115,11 @@ def main() -> None:
         # question/answers/image; the Trainer must not strip its inputs beforehand.
         remove_unused_columns=False,
         seed=preset.seed,
-        report_to=[] if args.no_wandb else ["wandb"],
+        report_to=wandb_reporting(args.no_wandb),
         run_name=run_name,
     )
-    peft_config = LoraConfig(
-        r=preset.lora_r,
-        lora_alpha=preset.lora_alpha,
-        lora_dropout=preset.lora_dropout,
-        target_modules=list(preset.lora_targets),
-        task_type="CAUSAL_LM",
-    )
-    write_run_config(output_dir, {
+    peft_config = lora_config(preset)
+    write_run_config(output, {
         "preset": config.dump(preset), "policy_model": preset.model,
         "overrides": {"hardware": args.hardware, "max_steps": args.max_steps},
         "data": provenance(ROOT / "data", preset.datasets),
@@ -161,18 +134,7 @@ def main() -> None:
         processing_class=processor,
         peft_config=peft_config,
     )
-
-    from scripts.hf_preempt_callback import JsonlMetrics, PreemptCallback, install_signal_flag
-
-    install_signal_flag()
-    trainer.add_callback(PreemptCallback())
-    if args.run_dir:
-        trainer.add_callback(JsonlMetrics(str(args.run_dir / "metrics.jsonl")))
-    trainer.train(resume_from_checkpoint=last_complete_checkpoint(output_dir))
-    trainer.save_model(str(output_dir))
-    write_training_summary(trainer, output_dir)
-
-    print(f"adapter saved -> {output_dir}")
+    run_training(trainer, output, args.run_dir)
 
 
 if __name__ == "__main__":
