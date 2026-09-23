@@ -231,7 +231,7 @@ def test_evaluation_rejects_data_changed_after_the_split(data_dir, model, tmp_pa
     split = json.loads(path.read_text())
     split["subsets"]["gqa_eval"]["qids_sha256"] = "changed"
     path.write_text(json.dumps(split))
-    with pytest.raises(ValueError, match="changed since its split file was written"):
+    with pytest.raises(ValueError, match="differs from the rows its split file records"):
         run_eval(model, Protocol("gqa"), ScriptedGenerator(SCRIPT),
                  data_dir=data_dir, records_dir=tmp_path / "records")
 

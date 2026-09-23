@@ -21,6 +21,7 @@ VERSION = "split-files-v1"
 HELD_OUT_ROLES = frozenset({"dev", "test"})
 DEV_TARGET = 500  # questions carved from a training pool when a dataset has no dev subset
 SEED = 42
+VERIFIED = ".verified-subsets.json"  # content checks already passed, kept beside the data
 
 
 def image_keys(dataset) -> list[str]:
@@ -43,6 +44,45 @@ def image_keys(dataset) -> list[str]:
 
 def qid_hash(dataset) -> str:
     return hashlib.sha256(",".join(dataset["qid"]).encode()).hexdigest()
+
+
+def rows_sha256(dataset) -> str:
+    """Hash every row's question ID, question, answers, and answer type (not the image)."""
+    digest = hashlib.sha256()
+    for row in dataset.select_columns(["qid", "question", "answers", "answer_type"]):
+        digest.update(json.dumps(row, sort_keys=True).encode() + b"\n")
+    return digest.hexdigest()
+
+
+def verify_subset(data_dir: Path, name: str, entry: dict, rows) -> None:
+    """Refuse a materialized subset whose rows differ from what its split file records.
+
+    The recorded fingerprint is only a fast path: a fresh prepare_data run can write the
+    same rows under a new fingerprint. Then question IDs, text, and decoded images are
+    compared with the split file once, and the match is remembered beside the data.
+    """
+    if (rows._fingerprint, qid_hash(rows)) == (entry["fingerprint"], entry["qids_sha256"]):
+        return
+    record = Path(data_dir) / VERIFIED
+    verified = json.loads(record.read_text()) if record.exists() else {}
+    check = {"fingerprint": rows._fingerprint,
+             "entry_sha256": hashlib.sha256(json.dumps(entry, sort_keys=True).encode()).hexdigest()}
+    if verified.get(name) == check:
+        return
+    text = rows_sha256(rows)  # older split files may not record it
+    same = (qid_hash(rows) == entry["qids_sha256"]
+            and entry.get("rows_sha256", text) == text
+            and image_keys(rows) == entry["image_keys"])
+    if not same:
+        raise ValueError(
+            f"{name} differs from the rows its split file records. If you materialized the data "
+            "yourself, move data/splits/*.json aside and run python -m scripts.check_data to "
+            "build split files for it; its numbers are then not comparable with the recorded "
+            "tables.")
+    verified[name] = check
+    temporary = record.with_suffix(".tmp")
+    temporary.write_text(json.dumps(verified, indent=1) + "\n")
+    temporary.replace(record)
 
 
 def split_path(data_dir: Path, dataset: str) -> Path:
@@ -110,9 +150,7 @@ def load_role(data_dir: Path, datasets, role: str, seed: int | None = SEED):
             name = part["subset"]
             subset = load_from_disk(str(Path(data_dir) / name))
             entry = split["subsets"][name]
-            if (entry["fingerprint"], entry["qids_sha256"]) != (subset._fingerprint,
-                                                                qid_hash(subset)):
-                raise ValueError(f"{name} changed since its split file was written; rebuild it.")
+            verify_subset(data_dir, name, entry, subset)
             subset = subset.add_column("image_key", entry["image_keys"])
             # Where each row came from, so shuffled rows can still be identified.
             subset = subset.add_column("source_subset", [name] * len(subset))
@@ -160,7 +198,8 @@ def build_split(dataset: str, data_dir: Path, other_splits: list[dict],
         rows = load_from_disk(str(Path(data_dir) / name))
         keys[name] = image_keys(rows)
         subsets[name] = {"n": len(rows), "fingerprint": rows._fingerprint,
-                         "qids_sha256": qid_hash(rows), "image_keys": keys[name]}
+                         "qids_sha256": qid_hash(rows), "rows_sha256": rows_sha256(rows),
+                         "image_keys": keys[name]}
     others_held = role_keys(other_splits, HELD_OUT_ROLES)
     others_dev = role_keys(other_splits, {"dev"})
     others_train = role_keys(other_splits, TRAINING_ROLES)

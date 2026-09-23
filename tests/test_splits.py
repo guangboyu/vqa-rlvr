@@ -153,14 +153,41 @@ def test_a_role_may_only_draw_from_its_registered_subset(planted):
         validate_split(vqav2)
 
 
+def edit_entry(data_dir, dataset, subset, **fields):
+    path = split_path(data_dir, dataset)
+    split = json.loads(path.read_text())
+    split["subsets"][subset].update(fields)
+    path.write_text(json.dumps(split))
+
+
 def test_loading_rejects_data_changed_after_the_split(planted):
     build_all(planted, ["vqav2"])
-    path = split_path(planted, "vqav2")
-    split = json.loads(path.read_text())
-    split["subsets"]["vqav2_eval"]["qids_sha256"] = "changed"
-    path.write_text(json.dumps(split))
-    with pytest.raises(ValueError, match="changed since its split file was written"):
+    edit_entry(planted, "vqav2", "vqav2_eval", qids_sha256="changed")
+    with pytest.raises(ValueError, match="differs from the rows its split file records"):
         load_role(planted, ["vqav2"], "test")
+
+
+def test_changed_answers_with_the_same_questions_and_images_are_rejected(planted):
+    build_all(planted, ["vqav2"])
+    edit_entry(planted, "vqav2", "vqav2_eval", fingerprint="elsewhere", rows_sha256="changed")
+    with pytest.raises(ValueError, match="differs from the rows its split file records"):
+        load_role(planted, ["vqav2"], "test")
+
+
+def test_a_rebuilt_subset_with_the_same_rows_is_accepted_and_checked_once(planted, monkeypatch):
+    # A fresh prepare_data run can write identical rows under a new fingerprint.
+    import vqar.splits
+
+    build_all(planted, ["vqav2"])
+    edit_entry(planted, "vqav2", "vqav2_eval", fingerprint="recorded-elsewhere")
+    expected = [row["qid"] for row in load_from_disk(str(planted / "vqav2_eval"))]
+    assert load_role(planted, ["vqav2"], "test", seed=None)["qid"] == expected
+
+    def no_second_check(rows):
+        raise AssertionError("the content check should run once per subset")
+
+    monkeypatch.setattr(vqar.splits, "image_keys", no_second_check)
+    assert load_role(planted, ["vqav2"], "test", seed=None)["qid"] == expected
 
 
 def test_unknown_split_version_is_rejected(planted):

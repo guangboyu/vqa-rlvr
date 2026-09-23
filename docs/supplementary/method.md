@@ -47,9 +47,10 @@ uses the same pattern (SFT and RL data from the same problem sources); here the 
 files and each run's prompt-draw log make the reuse exact. Of the 1,200 questions the RL
 runs drew, 841 are also SFT training questions and 359 come from the RL-only sources.
 
-The exact recorded rows come from the materialized data bundle. A fresh `prepare_data.py`
-download pins and records the five source revisions, and `check_data` reports when the
-fingerprints of a new materialization differ from the recorded ones. Five duplicate
+`prepare_data.py` pins the five source revisions, and a fresh materialization from them
+reproduced all ten recorded subsets byte for byte: the same question IDs, text, and image
+bytes. `check_data` compares a new materialization with the split files row by row, so
+any difference is reported by subset. Five duplicate
 image-question pairs within training, one with conflicting count labels, were recorded and
 kept in the frozen pool.
 

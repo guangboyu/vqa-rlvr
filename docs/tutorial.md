@@ -38,11 +38,14 @@ textvqa (far-ood): {'test': 2000}
 no held-out image in any training pool; report: data/splits/overlap-report.json
 ```
 
-The committed split files describe the recorded materialization. If `check_data` reports
-that a subset changed since its split file was written, your download differs from it:
-move `data/splits/*.json` aside and run `check_data` again to build split files for your
-data with the same policy and seed. Numbers from your data are then not row-for-row
-comparable with the recorded tables.
+The committed split files record every subset's rows: question IDs, a hash of the question
+and answer text, and a hash of each decoded image. A fresh download can store the same rows
+under a different internal dataset fingerprint; `check_data` then compares the rows
+themselves once (under a minute for CLEVR here) and remembers the match in
+`data/.verified-subsets.json`. A fresh materialization from the pinned revisions reproduced
+all ten recorded subsets byte for byte. If your rows do differ, `check_data` names the
+subset; to use that data anyway, move `data/splits/*.json` aside and run `check_data` again
+to build split files for it. Its numbers are then not comparable with the recorded tables.
 
 ## 3. Evaluate the starting model
 

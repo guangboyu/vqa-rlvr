@@ -101,8 +101,12 @@ Run `python -m scripts.check_data` after materialization. It validates the split
 files in `data/splits/` (one per dataset, versioned in the repository) without editing
 the Arrow datasets, fails if any dev or test image appears in any training pool, and
 writes `data/splits/overlap-report.json`. The `heldout-images-v2` manifest was migrated
-into these files with every role's rows unchanged. Training and evaluation verify
-question IDs and dataset fingerprints against them. Historical source
+into these files with every role's rows unchanged. Training and evaluation verify each
+subset against them: the dataset fingerprint is a fast path, and when it differs the
+question IDs, question and answer text, and decoded images are compared instead. On
+2026-09-23 a fresh materialization from the pinned revisions reproduced all ten subsets
+byte for byte; the three CLEVR subsets came back under new fingerprints, which the row
+comparison accepts. Historical source
 revisions were not pinned sufficiently to reconstruct every upstream download;
 new manifests establish local identity, not retroactive upstream provenance. New
 materializations now pin the five source repositories and record those revisions.

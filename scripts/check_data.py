@@ -2,9 +2,10 @@
 
     python -m scripts.check_data
 
-Existing split files are validated against the data on disk and never rewritten; a
-registered dataset without one gets a new file that leaves the others unchanged. The
-overlap report lands next to the split files.
+Existing split files are validated against the data on disk and never rewritten: each
+subset must hold the rows its split file records (compared by content when the dataset
+fingerprint differs). A registered dataset without a split file gets a new one that leaves
+the others unchanged. The overlap report lands next to the split files.
 
 `--migrate data/split_manifest.json` converted the single heldout-images-v2 manifest into
 per-dataset files once, keeping every row of every role.
@@ -22,10 +23,10 @@ from vqar.splits import (
     VERSION,
     build_split,
     overlap_report,
-    qid_hash,
     read_split,
     roles_sha256,
     split_path,
+    verify_subset,
 )
 
 
@@ -87,9 +88,7 @@ def write_split(path: Path, split: dict) -> None:
 
 def check_subsets(data_dir: Path, split: dict) -> None:
     for name, entry in split["subsets"].items():
-        rows = load_from_disk(str(data_dir / name))
-        if (entry["fingerprint"], entry["qids_sha256"]) != (rows._fingerprint, qid_hash(rows)):
-            raise ValueError(f"{name} changed since {split['dataset']}'s split file was written")
+        verify_subset(data_dir, name, entry, load_from_disk(str(data_dir / name)))
 
 
 def main():
