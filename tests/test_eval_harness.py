@@ -5,37 +5,11 @@ import io
 import json
 
 import pytest
-from datasets import Dataset
+from fixtures import png, save_subset, write_splits
 from PIL import Image as PILImage
 
-from vqar.data import FEATURES
 from vqar.eval import ModelRef, Protocol, RunRecord, find_cell, protocol_identity, run_eval
-from vqar.splits import build_split, split_path
-
-
-def png(shade: int, size=(4, 4)) -> bytes:
-    buffer = io.BytesIO()
-    PILImage.new("RGB", size, (shade, shade, shade)).save(buffer, format="PNG")
-    return buffer.getvalue()
-
-
-def save_subset(data_dir, name, dataset, rows):
-    records = [
-        {"dataset": dataset, "qid": qid, "image": {"bytes": image, "path": None},
-         "question": question, "answers": answers, "answer_type": answer_type}
-        for qid, image, question, answers, answer_type in rows
-    ]
-    Dataset.from_list(records, features=FEATURES).save_to_disk(str(data_dir / name))
-
-
-def write_splits(directory, datasets):
-    """Split files for tiny fixture datasets, built the same way as for real data."""
-    built = []
-    for dataset in datasets:
-        built.append(build_split(dataset, directory, built, seed=0, dev_target=1))
-        path = split_path(directory, dataset)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(built[-1]))
+from vqar.splits import split_path
 
 
 @pytest.fixture
@@ -181,8 +155,9 @@ def test_interrupted_run_resumes_from_saved_batches(data_dir, model, tmp_path):
 def test_black_images_keep_size_and_labels(data_dir, model, tmp_path):
     script = dict(SCRIPT, **{q: (lambda m: "black" if image_shade(m) == 0 else "lit")
                              for q in ("What animal?", "Is it red?", "How many?")})
-    generator = ScriptedGenerator(script)
-    record = run_eval(model, Protocol("vqav2", image_mode="black"), generator,
+    run_eval(model, Protocol("vqav2"), ScriptedGenerator(script),
+             data_dir=data_dir, records_dir=tmp_path / "records")
+    record = run_eval(model, Protocol("vqav2", image_mode="black"), ScriptedGenerator(script),
                       data_dir=data_dir, records_dir=tmp_path / "records")
     lines = [json.loads(line) for line in record.predictions_path().read_text().splitlines()]
     assert {line["prediction"] for line in lines} == {"black"}
@@ -193,6 +168,8 @@ def test_black_images_keep_size_and_labels(data_dir, model, tmp_path):
 def test_swapped_images_come_from_a_different_picture(data_dir, model, tmp_path):
     script = dict(SCRIPT, **{q: (lambda m: str(image_shade(m)))
                              for q in ("Which side?", "What color?", "Is there a dog?")})
+    run_eval(model, Protocol("gqa"), ScriptedGenerator(script),
+             data_dir=data_dir, records_dir=tmp_path / "records")
     record = run_eval(model, Protocol("gqa", image_mode="swapped"), ScriptedGenerator(script),
                       data_dir=data_dir, records_dir=tmp_path / "records")
     lines = [json.loads(line) for line in record.predictions_path().read_text().splitlines()]
@@ -328,3 +305,28 @@ def test_generator_must_return_every_sample(data_dir, model, tmp_path):
     with pytest.raises(ValueError, match="2 samples per question"):
         run_eval(model, Protocol("gqa", temperature=1.0, samples=2), Short(SCRIPT),
                  data_dir=data_dir, records_dir=tmp_path / "records")
+
+
+def test_casing_diagnostics_separate_capitalization_from_other_misses(data_dir, model, tmp_path):
+    record = run_eval(model, Protocol("vqav2"), ScriptedGenerator(SCRIPT),
+                      data_dir=data_dir, records_dir=tmp_path / "records")
+    # "Cat" fails the official unanimous-case rule only because of its capital letter.
+    assert record.metrics["official_on_lowercased_answers"] == pytest.approx(2 / 3)
+    assert record.metrics["answers_scored_differently"] == 1
+
+
+def test_interventions_pair_with_the_original_image_cell(data_dir, model, tmp_path):
+    records = tmp_path / "records"
+    with pytest.raises(ValueError, match="Evaluate the original-image cell first"):
+        run_eval(model, Protocol("gqa", image_mode="black"), ScriptedGenerator(SCRIPT),
+                 data_dir=data_dir, records_dir=records)
+    run_eval(model, Protocol("vqav2"), ScriptedGenerator(SCRIPT),
+             data_dir=data_dir, records_dir=records)
+    script = dict(SCRIPT, **{"What animal?": "dog"})
+    changed = run_eval(model, Protocol("vqav2", image_mode="black"), ScriptedGenerator(script),
+                       data_dir=data_dir, records_dir=records)
+    paired = changed.metrics["paired_with_original"]
+    assert paired["n"] == 3
+    assert paired["original"] == {"official": pytest.approx(1 / 3),
+                                  "normalized": pytest.approx(2 / 3)}
+    assert paired["normalized_answer_changed_fraction"] == pytest.approx(1 / 3)

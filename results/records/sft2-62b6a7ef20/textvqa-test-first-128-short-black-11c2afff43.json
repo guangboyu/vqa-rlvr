@@ -1,0 +1,95 @@
+{
+  "schema": "run-record/1",
+  "legacy": true,
+  "model_id": "62b6a7ef20b0d2f4889b2fcaae05c74841ddc18eb88dd1812d07dd7084135476",
+  "protocol_id": "11c2afff43df818c7d98f85483d81799de22ca64b21c29fb88e4bb9bf0b4e4b5",
+  "model": {
+    "source": "/pub/guangboy/ops/vqa-baselines-20260913/merged/sft2",
+    "label": "sft2",
+    "run": "sft2",
+    "step": null,
+    "weights": {
+      "sha256": "bc3ee8d2a07b3ecda240040dbf1a9f9ef4838d3f6e84bb3d204f0157555b110c",
+      "config_sha256": "956859bbf348ffbcbdecd094686e060f471981471aab95056f53652ac6031279"
+    }
+  },
+  "protocol": {
+    "dataset": "textvqa",
+    "ladder": "far-ood",
+    "role": "test",
+    "tier": "first-128",
+    "question_limit": 128,
+    "prompt": "short",
+    "prompt_text": "{question}\nAnswer the question using a single word or phrase.",
+    "max_tokens": 64,
+    "temperature": 0.0,
+    "samples": 1,
+    "image_mode": "black",
+    "max_pixels": 786432,
+    "scorers": {
+      "official": "textvqa_accuracy/v1",
+      "normalized": "vqa_accuracy/v1"
+    },
+    "extraction": "last_answer_tag_or_full_text",
+    "answer_tag_rule": "raw text contains </answer>",
+    "data": {
+      "subsets": {
+        "textvqa_eval": "6fd865d446dd7196"
+      },
+      "selection_sha256": "50190502a2b2b73358df0d2cdc4adfe8bb64fd0af065f0dd0b36af0dde96a72f"
+    }
+  },
+  "metrics": {
+    "n": 128,
+    "official": {
+      "overall": 0.04765625,
+      "by_answer_type": {
+        "all": 0.04765625
+      }
+    },
+    "normalized": {
+      "overall": 0.04765625,
+      "by_answer_type": {
+        "all": 0.04765625
+      }
+    },
+    "mean_output_tokens": 2.90625,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.04765625,
+    "answers_scored_differently": 0,
+    "paired_with_original": {
+      "n": 128,
+      "original": {
+        "official": 0.83515625,
+        "normalized": 0.83515625
+      },
+      "normalized_answer_changed_fraction": 0.96875
+    }
+  },
+  "provenance": {
+    "legacy": "corrected campaign, September 2026",
+    "code_version": "unknown",
+    "source_sha256": {
+      "evaluate.py": "c1425859e656bfee70c97b1aeb6a933d780cdaa6ab573a93c6a38ac0ada075a3",
+      "vqar/inference.py": "361778b1e03063c566f79974f224e2781ddb30f6e49ae9020a7518600a7a1665",
+      "vqar/metrics.py": "3ba4c6b35621edc28568199a10f51351f1941c31b4998aee50eaa31f663126ec",
+      "vqar/config.py": "51c3c85c9892993c0dd6a8d09eb0af790cdec1590e2a7f16d8f76950f4614b34",
+      "vqar/data.py": "e9dfd5e0462e3dab0e5123fbab8d819e93c98b6e823a38a75f50ee70bfa444d9",
+      "vqar/splits.py": "33d4f5d32f4386cabb6f8155d4764182a627040ead33f8bc5f1fad9e4182114d",
+      "uv.lock": "91a36d0647e782cf10edf11da067557746ca1d8a3ed9e3273485ae8e7df079e5"
+    },
+    "versions": {
+      "torch": "2.11.0+cu129",
+      "transformers": "5.13.0",
+      "vllm": "0.23.0+cu129",
+      "datasets": "5.0.0"
+    },
+    "timestamp": "2026-09-14T06:14:56+00:00",
+    "migrated_from": {
+      "results/baselines/interventions/sft2/runs/sft2-short-black-textvqa.json": "55fb1b4fc8bc46c0e4af00dce0f5956eceb3772400791714ae6faa42e504f9ab",
+      "results/baselines/interventions/sft2/preds/sft2-short-black-textvqa.jsonl": "810532abd15f6a4684f10ce984bb492235549d22bd584f5a4e86d3acffb85b65"
+    }
+  }
+}

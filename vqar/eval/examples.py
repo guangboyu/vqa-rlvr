@@ -34,18 +34,19 @@ def to_example(row: dict) -> Example:
                    row["answer_type"], row.get("choices"))
 
 
-def select_rows(protocol: Protocol, data_dir: Path):
+def select_rows(protocol: Protocol, data_dir: Path, limit: int | None = None):
     """The rows a protocol evaluates, in the split file's order, and the identity of that data.
 
     The identity names the source subsets and hashes the ordered (subset, row, question id)
     selection, so it changes exactly when the evaluated rows change; editing another role
     of the same split file leaves it alone. Swapped images also pin the donor of each row.
+    `limit` overrides the tier's question count (historical records only).
     """
     rows = load_role(data_dir, [protocol.dataset], protocol.role, seed=None)
     split = read_split(data_dir, protocol.dataset)
     parts = split["roles"][protocol.role]
     selection = [[part["subset"], index] for part in parts for index in part["indices"]]
-    limit = Protocol.TIERS[protocol.tier]
+    limit = limit or Protocol.TIERS[protocol.tier]
     if limit is not None:
         rows = rows.select(range(min(limit, len(rows))))
         selection = selection[:limit]

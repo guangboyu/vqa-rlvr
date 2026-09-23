@@ -99,8 +99,9 @@ def main() -> None:
         cached = cell.cached
         record = run_eval(model, protocol, generator, data_dir=args.data_dir,
                           records_dir=args.records_dir, batch_size=args.batch_size)
-        print(f"{protocol.slug()}: {describe(record)}{' (cached)' if cached else ''} "
-              f"-> {record.path}")
+        # A legacy record is the same cell, migrated from an earlier revision of the code.
+        note = (" (cached, legacy)" if record.legacy else " (cached)") if cached else ""
+        print(f"{protocol.slug()}: {describe(record)}{note} -> {record.path}")
 
 
 if __name__ == "__main__":

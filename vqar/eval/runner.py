@@ -3,17 +3,19 @@
 import hashlib
 import importlib.metadata
 import json
+import math
 import shutil
 import subprocess
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from pathlib import Path
 
 from vqar.eval.examples import image_donors, select_rows, shown_images, to_example
-from vqar.eval.protocol import Protocol, protocol_identity
+from vqar.eval.protocol import Protocol, protocol_identity, slug
 from vqar.eval.record import ModelRef, RunRecord, model_id, record_path
 from vqar.inference import build_messages, extract_answer
+from vqar.metrics import normalize_answer
 from vqar.registry import DATASETS, PROMPTS, SCORER_VARIANTS
 
 ROOT = Path(__file__).resolve().parent.parent.parent
@@ -40,6 +42,13 @@ def run_eval(model: ModelRef, protocol: Protocol, generator, *, data_dir: Path =
                                                      Protocol.id_of(identity)):
             raise ValueError(f"{path} holds a different cell; its short ids collide")
         return cached
+
+    if protocol.image_mode != "original":
+        # Interventions are reported against the same questions with original images.
+        original = original_lines(model, protocol, data_dir, records_dir)
+        if original is None:
+            raise ValueError("Evaluate the original-image cell first; its saved predictions "
+                             f"pair with this {protocol.image_mode}-image cell.")
 
     progress = path.with_suffix(".progress")
     qids = list(rows["qid"])
@@ -68,10 +77,42 @@ def run_eval(model: ModelRef, protocol: Protocol, generator, *, data_dir: Path =
         lines.extend(batch)
         print(f"{protocol.slug()}: saved {start + len(examples)}/{len(rows)}", flush=True)
 
-    record = RunRecord(model_identity, identity, summarize(lines), provenance())
+    metrics = summarize(lines, protocol.dataset)
+    if protocol.image_mode != "original":
+        metrics["paired_with_original"] = paired_with_original(lines, original)
+    record = RunRecord(model_identity, identity, metrics, provenance())
     saved = record.save(path, lines)
     shutil.rmtree(progress, ignore_errors=True)
     return saved
+
+
+def original_lines(model, protocol, data_dir, records_dir) -> list[dict] | None:
+    """Predictions of the same cell with original images, when they were saved."""
+    _, _, _, path = resolve(model, replace(protocol, image_mode="original"), data_dir,
+                            records_dir)
+    sidecar = path.with_name(path.stem + ".predictions.jsonl")
+    if not sidecar.exists():
+        return None
+    return [json.loads(line) for line in sidecar.read_text().splitlines()]
+
+
+def paired_with_original(changed: list[dict], original: list[dict]) -> dict:
+    """How an image intervention moved scores and answers on the same questions.
+
+    Scores keep the original image's references, so they measure agreement with those
+    references, not accuracy on the changed image. Only first samples are compared.
+    """
+    by_qid = {line["qid"]: line for line in original if line["sample"] == 0}
+    pairs = [(by_qid[line["qid"]], line) for line in changed if line["sample"] == 0]
+    variants = [v for v in SCORER_VARIANTS if pairs[0][0]["scores"][v] is not None]
+    return {
+        "n": len(pairs),
+        "original": {v: sum(o["scores"][v] for o, _ in pairs) / len(pairs) for v in variants},
+        "normalized_answer_changed_fraction": sum(
+            normalize_answer(o["prediction"]) != normalize_answer(c["prediction"])
+            for o, c in pairs
+        ) / len(pairs),
+    }
 
 
 @dataclass(frozen=True)
@@ -100,7 +141,7 @@ def resolve(model, protocol, data_dir, records_dir):
     identity = protocol_identity(protocol, data)
     model_identity = model.identity()
     return rows, model_identity, identity, record_path(Path(records_dir), model_identity,
-                                                         protocol, identity)
+                                                         slug(identity), identity)
 
 
 def prediction_line(example, image_qid: str, sample: int, output: dict, role: str) -> dict:
@@ -118,10 +159,11 @@ def prediction_line(example, image_qid: str, sample: int, output: dict, role: st
             "finish_reason": output["finish_reason"]}
 
 
-def summarize(lines: list[dict]) -> dict:
+def summarize(lines: list[dict], dataset: str) -> dict:
     """Both scorer variants overall and per answer type, plus behavior metrics.
 
-    With several samples per question, accuracies average over samples (avg@k).
+    With several samples per question, accuracies average over samples (avg@k). Two casing
+    diagnostics show how much of the gap between the variants is capitalization.
     """
     if not lines:
         raise ValueError("Evaluation subset is empty.")
@@ -145,6 +187,15 @@ def summarize(lines: list[dict]) -> dict:
         "answer_tag_fraction": sum("</answer>" in line["raw"] for line in lines) / count,
         "empty_answer_fraction": sum(not line["prediction"] for line in lines) / count,
     })
+    if metrics["official"] is not None:
+        official = DATASETS[dataset].official
+        lowercased = [official(line["prediction"].lower(), line["answers"]) for line in lines]
+        metrics["official_on_lowercased_answers"] = sum(lowercased) / count
+        metrics["answers_scored_differently"] = sum(
+            not math.isclose(line["scores"]["official"], line["scores"]["normalized"],
+                             abs_tol=1e-12)
+            for line in lines
+        )
     return metrics
 
 

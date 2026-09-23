@@ -177,9 +177,10 @@ evaluate_arm grpo2-base checkpoints/merged/sharedpool_20260913_grpo_2b_base
 evaluate_arm grpo2-sft checkpoints/merged/sharedpool_20260913_grpo_2b_sft
 ```
 
-For image sensitivity, add `--image-mode black` or `swapped`. The recorded
-interventions used the first 128 test questions; the harness's nearest tier is
-`--tier dev` (the first 500). Interventions keep the original references, so their
+For image sensitivity, evaluate the original-image cell first, then repeat it with
+`--image-mode black` or `swapped` at the same tier; each intervention record pairs with
+the original's saved predictions. The recorded interventions used the first 128 test
+questions; the harness's nearest tier is `--tier dev` (the first 500). Interventions keep the original references, so their
 scores are not ground-truth accuracy on altered images.
 
 ## Inspect saved evidence without a GPU

@@ -135,7 +135,7 @@ class RunRecord:
         return record
 
 
-def record_path(records_dir: Path, model: dict, protocol: Protocol, identity: dict) -> Path:
+def record_path(records_dir: Path, model: dict, slug: str, identity: dict) -> Path:
     """Records live under <label>-<model id>/<protocol slug>-<protocol id>.json.
 
     An existing folder for the same model id is reused whatever its label, so a cache hit
@@ -144,4 +144,4 @@ def record_path(records_dir: Path, model: dict, protocol: Protocol, identity: di
     short_model = model_id(model)[:10]
     folders = sorted(records_dir.glob(f"*-{short_model}")) if records_dir.exists() else []
     folder = folders[0] if folders else records_dir / f"{model['label']}-{short_model}"
-    return folder / f"{protocol.slug()}-{Protocol.id_of(identity)[:10]}.json"
+    return folder / f"{slug}-{Protocol.id_of(identity)[:10]}.json"

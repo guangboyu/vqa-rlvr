@@ -60,16 +60,23 @@ class Protocol:
         return self.temperature > 0
 
     def slug(self) -> str:
-        parts = [self.dataset, self.role, self.tier, self.prompt]
-        if self.image_mode != "original":
-            parts.append(self.image_mode)
-        if self.sampled:
-            parts.append(f"t{self.temperature:g}k{self.samples}")
-        return "-".join(parts)
+        return slug({"dataset": self.dataset, "role": self.role, "tier": self.tier,
+                     "prompt": self.prompt, "image_mode": self.image_mode,
+                     "temperature": self.temperature, "samples": self.samples})
 
     @staticmethod
     def id_of(identity: dict) -> str:
         return hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
+
+
+def slug(identity: dict) -> str:
+    """A readable file-name prefix for a record, e.g. vqav2-test-full-short-black."""
+    parts = [identity["dataset"], identity["role"], identity["tier"], identity["prompt"]]
+    if identity["image_mode"] != "original":
+        parts.append(identity["image_mode"])
+    if identity["temperature"] > 0:
+        parts.append(f"t{identity['temperature']:g}k{identity['samples']}")
+    return "-".join(parts)
 
 
 def scorer_version(scorer) -> str:
