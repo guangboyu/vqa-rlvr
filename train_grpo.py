@@ -18,7 +18,7 @@ from pathlib import Path
 
 from vqar import config
 from vqar.registry import PROMPTS
-from vqar.splits import load_training_subsets, split_provenance
+from vqar.splits import load_role, provenance
 from vqar.training import (
     check_rl_precision,
     last_complete_checkpoint,
@@ -64,10 +64,9 @@ def to_grpo_columns(batch: dict) -> dict:
     }
 
 
-def load_rl_dataset(preset: config.GRPOPreset, legacy: bool = False):
-    if not legacy and any(not name.endswith("_rl") for name in preset.subsets):
-        raise ValueError("Use *_rl views for RL; they already include eligible SFT training rows.")
-    ds = load_training_subsets(ROOT / "data", preset.subsets, preset.seed, legacy)
+def load_rl_dataset(preset: config.GRPOPreset):
+    """The rl role of the preset's datasets; it already reuses their SFT training rows."""
+    ds = load_role(ROOT / "data", preset.datasets, "rl", preset.seed)
     return ds.select_columns(["image", "question", "answers", "dataset", "qid"]).with_transform(
         to_grpo_columns
     )
@@ -135,15 +134,15 @@ def make_chat_rollout(preset: config.GRPOPreset):
     return rollout
 
 
-def dry_run(preset: config.GRPOPreset, rewards: tuple[str, ...], legacy: bool = False) -> None:
+def dry_run(preset: config.GRPOPreset, rewards: tuple[str, ...]) -> None:
     """Validate dataset shape and reward wiring without touching a model or GPU."""
     from vqar.rewards import REWARDS
 
-    ds = load_rl_dataset(preset, legacy)
+    ds = load_rl_dataset(preset)
     row = ds[0]
     assert row["prompt"][0]["role"] == "user", row
     assert "<think>" in row["prompt"][0]["content"]
-    print(f"dataset ok: {len(ds)} prompts from views {preset.subsets}")
+    print(f"dataset ok: {len(ds)} prompts from the rl roles of {preset.datasets}")
     print(f"sample question: {row['question'][:80]}")
 
     fake_completion = [{"role": "assistant", "content": "<think>x</think><answer>4</answer>"}]
@@ -163,15 +162,14 @@ def main() -> None:
     parser.add_argument("--preset", required=True, choices=sorted(config.GRPO_PRESETS))
     parser.add_argument("--model", default=None, help="override policy model/checkpoint")
     parser.add_argument("--hardware", choices=config.HARDWARE_PROFILES, default="legacy")
-    parser.add_argument("--legacy-splits", action="store_true", help="reproduce historical splits")
     parser.add_argument("--rewards", nargs="+", default=None,
                         help="override reward set, e.g. correctness format")
     parser.add_argument("--reward-weights", nargs="+", type=float, default=None)
     parser.add_argument("--max-steps", type=int, default=None)
     parser.add_argument("--grad-accum", type=int, default=None)
     parser.add_argument("--batch-size", type=int, default=None)
-    parser.add_argument("--subsets-override", nargs="+", default=None,
-                        help="train on specific RL subsets (transfer-matrix arms)")
+    parser.add_argument("--datasets", nargs="+", default=None,
+                        help="train on these datasets' rl roles (transfer-matrix arms)")
     parser.add_argument("--kl-beta", type=float, default=None)
     parser.add_argument("--run-name", default=None)
     parser.add_argument("--run-dir", default=None,
@@ -191,8 +189,8 @@ def main() -> None:
     if args.model:
         preset = replace(preset, model=args.model)
     preset = config.for_hardware(preset, args.hardware)
-    if args.subsets_override:
-        preset = replace(preset, subsets=tuple(args.subsets_override))
+    if args.datasets:
+        preset = replace(preset, datasets=tuple(args.datasets))
     rewards = tuple(args.rewards) if args.rewards else preset.rewards
     weights = tuple(args.reward_weights) if args.reward_weights else preset.reward_weights
     if args.rewards and not args.reward_weights:
@@ -201,7 +199,7 @@ def main() -> None:
 
     if args.dry_run:
         print(f"hardware={args.hardware}; recipe={config.RL_RECIPE}")
-        dry_run(preset, rewards, args.legacy_splits)
+        dry_run(preset, rewards)
         return
 
     check_rl_precision(preset)
@@ -275,7 +273,7 @@ def main() -> None:
     )
     write_run_config(output_dir, {
         "preset": config.dump(preset), "policy_model": model_path,
-        "data": split_provenance(ROOT / "data", args.legacy_splits),
+        "data": provenance(ROOT / "data", preset.datasets),
         "overrides": {"hardware": args.hardware, "rewards": list(rewards),
                       "reward_weights": list(weights), "max_steps": max_steps,
                       "kl_beta": kl_beta, "batch_size": grpo_config.per_device_train_batch_size,
@@ -285,7 +283,7 @@ def main() -> None:
         model=model_path,
         reward_funcs=build_rewards(rewards),
         args=grpo_config,
-        train_dataset=load_rl_dataset(preset, args.legacy_splits),
+        train_dataset=load_rl_dataset(preset),
         processing_class=processor,
         peft_config=peft_config,
         rollout_func=make_chat_rollout(preset),

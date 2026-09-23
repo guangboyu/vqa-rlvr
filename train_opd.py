@@ -27,7 +27,7 @@ from train_grpo import (
     resolve_model,
 )
 from vqar import config
-from vqar.splits import split_provenance
+from vqar.splits import provenance
 from vqar.training import (
     check_rl_precision,
     last_complete_checkpoint,
@@ -213,7 +213,6 @@ def main() -> None:
     parser.add_argument("--preset", required=True, choices=sorted(config.OPD_PRESETS))
     parser.add_argument("--model", default=None, help="override student model/checkpoint")
     parser.add_argument("--hardware", choices=config.HARDWARE_PROFILES, default="legacy")
-    parser.add_argument("--legacy-splits", action="store_true", help="reproduce historical splits")
     parser.add_argument("--teacher", default=None, help="override teacher model/checkpoint")
     parser.add_argument("--max-steps", type=int, default=None)
     parser.add_argument("--seed", type=int, default=None, help="seed replication arms")
@@ -240,7 +239,7 @@ def main() -> None:
 
     if args.dry_run:
         print(f"hardware={args.hardware}; recipe={config.RL_RECIPE}")
-        dry_run(preset, rewards=("correctness",), legacy=args.legacy_splits)
+        dry_run(preset, rewards=("correctness",))
         return
 
     check_rl_precision(preset)
@@ -334,7 +333,7 @@ def main() -> None:
         "preset": config.dump(preset), "policy_model": student_path,
         "teacher_model": teacher_path,
         "teacher_log_softmax_dtype": "float32",
-        "data": split_provenance(ROOT / "data", args.legacy_splits),
+        "data": provenance(ROOT / "data", preset.datasets),
         "overrides": {"hardware": args.hardware, "max_steps": max_steps},
     }, opd_config)
     trainer_cls = make_opd_trainer_cls()
@@ -342,7 +341,7 @@ def main() -> None:
         model=student_path,
         reward_funcs=[REWARDS["correctness"]],
         args=opd_config,
-        train_dataset=load_rl_dataset(preset, args.legacy_splits),
+        train_dataset=load_rl_dataset(preset),
         processing_class=processor,
         peft_config=peft_config,
         rollout_func=make_chat_rollout(preset),

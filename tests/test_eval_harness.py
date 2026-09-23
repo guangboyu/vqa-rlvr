@@ -10,6 +10,7 @@ from PIL import Image as PILImage
 
 from vqar.data import FEATURES
 from vqar.eval import ModelRef, Protocol, RunRecord, find_cell, protocol_identity, run_eval
+from vqar.splits import build_split, split_path
 
 
 def png(shade: int, size=(4, 4)) -> bytes:
@@ -27,6 +28,16 @@ def save_subset(data_dir, name, dataset, rows):
     Dataset.from_list(records, features=FEATURES).save_to_disk(str(data_dir / name))
 
 
+def write_splits(directory, datasets):
+    """Split files for tiny fixture datasets, built the same way as for real data."""
+    built = []
+    for dataset in datasets:
+        built.append(build_split(dataset, directory, built, seed=0, dev_target=1))
+        path = split_path(directory, dataset)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(built[-1]))
+
+
 @pytest.fixture
 def data_dir(tmp_path):
     directory = tmp_path / "data"
@@ -40,6 +51,14 @@ def data_dir(tmp_path):
         ("g2", png(40), "What color?", ["blue"], "query"),
         ("g3", png(50), "Is there a dog?", ["no"], "verify"),
     ])
+    for dataset, answer, shade in (("vqav2", "yes", 60), ("gqa", "left", 80)):
+        save_subset(directory, f"{dataset}_sft", dataset, [
+            (f"{dataset}-s{i}", png(shade + i), "Is it red?", [answer], "") for i in range(3)
+        ])
+        save_subset(directory, f"{dataset}_rl", dataset, [
+            (f"{dataset}-r0", png(shade + 9), "Is it red?", [answer], "")
+        ])
+    write_splits(directory, ["vqav2", "gqa"])
     return directory
 
 
@@ -214,52 +233,30 @@ def test_protocol_rejects_unknown_or_inconsistent_fields():
         Protocol("gqa", image_mode="blurred")
 
 
-@pytest.fixture
-def dev_data_dir(tmp_path):
-    """Two SFT pools whose second image the split manifest reserves for dev."""
-    from datasets import load_from_disk
-
-    from vqar.splits import VERSION, qid_hash
-
-    directory = tmp_path / "dev-data"
-    entries = {}
-    for name, answer in (("vqav2", "yes"), ("gqa", "left")):
-        subset = f"{name}_sft"
-        save_subset(directory, subset, name, [
-            (f"{name}-a", png(1), "Is it red?", [answer], ""),
-            (f"{name}-b", png(2), "Which side?", [answer], ""),
-        ])
-        saved = load_from_disk(str(directory / subset))
-        entries[subset] = {"fingerprint": saved._fingerprint, "qids_sha256": qid_hash(saved),
-                           "image_keys": ["train-image", "dev-image"],
-                           "retained_indices": [0, 1]}
-    manifest = {"version": VERSION, "subsets": entries,
-                "sft_dev": {"subsets": list(entries), "seed": 42, "image_keys": ["dev-image"]}}
-    (directory / "split_manifest.json").write_text(json.dumps(manifest))
-    return directory
-
-
-def test_dev_role_uses_manifest_images_and_skips_unscorable_official(dev_data_dir, model,
+def test_dev_role_reads_the_split_file_and_skips_unscorable_official(data_dir, model,
                                                                      tmp_path):
-    script = {"Is it red?": "yes", "Which side?": "Yes"}
+    split = json.loads(split_path(data_dir, "vqav2").read_text())
+    (dev,) = split["roles"]["dev"]
+    script = {"Is it red?": "Yes"}
     record = run_eval(model, Protocol("vqav2", role="dev"), ScriptedGenerator(script),
-                      data_dir=dev_data_dir, records_dir=tmp_path / "records")
+                      data_dir=data_dir, records_dir=tmp_path / "records")
     lines = [json.loads(line) for line in record.predictions_path().read_text().splitlines()]
-    assert [line["qid"] for line in lines] == ["vqav2-b"]
+    assert [line["qid"] for line in lines] == [f"vqav2-s{i}" for i in dev["indices"]]
     # The authors' VQAv2 evaluator needs ten annotators; dev keeps one reference.
     assert record.metrics["official"] is None
     assert record.metrics["normalized"]["overall"] == 1.0
-    assert record.protocol["data"]["split_sha256"]
+    assert record.protocol["data"]["subsets"] == {
+        "vqav2_sft": split["subsets"]["vqav2_sft"]["fingerprint"]}
 
 
-def test_dev_role_rejects_changed_sources(dev_data_dir, model, tmp_path):
-    path = dev_data_dir / "split_manifest.json"
-    manifest = json.loads(path.read_text())
-    manifest["subsets"]["gqa_sft"]["qids_sha256"] = "changed"
-    path.write_text(json.dumps(manifest))
-    with pytest.raises(ValueError, match="changed since the split check"):
-        run_eval(model, Protocol("gqa", role="dev"), ScriptedGenerator({}),
-                 data_dir=dev_data_dir, records_dir=tmp_path / "records")
+def test_evaluation_rejects_data_changed_after_the_split(data_dir, model, tmp_path):
+    path = split_path(data_dir, "gqa")
+    split = json.loads(path.read_text())
+    split["subsets"]["gqa_eval"]["qids_sha256"] = "changed"
+    path.write_text(json.dumps(split))
+    with pytest.raises(ValueError, match="changed since its split file was written"):
+        run_eval(model, Protocol("gqa"), ScriptedGenerator(SCRIPT),
+                 data_dir=data_dir, records_dir=tmp_path / "records")
 
 
 def interrupted_cell(data_dir, model, records):
@@ -303,15 +300,14 @@ def test_resume_rejects_damaged_progress(data_dir, model, tmp_path, damage, mess
                  data_dir=data_dir, records_dir=tmp_path / "records", batch_size=2)
 
 
-def test_swapping_needs_two_different_pictures(tmp_path, model):
-    directory = tmp_path / "same"
-    save_subset(directory, "gqa_eval", "gqa", [
-        ("g1", png(40), "Which side?", ["left"], "choose"),
-        ("g2", png(40), "What color?", ["blue"], "query"),
-    ])
+def test_swapping_needs_two_different_pictures(data_dir, model, tmp_path):
+    path = split_path(data_dir, "gqa")
+    split = json.loads(path.read_text())
+    split["roles"]["test"] = [{"subset": "gqa_eval", "indices": [0, 1]}]  # one shared picture
+    path.write_text(json.dumps(split))
     with pytest.raises(ValueError, match="at least two different images"):
         run_eval(model, Protocol("gqa", image_mode="swapped"), ScriptedGenerator(SCRIPT),
-                 data_dir=directory, records_dir=tmp_path / "records")
+                 data_dir=data_dir, records_dir=tmp_path / "records")
 
 
 def test_a_changed_chat_template_is_a_new_model(data_dir, model, tmp_path):

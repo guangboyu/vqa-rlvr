@@ -25,5 +25,6 @@ results/records/**/*.progress/
 # Local release bundles and their manifests
 artifacts/
 
-# The manifest defines the benchmark (sizes, seeds, qid fingerprints) — versioned.
+# The manifest and split files define the benchmark (sizes, seeds, roles) — versioned.
 !data/manifest.json
+!data/splits/

@@ -7,8 +7,6 @@ settings are declared as protocols in `vqar.eval` instead.
 
 from dataclasses import asdict, dataclass, replace
 
-from vqar.registry import pools
-
 MODEL_2B = "Qwen/Qwen3-VL-2B-Instruct"
 MODEL_8B = "Qwen/Qwen3-VL-8B-Instruct"
 
@@ -48,7 +46,7 @@ class SFTPreset:
     learning_rate: float
     per_device_batch_size: int
     gradient_accumulation: int
-    subsets: tuple[str, ...] = pools("sft", "vqav2", "gqa")
+    datasets: tuple[str, ...] = ("vqav2", "gqa")  # trains on their sft roles
     lora_r: int = 16
     lora_alpha: int = 32
     lora_dropout: float = 0.05
@@ -97,7 +95,7 @@ SFT_PRESETS: dict[str, SFTPreset] = {
 class GRPOPreset:
     name: str
     model: str  # base HF id or a merged SFT checkpoint dir to continue from
-    subsets: tuple[str, ...]  # RL prompt pools, e.g. pools("rl", "clevr")
+    datasets: tuple[str, ...]  # RL prompts come from these datasets' rl roles
     quantize_4bit: bool
     learning_rate: float
     num_generations: int  # group size G
@@ -129,7 +127,7 @@ GRPO_PRESETS: dict[str, GRPOPreset] = {
         GRPOPreset(
             name="grpo_2b_clevr_base",  # R1-Zero-style sandbox: base model emits <think>
             model=MODEL_2B,  # zero-shot, so format reward is alive from step 0
-            subsets=pools("rl", "clevr"),
+            datasets=("clevr",),
             quantize_4bit=False,
             learning_rate=1e-5,
             num_generations=8,
@@ -142,7 +140,7 @@ GRPO_PRESETS: dict[str, GRPOPreset] = {
         GRPOPreset(
             name="grpo_2b_main",
             model=MODEL_2B,
-            subsets=pools("rl", "vqav2", "gqa"),
+            datasets=("vqav2", "gqa"),
             quantize_4bit=False,
             learning_rate=1e-5,
             num_generations=8,
@@ -158,7 +156,7 @@ GRPO_PRESETS: dict[str, GRPOPreset] = {
         GRPOPreset(
             name="grpo_8b_fmt0",
             model=MODEL_8B,
-            subsets=pools("rl", "vqav2", "gqa"),
+            datasets=("vqav2", "gqa"),
             quantize_4bit=False,
             learning_rate=1e-5,
             num_generations=8,
@@ -183,7 +181,7 @@ class OPDPreset:
     name: str
     model: str  # student init (base HF id or merged checkpoint dir)
     teacher: str  # scored frozen; NF4-quantized to fit next to the student on 24GB
-    subsets: tuple[str, ...]
+    datasets: tuple[str, ...]
     learning_rate: float
     num_generations: int  # rollouts per prompt; kept only for geometry parity
     per_device_batch_size: int
@@ -218,7 +216,7 @@ OPD_PRESETS: dict[str, OPDPreset] = {
             name="opd_2b_main",
             model=MODEL_2B,
             teacher=MODEL_8B,
-            subsets=pools("rl", "vqav2", "gqa"),
+            datasets=("vqav2", "gqa"),
             learning_rate=1e-5,
             num_generations=8,
             per_device_batch_size=8,
@@ -232,7 +230,7 @@ OPD_PRESETS: dict[str, OPDPreset] = {
             name="opd_self_2b_main",
             model=MODEL_2B,
             teacher="self",
-            subsets=pools("rl", "vqav2", "gqa"),
+            datasets=("vqav2", "gqa"),
             learning_rate=1e-5,
             num_generations=8,
             per_device_batch_size=8,
@@ -247,7 +245,7 @@ OPD_PRESETS: dict[str, OPDPreset] = {
             name="opd_self_8b_main",
             model=MODEL_8B,
             teacher="self",
-            subsets=pools("rl", "vqav2", "gqa"),
+            datasets=("vqav2", "gqa"),
             learning_rate=1e-5,
             num_generations=8,
             per_device_batch_size=8,

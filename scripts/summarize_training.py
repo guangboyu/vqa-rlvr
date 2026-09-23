@@ -51,13 +51,28 @@ def group_summary(groups):
     }
 
 
-def summarize_run(directory, sft_questions, manifest_sha):
+def same_data(recorded: dict, splits: dict[str, dict], split_sha: dict[str, str]) -> bool:
+    """A run matches the current split files directly, or, for runs that predate them,
+    through the manifest the files were migrated from with their roles still unedited."""
+    if "manifest_sha256" not in recorded:
+        return all(split_sha.get(name) == sha for name, sha in recorded["split_sha256"].items())
+    from vqar.splits import roles_sha256
+
+    migrated = [split for split in splits.values() if "migrated_from" in split]
+    return bool(migrated) and all(
+        split["migrated_from"]["sha256"] == recorded["manifest_sha256"]
+        and split["migrated_from"]["roles_sha256"] == roles_sha256(split)
+        for split in migrated
+    )
+
+
+def summarize_run(directory, sft_questions, splits, split_sha):
     config = json.loads((directory / "checkpoints/run_config.json").read_text())
     summary = json.loads((directory / "checkpoints/run_summary.json").read_text())
     if not summary["completed"]:
         raise ValueError(f"{directory}: training is not complete")
-    if config["data"]["manifest_sha256"] != manifest_sha:
-        raise ValueError(f"{directory}: split manifest differs from --data-dir")
+    if not same_data(config["data"], splits, split_sha):
+        raise ValueError(f"{directory}: trained on different split files than --data-dir")
     path = directory / "prompt_draws.jsonl"
     groups = completed_draws(path, summary["steps"], config["preset"]["num_generations"])
     buckets = defaultdict(list)
@@ -86,18 +101,17 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
 
-    from vqar.splits import load_training_subsets, split_dev
+    from vqar.registry import DATASETS, datasets_with_role
+    from vqar.splits import load_role, read_split, split_sha256
 
-    manifest_path = args.data_dir / "split_manifest.json"
-    manifest = json.loads(manifest_path.read_text())
-    sft = load_training_subsets(args.data_dir, manifest["sft_dev"]["subsets"],
-                                manifest["sft_dev"]["seed"])
-    train, _ = split_dev(sft)
+    splits = {name: read_split(args.data_dir, name) for name in DATASETS}
+    split_sha = {name: split_sha256(args.data_dir, name) for name in DATASETS}
+    train = load_role(args.data_dir, datasets_with_role("sft"), "sft", seed=None)
     sft_questions = set(zip(train["dataset"], train["qid"], strict=True))
-    manifest_sha = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
-    runs = {str(path): summarize_run(path, sft_questions, manifest_sha) for path in args.runs}
+    runs = {str(path): summarize_run(path, sft_questions, splits, split_sha)
+            for path in args.runs}
     report = {
-        "split_manifest_sha256": manifest_sha,
+        "split_sha256": split_sha,
         "runs": runs,
         "same_prompt_order": (
             len({r["prompt_order_sha256"] for r in runs.values()}) == 1 if len(runs) > 1 else None

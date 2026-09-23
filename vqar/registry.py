@@ -69,7 +69,9 @@ class DatasetSpec:
     name: str
     display_name: str
     sources: Mapping[str, str]  # Hub repository -> pinned revision
-    subsets: Mapping[str, str]  # role -> materialized subset under data/
+    # role -> the materialized subset under data/ it draws from. A dev role drawn from the
+    # SFT subset holds out whole images from it; the split files record the exact rows.
+    subsets: Mapping[str, str]
     official_splits: frozenset[str]  # roles drawn from the dataset's own official split
     ladder: str  # position on the OOD ladder, frozen before training
     answer_schema: str
@@ -135,8 +137,9 @@ DATASETS: dict[str, DatasetSpec] = {
                 "HuggingFaceM4/the_cauldron": "847a98a779b1652d65111daf20c972dfcd333605",
                 "lmms-lab/VQAv2": "32665d35052eb4a6d4414851c3c829a72754915a",
             },
-            subsets={"sft": "vqav2_sft", "rl": "vqav2_rl", "test": "vqav2_eval"},
-            official_splits=frozenset({"sft", "rl", "test"}),
+            subsets={"sft": "vqav2_sft", "rl": "vqav2_rl", "dev": "vqav2_sft",
+                     "test": "vqav2_eval"},
+            official_splits=frozenset({"sft", "rl", "dev", "test"}),
             ladder="in-domain",
             answer_schema="open-ended phrase; ten annotator answers in test, one in training",
             official=metrics.official_vqa_accuracy,
@@ -149,8 +152,8 @@ DATASETS: dict[str, DatasetSpec] = {
             name="gqa",
             display_name="GQA",
             sources={"lmms-lab/GQA": "a6e72d6e1b912da88af8b2f9eba05d5ea8ec2dd8"},
-            subsets={"sft": "gqa_sft", "rl": "gqa_rl", "test": "gqa_eval"},
-            official_splits=frozenset({"sft", "rl", "test"}),
+            subsets={"sft": "gqa_sft", "rl": "gqa_rl", "dev": "gqa_sft", "test": "gqa_eval"},
+            official_splits=frozenset({"sft", "rl", "dev", "test"}),
             ladder="in-domain",
             answer_schema="open-ended phrase; one answer",
             official=metrics.exact_string_match,
@@ -164,7 +167,7 @@ DATASETS: dict[str, DatasetSpec] = {
             name="clevr",
             display_name="CLEVR counting",
             sources={"leonardPKU/clevr_cogen_a_train": "d5a8da66aa97c9c19ebe4075b7c7f777fef850a6"},
-            subsets={"rl": "clevr_rl", "test": "clevr_test"},
+            subsets={"rl": "clevr_rl", "dev": "clevr_val", "test": "clevr_test"},
             official_splits=frozenset(),  # slices of one shuffled source split
             ladder="in-domain",
             answer_schema="integer count",
@@ -204,10 +207,3 @@ def score(dataset: str, prediction: str, answers: list[str], variant: str) -> fl
 def datasets_with_role(role: str) -> list[str]:
     return [name for name, spec in DATASETS.items() if role in spec.subsets]
 
-
-def pools(role: str, *names: str) -> tuple[str, ...]:
-    """The materialized subsets playing `role` for the named datasets, e.g. a recipe's RL pools."""
-    missing = [name for name in names if role not in DATASETS[name].subsets]
-    if missing:
-        raise ValueError(f"{', '.join(missing)} has no {role} role")
-    return tuple(DATASETS[name].subsets[role] for name in names)

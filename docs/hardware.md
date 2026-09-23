@@ -73,10 +73,10 @@ uv run --frozen pytest
 For the current materialized data, expect 39,458 SFT training examples, 506 dev
 examples, and 55,438 mixed RL prompts. Both RL starting points reuse the SFT
 training examples alongside the original RL sources. Dev and evaluation images
-are excluded from both stages. `check_data` writes a versioned split manifest;
-it leaves the source datasets intact. Rebuild the manifest after changing data.
-`--legacy-splits` reproduces the historical, unfiltered data assignment and is recorded
-in run metadata.
+are excluded from both stages. `check_data` validates the versioned split files in
+`data/splits/` (one per dataset) and leaves the source datasets intact; a newly
+registered dataset gets its own file. Historical runs that predate the held-out
+splits reproduce from the archived July code, not from this tree.
 
 ## Small GPU checks
 

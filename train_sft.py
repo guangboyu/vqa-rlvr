@@ -1,7 +1,7 @@
 """Supervised fine-tuning: TRL SFTTrainer + PEFT LoRA (2B, bf16) / QLoRA (8B, NF4).
 
-Trains on the materialized SFT subsets (VQAv2 + GQA mixture) with the fixed `short`
-prompt template. The vision tower stays frozen; adapters target the LM only.
+Trains on the sft role of VQAv2 and GQA (their split files hold dev and test images out)
+with the fixed `short` prompt template. The vision tower stays frozen; adapters target the LM only.
 
 Usage:
     uv run python train_sft.py --preset sft_2b
@@ -22,13 +22,12 @@ from trl import SFTConfig, SFTTrainer
 from vqar import config
 from vqar.data import cap_pixels
 from vqar.registry import PROMPTS
-from vqar.splits import load_training_subsets, split_dev, split_provenance
+from vqar.splits import load_role, provenance
 from vqar.training import last_complete_checkpoint, write_run_config, write_training_summary
 
 os.environ.setdefault("WANDB_PROJECT", "vqa-rlvr")
 
 ROOT = Path(__file__).parent
-DEV_SLICE = 500  # held-out examples for eval-loss monitoring
 
 
 def to_sft_columns(batch: dict) -> dict:
@@ -51,12 +50,10 @@ def to_sft_columns(batch: dict) -> dict:
     }
 
 
-def load_datasets(preset: config.SFTPreset, legacy: bool = False):
-    ds = load_training_subsets(ROOT / "data", preset.subsets, preset.seed, legacy)
-    if legacy:
-        train, dev = ds.select(range(DEV_SLICE, len(ds))), ds.select(range(DEV_SLICE))
-    else:
-        train, dev = split_dev(ds, DEV_SLICE)
+def load_datasets(preset: config.SFTPreset):
+    """The sft role for training and the dev role for eval-loss monitoring."""
+    train = load_role(ROOT / "data", preset.datasets, "sft", preset.seed)
+    dev = load_role(ROOT / "data", preset.datasets, "dev", preset.seed)
     columns = ["image", "question", "answers"]
     return (train.select_columns(columns).with_transform(to_sft_columns),
             dev.select_columns(columns).with_transform(to_sft_columns))
@@ -87,7 +84,6 @@ def main() -> None:
     parser.add_argument("--preset", required=True, choices=sorted(config.SFT_PRESETS))
     parser.add_argument("--model", default=None, help="override base model or pinned snapshot")
     parser.add_argument("--hardware", choices=config.HARDWARE_PROFILES, default="legacy")
-    parser.add_argument("--legacy-splits", action="store_true", help="reproduce historical splits")
     parser.add_argument("--max-steps", type=int, default=-1, help="cap steps (sanity runs)")
     parser.add_argument("--run-name", default=None)
     parser.add_argument("--run-dir", type=Path, default=None)
@@ -104,7 +100,7 @@ def main() -> None:
     if args.model:
         preset = replace(preset, model=args.model)
     preset = config.for_hardware(preset, args.hardware)
-    train_ds, dev_ds = load_datasets(preset, args.legacy_splits)
+    train_ds, dev_ds = load_datasets(preset)
     if args.dry_run:
         print(f"hardware={args.hardware}; train={len(train_ds)}, dev={len(dev_ds)}")
         print(f"completion: {train_ds[0]['completion']}")
@@ -153,7 +149,7 @@ def main() -> None:
     write_run_config(output_dir, {
         "preset": config.dump(preset), "policy_model": preset.model,
         "overrides": {"hardware": args.hardware, "max_steps": args.max_steps},
-        "data": split_provenance(ROOT / "data", args.legacy_splits),
+        "data": provenance(ROOT / "data", preset.datasets),
         "samples": {"train": len(train_ds), "dev": len(dev_ds)},
     }, sft_config)
     model, processor = build_model(preset)

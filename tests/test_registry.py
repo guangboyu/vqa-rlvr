@@ -10,7 +10,6 @@ from vqar.registry import (
     ROLES,
     SOURCE_REVISIONS,
     datasets_with_role,
-    pools,
     score,
 )
 
@@ -33,7 +32,7 @@ def test_ood_dataset_cannot_declare_a_training_role():
 
 def test_official_splits_must_name_declared_roles():
     with pytest.raises(ValueError, match="official splits"):
-        replace(DATASETS["gqa"], official_splits=frozenset({"dev"}))
+        replace(DATASETS["textvqa"], official_splits=frozenset({"dev"}))
 
 
 def test_unknown_role_is_rejected():
@@ -44,6 +43,7 @@ def test_unknown_role_is_rejected():
 def test_role_listing_follows_registry_order():
     assert datasets_with_role("test") == ["vqav2", "gqa", "clevr", "textvqa"]
     assert datasets_with_role("sft") == ["vqav2", "gqa"]
+    assert datasets_with_role("dev") == ["vqav2", "gqa", "clevr"]
 
 
 class TestScoreDispatch:
@@ -119,8 +119,3 @@ class TestPrompts:
         rendered = PROMPTS["reasoning"].text.format(question="Q?")
         assert rendered.startswith("Q?\n") and "<think>" in rendered and "<answer>" in rendered
 
-
-def test_recipe_pools_resolve_through_roles():
-    assert pools("rl", "vqav2", "gqa") == ("vqav2_rl", "gqa_rl")
-    with pytest.raises(ValueError, match="textvqa has no rl role"):
-        pools("rl", "textvqa")

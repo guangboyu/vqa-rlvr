@@ -38,11 +38,8 @@ class Protocol:
         spec = DATASETS[self.dataset]
         if self.role not in EVAL_ROLES:
             raise ValueError(f"evaluation role must be one of {EVAL_ROLES}")
-        # Until per-dataset split files exist, dev is the frozen split carved from SFT pools.
-        if self.role == "dev" and not {"dev", "sft"} & set(spec.subsets):
-            raise ValueError(f"{self.dataset} has no dev role")
-        if self.role == "test" and "test" not in spec.subsets:
-            raise ValueError(f"{self.dataset} has no test role")
+        if self.role not in spec.subsets:
+            raise ValueError(f"{self.dataset} has no {self.role} role")
         if self.prompt not in PROMPTS:
             raise ValueError(f"unknown prompt template: {self.prompt}")
         if self.tier not in self.TIERS:
@@ -84,6 +81,7 @@ def protocol_identity(protocol: Protocol, data: dict) -> dict:
     spec = DATASETS[protocol.dataset]
     identity = {
         "dataset": protocol.dataset,
+        "ladder": spec.ladder,  # frozen before training; OOD columns are never tuned on
         "role": protocol.role,
         "tier": protocol.tier,
         "question_limit": Protocol.TIERS[protocol.tier],

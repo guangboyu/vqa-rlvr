@@ -73,12 +73,23 @@ def test_prompt_draw_log_preserves_rewards_and_records_resume_step(tmp_path):
                           qid=["a", "a"], scores=scores)
 
 
-@pytest.mark.parametrize("subset", ["vqav2_eval", "vqav2_sft", "clevr_val"])
-def test_rl_override_cannot_train_on_held_out_views(subset):
-    from dataclasses import replace
+@pytest.mark.parametrize("trainer, presets, name", [
+    ("train_grpo", config.GRPO_PRESETS, "grpo_2b_main"),
+    ("train_opd", config.OPD_PRESETS, "opd_self_2b_main"),
+])
+def test_rl_trainers_cannot_load_a_dataset_without_an_rl_role(trainer, presets, name):
+    import importlib
 
-    from train_grpo import load_rl_dataset
-
-    preset = replace(config.GRPO_PRESETS["grpo_2b_main"], subsets=(subset,))
-    with pytest.raises(ValueError, match="Use \\*_rl views"):
+    load_rl_dataset = importlib.import_module(trainer).load_rl_dataset
+    preset = replace(presets[name], datasets=("textvqa",))
+    with pytest.raises(ValueError, match="textvqa has no rl role"):
         load_rl_dataset(preset)
+
+
+def test_sft_cannot_load_a_dataset_without_an_sft_role():
+    pytest.importorskip("trl")
+    from train_sft import load_datasets
+
+    preset = replace(config.SFT_PRESETS["sft_2b"], datasets=("clevr",))
+    with pytest.raises(ValueError, match="clevr has no sft role"):
+        load_datasets(preset)

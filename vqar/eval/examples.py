@@ -6,12 +6,11 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from datasets import Image, load_from_disk
+from datasets import Image
 from PIL import Image as PILImage
 
 from vqar.eval.protocol import Protocol
-from vqar.registry import DATASETS
-from vqar.splits import image_keys, load_training_subsets, split_dev
+from vqar.splits import load_role, read_split
 
 
 @dataclass(frozen=True)
@@ -36,44 +35,39 @@ def to_example(row: dict) -> Example:
 
 
 def select_rows(protocol: Protocol, data_dir: Path):
-    """The rows a protocol evaluates, in a fixed order, and the identity of that data."""
-    spec = DATASETS[protocol.dataset]
-    split_sha256 = None
-    if protocol.role == "test":
-        rows = load_from_disk(str(data_dir / spec.subsets["test"]))
-    else:
-        rows, split_sha256 = frozen_dev_rows(protocol.dataset, data_dir)
-    fingerprint = rows._fingerprint
+    """The rows a protocol evaluates, in the split file's order, and the identity of that data.
+
+    The identity names the source subsets and hashes the ordered (subset, row, question id)
+    selection, so it changes exactly when the evaluated rows change; editing another role
+    of the same split file leaves it alone. Swapped images also pin the donor of each row.
+    """
+    rows = load_role(data_dir, [protocol.dataset], protocol.role, seed=None)
+    split = read_split(data_dir, protocol.dataset)
+    parts = split["roles"][protocol.role]
+    selection = [[part["subset"], index] for part in parts for index in part["indices"]]
     limit = Protocol.TIERS[protocol.tier]
     if limit is not None:
         rows = rows.select(range(min(limit, len(rows))))
+        selection = selection[:limit]
     rows = rows.cast_column("image", Image(decode=False))
-    qids = list(rows["qid"])
-    data = {
-        "fingerprint": fingerprint,
-        "qids_sha256": hashlib.sha256(json.dumps(qids).encode()).hexdigest(),
-        "split_sha256": split_sha256,
-    }
+    selection = [entry + [qid] for entry, qid in zip(selection, rows["qid"], strict=True)]
+    data = {"subsets": {part["subset"]: split["subsets"][part["subset"]]["fingerprint"]
+                        for part in parts},
+            "selection_sha256": sha256_json(selection)}
+    if protocol.image_mode == "swapped":
+        data["donors_sha256"] = sha256_json(image_donors(rows, "swapped"))
     return rows, data
 
 
-def frozen_dev_rows(dataset: str, data_dir: Path):
-    """The frozen dev split: whole images held out of the SFT pools by the split check."""
-    path = data_dir / "split_manifest.json"
-    manifest = json.loads(path.read_text())
-    spec = manifest["sft_dev"]
-    if DATASETS[dataset].subsets.get("sft") not in spec["subsets"]:
-        raise ValueError(f"The frozen dev split has no {DATASETS[dataset].display_name} images.")
-    _, dev = split_dev(load_training_subsets(data_dir, spec["subsets"], spec["seed"]))
-    rows = dev.select([i for i, name in enumerate(dev["dataset"]) if name == dataset])
-    return rows, hashlib.sha256(path.read_bytes()).hexdigest()
+def sha256_json(value) -> str:
+    return hashlib.sha256(json.dumps(value).encode()).hexdigest()
 
 
 def image_donors(rows, image_mode: str) -> list[int]:
     """Which row supplies each question's image: itself, or a row with different pixels."""
     if image_mode != "swapped":
         return list(range(len(rows)))
-    keys = image_keys(rows)
+    keys = rows["image_key"]
     if len(set(keys)) < 2:
         raise ValueError("Swapped-image evaluation needs at least two different images.")
     donors = []

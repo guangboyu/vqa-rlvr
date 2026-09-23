@@ -110,9 +110,12 @@ pretraining exposure, or patient identity.
 - CLEVR's 8,000 training, 3,000 validation, and 3,000 test examples are locally
   image-disjoint. They are a counting-subset partition, not a general CLEVR split.
 
-Run `python -m scripts.check_data` after materialization. It writes
-`data/split_manifest.json` without editing the Arrow datasets. Training verifies
-question IDs and dataset fingerprints against that manifest. Historical source
+Run `python -m scripts.check_data` after materialization. It validates the split
+files in `data/splits/` (one per dataset, versioned in the repository) without editing
+the Arrow datasets, fails if any dev or test image appears in any training pool, and
+writes `data/splits/overlap-report.json`. The `heldout-images-v2` manifest was migrated
+into these files with every role's rows unchanged. Training and evaluation verify
+question IDs and dataset fingerprints against them. Historical source
 revisions were not pinned sufficiently to reconstruct every upstream download;
 new manifests establish local identity, not retroactive upstream provenance. New
 materializations now pin the five source repositories and record those revisions.
