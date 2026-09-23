@@ -1,0 +1,54 @@
+{
+  "run_id": "grpo_2b_gqaonly-vqav2",
+  "timestamp": "2026-07-17T00:24:25+00:00",
+  "git_sha": "5dba162",
+  "model": {
+    "base": "checkpoints/merged/grpo_2b_gqaonly",
+    "preset": "zero_shot_2b"
+  },
+  "eval": {
+    "dataset": "vqav2",
+    "subset": "vqav2_eval",
+    "n": 5000,
+    "limit": null,
+    "prompt_template": "short",
+    "metric_variant": "official"
+  },
+  "gen": {
+    "backend": "vllm",
+    "temperature": 0.0,
+    "max_tokens": 64,
+    "max_model_len": 4096
+  },
+  "metrics": {
+    "overall": 0.7804800000000001,
+    "by_answer_type": {
+      "number": 0.7186666666666667,
+      "other": 0.6910628019323671,
+      "yes/no": 0.9237914177077675
+    }
+  },
+  "config": {
+    "name": "zero_shot_2b",
+    "model": "Qwen/Qwen3-VL-2B-Instruct",
+    "backend": "vllm",
+    "template": "short",
+    "datasets": [
+      "vqav2",
+      "gqa",
+      "clevr",
+      "textvqa"
+    ],
+    "max_tokens": 64,
+    "max_model_len": 4096,
+    "gpu_memory_utilization": 0.8
+  },
+  "rescore": {
+    "source_run": "results/runs/grpo_2b_gqaonly-vqav2.json",
+    "source_run_sha256": "a5896d247dd4ea0d3d91f9f6e2ee58583463c2f81775a7b39fbecc2c0598f4c7",
+    "source_predictions_sha256": "78afd747ed296e982fe184f1fcf38b557d684e84bf6b0c6f2e45580819938362",
+    "qids_sha256": "7b93c42a039734f47bb72e104abae962d6114f5fbdbfb05ca71dce267d24a3f0",
+    "scorer_sha256": "3ba4c6b35621edc28568199a10f51351f1941c31b4998aee50eaa31f663126ec",
+    "previous_overall": 0.78088
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "run_id": "opd_self_8b_main_reasoning-vqav2",
+  "timestamp": "2026-08-08T02:43:29+00:00",
+  "git_sha": "b192177",
+  "model": {
+    "base": "checkpoints/merged/opd_self_8b_main",
+    "preset": "zero_shot_8b_reasoning"
+  },
+  "eval": {
+    "dataset": "vqav2",
+    "subset": "vqav2_eval",
+    "n": 5000,
+    "limit": null,
+    "prompt_template": "reasoning",
+    "metric_variant": "official"
+  },
+  "gen": {
+    "backend": "vllm",
+    "temperature": 0.0,
+    "max_tokens": 512,
+    "max_model_len": 4096
+  },
+  "metrics": {
+    "overall": 0.7306199999999999,
+    "by_answer_type": {
+      "number": 0.6856296296296297,
+      "other": 0.595330112721417,
+      "yes/no": 0.9296577946768061
+    }
+  },
+  "config": {
+    "name": "zero_shot_8b_reasoning",
+    "model": "Qwen/Qwen3-VL-8B-Instruct",
+    "backend": "vllm",
+    "template": "reasoning",
+    "datasets": [
+      "vqav2",
+      "gqa",
+      "clevr",
+      "textvqa"
+    ],
+    "max_tokens": 512,
+    "max_model_len": 4096,
+    "gpu_memory_utilization": 0.88
+  },
+  "rescore": {
+    "source_run": "results/runs/opd_self_8b_main_reasoning-vqav2.json",
+    "source_run_sha256": "99cbcc9105db6feb90c43e04f379f685b1d46a144706e140b0fda4f7741132b6",
+    "source_predictions_sha256": "5ba2d9c7bea1bf6861ff620f089dd2f03546a6b91454aebd31c305b5ea1c23dd",
+    "qids_sha256": "7b93c42a039734f47bb72e104abae962d6114f5fbdbfb05ca71dce267d24a3f0",
+    "scorer_sha256": "3ba4c6b35621edc28568199a10f51351f1941c31b4998aee50eaa31f663126ec",
+    "previous_overall": 0.7376199999999999
+  }
+}

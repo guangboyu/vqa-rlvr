@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useState } from 'react'
 import { fetchResults, type ResultsPayload } from '../lib/api'
+import FreshResults from './FreshResults'
 
 const DATASETS = ['vqav2', 'gqa', 'clevr', 'textvqa'] as const
 const DATASET_LABELS: Record<string, string> = {
@@ -26,8 +27,6 @@ const TRANSFER_ROWS: [string, string][] = [
   ['VQAv2 + GQA', 'grpo_2b_main_base_reasoning'],
 ]
 
-// Diverging encoding for deltas — validated poles on the dark surface
-// (scripts/validate_palette.js: #5b8dd6 / #b87d26, neutral #3a4250 midpoint).
 function deltaColor(delta: number, maxAbs: number): string {
   const t = Math.min(Math.abs(delta) / maxAbs, 1)
   const from = [0x3a, 0x42, 0x50]
@@ -49,25 +48,53 @@ function Section({ title, note, children }: {
 }
 
 export default function Dashboard() {
-  const [data, setData] = useState<ResultsPayload & { ablation?: { weight: number; steps: number; retention: number; run_id: string }[] } | null>(null)
+  const [data, setData] = useState<ResultsPayload | null>(null)
+  const [variant, setVariant] = useState<'official' | 'normalized'>('official')
+  const [history, setHistory] = useState(false)
 
   useEffect(() => {
     fetchResults().then(setData)
   }, [])
 
   if (!data) return <p className="text-sm text-ink-400">Loading results…</p>
-  const { runs } = data
+  if (data.comparison && !history) return (
+    <div className="space-y-5">
+      <FreshResults comparison={data.comparison} />
+      <button onClick={() => setHistory(true)} className="text-sm text-ink-300 underline">
+        Explore the historical experiments and their limitations
+      </button>
+    </div>
+  )
+  const officialAvailable = Object.keys(data.official_runs).length > 0
+  const runs = variant === 'official' && officialAvailable ? data.official_runs : data.runs
   const baseline = runs[BASELINE] ?? {}
   const deltas = TRANSFER_ROWS.map(([, id]) =>
-    DATASETS.map((d) => (runs[id]?.[d] ?? 0) - (baseline[d] ?? 0)),
+    DATASETS.map((d) => runs[id]?.[d] != null && baseline[d] != null ? runs[id][d] - baseline[d] : null),
   )
-  const maxAbs = Math.max(...deltas.flat().map(Math.abs))
+  const maxAbs = Math.max(1, ...deltas.flat().map((value) => Math.abs(value ?? 0)))
 
   return (
     <div className="space-y-6">
+      {data.comparison && <button onClick={() => setHistory(false)}
+        className="text-sm text-ink-300 underline">Back to the corrected comparison</button>}
+      <div className="flex flex-wrap items-center gap-3 text-sm">
+        <label htmlFor="metric">Scoring protocol</label>
+        <select id="metric" value={officialAvailable ? variant : 'normalized'}
+          onChange={(event) => setVariant(event.target.value as 'official' | 'normalized')}
+          className="rounded border border-ink-700 bg-ink-900 p-2">
+          <option value="official" disabled={!officialAvailable}>Dataset-author accuracy</option>
+          <option value="normalized">Historical normalized accuracy</option>
+        </select>
+        <p className="text-xs text-ink-400">Same saved predictions; different scoring rules.</p>
+      </div>
+      <p className="text-sm text-ink-300">
+        Historical experiments: several training runs used a defective VQAv2 reward,
+        and the original data mix contained shared images. Rescoring updates evaluation,
+        not training. See the repository validation note before interpreting comparisons.
+      </p>
       <Section
-        title="Chain-of-thought accuracy across post-training stages"
-        note="Full eval sets, greedy decoding. Every number traces to a results/runs JSON with git SHA."
+        title="Accuracy under the reasoning prompt"
+        note="Greedy decoding: 5,000 VQAv2, 12,578 GQA test-dev, 3,000 CLEVR counting, and 2,000 TextVQA questions."
       >
         <table className="w-full text-sm">
           <thead>
@@ -119,11 +146,11 @@ export default function Dashboard() {
                   return (
                     <div
                       key={`${label}-${d}`}
-                      title={`train ${label} → eval ${DATASET_LABELS[d]}: ${delta >= 0 ? '+' : ''}${delta.toFixed(1)}`}
+                      title={delta == null ? 'Not evaluated' : `train ${label} → eval ${DATASET_LABELS[d]}: ${delta.toFixed(1)}`}
                       className="flex h-12 items-center justify-center rounded font-mono text-sm text-ink-50"
-                      style={{ background: deltaColor(delta, maxAbs) }}
+                      style={{ background: delta == null ? '#202631' : deltaColor(delta, maxAbs) }}
                     >
-                      {delta >= 0 ? '+' : ''}{delta.toFixed(1)}
+                      {delta == null ? '—' : `${delta >= 0 ? '+' : ''}${delta.toFixed(1)}`}
                     </div>
                   )
                 })}
@@ -131,14 +158,14 @@ export default function Dashboard() {
             ))}
           </div>
           <p className="mt-3 text-xs leading-relaxed text-ink-400">
-            Training on synthetic CLEVR alone is the only set that improves everything —
-            including the largest out-of-distribution gain (+5.3 on TextVQA).
+            A blank cell means no saved evaluation. These runs compare different training
+            sources; the VQAv2-only legacy arm received no correctness signal.
           </p>
         </Section>
 
         <Section
-          title="Reward design — the price of keeping reasoning"
-          note="Format-reward weight vs chain-of-thought retention (share of GQA completions with reasoning)."
+          title="Reward design and response length"
+          note="Historical retention proxy: share of GQA completions longer than 100 characters."
         >
           <div className="space-y-3">
             {data.ablation?.map((arm) => (
@@ -151,16 +178,15 @@ export default function Dashboard() {
                   <div
                     className="h-4 rounded-sm bg-ember-600"
                     style={{ width: `${arm.retention}%` }}
-                    title={`${arm.retention}% of completions keep chain-of-thought`}
+                    title={`${arm.retention}% of completions exceed 100 characters`}
                   />
                 </div>
               </div>
             ))}
           </div>
           <p className="mt-4 text-xs leading-relaxed text-ink-400">
-            With no format reward, GRPO deletes reasoning (17% retention) because it lowers
-            exact-match reward. A 0.2 weight fully preserves it — and the judge study shows
-            the apparent EM cost is a metric artifact (81.8 vs 81.1 judge-corrected).
+            Response length changes with the reward. Length alone does not establish
+            reasoning quality, and these arms also differ in training duration.
           </p>
         </Section>
       </div>
@@ -168,7 +194,7 @@ export default function Dashboard() {
       {data.judge_study && (
         <Section
           title="LLM-judge study — how much does exact-match undercount?"
-          note={`Claude Haiku on sampled EM-misses + hit controls. Total spend: $${data.judge_study.judge_spend_usd.toFixed(2)}.`}
+          note={`Historical exploratory estimate; the follow-up did not reproduce the claimed ranking reversal. Judge spend: $${data.judge_study.judge_spend_usd.toFixed(2)}.`}
         >
           <table className="w-full text-sm">
             <thead>

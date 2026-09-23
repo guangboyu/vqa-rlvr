@@ -1,7 +1,7 @@
 [project]
 name = "vqa-rlvr"
 version = "0.1.0"
-description = "Post-training Qwen3-VL for visual question answering: QLoRA SFT + GRPO-based RLVR on a single RTX 4090, benchmarked on VQAv2 / GQA / CLEVR"
+description = "Post-training Qwen vision-language models with SFT, GRPO, and on-policy distillation."
 readme = "README.md"
 license = { text = "Apache-2.0" }
 authors = [{ name = "Guangbo Yu", email = "ygbuestc@gmail.com" }]

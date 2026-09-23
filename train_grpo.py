@@ -1,32 +1,34 @@
 """RLVR: GRPO with verifiable rewards, vLLM colocated rollouts on a single GPU.
 
 The policy answers in the `reasoning` template (<think>...</think><answer>...</answer>);
-rewards are correctness (official metric / EM, judge-rescued variant available) plus a
-weighted format term. vLLM generates rollouts colocated on the training GPU with sleep
-mode so training and generation alternate within 24GB.
+rewards are normalized answer correctness and, optionally, a weighted format term. vLLM
+generates rollouts colocated on the training GPU with sleep mode, so training and
+generation alternate on one card.
 
 Usage:
-    uv run python train_grpo.py --preset grpo_2b_clevr --dry-run   # no GPU, no model
-    uv run python train_grpo.py --preset grpo_2b_clevr
-    uv run python train_grpo.py --preset grpo_2b_main --rewards correctness format judge
+    uv run python train_grpo.py --preset grpo_2b_main --hardware 24gb --dry-run  # no GPU
+    uv run python train_grpo.py --preset grpo_2b_main --hardware 24gb
+    uv run python train_grpo.py --preset grpo_2b_main --rewards correctness format
 """
 
 import argparse
-import json
 import os
-import subprocess
 from dataclasses import replace
 from pathlib import Path
 
 from vqar import config
 from vqar.data import PROMPT_REASONING
+from vqar.splits import load_training_subsets, split_provenance
+from vqar.training import (
+    check_rl_precision,
+    last_complete_checkpoint,
+    log_prompt_draws,
+    write_run_config,
+    write_training_summary,
+)
 
-# TRL 1.8 workaround: GRPO's sample<->image-grid handling breaks when image token
-# counts differ within a generation batch (M-RoPE shape crash; CLEVR's uniform
-# 480x320 images are why the sandbox never hit it). Uniform square canvas =
-# identical grids for every sample. Content keeps its aspect ratio (resize long
-# side, pad with black) — naive squashing degenerated generation (probe4: the
-# model dropped its answer-tag habit entirely on distorted images).
+# Keep the historical image geometry for comparable runs. Preserve aspect ratio
+# within a fixed canvas so rollout and training use the same vision-token budget.
 RL_IMAGE_SIZE = 608  # 19x19 = 361 vision tokens/image
 
 
@@ -58,31 +60,23 @@ def to_grpo_columns(batch: dict) -> dict:
         "question": batch["question"],
         "answers": batch["answers"],
         "dataset": batch["dataset"],
+        "qid": batch["qid"],
     }
 
 
-def load_rl_dataset(preset: config.GRPOPreset):
-    from datasets import concatenate_datasets, load_from_disk
-
-    ds = concatenate_datasets(
-        [load_from_disk(str(ROOT / "data" / name)) for name in preset.subsets]
-    ).shuffle(seed=preset.seed)
-    return ds.select_columns(["image", "question", "answers", "dataset"]).with_transform(
+def load_rl_dataset(preset: config.GRPOPreset, legacy: bool = False):
+    if not legacy and any(not name.endswith("_rl") for name in preset.subsets):
+        raise ValueError("Use *_rl views for RL; they already include eligible SFT training rows.")
+    ds = load_training_subsets(ROOT / "data", preset.subsets, preset.seed, legacy)
+    return ds.select_columns(["image", "question", "answers", "dataset", "qid"]).with_transform(
         to_grpo_columns
     )
 
 
 def build_rewards(names: tuple[str, ...]):
-    from vqar.judge import Judge
-    from vqar.rewards import REWARDS, make_judge_reward
+    from vqar.rewards import REWARDS
 
-    funcs = []
-    for name in names:
-        if name == "judge":
-            funcs.append(make_judge_reward(Judge()))
-        else:
-            funcs.append(REWARDS[name])
-    return funcs
+    return [REWARDS[name] for name in names]
 
 
 def resolve_model(model: str) -> str:
@@ -141,83 +135,19 @@ def make_chat_rollout(preset: config.GRPOPreset):
     return rollout
 
 
-def _patch_qwen3vl_rope_alignment() -> None:
-    """Align M-RoPE position length with the attention mask (verl#856-style).
-
-    Under TRL 1.8's GRPO, Qwen3-VL's get_rope_index intermittently computes a few
-    more positions than the sample has unpadded tokens (a small constant, e.g. 6 —
-    vision wrapper tokens), which crashes as a shape mismatch whenever prompts in a
-    batch aren't identical. Trimming the tail keeps completion positions within ~6
-    of exact; training sanity is verified by reward levels at step 10 (mispairing
-    would produce near-random correctness).
-    """
-    from transformers.models.qwen3_vl import modeling_qwen3_vl
-
-    cls = modeling_qwen3_vl.Qwen3VLModel
-    original = cls.get_rope_index
-    if getattr(cls, "_rope_alignment_patched", False):
-        return
-
-    def patched(self, input_ids, image_grid_thw=None, video_grid_thw=None,
-                attention_mask=None, **kwargs):
-        import torch
-
-        try:
-            return original(self, input_ids, image_grid_thw=image_grid_thw,
-                            video_grid_thw=video_grid_thw, attention_mask=attention_mask,
-                            **kwargs)
-        except RuntimeError as err:
-            if "shape mismatch" not in str(err) or attention_mask is None:
-                raise
-        # Per-sample retry (assumes ONE image per sample — true for this project).
-        # Samples that still misalign individually fall back to 1D positions.
-        batch, seq = input_ids.shape
-        position_ids = torch.zeros(3, batch, seq, dtype=input_ids.dtype, device=input_ids.device)
-        deltas = []
-        per_sample_kwargs = {
-            k: v for k, v in kwargs.items() if not hasattr(v, "shape") or v.shape[0] != batch
-        }
-        for i in range(batch):
-            row_kwargs = dict(per_sample_kwargs)
-            for k, v in kwargs.items():
-                if hasattr(v, "shape") and v.shape[0] == batch:
-                    row_kwargs[k] = v[i : i + 1]
-            grid = image_grid_thw[i : i + 1] if image_grid_thw is not None else None
-            try:
-                pos_i, delta_i = original(
-                    self, input_ids[i : i + 1], image_grid_thw=grid, video_grid_thw=None,
-                    attention_mask=attention_mask[i : i + 1], **row_kwargs,
-                )
-                position_ids[:, i : i + 1] = pos_i
-                deltas.append(delta_i.flatten()[0].item())
-            except RuntimeError:
-                mask = attention_mask[i].bool()
-                n = int(mask.sum())
-                pos = torch.arange(n, device=input_ids.device).view(1, -1).expand(3, -1)
-                position_ids[:, i, mask] = pos
-                deltas.append(0)
-        return position_ids, torch.tensor(deltas, device=input_ids.device).unsqueeze(1)
-
-    cls.get_rope_index = patched
-    cls._rope_alignment_patched = True
-
-
-def dry_run(preset: config.GRPOPreset, rewards: tuple[str, ...]) -> None:
+def dry_run(preset: config.GRPOPreset, rewards: tuple[str, ...], legacy: bool = False) -> None:
     """Validate dataset shape and reward wiring without touching a model or GPU."""
     from vqar.rewards import REWARDS
 
-    ds = load_rl_dataset(preset)
+    ds = load_rl_dataset(preset, legacy)
     row = ds[0]
     assert row["prompt"][0]["role"] == "user", row
     assert "<think>" in row["prompt"][0]["content"]
-    print(f"dataset ok: {len(ds)} prompts from {preset.subsets}")
+    print(f"dataset ok: {len(ds)} prompts from views {preset.subsets}")
     print(f"sample question: {row['question'][:80]}")
 
     fake_completion = [{"role": "assistant", "content": "<think>x</think><answer>4</answer>"}]
     for name in rewards:
-        if name == "judge":
-            print("reward judge: skipped in dry run (no API call)")
-            continue
         value = REWARDS[name](
             prompts=[row["prompt"]],
             completions=[fake_completion],
@@ -232,8 +162,10 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--preset", required=True, choices=sorted(config.GRPO_PRESETS))
     parser.add_argument("--model", default=None, help="override policy model/checkpoint")
+    parser.add_argument("--hardware", choices=config.HARDWARE_PROFILES, default="legacy")
+    parser.add_argument("--legacy-splits", action="store_true", help="reproduce historical splits")
     parser.add_argument("--rewards", nargs="+", default=None,
-                        help="override reward set, e.g. correctness format judge")
+                        help="override reward set, e.g. correctness format")
     parser.add_argument("--reward-weights", nargs="+", type=float, default=None)
     parser.add_argument("--max-steps", type=int, default=None)
     parser.add_argument("--grad-accum", type=int, default=None)
@@ -242,11 +174,23 @@ def main() -> None:
                         help="train on specific RL subsets (transfer-matrix arms)")
     parser.add_argument("--kl-beta", type=float, default=None)
     parser.add_argument("--run-name", default=None)
+    parser.add_argument("--run-dir", default=None,
+                        help="cluster mode: checkpoints + metrics.jsonl under this dir "
+                        "(auto-resumes from its last checkpoint; see hpc-env/AGENTS.md)")
+    parser.add_argument("--save-steps", type=int, default=100,
+                        help="checkpoint cadence; on free partitions size to <=15 min")
+    parser.add_argument("--save-total-limit", type=int, default=2,
+                        help="keep this many saved checkpoints; 0 keeps all")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--no-wandb", action="store_true")
     args = parser.parse_args()
+    if args.save_total_limit < 0:
+        parser.error("--save-total-limit must be nonnegative")
 
     preset = config.GRPO_PRESETS[args.preset]
+    if args.model:
+        preset = replace(preset, model=args.model)
+    preset = config.for_hardware(preset, args.hardware)
     if args.subsets_override:
         preset = replace(preset, subsets=tuple(args.subsets_override))
     rewards = tuple(args.rewards) if args.rewards else preset.rewards
@@ -256,15 +200,17 @@ def main() -> None:
     assert len(rewards) == len(weights), "each reward needs a weight"
 
     if args.dry_run:
-        dry_run(preset, rewards)
+        print(f"hardware={args.hardware}; recipe={config.RL_RECIPE}")
+        dry_run(preset, rewards, args.legacy_splits)
         return
+
+    check_rl_precision(preset)
 
     import torch
     from peft import LoraConfig
     from transformers import AutoProcessor, BitsAndBytesConfig
     from trl import GRPOConfig, GRPOTrainer
 
-    _patch_qwen3vl_rope_alignment()
 
     run_name = args.run_name or preset.name
     model_path = resolve_model(args.model or preset.model)
@@ -274,7 +220,7 @@ def main() -> None:
     # No processor size overrides: colocated vLLM preprocesses with the model's
     # default config, and any asymmetry vs the training processor breaks Qwen3-VL's
     # M-RoPE indexing. The pixel budget is enforced in the data (cap_pixels).
-    processor = AutoProcessor.from_pretrained(model_path)
+    processor = AutoProcessor.from_pretrained(model_path, padding_side="left")
 
     model_kwargs = dict(dtype=torch.bfloat16)
     if preset.quantize_4bit:
@@ -285,8 +231,10 @@ def main() -> None:
             bnb_4bit_use_double_quant=True,
         )
 
-    output_dir = ROOT / "checkpoints" / run_name
+    output_dir = (Path(args.run_dir) / "checkpoints" if args.run_dir
+                  else ROOT / "checkpoints" / run_name)
     grpo_config = GRPOConfig(
+        **config.RL_RECIPE,
         output_dir=str(output_dir),
         run_name=run_name,
         model_init_kwargs=model_kwargs,
@@ -310,8 +258,8 @@ def main() -> None:
         optim="paged_adamw_8bit" if preset.quantize_4bit else "adamw_torch",
         logging_steps=10,
         save_strategy="steps",
-        save_steps=100,
-        save_total_limit=2,
+        save_steps=args.save_steps,
+        save_total_limit=args.save_total_limit or None,
         dataloader_num_workers=2,
         dataloader_pin_memory=False,
         seed=preset.seed,
@@ -325,35 +273,41 @@ def main() -> None:
         target_modules=list(preset.lora_targets),
         task_type="CAUSAL_LM",
     )
+    write_run_config(output_dir, {
+        "preset": config.dump(preset), "policy_model": model_path,
+        "data": split_provenance(ROOT / "data", args.legacy_splits),
+        "overrides": {"hardware": args.hardware, "rewards": list(rewards),
+                      "reward_weights": list(weights), "max_steps": max_steps,
+                      "kl_beta": kl_beta, "batch_size": grpo_config.per_device_train_batch_size,
+                      "grad_accum": grpo_config.gradient_accumulation_steps},
+    }, grpo_config)
     trainer = GRPOTrainer(
         model=model_path,
         reward_funcs=build_rewards(rewards),
         args=grpo_config,
-        train_dataset=load_rl_dataset(preset),
+        train_dataset=load_rl_dataset(preset, args.legacy_splits),
         processing_class=processor,
         peft_config=peft_config,
         rollout_func=make_chat_rollout(preset),
     )
-    trainer.train()
-    trainer.save_model(str(output_dir))
 
-    git_sha = subprocess.run(
-        ["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True
-    ).stdout.strip()
-    (output_dir / "run_config.json").write_text(
-        json.dumps(
-            {
-                "preset": config.dump(preset),
-                "policy_model": model_path,  # resolved base the adapter merges onto
-                "overrides": {
-                    "rewards": list(rewards), "reward_weights": list(weights),
-                    "max_steps": max_steps, "kl_beta": kl_beta,
-                },
-                "git_sha": git_sha,
-            },
-            indent=2,
-        )
-    )
+    # Preemption contract (free HPC3 partitions CANCEL with no warning) — same
+    # wiring as train_opd.py; harmless locally on a fresh output_dir.
+
+    from scripts.hf_preempt_callback import JsonlMetrics, PreemptCallback, install_signal_flag
+
+    install_signal_flag()
+    trainer.add_callback(PreemptCallback())
+    if args.run_dir:
+        trainer.add_callback(JsonlMetrics(str(Path(args.run_dir) / "metrics.jsonl")))
+        log_prompt_draws(trainer, Path(args.run_dir) / "prompt_draws.jsonl")
+    last = last_complete_checkpoint(output_dir) if output_dir.is_dir() else None
+    if last:
+        print(f"resuming from {last}")
+    trainer.train(resume_from_checkpoint=last)
+    trainer.save_model(str(output_dir))
+    write_training_summary(trainer, output_dir)
+
     print(f"adapter saved -> {output_dir}")
 
 

@@ -1,0 +1,45 @@
+{
+  "run_id": "opd_self_2b_main_s43-vqav2",
+  "timestamp": "2026-08-06T15:53:24+00:00",
+  "git_sha": "bbdeebe",
+  "model": {
+    "base": "checkpoints/merged/opd_self_2b_main_s43",
+    "preset": "zero_shot_2b"
+  },
+  "eval": {
+    "dataset": "vqav2",
+    "subset": "vqav2_eval",
+    "n": 5000,
+    "limit": null,
+    "prompt_template": "short"
+  },
+  "gen": {
+    "backend": "vllm",
+    "temperature": 0.0,
+    "max_tokens": 64,
+    "max_model_len": 4096
+  },
+  "metrics": {
+    "overall": 0.77898,
+    "by_answer_type": {
+      "number": 0.7171851851851853,
+      "other": 0.6893317230273752,
+      "yes/no": 0.9225964149918523
+    }
+  },
+  "config": {
+    "name": "zero_shot_2b",
+    "model": "Qwen/Qwen3-VL-2B-Instruct",
+    "backend": "vllm",
+    "template": "short",
+    "datasets": [
+      "vqav2",
+      "gqa",
+      "clevr",
+      "textvqa"
+    ],
+    "max_tokens": 64,
+    "max_model_len": 4096,
+    "gpu_memory_utilization": 0.8
+  }
+}

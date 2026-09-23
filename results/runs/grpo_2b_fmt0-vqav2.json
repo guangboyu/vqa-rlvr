@@ -1,0 +1,45 @@
+{
+  "run_id": "grpo_2b_fmt0-vqav2",
+  "timestamp": "2026-07-17T00:17:09+00:00",
+  "git_sha": "5dba162",
+  "model": {
+    "base": "checkpoints/merged/grpo_2b_fmt0",
+    "preset": "zero_shot_2b"
+  },
+  "eval": {
+    "dataset": "vqav2",
+    "subset": "vqav2_eval",
+    "n": 5000,
+    "limit": null,
+    "prompt_template": "short"
+  },
+  "gen": {
+    "backend": "vllm",
+    "temperature": 0.0,
+    "max_tokens": 64,
+    "max_model_len": 4096
+  },
+  "metrics": {
+    "overall": 0.7793800000000001,
+    "by_answer_type": {
+      "number": 0.7167407407407408,
+      "other": 0.6889291465378422,
+      "yes/no": 0.9243889190657252
+    }
+  },
+  "config": {
+    "name": "zero_shot_2b",
+    "model": "Qwen/Qwen3-VL-2B-Instruct",
+    "backend": "vllm",
+    "template": "short",
+    "datasets": [
+      "vqav2",
+      "gqa",
+      "clevr",
+      "textvqa"
+    ],
+    "max_tokens": 64,
+    "max_model_len": 4096,
+    "gpu_memory_utilization": 0.8
+  }
+}

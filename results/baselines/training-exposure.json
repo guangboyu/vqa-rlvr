@@ -1,0 +1,184 @@
+{
+  "split_manifest_sha256": "ca9560ad868a2b703fad5c5107a2966a4075f6d428468bafe5a0d185428713b2",
+  "runs": {
+    "results/baselines/training/grpo2-base": {
+      "completed_updates": 300,
+      "updates_without_reward_variation": 43,
+      "prompt_order_sha256": "cf2101eb06de31e80904b1e95e4738ba5158330d9518955ccf7b08956e3959ee",
+      "draw_file_sha256": "9b01e71fddbc1de2edb2168999de873d6973057df7565bf5db12a84c4c932138",
+      "overall": {
+        "prompt_groups": 1200,
+        "unique_questions": 1200,
+        "responses": 9600,
+        "mean_reward": 0.5988541666666667,
+        "all_zero_reward_groups": 264,
+        "all_full_reward_groups": 472,
+        "variable_reward_fraction": 0.38666666666666666
+      },
+      "by_training_membership": {
+        "vqav2/rl_only": {
+          "prompt_groups": 177,
+          "unique_questions": 177,
+          "responses": 1416,
+          "mean_reward": 0.6024011299435028,
+          "all_zero_reward_groups": 36,
+          "all_full_reward_groups": 70,
+          "variable_reward_fraction": 0.4011299435028249
+        },
+        "gqa/sft_train": {
+          "prompt_groups": 407,
+          "unique_questions": 407,
+          "responses": 3256,
+          "mean_reward": 0.6133292383292384,
+          "all_zero_reward_groups": 80,
+          "all_full_reward_groups": 167,
+          "variable_reward_fraction": 0.3931203931203931
+        },
+        "vqav2/sft_train": {
+          "prompt_groups": 434,
+          "unique_questions": 434,
+          "responses": 3472,
+          "mean_reward": 0.5786290322580645,
+          "all_zero_reward_groups": 105,
+          "all_full_reward_groups": 160,
+          "variable_reward_fraction": 0.38940092165898615
+        },
+        "gqa/rl_only": {
+          "prompt_groups": 182,
+          "unique_questions": 182,
+          "responses": 1456,
+          "mean_reward": 0.6112637362637363,
+          "all_zero_reward_groups": 43,
+          "all_full_reward_groups": 75,
+          "variable_reward_fraction": 0.3516483516483517
+        }
+      },
+      "gpu": {
+        "name": "NVIDIA A100 80GB PCIe",
+        "total_bytes": 85094825984,
+        "peak_torch_allocated_bytes": 47919830528,
+        "peak_torch_reserved_bytes": 51514441728
+      }
+    },
+    "results/baselines/training/grpo2-sft": {
+      "completed_updates": 300,
+      "updates_without_reward_variation": 16,
+      "prompt_order_sha256": "cf2101eb06de31e80904b1e95e4738ba5158330d9518955ccf7b08956e3959ee",
+      "draw_file_sha256": "2e8d2a16e6e7dd07bb846b7a0ce6304569bbef1a147c14ab416254bbcded05f4",
+      "overall": {
+        "prompt_groups": 1200,
+        "unique_questions": 1200,
+        "responses": 9600,
+        "mean_reward": 0.5813541666666666,
+        "all_zero_reward_groups": 229,
+        "all_full_reward_groups": 383,
+        "variable_reward_fraction": 0.49
+      },
+      "by_training_membership": {
+        "vqav2/rl_only": {
+          "prompt_groups": 177,
+          "unique_questions": 177,
+          "responses": 1416,
+          "mean_reward": 0.5741525423728814,
+          "all_zero_reward_groups": 36,
+          "all_full_reward_groups": 58,
+          "variable_reward_fraction": 0.4689265536723164
+        },
+        "gqa/sft_train": {
+          "prompt_groups": 407,
+          "unique_questions": 407,
+          "responses": 3256,
+          "mean_reward": 0.6016584766584766,
+          "all_zero_reward_groups": 65,
+          "all_full_reward_groups": 134,
+          "variable_reward_fraction": 0.5110565110565111
+        },
+        "vqav2/sft_train": {
+          "prompt_groups": 434,
+          "unique_questions": 434,
+          "responses": 3472,
+          "mean_reward": 0.5622119815668203,
+          "all_zero_reward_groups": 92,
+          "all_full_reward_groups": 128,
+          "variable_reward_fraction": 0.4930875576036866
+        },
+        "gqa/rl_only": {
+          "prompt_groups": 182,
+          "unique_questions": 182,
+          "responses": 1456,
+          "mean_reward": 0.5885989010989011,
+          "all_zero_reward_groups": 36,
+          "all_full_reward_groups": 63,
+          "variable_reward_fraction": 0.45604395604395603
+        }
+      },
+      "gpu": {
+        "name": "NVIDIA A100 80GB PCIe",
+        "total_bytes": 85094825984,
+        "peak_torch_allocated_bytes": 30060653568,
+        "peak_torch_reserved_bytes": 33550237696
+      }
+    },
+    "results/baselines/training/grpo8-base": {
+      "completed_updates": 300,
+      "updates_without_reward_variation": 110,
+      "prompt_order_sha256": "cf2101eb06de31e80904b1e95e4738ba5158330d9518955ccf7b08956e3959ee",
+      "draw_file_sha256": "93d58790c186a1ea6e2fbdf6bb8c1aad52b04ddb4990cac74b99322faff15249",
+      "overall": {
+        "prompt_groups": 1200,
+        "unique_questions": 1200,
+        "responses": 9600,
+        "mean_reward": 0.6461458333333333,
+        "all_zero_reward_groups": 296,
+        "all_full_reward_groups": 624,
+        "variable_reward_fraction": 0.23333333333333334
+      },
+      "by_training_membership": {
+        "vqav2/rl_only": {
+          "prompt_groups": 177,
+          "unique_questions": 177,
+          "responses": 1416,
+          "mean_reward": 0.644774011299435,
+          "all_zero_reward_groups": 43,
+          "all_full_reward_groups": 98,
+          "variable_reward_fraction": 0.2033898305084746
+        },
+        "gqa/sft_train": {
+          "prompt_groups": 407,
+          "unique_questions": 407,
+          "responses": 3256,
+          "mean_reward": 0.6793611793611793,
+          "all_zero_reward_groups": 85,
+          "all_full_reward_groups": 220,
+          "variable_reward_fraction": 0.25061425061425063
+        },
+        "vqav2/sft_train": {
+          "prompt_groups": 434,
+          "unique_questions": 434,
+          "responses": 3472,
+          "mean_reward": 0.6238479262672811,
+          "all_zero_reward_groups": 117,
+          "all_full_reward_groups": 216,
+          "variable_reward_fraction": 0.23271889400921658
+        },
+        "gqa/rl_only": {
+          "prompt_groups": 182,
+          "unique_questions": 182,
+          "responses": 1456,
+          "mean_reward": 0.6263736263736264,
+          "all_zero_reward_groups": 51,
+          "all_full_reward_groups": 90,
+          "variable_reward_fraction": 0.22527472527472528
+        }
+      },
+      "gpu": {
+        "name": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+        "total_bytes": 101974081536,
+        "peak_torch_allocated_bytes": 62816728576,
+        "peak_torch_reserved_bytes": 65997373440
+      }
+    }
+  },
+  "same_prompt_order": true,
+  "interpretation": "Membership describes the SFT training set; the base-to-RL arm did not receive SFT. Reward variation describes sampled groups, not held-out accuracy. Zero rewards can reflect incorrect answers or missing required answer tags."
+}

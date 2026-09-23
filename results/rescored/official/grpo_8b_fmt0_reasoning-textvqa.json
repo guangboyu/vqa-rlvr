@@ -1,0 +1,52 @@
+{
+  "run_id": "grpo_8b_fmt0_reasoning-textvqa",
+  "timestamp": "2026-08-09T03:00:37+00:00",
+  "git_sha": "0b19aa7",
+  "model": {
+    "base": "checkpoints/merged/grpo_8b_fmt0",
+    "preset": "zero_shot_8b_reasoning"
+  },
+  "eval": {
+    "dataset": "textvqa",
+    "subset": "textvqa_eval",
+    "n": 2000,
+    "limit": null,
+    "prompt_template": "reasoning",
+    "metric_variant": "official"
+  },
+  "gen": {
+    "backend": "vllm",
+    "temperature": 0.0,
+    "max_tokens": 512,
+    "max_model_len": 4096
+  },
+  "metrics": {
+    "overall": 0.80445,
+    "by_answer_type": {
+      "all": 0.80445
+    }
+  },
+  "config": {
+    "name": "zero_shot_8b_reasoning",
+    "model": "Qwen/Qwen3-VL-8B-Instruct",
+    "backend": "vllm",
+    "template": "reasoning",
+    "datasets": [
+      "vqav2",
+      "gqa",
+      "clevr",
+      "textvqa"
+    ],
+    "max_tokens": 512,
+    "max_model_len": 4096,
+    "gpu_memory_utilization": 0.88
+  },
+  "rescore": {
+    "source_run": "results/runs/grpo_8b_fmt0_reasoning-textvqa.json",
+    "source_run_sha256": "e1b2a97f42b3379bb38348390142fced1ed9b927744f8d9d6ed7d36ab1f9d71b",
+    "source_predictions_sha256": "be3279dba5022ad015286d13bc784cc3f2c8791c608f8fe7455a83ed91cfbd22",
+    "qids_sha256": "06fe623dd201040ba8dfa98f35efb44bedabaa5eb7a56f6c897ff2c950ebd6b5",
+    "scorer_sha256": "3ba4c6b35621edc28568199a10f51351f1941c31b4998aee50eaa31f663126ec",
+    "previous_overall": 0.80465
+  }
+}

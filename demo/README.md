@@ -1,45 +1,57 @@
-# VQA Arena — live demo
+# Recorded gallery and live VQA comparison
 
-A local web app that puts the project's checkpoints side by side: upload any image,
-ask a question, and watch the **zero-shot base**, **SFT**, and **GRPO (RLVR)**
-policies of Qwen3-VL-2B answer concurrently, token by token, from one RTX 4090.
-A second tab renders the paper-style results — main table, transfer-matrix heatmap,
-reward-design ablation, and the LLM-judge study — straight from `results/`.
+The default app needs no GPU or downloaded model. It serves recorded examples
+and artifact-derived results, including metric disagreements and counterexamples.
+The gallery is illustrative; its selected examples do not estimate failure rates.
 
-![Arena](assets/arena.png)
-
-![Dashboard](assets/dashboard.png)
-
-## Run it
+## Start
 
 ```bash
-# 1. Build the frontend once (Node ≥18)
-cd demo/frontend && npm install && npm run build && cd ../..
-
-# 2. Serve everything from one process (loads all three 2B models, ~17 GB VRAM)
-uv run --group demo uvicorn demo.backend.app:app --host 0.0.0.0 --port 8000
+uv sync --frozen --group demo
+cd demo/frontend
+npm ci
+npm run build
+cd ../..
+uv run --frozen uvicorn demo.backend.app:app --host 127.0.0.1 --port 8000
 ```
 
-Open http://localhost:8000. For frontend development, `npm run dev` serves Vite on
-:5173 with `/api` proxied to :8000.
+Open `http://127.0.0.1:8000`. For frontend development, `npm run dev` serves Vite
+on port 5173 and proxies `/api` and `/examples` to port 8000.
 
-## How it works
+The dashboard opens the corrected comparison in `results/baselines/comparison.json`
+when available. Switch between short and reasoning prompts, inspect scoring and
+response behavior, and compare fixed image interventions. Its summaries are
+recreated by `python -m scripts.summarize_comparison results/baselines`.
+Historical experiments remain accessible with their original limitations;
+judge-adjusted scores are separate from official benchmark accuracy.
 
-- **Backend** (`backend/`): FastAPI. On startup, `ModelManager` loads the base
-  model plus the two merged post-trained checkpoints (all bf16, ~17 GB total —
-  they stay resident so answers start in under a second). `/api/ask` fans a
-  question out to every model in its own thread; each `TextIteratorStreamer`
-  pushes tokens into a shared asyncio queue, and the endpoint multiplexes them to
-  the browser as one Server-Sent-Events stream tagged by model.
-- **Frontend** (`frontend/`): React 19 + Vite + Tailwind. The Arena parses the
-  stream per model, splitting chain-of-thought from the final `<answer>` tag as it
-  arrives. The Dashboard fetches `/api/results`, which aggregates
-  `results/runs/*.json` and the judge study — the same source of truth as the
-  README tables (nothing is hand-typed).
+## Optional live inference
 
-## Requirements
+Prepare the three 2B model paths listed in `backend/model_manager.py`. The default
+lineup uses the pinned Instruct revision and the corrected SFT/base-to-GRPO models
+from the [comparison walkthrough](../docs/baselines.md). Fresh adapters are prepared
+locally and have not been published. Historical Hub adapters correspond to older runs.
+Then enable model loading:
 
-Checkpoints must exist locally first — either run the pipeline (see the root
-README) or merge the published adapters from
-[HF Hub](https://huggingface.co/omnifish123) with `scripts/merge_adapter.py`.
-Expected paths are listed in `backend/model_manager.py`.
+```bash
+VQA_LIVE_MODELS=1 uv run --frozen uvicorn demo.backend.app:app \
+  --host 127.0.0.1 --port 8000
+```
+
+This loads the base, SFT, and GRPO models in bf16. The corrected three-model lineup
+passed a small concurrent streaming check on an RTX 4090: 11.89 GiB resident
+PyTorch allocation and 12.10 GiB peak. The check also exercised black-image and
+reasoning-prompt responses. [Recorded outputs and scope](../results/baselines/live-demo-24gb.json)
+are included; larger images and longer responses need additional memory.
+Models and short/reasoning prompts are selectable. An optional black-image input
+keeps the image dimensions fixed for a simple sensitivity check. The app reports unavailable
+models and generation failures instead of leaving the stream waiting forever.
+The current live comparison is the 2B path; 8B training profiles do not enable
+three simultaneous 8B models in this app.
+Live inference uses Transformers and bounds image size for responsiveness, so its
+responses can differ from the recorded vLLM evaluations.
+
+Recorded examples retain their prediction run IDs and questions. Refresh them with
+`uv run --frozen python -m scripts.make_diagnostics --gallery-only` after restoring
+the predictions and VQAv2 evaluation subset. The generator prefers the completed
+four-arm comparison; historical examples remain available when those files are absent.

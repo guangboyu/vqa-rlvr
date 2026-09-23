@@ -1,0 +1,45 @@
+{
+  "run_id": "grpo_2b_fmt0_fixedreward_reasoning-vqav2",
+  "timestamp": "2026-07-17T00:10:54+00:00",
+  "git_sha": "9df8578",
+  "model": {
+    "base": "checkpoints/merged/grpo_2b_fmt0_fixedreward",
+    "preset": "zero_shot_2b_reasoning"
+  },
+  "eval": {
+    "dataset": "vqav2",
+    "subset": "vqav2_eval",
+    "n": 5000,
+    "limit": null,
+    "prompt_template": "reasoning"
+  },
+  "gen": {
+    "backend": "vllm",
+    "temperature": 0.0,
+    "max_tokens": 512,
+    "max_model_len": 4096
+  },
+  "metrics": {
+    "overall": 0.74688,
+    "by_answer_type": {
+      "number": 0.6754074074074073,
+      "other": 0.6400563607085347,
+      "yes/no": 0.9172189027702335
+    }
+  },
+  "config": {
+    "name": "zero_shot_2b_reasoning",
+    "model": "Qwen/Qwen3-VL-2B-Instruct",
+    "backend": "vllm",
+    "template": "reasoning",
+    "datasets": [
+      "vqav2",
+      "gqa",
+      "clevr",
+      "textvqa"
+    ],
+    "max_tokens": 512,
+    "max_model_len": 4096,
+    "gpu_memory_utilization": 0.8
+  }
+}

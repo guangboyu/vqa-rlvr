@@ -1,0 +1,45 @@
+{
+  "run_id": "grpo_8b_fmt0-vqav2",
+  "timestamp": "2026-08-09T02:49:06+00:00",
+  "git_sha": "0b19aa7",
+  "model": {
+    "base": "checkpoints/merged/grpo_8b_fmt0",
+    "preset": "zero_shot_8b"
+  },
+  "eval": {
+    "dataset": "vqav2",
+    "subset": "vqav2_eval",
+    "n": 5000,
+    "limit": null,
+    "prompt_template": "short"
+  },
+  "gen": {
+    "backend": "vllm",
+    "temperature": 0.0,
+    "max_tokens": 64,
+    "max_model_len": 4096
+  },
+  "metrics": {
+    "overall": 0.8123600000000001,
+    "by_answer_type": {
+      "number": 0.7491851851851852,
+      "other": 0.7277777777777777,
+      "yes/no": 0.9496469310157523
+    }
+  },
+  "config": {
+    "name": "zero_shot_8b",
+    "model": "Qwen/Qwen3-VL-8B-Instruct",
+    "backend": "vllm",
+    "template": "short",
+    "datasets": [
+      "vqav2",
+      "gqa",
+      "clevr",
+      "textvqa"
+    ],
+    "max_tokens": 64,
+    "max_model_len": 4096,
+    "gpu_memory_utilization": 0.88
+  }
+}

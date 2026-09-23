@@ -1,0 +1,183 @@
+[
+  {
+    "title": "One answer, two scores",
+    "lesson": "The original VQA scorer skips normalization when annotators agree. Capitalization can then change the score.",
+    "question": "Is he on the ground?",
+    "qid": "480470022",
+    "image": "/examples/480470022.jpg",
+    "answers": [
+      "yes",
+      "yes",
+      "yes",
+      "yes",
+      "yes",
+      "yes",
+      "yes",
+      "yes",
+      "yes",
+      "yes"
+    ],
+    "responses": [
+      {
+        "label": "Base 2B",
+        "run_id": "zero_shot_2b_reasoning",
+        "raw": "Let's analyze the image step by step:\n\n1. The person in the image is standing on a surface that appears to be dirt or sand, which is typical of a beach or park area.\n2. The person is barefoot, which is consistent with being on the ground.\n3. The ground is not paved or covered with grass or concrete, but rather a natural, uneven surface.\n4. The person is holding a kite and appears to be flying it, which is a common activity on the ground at a beach or park.\n\nBased on these observations, the person is indeed on the ground.\n\n<answer>Yes</answer>",
+        "official": 0.0,
+        "normalized": 1.0,
+        "source_sha256": "dcb6db5dc5e684452b19d12754b70813ff00bfc0bf658f97bb2734cf23192d75"
+      }
+    ]
+  },
+  {
+    "title": "SFT changes the visible response",
+    "lesson": "Both answers receive full credit here. Short-answer SFT produces less explanation; this does not prove internal reasoning was erased.",
+    "question": "Does this man have a little food on his upper lip?",
+    "qid": "312103000",
+    "image": "/examples/312103000.jpg",
+    "answers": [
+      "yes",
+      "no",
+      "yes",
+      "no",
+      "no",
+      "no",
+      "yes",
+      "yes",
+      "yes",
+      "yes"
+    ],
+    "responses": [
+      {
+        "label": "Base 2B",
+        "run_id": "zero_shot_2b_reasoning",
+        "raw": "Step 1: Observe the man's face, particularly the area around his upper lip.\nStep 2: Look closely at the man's upper lip to see if there is any food residue.\nStep 3: The man is holding a hot dog, and the hot dog is visible in the foreground.\nStep 4: The hot dog is positioned in front of the man's mouth, and the hot dog is clearly visible.\nStep 5: The hot dog is a hot dog with mustard, ketchup, and other toppings.\nStep 6: The man's upper lip is not covered by any food, but there is a small amount of food residue on the upper lip.\nStep 7: The food residue is likely from the hot dog, and it is visible on the upper lip.\nStep 8: The food residue is not a large amount, but it is present.\n\n<answer>Yes</answer>",
+        "official": 1.0,
+        "normalized": 1.0,
+        "source_sha256": "dcb6db5dc5e684452b19d12754b70813ff00bfc0bf658f97bb2734cf23192d75"
+      },
+      {
+        "label": "Short-answer SFT",
+        "run_id": "sft_2b_reasoning",
+        "raw": "yes",
+        "official": 1.0,
+        "normalized": 1.0,
+        "source_sha256": "1cdc10e406f6c83573b25e884ae7de39fcaef935d2b2a418d6756c7e664ed5a8"
+      }
+    ]
+  },
+  {
+    "title": "A long explanation can be wrong",
+    "lesson": "The base model explains its answer but misses the reference. The GRPO response is shorter and correct on this question.",
+    "question": "What is on the borders back?",
+    "qid": "574507002",
+    "image": "/examples/574507002.jpg",
+    "answers": [
+      "backpack",
+      "backpack",
+      "jacket",
+      "backpack",
+      "backpack",
+      "backpack",
+      "backpack",
+      "backpack",
+      "backpack",
+      "backpack"
+    ],
+    "responses": [
+      {
+        "label": "Base 2B",
+        "run_id": "zero_shot_2b_reasoning",
+        "raw": "The image shows a person snowboarding in mid-air, with a snowboard on the ground. The snowboard has a yellow and black striped pattern on its edges. The person is wearing a black and white jacket, and the snowboard is positioned in the foreground.\n\nThe snowboard has a yellow and black striped pattern on its edges. The snowboard is on the ground.\n\n<answer>yellow and black striped pattern</answer>",
+        "official": 0.0,
+        "normalized": 0.0,
+        "source_sha256": "dcb6db5dc5e684452b19d12754b70813ff00bfc0bf658f97bb2734cf23192d75"
+      },
+      {
+        "label": "Correctness-only GRPO",
+        "run_id": "grpo_2b_fmt0_fixedreward_reasoning",
+        "raw": "<answer>backpack</answer>",
+        "official": 1.0,
+        "normalized": 1.0,
+        "source_sha256": "96464c2ed94e943f4813474766b997298b49f6275790040e388cb716a6c9a65d"
+      }
+    ]
+  },
+  {
+    "title": "Shorter is not always better",
+    "lesson": "This counterexample goes the other way: the longer base response is correct and the short GRPO response is wrong.",
+    "question": "Is the sharp end of the fork facing up?",
+    "qid": "105812038",
+    "image": "/examples/105812038.jpg",
+    "answers": [
+      "yes",
+      "yes",
+      "yes",
+      "yes",
+      "yes",
+      "yes",
+      "yes",
+      "yes",
+      "yes",
+      "yes"
+    ],
+    "responses": [
+      {
+        "label": "Base 2B",
+        "run_id": "zero_shot_2b_reasoning",
+        "raw": "Let's analyze the image step by step:\n\n1. The image shows a table setting with a sandwich, a glass of water, a teacup, and a fork.\n2. The fork is placed on the table, next to the sandwich and the bread.\n3. The fork is positioned with its tines (the sharp parts) pointing towards the right side of the image.\n4. The fork is resting on a napkin, and its handle is on the left side of the image.\n5. The tines of the fork are clearly visible and are pointing upwards, indicating the sharp end is facing up.\n\n<answer>yes</answer>",
+        "official": 1.0,
+        "normalized": 1.0,
+        "source_sha256": "dcb6db5dc5e684452b19d12754b70813ff00bfc0bf658f97bb2734cf23192d75"
+      },
+      {
+        "label": "Correctness-only GRPO",
+        "run_id": "grpo_2b_fmt0_fixedreward_reasoning",
+        "raw": "<answer>no</answer>",
+        "official": 0.0,
+        "normalized": 0.0,
+        "source_sha256": "96464c2ed94e943f4813474766b997298b49f6275790040e388cb716a6c9a65d"
+      }
+    ]
+  },
+  {
+    "title": "Image sensitivity is not enough",
+    "lesson": "The answer changes with the image, but the model still answers a question about a boy when shown flowers or a black image. Sensitivity alone does not establish correct grounding or isolate the image encoder.",
+    "question": "What is the boy playing with?",
+    "qid": "201030621",
+    "dataset": "GQA",
+    "image": "/examples/intervention_original.jpg",
+    "answers": [
+      "wii controller"
+    ],
+    "reference_label": "Reference for the original image",
+    "responses": [
+      {
+        "label": "Base 2B, original image",
+        "run_id": "swap_probes::gqa::201030621::original",
+        "raw": "wii controller",
+        "image": "/examples/intervention_original.jpg",
+        "official": null,
+        "normalized": null,
+        "source_sha256": "3a53c5a827739cab742e6f5201a802e5d8ff5da29e9feb0f10599b13eaa3d6e4"
+      },
+      {
+        "label": "Base 2B, swapped image",
+        "run_id": "swap_probes::gqa::201030621::swapped",
+        "raw": "flowers",
+        "image": "/examples/intervention_swapped.jpg",
+        "official": null,
+        "normalized": null,
+        "source_sha256": "3a53c5a827739cab742e6f5201a802e5d8ff5da29e9feb0f10599b13eaa3d6e4"
+      },
+      {
+        "label": "Base 2B, blank image",
+        "run_id": "swap_probes::gqa::201030621::blank",
+        "raw": "ball",
+        "image": "/examples/intervention_blank.png",
+        "official": null,
+        "normalized": null,
+        "source_sha256": "3a53c5a827739cab742e6f5201a802e5d8ff5da29e9feb0f10599b13eaa3d6e4"
+      }
+    ]
+  }
+]

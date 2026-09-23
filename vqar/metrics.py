@@ -11,8 +11,8 @@ zeroes e.g. prediction "Yes" against a unanimous ["yes"]*10 — an artifact for
 zero-shot instruct models that capitalize. Modern harnesses (lmms-eval's vqav2
 task) always normalize both sides; we follow them for comparability.
 
-GQA / CLEVR / TextVQA-style single-answer datasets use normalized exact match
-with the same normalizer.
+`score` retains this historical normalization for training rewards and old tables.
+`evaluation_score` selects the dataset-author protocol for new evaluations.
 """
 
 import re
@@ -120,7 +120,7 @@ def vqa_accuracy(prediction: str, gt_answers: list[str]) -> float:
 
 
 def exact_match(prediction: str, gt_answers: list[str]) -> float:
-    """Normalized exact match for single-answer datasets (GQA, CLEVR, TextVQA)."""
+    """Normalized exact match, including single-reference training examples."""
     pred = normalize_answer(prediction)
     return float(any(pred == normalize_answer(a) for a in gt_answers))
 
@@ -130,3 +130,45 @@ def score(dataset: str, prediction: str, gt_answers: list[str]) -> float:
     if dataset in ("vqav2", "textvqa"):  # both officially use 10-annotator VQA accuracy
         return vqa_accuracy(prediction, gt_answers)
     return exact_match(prediction, gt_answers)
+
+
+def official_vqa_accuracy(prediction: str, gt_answers: list[str]) -> float:
+    """GT-Vision-Lab's evaluator, including its conditional normalization."""
+    if len(gt_answers) != 10:
+        raise ValueError("Official VQA evaluation needs all 10 annotator answers.")
+    def clean(text):
+        return text.replace("\n", " ").replace("\t", " ").strip()
+
+    prediction, answers = clean(prediction), [clean(answer) for answer in gt_answers]
+    if len(set(answers)) > 1:
+        prediction = normalize_answer(prediction)
+        answers = [normalize_answer(answer) for answer in answers]
+    matches = sum(answer == prediction for answer in answers)
+    return sum(min(1.0, (matches - (answer == prediction)) / 3) for answer in answers) / 10
+
+
+def textvqa_accuracy(prediction: str, gt_answers: list[str]) -> float:
+    """MMF TextVQA evaluator: EvalAI tokenization, then annotator agreement."""
+    if len(gt_answers) != 10:
+        raise ValueError("TextVQA evaluation needs all 10 annotator answers.")
+
+    def tokenize(text):
+        return text.lower().replace(",", "").replace("?", "").replace("'s", " 's").strip()
+
+    return vqa_accuracy(tokenize(prediction), [tokenize(answer) for answer in gt_answers])
+
+
+def evaluation_score(dataset: str, prediction: str, gt_answers: list[str],
+                     variant: str = "official") -> float:
+    """Dataset-author accuracy, or the explicitly named historical variant."""
+    if variant == "normalized":
+        return score(dataset, prediction, gt_answers)
+    if variant != "official":
+        raise ValueError(f"Unknown metric variant: {variant}")
+    if dataset == "vqav2":
+        return official_vqa_accuracy(prediction, gt_answers)
+    if dataset == "textvqa":
+        return textvqa_accuracy(prediction, gt_answers)
+    if dataset in ("gqa", "clevr"):
+        return float(prediction in gt_answers)
+    raise ValueError(f"No evaluation metric for {dataset}")

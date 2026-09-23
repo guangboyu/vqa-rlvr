@@ -1,4 +1,12 @@
-from vqar.metrics import exact_match, normalize_answer, score, vqa_accuracy
+from vqar.metrics import (
+    evaluation_score,
+    exact_match,
+    normalize_answer,
+    official_vqa_accuracy,
+    score,
+    textvqa_accuracy,
+    vqa_accuracy,
+)
 
 
 class TestNormalizeAnswer:
@@ -106,3 +114,22 @@ class TestSingleReferenceFallback:
 
     def test_textvqa_single_gold_fallback(self):
         assert score("textvqa", "42", ["42"]) == 1.0
+
+
+def test_official_vqa_keeps_unanimous_case_rule_separate():
+    answers = ["yes"] * 10
+    assert official_vqa_accuracy("Yes", answers) == 0.0
+    assert evaluation_score("vqav2", "Yes", answers, "normalized") == 1.0
+
+
+def test_official_vqa_normalizes_when_annotators_disagree():
+    assert official_vqa_accuracy("Two.", ["2"] * 3 + ["3"] * 7) == 0.9
+
+
+def test_textvqa_uses_evalai_possessive_tokenization():
+    assert textvqa_accuracy("dog's", ["dog 's"] * 10) == 1.0
+
+
+def test_gqa_author_accuracy_does_not_strip_articles():
+    assert evaluation_score("gqa", "the frisbee", ["frisbee"]) == 0.0
+    assert evaluation_score("gqa", "the frisbee", ["frisbee"], "normalized") == 1.0

@@ -1,0 +1,90 @@
+{
+  "models": {
+    "2b": {
+      "repository": "Qwen/Qwen3-VL-2B-Instruct",
+      "revision": "89644892e4d85e24eaac8bacfd4f463576704203"
+    },
+    "8b": {
+      "repository": "Qwen/Qwen3-VL-8B-Instruct",
+      "revision": "0c351dd01ed87e9c1b53cbc748cba10e6187ff3b"
+    }
+  },
+  "data": {
+    "split_version": "heldout-images-v2",
+    "split_manifest_sha256": "ca9560ad868a2b703fad5c5107a2966a4075f6d428468bafe5a0d185428713b2",
+    "sft_train_questions": 39458,
+    "sft_dev_questions": 506,
+    "rl_pool_questions": 55438,
+    "sft_training_reused_in_rl": true,
+    "within_training_duplicate_image_question_pairs": 5,
+    "conflicting_training_pairs": 1,
+    "holdout_scope": "Exact decoded RGB image identity, including cross-source matches."
+  },
+  "shared_2b_grpo_arguments": {
+    "seed": 42,
+    "learning_rate": 1e-05,
+    "per_device_train_batch_size": 8,
+    "gradient_accumulation_steps": 4,
+    "num_generations": 8,
+    "max_steps": 300,
+    "max_completion_length": 640,
+    "beta": 0.0,
+    "loss_type": "dapo",
+    "scale_rewards": "group",
+    "epsilon": 0.2,
+    "epsilon_high": 0.2,
+    "reward_weights": [
+      1.0
+    ],
+    "vllm_max_model_length": 2048
+  },
+  "recorded_vllm_memory_fraction": {
+    "grpo2-base": 0.36,
+    "grpo2-sft": 0.15
+  },
+  "memory_note": "The original size check misread 8b in the 2B snapshot hash; the named 2B preset now selects 0.15 on 80gb. This allocation difference is preserved in the recorded runs.",
+  "comparison": "Both RL arms use identical prompt order and update geometry. SFT adds one epoch of exposure and compute.",
+  "seed_scope": "One training seed; no seed sweep.",
+  "confirmation_8b": {
+    "preset": "grpo_8b_fmt0",
+    "hardware": "96gb",
+    "gpu": "RTX PRO 6000 Blackwell 96 GB",
+    "learning_rate": 1e-05,
+    "max_steps": 300,
+    "vllm_memory_fraction": 0.3,
+    "comparison": "Resolved training arguments match the 2B base-to-GRPO arm except output/run names and engine memory fraction. Model size and GPU differ.",
+    "training_source": "source/training-larger",
+    "evaluation_source": "source/evaluation",
+    "source_change_from_2b": "The memory-profile size check uses the preset name instead of searching the checkpoint path.",
+    "same_complete_prompt_order_as_2b": true,
+    "prompt_order_sha256": "cf2101eb06de31e80904b1e95e4738ba5158330d9518955ccf7b08956e3959ee"
+  },
+  "completion_status": {
+    "2b_four_arm_comparison": "complete",
+    "8b_confirmation": "Complete: 300 GRPO updates and matched before/after evaluation on all four datasets under both prompts.",
+    "selected_opd": "Complete: 300 updates, identical full question order to GRPO, and matched evaluation on four datasets under both prompts.",
+    "release": "Local release prepared; not committed, pushed, hosted, or published.",
+    "8b_base_predictions": "All eight dataset/prompt files validated locally; scheduler completion confirmed."
+  },
+  "selected_opd": {
+    "preset": "opd_self_2b_main",
+    "hardware": "96gb",
+    "max_steps": 300,
+    "save_steps": 25,
+    "save_total_limit": 0,
+    "training_source": "source/training-opd",
+    "teacher": "frozen released 2B Instruct, conditioned on reference answer",
+    "interpretation": "Teacher conditioning and token-feedback objective differ from outcome-reward GRPO. Correctness is logged only.",
+    "same_complete_prompt_order_as_grpo": true,
+    "prompt_order_sha256": "cf2101eb06de31e80904b1e95e4738ba5158330d9518955ccf7b08956e3959ee",
+    "unique_questions": 1200,
+    "sampled_responses": 9600,
+    "sft_training_membership": 841,
+    "rl_only_questions": 359
+  },
+  "compute": {
+    "gpu_hour_ceiling": 30,
+    "gpu_hours_including_prior_and_local_allowances": 17.78388888888889,
+    "remaining_reservations": 0
+  }
+}

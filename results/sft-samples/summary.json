@@ -1,0 +1,12 @@
+{
+  "questions": 20,
+  "sampled_per_question": 8,
+  "max_new_tokens": 512,
+  "seconds": 215.2733256869833,
+  "gpu": "NVIDIA GeForce RTX 4090",
+  "peak_allocated": 8697402880,
+  "adapter_sha256": "3254996ad62148802c84478c0df241de8763e3695e9439aa98c2e99f46ef998a",
+  "merge_fp32_max_logit_error": 3.147125244140625e-05,
+  "merge_fp32_mean_logit_error": 5.280335244606249e-06,
+  "merge_next_token_matches": true
+}

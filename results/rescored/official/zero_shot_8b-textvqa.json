@@ -1,0 +1,52 @@
+{
+  "run_id": "zero_shot_8b-textvqa",
+  "timestamp": "2026-07-11T14:52:43+00:00",
+  "git_sha": "dceca4b",
+  "model": {
+    "base": "Qwen/Qwen3-VL-8B-Instruct",
+    "preset": "zero_shot_8b"
+  },
+  "eval": {
+    "dataset": "textvqa",
+    "subset": "textvqa_eval",
+    "n": 2000,
+    "limit": null,
+    "prompt_template": "short",
+    "metric_variant": "official"
+  },
+  "gen": {
+    "backend": "vllm",
+    "temperature": 0.0,
+    "max_tokens": 64,
+    "max_model_len": 4096
+  },
+  "metrics": {
+    "overall": 0.8395499999999999,
+    "by_answer_type": {
+      "all": 0.8395499999999999
+    }
+  },
+  "config": {
+    "name": "zero_shot_8b",
+    "model": "Qwen/Qwen3-VL-8B-Instruct",
+    "backend": "vllm",
+    "template": "short",
+    "datasets": [
+      "vqav2",
+      "gqa",
+      "clevr",
+      "textvqa"
+    ],
+    "max_tokens": 64,
+    "max_model_len": 4096,
+    "gpu_memory_utilization": 0.88
+  },
+  "rescore": {
+    "source_run": "results/runs/zero_shot_8b-textvqa.json",
+    "source_run_sha256": "93edaee585334b1f241264b00493d8f899039a848da1b17694d59037347ecbc7",
+    "source_predictions_sha256": "be8eca3dd9fa7a6f5548e8d3ee8ccdfcfc8c82012bc50dbaf6f4bc70fe79c3fd",
+    "qids_sha256": "06fe623dd201040ba8dfa98f35efb44bedabaa5eb7a56f6c897ff2c950ebd6b5",
+    "scorer_sha256": "3ba4c6b35621edc28568199a10f51351f1941c31b4998aee50eaa31f663126ec",
+    "previous_overall": 0.83975
+  }
+}

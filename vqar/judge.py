@@ -1,15 +1,15 @@
 """LLM judge for answer equivalence, used where rule-based matching fails.
 
-Claude Haiku judges whether a predicted answer is semantically equivalent to the
-gold answer(s) ("grey" vs "gray", "4 people" vs "4"). Called only on rule-based
-mismatches, so volume stays small. Every verdict is cached in sqlite keyed by
-(model, question, golds, normalized prediction) — RL rollouts repeat wrong
-answers constantly, so the hit rate is high. Cumulative spend is persisted and a
-hard budget cap raises JudgeBudgetExceeded rather than overspending.
+A small hosted model (pinned in MODEL) judges whether a predicted answer is
+semantically equivalent to the gold answer(s) ("grey" vs "gray", "4 people" vs "4").
+Called only on rule-based mismatches, so volume stays small. Every verdict is cached
+in sqlite keyed by (model, question, golds, normalized prediction), so repeated wrong
+answers cost nothing. Cumulative spend is persisted and a hard budget cap raises
+JudgeBudgetExceeded rather than overspending.
 
 Two call paths:
-- judge(): synchronous, cache-first — used inside the GRPO reward function.
-- judge_many(): Message Batches API (50% price) — used for bulk eval scoring.
+- judge(): synchronous, cache-first.
+- judge_many(): Message Batches API (50% price), used by the judge study.
 """
 
 import hashlib
@@ -60,9 +60,8 @@ class Judge:
         if self._client is None:
             import anthropic
 
-            # The key lives in the project .env, NOT the shell environment — a
-            # globally exported ANTHROPIC_API_KEY makes Claude Code sessions bill
-            # the API instead of the owner's subscription.
+            # The key lives in the project .env rather than the shell environment,
+            # so other tools in the same shell do not pick it up.
             if not os.environ.get("ANTHROPIC_API_KEY"):
                 env_file = Path(__file__).parent.parent / ".env"
                 if env_file.exists():

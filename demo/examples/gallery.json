@@ -1,0 +1,226 @@
+[
+  {
+    "title": "One answer, two scores",
+    "lesson": "The original VQA scorer skips normalization when annotators agree. Capitalization can then change the score.",
+    "question": "Is he on the ground?",
+    "qid": "480470022",
+    "image": "/examples/480470022.jpg",
+    "answers": [
+      "yes",
+      "yes",
+      "yes",
+      "yes",
+      "yes",
+      "yes",
+      "yes",
+      "yes",
+      "yes",
+      "yes"
+    ],
+    "responses": [
+      {
+        "label": "Instruct 2B",
+        "run_id": "base2-reasoning",
+        "raw": "Let's analyze the image step by step:\n\n1. The person in the image is standing on a surface that appears to be dirt or sand, which is typical of a beach or park area.\n2. The person is barefoot, which is consistent with being on the ground.\n3. The person is holding a kite and appears to be flying it, which is a common activity done on the ground.\n4. The ground is not covered with grass or pavement, but rather with loose soil or sand.\n\nBased on these observations, the person is indeed on the ground.\n\n<answer>Yes</answer>",
+        "official": 0.0,
+        "normalized": 1.0,
+        "source_sha256": "4188e102ed07881fcc144402497a366b8dbd9ef0b69cade3d56fc46156bccf93"
+      }
+    ],
+    "study": "Corrected shared-pool comparison"
+  },
+  {
+    "title": "SFT changes the visible response",
+    "lesson": "Both answers receive full credit here. Short-answer SFT produces less explanation; this does not prove internal reasoning was erased.",
+    "question": "Is the clock on a house?",
+    "qid": "274864003",
+    "image": "/examples/274864003.jpg",
+    "answers": [
+      "no",
+      "no",
+      "no",
+      "no",
+      "no",
+      "no",
+      "no",
+      "no",
+      "no",
+      "no"
+    ],
+    "responses": [
+      {
+        "label": "Instruct 2B",
+        "run_id": "base2-reasoning",
+        "raw": "Let's analyze the image step by step:\n\n1. The image shows a prominent clock tower in the center.\n2. The tower is tall, white, and has a golden dome on top.\n3. The clock is clearly visible on the tower, not on a house.\n4. The tower is a standalone structure, not attached to a building.\n5. The structure is a clock tower, which is a type of building, but it is not a house.\n\nTherefore, the clock is on a tower, not on a house.\n\n<answer>no</answer>",
+        "official": 1.0,
+        "normalized": 1.0,
+        "source_sha256": "4188e102ed07881fcc144402497a366b8dbd9ef0b69cade3d56fc46156bccf93"
+      },
+      {
+        "label": "Short-answer SFT",
+        "run_id": "sft2-reasoning",
+        "raw": "no",
+        "official": 1.0,
+        "normalized": 1.0,
+        "source_sha256": "cbea119f896e7deba2e33b1bccee42388251b8313b816a56e79d33ea6e190fbb"
+      }
+    ],
+    "study": "Corrected shared-pool comparison"
+  },
+  {
+    "title": "A long explanation can be wrong",
+    "lesson": "The base model explains its answer but misses the reference. The GRPO response is shorter and correct on this question.",
+    "question": "What covers the ground?",
+    "qid": "285583000",
+    "image": "/examples/285583000.jpg",
+    "answers": [
+      "snow",
+      "snow",
+      "snow",
+      "snow",
+      "snow",
+      "snow",
+      "snow",
+      "snow",
+      "snow",
+      "snow"
+    ],
+    "responses": [
+      {
+        "label": "Instruct 2B",
+        "run_id": "base2-reasoning",
+        "raw": "Step 1: Identify the main subject of the image.\n- The image shows a man skiing in a snowy environment.\n\nStep 2: Observe the ground surface.\n- The ground is covered in a white, powdery substance.\n\nStep 3: Determine the substance based on its appearance and context.\n- The substance is consistent with snow, which is common in winter sports settings.\n\nStep 4: Confirm the presence of snow.\n- The ground is clearly covered in snow, and there are ski tracks and snow-covered trees in the background.\n\nFinal Answer: Snow",
+        "official": 0.0,
+        "normalized": 0.0,
+        "source_sha256": "4188e102ed07881fcc144402497a366b8dbd9ef0b69cade3d56fc46156bccf93"
+      },
+      {
+        "label": "Correctness-only GRPO",
+        "run_id": "grpo2-base-reasoning",
+        "raw": "The ground is covered in snow.\n\n<answer>snow</answer>",
+        "official": 1.0,
+        "normalized": 1.0,
+        "source_sha256": "abcc6d5009094f2f23373639e72b8c36a20610548977bbfeba0b1a783262e00b"
+      }
+    ],
+    "study": "Corrected shared-pool comparison"
+  },
+  {
+    "title": "An improvement after SFT then RL",
+    "lesson": "On this question, SFT gives a short wrong answer; subsequent GRPO produces a longer response with a correct final answer. This example does not establish that the explanation is faithful or that the same change holds generally.",
+    "question": "Was this food to-go?",
+    "qid": "464682025",
+    "image": "/examples/464682025.jpg",
+    "answers": [
+      "no",
+      "yes",
+      "corned beef",
+      "no",
+      "no",
+      "yes",
+      "no",
+      "no",
+      "no",
+      "no"
+    ],
+    "responses": [
+      {
+        "label": "Short-answer SFT",
+        "run_id": "sft2-reasoning",
+        "raw": "no\nit is on a plate",
+        "official": 0.0,
+        "normalized": 0.0,
+        "source_sha256": "cbea119f896e7deba2e33b1bccee42388251b8313b816a56e79d33ea6e190fbb"
+      },
+      {
+        "label": "SFT then GRPO",
+        "run_id": "grpo2-sft-reasoning",
+        "raw": "The sandwich is on a plate, which is a typical setting for a meal served at a restaurant or in a dining establishment. It is not in a container or on a tray, and there is no indication of it being served in a takeaway box or on a plate with a lid. The food is presented on a plate, which is a common way to serve food in a restaurant.\n\n<answer>no</answer>",
+        "official": 1.0,
+        "normalized": 1.0,
+        "source_sha256": "6433b2b79ab7ebb61500933c988f2cb024e7855579ca269b61a3b0827c8e0e65"
+      }
+    ],
+    "study": "Corrected shared-pool comparison"
+  },
+  {
+    "title": "RL can also lose a correct answer",
+    "lesson": "The SFT answer receives full credit here, but the SFT-then-GRPO answer is wrong under both scoring variants. Aggregate gains can include regressions.",
+    "question": "What colors are the cat?",
+    "qid": "479440002",
+    "image": "/examples/479440002.jpg",
+    "answers": [
+      "white",
+      "white",
+      "white",
+      "white",
+      "white",
+      "white",
+      "white",
+      "white",
+      "white",
+      "white"
+    ],
+    "responses": [
+      {
+        "label": "Short-answer SFT",
+        "run_id": "sft2-reasoning",
+        "raw": "white\n<answer> white </answer>",
+        "official": 1.0,
+        "normalized": 1.0,
+        "source_sha256": "cbea119f896e7deba2e33b1bccee42388251b8313b816a56e79d33ea6e190fbb"
+      },
+      {
+        "label": "SFT then GRPO",
+        "run_id": "grpo2-sft-reasoning",
+        "raw": "Step 1: Observe the cat in the image.\nStep 2: Identify the fur color of the cat.\nStep 3: The cat's fur is white.\nStep 4: The cat's eyes are green.\nStep 5: The cat's nose is pink.\nStep 6: The cat's ears are pink.\nStep 7: The cat's whiskers are white.\nStep 8: The cat's paws are white.\nStep 9: The cat's tail is white.\nStep 10: The cat's body is white.\nStep 11: The cat's face is white.\nStep 12: The cat's legs are white.\nStep 13: The cat's back is white.\nStep 14: The cat's head is white.\nStep 15: The cat's neck is white.\nStep 16: The cat's chest is white.\nStep 17: The cat's belly is white.\nStep 18: The cat's back is white.\nStep 19: The cat's tail is white.\nStep 20: The cat's paws are white.\nStep 21: The cat's face is white.\nStep 22: The cat's eyes are green.\nStep 23: The cat's nose is pink.\nStep 24: The cat's ears are pink.\nStep 25: The cat's whiskers are white.\nStep 26: The cat's legs are white.\nStep 27: The cat's back is white.\nStep 28: The cat's head is white.\nStep 29: The cat's neck is white.\nStep 30: The cat's chest is white.\nStep 31: The cat's belly is white.\nStep 32: The cat's back is white.\nStep 33: The cat's tail is white.\nStep 34: The cat's paws are white.\nStep 35: The cat's face is white.\nStep 36: The cat's eyes are green.\nStep 37: The cat's nose is pink.\nStep 38: The cat's ears are pink.\nStep 39: The cat's whiskers are white.\nStep 40: The cat's legs are white.\nStep 41: The cat's back is white.\nStep 42: The cat's head is white.\nStep 43: The cat's neck",
+        "official": 0.0,
+        "normalized": 0.0,
+        "source_sha256": "6433b2b79ab7ebb61500933c988f2cb024e7855579ca269b61a3b0827c8e0e65"
+      }
+    ],
+    "study": "Corrected shared-pool comparison"
+  },
+  {
+    "title": "Image sensitivity is not enough",
+    "lesson": "The answer changes with the image, but the model still answers a question about a boy when shown flowers or a black image. Sensitivity alone does not establish correct grounding or isolate the image encoder.",
+    "question": "What is the boy playing with?",
+    "qid": "201030621",
+    "dataset": "GQA",
+    "image": "/examples/intervention_original.jpg",
+    "answers": [
+      "wii controller"
+    ],
+    "reference_label": "Reference for the original image",
+    "responses": [
+      {
+        "label": "Base 2B, original image",
+        "run_id": "swap_probes::gqa::201030621::original",
+        "raw": "wii controller",
+        "image": "/examples/intervention_original.jpg",
+        "official": null,
+        "normalized": null,
+        "source_sha256": "3a53c5a827739cab742e6f5201a802e5d8ff5da29e9feb0f10599b13eaa3d6e4"
+      },
+      {
+        "label": "Base 2B, swapped image",
+        "run_id": "swap_probes::gqa::201030621::swapped",
+        "raw": "flowers",
+        "image": "/examples/intervention_swapped.jpg",
+        "official": null,
+        "normalized": null,
+        "source_sha256": "3a53c5a827739cab742e6f5201a802e5d8ff5da29e9feb0f10599b13eaa3d6e4"
+      },
+      {
+        "label": "Base 2B, blank image",
+        "run_id": "swap_probes::gqa::201030621::blank",
+        "raw": "ball",
+        "image": "/examples/intervention_blank.png",
+        "official": null,
+        "normalized": null,
+        "source_sha256": "3a53c5a827739cab742e6f5201a802e5d8ff5da29e9feb0f10599b13eaa3d6e4"
+      }
+    ],
+    "study": "Historical public-checkpoint image audit"
+  }
+]

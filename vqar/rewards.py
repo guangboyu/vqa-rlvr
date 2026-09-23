@@ -9,9 +9,7 @@ config change, not a code change.
 """
 
 import re
-import warnings
 
-from vqar.judge import Judge, JudgeBudgetExceeded
 from vqar.metrics import score
 
 _ANSWER_TAG = re.compile(r"<answer>(.*?)</answer>", re.DOTALL)
@@ -62,37 +60,6 @@ def _well_formed(text: str) -> bool:
 def format_reward(prompts, completions, **kwargs) -> list[float]:
     """1.0 for reasoning prose followed by one short, terminal <answer> tag."""
     return [1.0 if _well_formed(_text(completion)) else 0.0 for completion in completions]
-
-
-def make_judge_reward(judge: Judge):
-    """Correctness with LLM-judge rescue: rule-based match first; on failure, Claude
-    judges semantic equivalence. Degrades to plain correctness if the budget cap hits.
-    """
-    state = {"budget_exhausted": False}
-
-    def judge_reward(prompts, completions, answers, dataset, question, **kwargs) -> list[float]:
-        out = []
-        for completion, golds, ds, q in zip(completions, answers, dataset, question, strict=True):
-            pred = _strict_answer(_text(completion))
-            if pred is None:
-                out.append(0.0)
-                continue
-            base = score(ds, pred, golds)
-            if base > 0 or state["budget_exhausted"] or not pred:
-                out.append(base)
-                continue
-            try:
-                out.append(1.0 if judge.judge(q, golds, pred) else 0.0)
-            except JudgeBudgetExceeded:
-                state["budget_exhausted"] = True
-                warnings.warn(
-                    "judge budget exhausted; falling back to rule-based rewards",
-                    stacklevel=2,
-                )
-                out.append(base)
-        return out
-
-    return judge_reward
 
 
 REWARDS = {

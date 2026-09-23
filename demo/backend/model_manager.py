@@ -10,19 +10,15 @@ import threading
 from dataclasses import dataclass
 from pathlib import Path
 
-import torch
 from PIL import Image
-from transformers import AutoModelForImageTextToText, AutoProcessor, TextIteratorStreamer
+
+from vqar.data import PROMPT_REASONING, PROMPT_SHORT
 
 ROOT = Path(__file__).parent.parent.parent
 
 PROMPTS = {
-    "short": "{question}\nAnswer the question using a single word or phrase.",
-    "reasoning": (
-        "{question}\n"
-        "First think step by step inside <think> </think> tags, then write only the final "
-        "answer inside <answer> </answer> tags."
-    ),
+    "short": PROMPT_SHORT,
+    "reasoning": PROMPT_REASONING,
 }
 
 
@@ -32,6 +28,7 @@ class ModelSpec:
     label: str
     path: str
     description: str
+    revision: str | None = None
 
 
 LINEUP = [
@@ -39,19 +36,20 @@ LINEUP = [
         "zero_shot",
         "Qwen3-VL-2B (zero-shot)",
         "Qwen/Qwen3-VL-2B-Instruct",
-        "The untouched base model.",
+        "The released Instruct checkpoint, before our VQA fine-tuning.",
+        "89644892e4d85e24eaac8bacfd4f463576704203",
     ),
     ModelSpec(
         "sft",
         "+ SFT (LoRA)",
-        str(ROOT / "checkpoints/merged/sft_2b"),
-        "Supervised fine-tune on 40k VQAv2+GQA short answers.",
+        str(ROOT / "checkpoints/merged/sharedpool_20260913_sft_2b"),
+        "One epoch on 39,458 VQAv2/GQA short answers, with held-out images excluded.",
     ),
     ModelSpec(
         "grpo",
         "+ GRPO (RLVR)",
-        str(ROOT / "checkpoints/merged/grpo_2b_main_base"),
-        "RL with verifiable rewards on VQAv2+GQA (from base).",
+        str(ROOT / "checkpoints/merged/sharedpool_20260913_grpo_2b_base"),
+        "300 correctness-only GRPO updates from Instruct on the shared VQAv2/GQA pool.",
     ),
 ]
 
@@ -62,12 +60,15 @@ class ModelManager:
         self._lock = threading.Lock()
 
     def load_all(self) -> None:
+        import torch
+        from transformers import AutoModelForImageTextToText, AutoProcessor
+
         for spec in LINEUP:
             if spec.key in self._models:
                 continue
-            processor = AutoProcessor.from_pretrained(spec.path)
+            processor = AutoProcessor.from_pretrained(spec.path, revision=spec.revision)
             model = AutoModelForImageTextToText.from_pretrained(
-                spec.path, dtype=torch.bfloat16, device_map="cuda"
+                spec.path, revision=spec.revision, dtype=torch.bfloat16, device_map="cuda"
             ).eval()
             self._models[spec.key] = (model, processor)
 
@@ -97,6 +98,9 @@ class ModelManager:
         All requested models generate concurrently — CUDA interleaves their kernels,
         so the arena cards stream side by side.
         """
+        import torch
+        from transformers import TextIteratorStreamer
+
         model, processor = self._models[key]
         text = PROMPTS[template].format(question=question)
         messages = [
@@ -116,20 +120,27 @@ class ModelManager:
             processor.tokenizer, skip_prompt=True, skip_special_tokens=True
         )
 
+        failure = []
+
         def generate():
-            with torch.inference_mode():
-                model.generate(
-                    **inputs,
-                    max_new_tokens=max_new_tokens,
-                    do_sample=False,
-                    streamer=streamer,
-                )
+            try:
+                with torch.inference_mode():
+                    model.generate(
+                        **inputs,
+                        max_new_tokens=max_new_tokens,
+                        do_sample=False,
+                        streamer=streamer,
+                    )
+            except Exception as error:
+                failure.append(error)
+                streamer.end()
 
         thread = threading.Thread(target=generate, daemon=True)
         thread.start()
         try:
             for token in streamer:
                 asyncio.run_coroutine_threadsafe(queue.put((key, token)), loop).result()
+            if failure:
+                raise failure[0]
         finally:
             thread.join()
-            asyncio.run_coroutine_threadsafe(queue.put((key, None)), loop).result()

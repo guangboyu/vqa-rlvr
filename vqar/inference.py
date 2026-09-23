@@ -47,8 +47,8 @@ def build_messages(question: str, image_bytes: bytes, template: str) -> list[dic
     ]
 
 
-def generate_vllm(llm, conversations: list[list[dict]], max_tokens: int) -> list[str]:
-    """Greedy batch generation; chunked so data-URI payloads never all sit in RAM."""
+def generate_vllm_records(llm, conversations: list[list[dict]], max_tokens: int) -> list[dict]:
+    """Keep token counts and stop reasons so evaluation can measure truncation."""
     from vllm import SamplingParams
 
     params = SamplingParams(temperature=0.0, max_tokens=max_tokens)
@@ -56,7 +56,13 @@ def generate_vllm(llm, conversations: list[list[dict]], max_tokens: int) -> list
     chunk = 256
     for i in range(0, len(conversations), chunk):
         results = llm.chat(conversations[i : i + chunk], params, use_tqdm=False)
-        outputs.extend(r.outputs[0].text for r in results)
+        for result in results:
+            response = result.outputs[0]
+            outputs.append({
+                "text": response.text,
+                "output_tokens": len(response.token_ids),
+                "finish_reason": response.finish_reason,
+            })
     return outputs
 
 

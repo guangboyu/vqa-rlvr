@@ -1,0 +1,1841 @@
+{
+  "runs": {
+    "base2-reasoning": {
+      "template": "reasoning",
+      "datasets": {
+        "clevr": {
+          "overall": 0.8713333333333333,
+          "by_answer_type": {
+            "number": 0.8713333333333333
+          },
+          "mean_output_tokens": 185.706,
+          "truncated_fraction": 0.017666666666666667,
+          "answer_tag_fraction": 0.9823333333333333,
+          "empty_answer_fraction": 0.0,
+          "n": 3000,
+          "normalized": 0.8713333333333333,
+          "lowercase_official": 0.8713333333333333,
+          "normalized_changed_questions": 0
+        },
+        "gqa": {
+          "overall": 0.36134520591508984,
+          "by_answer_type": {
+            "choose": 0.7475642161204605,
+            "compare": 0.2801358234295416,
+            "logical": 0.4082085413200222,
+            "query": 0.2987509184423218,
+            "verify": 0.34058614564831263
+          },
+          "mean_output_tokens": 122.60494514231198,
+          "truncated_fraction": 0.022658610271903322,
+          "answer_tag_fraction": 0.9684369534107171,
+          "empty_answer_fraction": 0.0,
+          "n": 12578,
+          "normalized": 0.5194784544442678,
+          "lowercase_official": 0.5080298934647798,
+          "normalized_changed_questions": 1989
+        },
+        "textvqa": {
+          "overall": 0.69605,
+          "by_answer_type": {
+            "all": 0.69605
+          },
+          "mean_output_tokens": 106.227,
+          "truncated_fraction": 0.0145,
+          "answer_tag_fraction": 0.9465,
+          "empty_answer_fraction": 0.0,
+          "n": 2000,
+          "normalized": 0.6961,
+          "lowercase_official": 0.69605,
+          "normalized_changed_questions": 1
+        },
+        "vqav2": {
+          "overall": 0.55056,
+          "by_answer_type": {
+            "number": 0.6088888888888889,
+            "other": 0.4893317230273752,
+            "yes/no": 0.6117870722433459
+          },
+          "mean_output_tokens": 147.6614,
+          "truncated_fraction": 0.0372,
+          "answer_tag_fraction": 0.9488,
+          "empty_answer_fraction": 0.0,
+          "n": 5000,
+          "normalized": 0.64676,
+          "lowercase_official": 0.64636,
+          "normalized_changed_questions": 481
+        }
+      }
+    },
+    "base2-short": {
+      "template": "short",
+      "datasets": {
+        "clevr": {
+          "overall": 0.9766666666666667,
+          "by_answer_type": {
+            "number": 0.9766666666666667
+          },
+          "mean_output_tokens": 2.127,
+          "truncated_fraction": 0.0,
+          "answer_tag_fraction": 0.0,
+          "empty_answer_fraction": 0.0,
+          "n": 3000,
+          "normalized": 0.9766666666666667,
+          "lowercase_official": 0.9766666666666667,
+          "normalized_changed_questions": 0
+        },
+        "gqa": {
+          "overall": 0.5945301319764669,
+          "by_answer_type": {
+            "choose": 0.804251550044287,
+            "compare": 0.601018675721562,
+            "logical": 0.778702163061564,
+            "query": 0.43908890521675237,
+            "verify": 0.8099467140319716
+          },
+          "mean_output_tokens": 2.2621243440928605,
+          "truncated_fraction": 0.0,
+          "answer_tag_fraction": 0.0,
+          "empty_answer_fraction": 0.0,
+          "n": 12578,
+          "normalized": 0.5946096358721578,
+          "lowercase_official": 0.5946096358721578,
+          "normalized_changed_questions": 1
+        },
+        "textvqa": {
+          "overall": 0.80555,
+          "by_answer_type": {
+            "all": 0.80555
+          },
+          "mean_output_tokens": 4.0955,
+          "truncated_fraction": 0.0015,
+          "answer_tag_fraction": 0.0,
+          "empty_answer_fraction": 0.0,
+          "n": 2000,
+          "normalized": 0.8056,
+          "lowercase_official": 0.80555,
+          "normalized_changed_questions": 1
+        },
+        "vqav2": {
+          "overall": 0.7787,
+          "by_answer_type": {
+            "number": 0.714962962962963,
+            "other": 0.6896135265700483,
+            "yes/no": 0.922270505160239
+          },
+          "mean_output_tokens": 2.4126,
+          "truncated_fraction": 0.0,
+          "answer_tag_fraction": 0.0,
+          "empty_answer_fraction": 0.0,
+          "n": 5000,
+          "normalized": 0.7791,
+          "lowercase_official": 0.7789,
+          "normalized_changed_questions": 2
+        }
+      }
+    },
+    "base8-reasoning": {
+      "template": "reasoning",
+      "datasets": {
+        "clevr": {
+          "overall": 0.9696666666666667,
+          "by_answer_type": {
+            "number": 0.9696666666666667
+          },
+          "mean_output_tokens": 192.69133333333335,
+          "truncated_fraction": 0.006666666666666667,
+          "answer_tag_fraction": 0.9933333333333333,
+          "empty_answer_fraction": 0.0,
+          "n": 3000,
+          "normalized": 0.9696666666666667,
+          "lowercase_official": 0.9696666666666667,
+          "normalized_changed_questions": 0
+        },
+        "gqa": {
+          "overall": 0.4684369534107171,
+          "by_answer_type": {
+            "choose": 0.7626217891939769,
+            "compare": 0.5110356536502547,
+            "logical": 0.6100942872989462,
+            "query": 0.303600293901543,
+            "verify": 0.69449378330373
+          },
+          "mean_output_tokens": 103.99014151693433,
+          "truncated_fraction": 0.004293210367307998,
+          "answer_tag_fraction": 0.9891079662903483,
+          "empty_answer_fraction": 0.0,
+          "n": 12578,
+          "normalized": 0.5226586102719033,
+          "lowercase_official": 0.5128001272062331,
+          "normalized_changed_questions": 682
+        },
+        "textvqa": {
+          "overall": 0.7531,
+          "by_answer_type": {
+            "all": 0.7531
+          },
+          "mean_output_tokens": 109.3335,
+          "truncated_fraction": 0.0045,
+          "answer_tag_fraction": 0.9895,
+          "empty_answer_fraction": 0.0,
+          "n": 2000,
+          "normalized": 0.75315,
+          "lowercase_official": 0.7531,
+          "normalized_changed_questions": 1
+        },
+        "vqav2": {
+          "overall": 0.6367,
+          "by_answer_type": {
+            "number": 0.6731851851851851,
+            "other": 0.5043880837359098,
+            "yes/no": 0.8018468223791418
+          },
+          "mean_output_tokens": 118.178,
+          "truncated_fraction": 0.0092,
+          "answer_tag_fraction": 0.9876,
+          "empty_answer_fraction": 0.0,
+          "n": 5000,
+          "normalized": 0.6875,
+          "lowercase_official": 0.6871,
+          "normalized_changed_questions": 254
+        }
+      }
+    },
+    "base8-short": {
+      "template": "short",
+      "datasets": {
+        "clevr": {
+          "overall": 0.9966666666666667,
+          "by_answer_type": {
+            "number": 0.9966666666666667
+          },
+          "mean_output_tokens": 2.1253333333333333,
+          "truncated_fraction": 0.0,
+          "answer_tag_fraction": 0.0,
+          "empty_answer_fraction": 0.0,
+          "n": 3000,
+          "normalized": 0.9966666666666667,
+          "lowercase_official": 0.9966666666666667,
+          "normalized_changed_questions": 0
+        },
+        "gqa": {
+          "overall": 0.616552711082843,
+          "by_answer_type": {
+            "choose": 0.8529672276350753,
+            "compare": 0.6757215619694398,
+            "logical": 0.8097615085967831,
+            "query": 0.4534900808229243,
+            "verify": 0.8206039076376554
+          },
+          "mean_output_tokens": 2.2607727778661153,
+          "truncated_fraction": 0.0,
+          "answer_tag_fraction": 0.0,
+          "empty_answer_fraction": 0.0,
+          "n": 12578,
+          "normalized": 0.616552711082843,
+          "lowercase_official": 0.616552711082843,
+          "normalized_changed_questions": 0
+        },
+        "textvqa": {
+          "overall": 0.8398,
+          "by_answer_type": {
+            "all": 0.8398
+          },
+          "mean_output_tokens": 3.979,
+          "truncated_fraction": 0.0,
+          "answer_tag_fraction": 0.0,
+          "empty_answer_fraction": 0.0,
+          "n": 2000,
+          "normalized": 0.84,
+          "lowercase_official": 0.8398,
+          "normalized_changed_questions": 2
+        },
+        "vqav2": {
+          "overall": 0.81176,
+          "by_answer_type": {
+            "number": 0.7451851851851852,
+            "other": 0.7277777777777777,
+            "yes/no": 0.9494839760999457
+          },
+          "mean_output_tokens": 2.4038,
+          "truncated_fraction": 0.0,
+          "answer_tag_fraction": 0.0,
+          "empty_answer_fraction": 0.0,
+          "n": 5000,
+          "normalized": 0.81216,
+          "lowercase_official": 0.81196,
+          "normalized_changed_questions": 2
+        }
+      }
+    },
+    "grpo2-base-reasoning": {
+      "template": "reasoning",
+      "datasets": {
+        "clevr": {
+          "overall": 0.861,
+          "by_answer_type": {
+            "number": 0.861
+          },
+          "mean_output_tokens": 196.60766666666666,
+          "truncated_fraction": 0.027,
+          "answer_tag_fraction": 0.973,
+          "empty_answer_fraction": 0.0,
+          "n": 3000,
+          "normalized": 0.861,
+          "lowercase_official": 0.861,
+          "normalized_changed_questions": 0
+        },
+        "gqa": {
+          "overall": 0.44895849896644935,
+          "by_answer_type": {
+            "choose": 0.75022143489814,
+            "compare": 0.4142614601018676,
+            "logical": 0.5646145313366612,
+            "query": 0.3387215282880235,
+            "verify": 0.5475133214920072
+          },
+          "mean_output_tokens": 119.40093814596915,
+          "truncated_fraction": 0.01788837653044999,
+          "answer_tag_fraction": 0.9819526156781683,
+          "empty_answer_fraction": 0.0,
+          "n": 12578,
+          "normalized": 0.5409445062808078,
+          "lowercase_official": 0.5342661790427731,
+          "normalized_changed_questions": 1157
+        },
+        "textvqa": {
+          "overall": 0.7423,
+          "by_answer_type": {
+            "all": 0.7423
+          },
+          "mean_output_tokens": 100.935,
+          "truncated_fraction": 0.0135,
+          "answer_tag_fraction": 0.985,
+          "empty_answer_fraction": 0.0,
+          "n": 2000,
+          "normalized": 0.74225,
+          "lowercase_official": 0.7423,
+          "normalized_changed_questions": 1
+        },
+        "vqav2": {
+          "overall": 0.6179,
+          "by_answer_type": {
+            "number": 0.6162962962962963,
+            "other": 0.5428341384863125,
+            "yes/no": 0.7197718631178707
+          },
+          "mean_output_tokens": 141.4058,
+          "truncated_fraction": 0.037,
+          "answer_tag_fraction": 0.9628,
+          "empty_answer_fraction": 0.0,
+          "n": 5000,
+          "normalized": 0.6901,
+          "lowercase_official": 0.6899,
+          "normalized_changed_questions": 361
+        }
+      }
+    },
+    "grpo2-base-short": {
+      "template": "short",
+      "datasets": {
+        "clevr": {
+          "overall": 0.9826666666666667,
+          "by_answer_type": {
+            "number": 0.9826666666666667
+          },
+          "mean_output_tokens": 2.1266666666666665,
+          "truncated_fraction": 0.0,
+          "answer_tag_fraction": 0.0,
+          "empty_answer_fraction": 0.0,
+          "n": 3000,
+          "normalized": 0.9826666666666667,
+          "lowercase_official": 0.9826666666666667,
+          "normalized_changed_questions": 0
+        },
+        "gqa": {
+          "overall": 0.5954841787247576,
+          "by_answer_type": {
+            "choose": 0.8024800708591674,
+            "compare": 0.5959252971137521,
+            "logical": 0.778702163061564,
+            "query": 0.4411462160176341,
+            "verify": 0.8112788632326821
+          },
+          "mean_output_tokens": 2.2590236921609157,
+          "truncated_fraction": 0.0,
+          "answer_tag_fraction": 0.0,
+          "empty_answer_fraction": 0.0,
+          "n": 12578,
+          "normalized": 0.5954841787247576,
+          "lowercase_official": 0.5954841787247576,
+          "normalized_changed_questions": 0
+        },
+        "textvqa": {
+          "overall": 0.8038,
+          "by_answer_type": {
+            "all": 0.8038
+          },
+          "mean_output_tokens": 4.0605,
+          "truncated_fraction": 0.001,
+          "answer_tag_fraction": 0.0,
+          "empty_answer_fraction": 0.0,
+          "n": 2000,
+          "normalized": 0.80385,
+          "lowercase_official": 0.8038,
+          "normalized_changed_questions": 1
+        },
+        "vqav2": {
+          "overall": 0.7802,
+          "by_answer_type": {
+            "number": 0.714962962962963,
+            "other": 0.6916264090177133,
+            "yes/no": 0.923628462791961
+          },
+          "mean_output_tokens": 2.4086,
+          "truncated_fraction": 0.0,
+          "answer_tag_fraction": 0.0,
+          "empty_answer_fraction": 0.0,
+          "n": 5000,
+          "normalized": 0.7806,
+          "lowercase_official": 0.7804,
+          "normalized_changed_questions": 2
+        }
+      }
+    },
+    "grpo2-sft-reasoning": {
+      "template": "reasoning",
+      "datasets": {
+        "clevr": {
+          "overall": 0.978,
+          "by_answer_type": {
+            "number": 0.978
+          },
+          "mean_output_tokens": 23.742333333333335,
+          "truncated_fraction": 0.0023333333333333335,
+          "answer_tag_fraction": 0.9976666666666667,
+          "empty_answer_fraction": 0.0,
+          "n": 3000,
+          "normalized": 0.978,
+          "lowercase_official": 0.978,
+          "normalized_changed_questions": 0
+        },
+        "gqa": {
+          "overall": 0.5370488153919543,
+          "by_answer_type": {
+            "choose": 0.7909654561558902,
+            "compare": 0.5874363327674024,
+            "logical": 0.7481974486966168,
+            "query": 0.3667891256429096,
+            "verify": 0.7420071047957372
+          },
+          "mean_output_tokens": 78.74884719351249,
+          "truncated_fraction": 0.019160438861504214,
+          "answer_tag_fraction": 0.9808395611384958,
+          "empty_answer_fraction": 0.0,
+          "n": 12578,
+          "normalized": 0.5485768802671331,
+          "lowercase_official": 0.545794243917952,
+          "normalized_changed_questions": 145
+        },
+        "textvqa": {
+          "overall": 0.74275,
+          "by_answer_type": {
+            "all": 0.74275
+          },
+          "mean_output_tokens": 58.934,
+          "truncated_fraction": 0.0115,
+          "answer_tag_fraction": 0.9885,
+          "empty_answer_fraction": 0.0,
+          "n": 2000,
+          "normalized": 0.7428,
+          "lowercase_official": 0.74275,
+          "normalized_changed_questions": 1
+        },
+        "vqav2": {
+          "overall": 0.69184,
+          "by_answer_type": {
+            "number": 0.662962962962963,
+            "other": 0.5596215780998389,
+            "yes/no": 0.8808256382400869
+          },
+          "mean_output_tokens": 101.6828,
+          "truncated_fraction": 0.0278,
+          "answer_tag_fraction": 0.9722,
+          "empty_answer_fraction": 0.0,
+          "n": 5000,
+          "normalized": 0.70804,
+          "lowercase_official": 0.70764,
+          "normalized_changed_questions": 81
+        }
+      }
+    },
+    "grpo2-sft-short": {
+      "template": "short",
+      "datasets": {
+        "clevr": {
+          "overall": 0.994,
+          "by_answer_type": {
+            "number": 0.994
+          },
+          "mean_output_tokens": 2.1266666666666665,
+          "truncated_fraction": 0.0,
+          "answer_tag_fraction": 0.0,
+          "empty_answer_fraction": 0.0,
+          "n": 3000,
+          "normalized": 0.994,
+          "lowercase_official": 0.994,
+          "normalized_changed_questions": 0
+        },
+        "gqa": {
+          "overall": 0.624423596756241,
+          "by_answer_type": {
+            "choose": 0.8255093002657219,
+            "compare": 0.6451612903225806,
+            "logical": 0.7925679423183583,
+            "query": 0.4808229243203527,
+            "verify": 0.8174955595026643
+          },
+          "mean_output_tokens": 2.25942121163937,
+          "truncated_fraction": 0.0,
+          "answer_tag_fraction": 0.0,
+          "empty_answer_fraction": 0.0,
+          "n": 12578,
+          "normalized": 0.624423596756241,
+          "lowercase_official": 0.624423596756241,
+          "normalized_changed_questions": 0
+        },
+        "textvqa": {
+          "overall": 0.7982,
+          "by_answer_type": {
+            "all": 0.7982
+          },
+          "mean_output_tokens": 3.7635,
+          "truncated_fraction": 0.0005,
+          "answer_tag_fraction": 0.0,
+          "empty_answer_fraction": 0.0,
+          "n": 2000,
+          "normalized": 0.7984,
+          "lowercase_official": 0.7982,
+          "normalized_changed_questions": 2
+        },
+        "vqav2": {
+          "overall": 0.7985,
+          "by_answer_type": {
+            "number": 0.7311111111111112,
+            "other": 0.7136070853462158,
+            "yes/no": 0.9377512221618686
+          },
+          "mean_output_tokens": 2.3788,
+          "truncated_fraction": 0.0,
+          "answer_tag_fraction": 0.0,
+          "empty_answer_fraction": 0.0,
+          "n": 5000,
+          "normalized": 0.7987,
+          "lowercase_official": 0.7985,
+          "normalized_changed_questions": 1
+        }
+      }
+    },
+    "grpo8-base-reasoning": {
+      "template": "reasoning",
+      "datasets": {
+        "clevr": {
+          "overall": 0.973,
+          "by_answer_type": {
+            "number": 0.973
+          },
+          "mean_output_tokens": 83.42566666666667,
+          "truncated_fraction": 0.009,
+          "answer_tag_fraction": 0.991,
+          "empty_answer_fraction": 0.0,
+          "n": 3000,
+          "normalized": 0.973,
+          "lowercase_official": 0.973,
+          "normalized_changed_questions": 0
+        },
+        "gqa": {
+          "overall": 0.5942916202893942,
+          "by_answer_type": {
+            "choose": 0.8441098317094774,
+            "compare": 0.66723259762309,
+            "logical": 0.8064337215751525,
+            "query": 0.4157237325495959,
+            "verify": 0.8197158081705151
+          },
+          "mean_output_tokens": 9.18254094450628,
+          "truncated_fraction": 0.0,
+          "answer_tag_fraction": 1.0,
+          "empty_answer_fraction": 0.0,
+          "n": 12578,
+          "normalized": 0.5981873111782477,
+          "lowercase_official": 0.5963587215773573,
+          "normalized_changed_questions": 49
+        },
+        "textvqa": {
+          "overall": 0.8078,
+          "by_answer_type": {
+            "all": 0.8078
+          },
+          "mean_output_tokens": 11.5535,
+          "truncated_fraction": 0.0015,
+          "answer_tag_fraction": 0.9985,
+          "empty_answer_fraction": 0.0,
+          "n": 2000,
+          "normalized": 0.808,
+          "lowercase_official": 0.8078,
+          "normalized_changed_questions": 2
+        },
+        "vqav2": {
+          "overall": 0.77366,
+          "by_answer_type": {
+            "number": 0.7416296296296296,
+            "other": 0.6560386473429951,
+            "yes/no": 0.944106463878327
+          },
+          "mean_output_tokens": 9.0408,
+          "truncated_fraction": 0.0,
+          "answer_tag_fraction": 1.0,
+          "empty_answer_fraction": 0.0,
+          "n": 5000,
+          "normalized": 0.78626,
+          "lowercase_official": 0.78606,
+          "normalized_changed_questions": 63
+        }
+      }
+    },
+    "grpo8-base-short": {
+      "template": "short",
+      "datasets": {
+        "clevr": {
+          "overall": 0.9956666666666667,
+          "by_answer_type": {
+            "number": 0.9956666666666667
+          },
+          "mean_output_tokens": 2.1246666666666667,
+          "truncated_fraction": 0.0,
+          "answer_tag_fraction": 0.0,
+          "empty_answer_fraction": 0.0,
+          "n": 3000,
+          "normalized": 0.9956666666666667,
+          "lowercase_official": 0.9956666666666667,
+          "normalized_changed_questions": 0
+        },
+        "gqa": {
+          "overall": 0.6178247734138973,
+          "by_answer_type": {
+            "choose": 0.853852967227635,
+            "compare": 0.6842105263157895,
+            "logical": 0.8097615085967831,
+            "query": 0.4545187362233652,
+            "verify": 0.8219360568383659
+          },
+          "mean_output_tokens": 2.2559230402289714,
+          "truncated_fraction": 0.0,
+          "answer_tag_fraction": 0.0,
+          "empty_answer_fraction": 0.0,
+          "n": 12578,
+          "normalized": 0.6178247734138973,
+          "lowercase_official": 0.6178247734138973,
+          "normalized_changed_questions": 0
+        },
+        "textvqa": {
+          "overall": 0.8407,
+          "by_answer_type": {
+            "all": 0.8407
+          },
+          "mean_output_tokens": 3.958,
+          "truncated_fraction": 0.0,
+          "answer_tag_fraction": 0.0,
+          "empty_answer_fraction": 0.0,
+          "n": 2000,
+          "normalized": 0.8409,
+          "lowercase_official": 0.8407,
+          "normalized_changed_questions": 2
+        },
+        "vqav2": {
+          "overall": 0.8112,
+          "by_answer_type": {
+            "number": 0.7465185185185185,
+            "other": 0.7262882447665056,
+            "yes/no": 0.9494839760999457
+          },
+          "mean_output_tokens": 2.4028,
+          "truncated_fraction": 0.0,
+          "answer_tag_fraction": 0.0,
+          "empty_answer_fraction": 0.0,
+          "n": 5000,
+          "normalized": 0.8116,
+          "lowercase_official": 0.8114,
+          "normalized_changed_questions": 2
+        }
+      }
+    },
+    "opd2-self-reasoning": {
+      "template": "reasoning",
+      "datasets": {
+        "clevr": {
+          "overall": 0.871,
+          "by_answer_type": {
+            "number": 0.871
+          },
+          "mean_output_tokens": 206.02433333333335,
+          "truncated_fraction": 0.015,
+          "answer_tag_fraction": 0.985,
+          "empty_answer_fraction": 0.0,
+          "n": 3000,
+          "normalized": 0.871,
+          "lowercase_official": 0.871,
+          "normalized_changed_questions": 0
+        },
+        "gqa": {
+          "overall": 0.5135156622674512,
+          "by_answer_type": {
+            "choose": 0.7121346324180691,
+            "compare": 0.45161290322580644,
+            "logical": 0.6744315030504714,
+            "query": 0.36620132255694343,
+            "verify": 0.7464476021314387
+          },
+          "mean_output_tokens": 118.50985848306567,
+          "truncated_fraction": 0.02774685959612021,
+          "answer_tag_fraction": 0.93202416918429,
+          "empty_answer_fraction": 0.0,
+          "n": 12578,
+          "normalized": 0.5158212752424869,
+          "lowercase_official": 0.51431070122436,
+          "normalized_changed_questions": 29
+        },
+        "textvqa": {
+          "overall": 0.72645,
+          "by_answer_type": {
+            "all": 0.72645
+          },
+          "mean_output_tokens": 106.938,
+          "truncated_fraction": 0.019,
+          "answer_tag_fraction": 0.9565,
+          "empty_answer_fraction": 0.0,
+          "n": 2000,
+          "normalized": 0.72655,
+          "lowercase_official": 0.72645,
+          "normalized_changed_questions": 2
+        },
+        "vqav2": {
+          "overall": 0.68608,
+          "by_answer_type": {
+            "number": 0.6201481481481482,
+            "other": 0.5802737520128824,
+            "yes/no": 0.8530146659424227
+          },
+          "mean_output_tokens": 140.7698,
+          "truncated_fraction": 0.0434,
+          "answer_tag_fraction": 0.9278,
+          "empty_answer_fraction": 0.0002,
+          "n": 5000,
+          "normalized": 0.69228,
+          "lowercase_official": 0.69208,
+          "normalized_changed_questions": 31
+        }
+      }
+    },
+    "opd2-self-short": {
+      "template": "short",
+      "datasets": {
+        "clevr": {
+          "overall": 0.9773333333333334,
+          "by_answer_type": {
+            "number": 0.9773333333333334
+          },
+          "mean_output_tokens": 2.1266666666666665,
+          "truncated_fraction": 0.0,
+          "answer_tag_fraction": 0.0,
+          "empty_answer_fraction": 0.0,
+          "n": 3000,
+          "normalized": 0.9773333333333334,
+          "lowercase_official": 0.9773333333333334,
+          "normalized_changed_questions": 0
+        },
+        "gqa": {
+          "overall": 0.5971537605342662,
+          "by_answer_type": {
+            "choose": 0.8033658104517272,
+            "compare": 0.597623089983022,
+            "logical": 0.7814753189129229,
+            "query": 0.44217487141807493,
+            "verify": 0.8143872113676732
+          },
+          "mean_output_tokens": 2.249721736365082,
+          "truncated_fraction": 0.0,
+          "answer_tag_fraction": 0.0,
+          "empty_answer_fraction": 0.0,
+          "n": 12578,
+          "normalized": 0.5971537605342662,
+          "lowercase_official": 0.5971537605342662,
+          "normalized_changed_questions": 0
+        },
+        "textvqa": {
+          "overall": 0.80355,
+          "by_answer_type": {
+            "all": 0.80355
+          },
+          "mean_output_tokens": 4.0185,
+          "truncated_fraction": 0.001,
+          "answer_tag_fraction": 0.0,
+          "empty_answer_fraction": 0.0,
+          "n": 2000,
+          "normalized": 0.8036,
+          "lowercase_official": 0.80355,
+          "normalized_changed_questions": 1
+        },
+        "vqav2": {
+          "overall": 0.77794,
+          "by_answer_type": {
+            "number": 0.7111111111111111,
+            "other": 0.6882045088566827,
+            "yes/no": 0.9235198261814231
+          },
+          "mean_output_tokens": 2.3962,
+          "truncated_fraction": 0.0,
+          "answer_tag_fraction": 0.0,
+          "empty_answer_fraction": 0.0,
+          "n": 5000,
+          "normalized": 0.77834,
+          "lowercase_official": 0.77814,
+          "normalized_changed_questions": 2
+        }
+      }
+    },
+    "sft2-reasoning": {
+      "template": "reasoning",
+      "datasets": {
+        "clevr": {
+          "overall": 0.921,
+          "by_answer_type": {
+            "number": 0.921
+          },
+          "mean_output_tokens": 61.55466666666667,
+          "truncated_fraction": 0.013,
+          "answer_tag_fraction": 0.9783333333333334,
+          "empty_answer_fraction": 0.0,
+          "n": 3000,
+          "normalized": 0.921,
+          "lowercase_official": 0.921,
+          "normalized_changed_questions": 0
+        },
+        "gqa": {
+          "overall": 0.5660677373191286,
+          "by_answer_type": {
+            "choose": 0.7998228520814881,
+            "compare": 0.5483870967741935,
+            "logical": 0.7249029395452025,
+            "query": 0.41748714180749447,
+            "verify": 0.7753108348134992
+          },
+          "mean_output_tokens": 7.839561138495786,
+          "truncated_fraction": 0.0049292415328351085,
+          "answer_tag_fraction": 0.20376848465574812,
+          "empty_answer_fraction": 0.0029416441405628875,
+          "n": 12578,
+          "normalized": 0.5700429321036731,
+          "lowercase_official": 0.5667832723803466,
+          "normalized_changed_questions": 50
+        },
+        "textvqa": {
+          "overall": 0.6878,
+          "by_answer_type": {
+            "all": 0.6878
+          },
+          "mean_output_tokens": 32.9405,
+          "truncated_fraction": 0.02,
+          "answer_tag_fraction": 0.466,
+          "empty_answer_fraction": 0.0015,
+          "n": 2000,
+          "normalized": 0.6879,
+          "lowercase_official": 0.6878,
+          "normalized_changed_questions": 2
+        },
+        "vqav2": {
+          "overall": 0.6799,
+          "by_answer_type": {
+            "number": 0.6634074074074074,
+            "other": 0.5740338164251209,
+            "yes/no": 0.8287887017925041
+          },
+          "mean_output_tokens": 20.634,
+          "truncated_fraction": 0.0176,
+          "answer_tag_fraction": 0.4022,
+          "empty_answer_fraction": 0.0076,
+          "n": 5000,
+          "normalized": 0.6817,
+          "lowercase_official": 0.6815,
+          "normalized_changed_questions": 9
+        }
+      }
+    },
+    "sft2-short": {
+      "template": "short",
+      "datasets": {
+        "clevr": {
+          "overall": 0.994,
+          "by_answer_type": {
+            "number": 0.994
+          },
+          "mean_output_tokens": 2.1266666666666665,
+          "truncated_fraction": 0.0,
+          "answer_tag_fraction": 0.0,
+          "empty_answer_fraction": 0.0,
+          "n": 3000,
+          "normalized": 0.994,
+          "lowercase_official": 0.994,
+          "normalized_changed_questions": 0
+        },
+        "gqa": {
+          "overall": 0.6234695500079503,
+          "by_answer_type": {
+            "choose": 0.8246235606731621,
+            "compare": 0.6485568760611206,
+            "logical": 0.790904048807543,
+            "query": 0.4792064658339456,
+            "verify": 0.8179396092362344
+          },
+          "mean_output_tokens": 2.2583876609953886,
+          "truncated_fraction": 0.0,
+          "answer_tag_fraction": 0.0,
+          "empty_answer_fraction": 0.0,
+          "n": 12578,
+          "normalized": 0.6234695500079503,
+          "lowercase_official": 0.6234695500079503,
+          "normalized_changed_questions": 0
+        },
+        "textvqa": {
+          "overall": 0.79835,
+          "by_answer_type": {
+            "all": 0.79835
+          },
+          "mean_output_tokens": 3.746,
+          "truncated_fraction": 0.0005,
+          "answer_tag_fraction": 0.0,
+          "empty_answer_fraction": 0.0,
+          "n": 2000,
+          "normalized": 0.79855,
+          "lowercase_official": 0.79835,
+          "normalized_changed_questions": 2
+        },
+        "vqav2": {
+          "overall": 0.79874,
+          "by_answer_type": {
+            "number": 0.7322962962962963,
+            "other": 0.7133252818035427,
+            "yes/no": 0.9383487235198262
+          },
+          "mean_output_tokens": 2.3784,
+          "truncated_fraction": 0.0,
+          "answer_tag_fraction": 0.0,
+          "empty_answer_fraction": 0.0,
+          "n": 5000,
+          "normalized": 0.79894,
+          "lowercase_official": 0.79874,
+          "normalized_changed_questions": 1
+        }
+      }
+    }
+  },
+  "image_interventions": {
+    "base2-reasoning": {
+      "clevr": {
+        "black": {
+          "n": 128,
+          "original_score": 0.8359375,
+          "changed_image_score": 0.0,
+          "normalized_answer_changed_fraction": 1
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.8359375,
+          "changed_image_score": 0.171875,
+          "normalized_answer_changed_fraction": 0.84375
+        }
+      },
+      "gqa": {
+        "black": {
+          "n": 128,
+          "original_score": 0.40625,
+          "changed_image_score": 0.0859375,
+          "normalized_answer_changed_fraction": 0.890625
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.40625,
+          "changed_image_score": 0.1875,
+          "normalized_answer_changed_fraction": 0.765625
+        }
+      },
+      "textvqa": {
+        "black": {
+          "n": 128,
+          "original_score": 0.75,
+          "changed_image_score": 0.0125,
+          "normalized_answer_changed_fraction": 0.9921875
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.75,
+          "changed_image_score": 0.01796875,
+          "normalized_answer_changed_fraction": 0.9921875
+        }
+      },
+      "vqav2": {
+        "black": {
+          "n": 128,
+          "original_score": 0.47265625,
+          "changed_image_score": 0.1046875,
+          "normalized_answer_changed_fraction": 0.921875
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.47265625,
+          "changed_image_score": 0.23125,
+          "normalized_answer_changed_fraction": 0.8046875
+        }
+      }
+    },
+    "base2-short": {
+      "clevr": {
+        "black": {
+          "n": 128,
+          "original_score": 0.9765625,
+          "changed_image_score": 0.0,
+          "normalized_answer_changed_fraction": 1
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.9765625,
+          "changed_image_score": 0.171875,
+          "normalized_answer_changed_fraction": 0.8359375
+        }
+      },
+      "gqa": {
+        "black": {
+          "n": 128,
+          "original_score": 0.578125,
+          "changed_image_score": 0.328125,
+          "normalized_answer_changed_fraction": 0.609375
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.578125,
+          "changed_image_score": 0.328125,
+          "normalized_answer_changed_fraction": 0.6328125
+        }
+      },
+      "textvqa": {
+        "black": {
+          "n": 128,
+          "original_score": 0.84453125,
+          "changed_image_score": 0.04765625,
+          "normalized_answer_changed_fraction": 0.96875
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.84453125,
+          "changed_image_score": 0.01953125,
+          "normalized_answer_changed_fraction": 0.9921875
+        }
+      },
+      "vqav2": {
+        "black": {
+          "n": 128,
+          "original_score": 0.6875,
+          "changed_image_score": 0.31171875,
+          "normalized_answer_changed_fraction": 0.7421875
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.6875,
+          "changed_image_score": 0.32109375,
+          "normalized_answer_changed_fraction": 0.75
+        }
+      }
+    },
+    "grpo2-base-reasoning": {
+      "clevr": {
+        "black": {
+          "n": 128,
+          "original_score": 0.859375,
+          "changed_image_score": 0.0,
+          "normalized_answer_changed_fraction": 1
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.859375,
+          "changed_image_score": 0.140625,
+          "normalized_answer_changed_fraction": 0.8671875
+        }
+      },
+      "gqa": {
+        "black": {
+          "n": 128,
+          "original_score": 0.4765625,
+          "changed_image_score": 0.1328125,
+          "normalized_answer_changed_fraction": 0.828125
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.4765625,
+          "changed_image_score": 0.2265625,
+          "normalized_answer_changed_fraction": 0.734375
+        }
+      },
+      "textvqa": {
+        "black": {
+          "n": 128,
+          "original_score": 0.8,
+          "changed_image_score": 0.0203125,
+          "normalized_answer_changed_fraction": 0.9765625
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.8,
+          "changed_image_score": 0.01796875,
+          "normalized_answer_changed_fraction": 0.9765625
+        }
+      },
+      "vqav2": {
+        "black": {
+          "n": 128,
+          "original_score": 0.57578125,
+          "changed_image_score": 0.1765625,
+          "normalized_answer_changed_fraction": 0.8359375
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.57578125,
+          "changed_image_score": 0.26484375,
+          "normalized_answer_changed_fraction": 0.7734375
+        }
+      }
+    },
+    "grpo2-base-short": {
+      "clevr": {
+        "black": {
+          "n": 128,
+          "original_score": 0.984375,
+          "changed_image_score": 0.0,
+          "normalized_answer_changed_fraction": 1
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.984375,
+          "changed_image_score": 0.171875,
+          "normalized_answer_changed_fraction": 0.828125
+        }
+      },
+      "gqa": {
+        "black": {
+          "n": 128,
+          "original_score": 0.578125,
+          "changed_image_score": 0.34375,
+          "normalized_answer_changed_fraction": 0.6015625
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.578125,
+          "changed_image_score": 0.3203125,
+          "normalized_answer_changed_fraction": 0.640625
+        }
+      },
+      "textvqa": {
+        "black": {
+          "n": 128,
+          "original_score": 0.83671875,
+          "changed_image_score": 0.04765625,
+          "normalized_answer_changed_fraction": 0.96875
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.83671875,
+          "changed_image_score": 0.01953125,
+          "normalized_answer_changed_fraction": 0.9921875
+        }
+      },
+      "vqav2": {
+        "black": {
+          "n": 128,
+          "original_score": 0.68984375,
+          "changed_image_score": 0.3109375,
+          "normalized_answer_changed_fraction": 0.7421875
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.68984375,
+          "changed_image_score": 0.315625,
+          "normalized_answer_changed_fraction": 0.7421875
+        }
+      }
+    },
+    "grpo2-sft-reasoning": {
+      "clevr": {
+        "black": {
+          "n": 128,
+          "original_score": 0.9765625,
+          "changed_image_score": 0.0,
+          "normalized_answer_changed_fraction": 1
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.9765625,
+          "changed_image_score": 0.1640625,
+          "normalized_answer_changed_fraction": 0.8359375
+        }
+      },
+      "gqa": {
+        "black": {
+          "n": 128,
+          "original_score": 0.5390625,
+          "changed_image_score": 0.28125,
+          "normalized_answer_changed_fraction": 0.6484375
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.5390625,
+          "changed_image_score": 0.2109375,
+          "normalized_answer_changed_fraction": 0.7578125
+        }
+      },
+      "textvqa": {
+        "black": {
+          "n": 128,
+          "original_score": 0.78203125,
+          "changed_image_score": 0.01953125,
+          "normalized_answer_changed_fraction": 0.984375
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.78203125,
+          "changed_image_score": 0.01015625,
+          "normalized_answer_changed_fraction": 0.9921875
+        }
+      },
+      "vqav2": {
+        "black": {
+          "n": 128,
+          "original_score": 0.575,
+          "changed_image_score": 0.2609375,
+          "normalized_answer_changed_fraction": 0.8046875
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.575,
+          "changed_image_score": 0.27421875,
+          "normalized_answer_changed_fraction": 0.796875
+        }
+      }
+    },
+    "grpo2-sft-short": {
+      "clevr": {
+        "black": {
+          "n": 128,
+          "original_score": 0.984375,
+          "changed_image_score": 0.0,
+          "normalized_answer_changed_fraction": 1
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.984375,
+          "changed_image_score": 0.171875,
+          "normalized_answer_changed_fraction": 0.828125
+        }
+      },
+      "gqa": {
+        "black": {
+          "n": 128,
+          "original_score": 0.5703125,
+          "changed_image_score": 0.375,
+          "normalized_answer_changed_fraction": 0.625
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.5703125,
+          "changed_image_score": 0.3046875,
+          "normalized_answer_changed_fraction": 0.71875
+        }
+      },
+      "textvqa": {
+        "black": {
+          "n": 128,
+          "original_score": 0.8296875,
+          "changed_image_score": 0.04765625,
+          "normalized_answer_changed_fraction": 0.96875
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.8296875,
+          "changed_image_score": 0.025,
+          "normalized_answer_changed_fraction": 0.984375
+        }
+      },
+      "vqav2": {
+        "black": {
+          "n": 128,
+          "original_score": 0.74140625,
+          "changed_image_score": 0.35078125,
+          "normalized_answer_changed_fraction": 0.75
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.74140625,
+          "changed_image_score": 0.3234375,
+          "normalized_answer_changed_fraction": 0.75
+        }
+      }
+    },
+    "sft2-reasoning": {
+      "clevr": {
+        "black": {
+          "n": 128,
+          "original_score": 0.8984375,
+          "changed_image_score": 0.0,
+          "normalized_answer_changed_fraction": 1
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.8984375,
+          "changed_image_score": 0.15625,
+          "normalized_answer_changed_fraction": 0.8515625
+        }
+      },
+      "gqa": {
+        "black": {
+          "n": 128,
+          "original_score": 0.5703125,
+          "changed_image_score": 0.2421875,
+          "normalized_answer_changed_fraction": 0.6875
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.5703125,
+          "changed_image_score": 0.2578125,
+          "normalized_answer_changed_fraction": 0.671875
+        }
+      },
+      "textvqa": {
+        "black": {
+          "n": 128,
+          "original_score": 0.74375,
+          "changed_image_score": 0.02734375,
+          "normalized_answer_changed_fraction": 0.9765625
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.74375,
+          "changed_image_score": 0.0,
+          "normalized_answer_changed_fraction": 0.9921875
+        }
+      },
+      "vqav2": {
+        "black": {
+          "n": 128,
+          "original_score": 0.58671875,
+          "changed_image_score": 0.26015625,
+          "normalized_answer_changed_fraction": 0.78125
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.58671875,
+          "changed_image_score": 0.26328125,
+          "normalized_answer_changed_fraction": 0.765625
+        }
+      }
+    },
+    "sft2-short": {
+      "clevr": {
+        "black": {
+          "n": 128,
+          "original_score": 0.984375,
+          "changed_image_score": 0.0,
+          "normalized_answer_changed_fraction": 1
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.984375,
+          "changed_image_score": 0.171875,
+          "normalized_answer_changed_fraction": 0.828125
+        }
+      },
+      "gqa": {
+        "black": {
+          "n": 128,
+          "original_score": 0.5703125,
+          "changed_image_score": 0.390625,
+          "normalized_answer_changed_fraction": 0.640625
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.5703125,
+          "changed_image_score": 0.296875,
+          "normalized_answer_changed_fraction": 0.7109375
+        }
+      },
+      "textvqa": {
+        "black": {
+          "n": 128,
+          "original_score": 0.83515625,
+          "changed_image_score": 0.04765625,
+          "normalized_answer_changed_fraction": 0.96875
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.83515625,
+          "changed_image_score": 0.02734375,
+          "normalized_answer_changed_fraction": 0.984375
+        }
+      },
+      "vqav2": {
+        "black": {
+          "n": 128,
+          "original_score": 0.73359375,
+          "changed_image_score": 0.35546875,
+          "normalized_answer_changed_fraction": 0.7421875
+        },
+        "swapped": {
+          "n": 128,
+          "original_score": 0.73359375,
+          "changed_image_score": 0.33046875,
+          "normalized_answer_changed_fraction": 0.7421875
+        }
+      }
+    }
+  },
+  "source_sha256": {
+    "evaluation/base2/runs/base2-reasoning-clevr.json": "21b92cf924bfcf1085c57c9bfe457641cc9fcaa8fd6677551fcc028324a3d0e2",
+    "evaluation/base2/preds/base2-reasoning-clevr.jsonl": "d926b42bf49f1592334cfb7d2c21da072d05db37654c7d097bb1a625f577e9e5",
+    "evaluation/base2/runs/base2-reasoning-gqa.json": "3a6f5ae48c74c8e6365d157d76db96c78cf6dcef56163b9905488e0dba318cc9",
+    "evaluation/base2/preds/base2-reasoning-gqa.jsonl": "94e29a157dc541533f329cdab57b481b9cad7e34fc8169331e4050a2fecf06b1",
+    "evaluation/base2/runs/base2-reasoning-textvqa.json": "43b81394323bb0ffac0f23b4d8977cab0d7169ce74e5ffd79acbaf0aedf0fd04",
+    "evaluation/base2/preds/base2-reasoning-textvqa.jsonl": "7d01c37b0523a9fddd2c88cd0de043c2630c7d470f5074fb43c52c3b8a147652",
+    "evaluation/base2/runs/base2-reasoning-vqav2.json": "120ac4907cf638ced7eca2a24268c0c2982fb6dc142e02d7fc1f9f891f9f3543",
+    "evaluation/base2/preds/base2-reasoning-vqav2.jsonl": "4188e102ed07881fcc144402497a366b8dbd9ef0b69cade3d56fc46156bccf93",
+    "evaluation/base2/runs/base2-short-clevr.json": "e8eaf587940226b022aa0946e5aaf7febb75993a1fb4021cdd604f984fd08011",
+    "evaluation/base2/preds/base2-short-clevr.jsonl": "ff5c594ee33b2c8d8cf0f5f93d08e5241e0cee25d2c67f52dddc096f7346fdc5",
+    "evaluation/base2/runs/base2-short-gqa.json": "ad4b07954702097dc5fe94ee3351f06159243158d17889424c4f9caf078f98f2",
+    "evaluation/base2/preds/base2-short-gqa.jsonl": "ce7e94bcc85e1d04f47bae4cbbdeda40504ac58da28f4a7ff9d26a0c7b2c163e",
+    "evaluation/base2/runs/base2-short-textvqa.json": "87fef7b2a0841fec822c1b9a312274618ac7edf8be9d16b7743e2ec34b2f1344",
+    "evaluation/base2/preds/base2-short-textvqa.jsonl": "b75181ef00c43bcd4ed52023b6f838122bc7d16fb82888397c05367dda630d87",
+    "evaluation/base2/runs/base2-short-vqav2.json": "b9b6a6c70fd15df591e6eceda5b62bbaafef46c59e9c8f1fad2553c8c46b19b3",
+    "evaluation/base2/preds/base2-short-vqav2.jsonl": "1a4ff4d093a69cd8f572ea07c9377d237b70c39682c08e2edd73f7068b590210",
+    "evaluation/base8/runs/base8-reasoning-clevr.json": "e09fbaf6e9ae81852c5e275488416fbcdd8f2af3e4c2672167a26aec222a9a62",
+    "evaluation/base8/preds/base8-reasoning-clevr.jsonl": "e91c1b88deb09b65d8c56c1cd165bd7e8d3785c3af2d2efb4a391d563c8a2c94",
+    "evaluation/base8/runs/base8-reasoning-gqa.json": "33f45e3c516664eb26877eba7878cd9be461b1ccb476977883473351b47ef750",
+    "evaluation/base8/preds/base8-reasoning-gqa.jsonl": "1b9f39309388e6fb276b77431f843852448e5b995b421113567178f07715a3eb",
+    "evaluation/base8/runs/base8-reasoning-textvqa.json": "1c9289c7fd14fde157abdf69b187509343ee2412cbdb606f5b82f61541a78736",
+    "evaluation/base8/preds/base8-reasoning-textvqa.jsonl": "18d1a95eb5770feabc5079be3927e5c6277d850d11d070b58a762f2f76a33623",
+    "evaluation/base8/runs/base8-reasoning-vqav2.json": "349ee12c52b160cd898d69c59d3cb7008bb863345b18d8bdc3676ab84a5d65f3",
+    "evaluation/base8/preds/base8-reasoning-vqav2.jsonl": "1c98791d2cdc5b5c169109f6f7e0bb318e64ef697f38d3348433eba8ba121b5f",
+    "evaluation/base8/runs/base8-short-clevr.json": "44bfffa2caa32a84f87f5201111b886e6c007ecfd6e9c53ba94274d93745fe6b",
+    "evaluation/base8/preds/base8-short-clevr.jsonl": "4106f1709036d42ac5b004f201f945650d732f7cea98f98ba5e4b189df76d79f",
+    "evaluation/base8/runs/base8-short-gqa.json": "d823f743d20efa0091a11bf2b08e6b0f196d8f6a8479ab2e37b705d90e2f25a5",
+    "evaluation/base8/preds/base8-short-gqa.jsonl": "d3a18042cd4f9cd208c8f7bb7f059216c453daa78ba942e851aaa6283d8f71b2",
+    "evaluation/base8/runs/base8-short-textvqa.json": "d3c62c23609a69e7fd463a3b97aea850ba4339dd890463736deeb513ae13d5ce",
+    "evaluation/base8/preds/base8-short-textvqa.jsonl": "d10660ef605c84746bf88fb9f5e76a4c3933fe45a221eff2bb8ee0fb47e3467d",
+    "evaluation/base8/runs/base8-short-vqav2.json": "3fc86eedad1d703982829cdc3480aa05160407a490dd06469e9589a0ae961db6",
+    "evaluation/base8/preds/base8-short-vqav2.jsonl": "508588fd96d959b3336038c9fc347f697a2912428e5b7758230b21f438c8a927",
+    "evaluation/grpo2-base/runs/grpo2-base-reasoning-clevr.json": "bfe360ad0d24e0f2bf86082aad899cfe2de7ccbf5e4acc65a78b707b6bd525de",
+    "evaluation/grpo2-base/preds/grpo2-base-reasoning-clevr.jsonl": "a40320e2682ed4c166503c5f38409ea704bd9f7d685bf504801ea9a0ac4be897",
+    "evaluation/grpo2-base/runs/grpo2-base-reasoning-gqa.json": "197a7521b61b90ea90569d7e599aa95901ed8e4508917efc36df6f5afa4cd768",
+    "evaluation/grpo2-base/preds/grpo2-base-reasoning-gqa.jsonl": "95a80f9ede8b79d38ede3686330c36fe8caab85fc4ac3903eef99241df5a3c9d",
+    "evaluation/grpo2-base/runs/grpo2-base-reasoning-textvqa.json": "8b491e1b31ee6af6c6724a4366480435b2535cd03ca4bbc698d6539f72b5dc98",
+    "evaluation/grpo2-base/preds/grpo2-base-reasoning-textvqa.jsonl": "390169074aad59ded52148380f7b42ca0227f33797226a4104c8416209f6f82b",
+    "evaluation/grpo2-base/runs/grpo2-base-reasoning-vqav2.json": "7dce133dfbb2a3a1ead1fe66a2c0c670e7dab2e3e9290a352550ab7eb716334d",
+    "evaluation/grpo2-base/preds/grpo2-base-reasoning-vqav2.jsonl": "abcc6d5009094f2f23373639e72b8c36a20610548977bbfeba0b1a783262e00b",
+    "evaluation/grpo2-base/runs/grpo2-base-short-clevr.json": "86c1d443db5b0fd0836c62fd26a7cbb86ba97d12202a9717ef5f38ca03f5aae4",
+    "evaluation/grpo2-base/preds/grpo2-base-short-clevr.jsonl": "96f5c80d48492c7b87582871e2502c1e3ea00289ccee35083219f617a0e0f149",
+    "evaluation/grpo2-base/runs/grpo2-base-short-gqa.json": "5d0a7bf855ef67d1bf7dceaf5e7186210059901424a835d3592afd625b706e03",
+    "evaluation/grpo2-base/preds/grpo2-base-short-gqa.jsonl": "1a8d3dba947505de23e130b798b0815911a1fa01a1ec028d9e996ad635bc8b27",
+    "evaluation/grpo2-base/runs/grpo2-base-short-textvqa.json": "5d7533ab01ef7fada19e1e345fe6adea7c030de944e3464deba74c96e46bbc4e",
+    "evaluation/grpo2-base/preds/grpo2-base-short-textvqa.jsonl": "cd0ac002b18c166cf9814bbfd92ac6ffaa909b98493f35fb284f8eabb0feff39",
+    "evaluation/grpo2-base/runs/grpo2-base-short-vqav2.json": "6b1ce17aad473cb8f83ee5666c03efa557df583886177c86fb839fb89f309c14",
+    "evaluation/grpo2-base/preds/grpo2-base-short-vqav2.jsonl": "04c517aa495053d8937424f9fe595e114dec8549f9d90effa9ea6093dea3d464",
+    "evaluation/grpo2-sft/runs/grpo2-sft-reasoning-clevr.json": "3d2051b442616e467e66724b77e4003fc16870900d5506b7d8894d6893be2543",
+    "evaluation/grpo2-sft/preds/grpo2-sft-reasoning-clevr.jsonl": "fc554bd2f71121f2e09da576992c195665f4531a506e5880ef468dbb24c00a09",
+    "evaluation/grpo2-sft/runs/grpo2-sft-reasoning-gqa.json": "c8482089ff8a78bab7835614333877645b8cc872eaf3ba53e8355e1e8ef7953b",
+    "evaluation/grpo2-sft/preds/grpo2-sft-reasoning-gqa.jsonl": "9da413431f51759bc0205034fee62a66e441c172625bd9d7f60382a27acfd774",
+    "evaluation/grpo2-sft/runs/grpo2-sft-reasoning-textvqa.json": "1b3e4aaeb6644e94ac239e8c44bf6ea71b4952a8c75180844d181033652ce72f",
+    "evaluation/grpo2-sft/preds/grpo2-sft-reasoning-textvqa.jsonl": "91984ac773866a8f2265641ddcadcec378c8ff8b37c01a2957fdb81b168ea021",
+    "evaluation/grpo2-sft/runs/grpo2-sft-reasoning-vqav2.json": "90a90f8012f4a63edc86d36cf8b0b62636e675ebf665d119d667100ef8dddcbe",
+    "evaluation/grpo2-sft/preds/grpo2-sft-reasoning-vqav2.jsonl": "6433b2b79ab7ebb61500933c988f2cb024e7855579ca269b61a3b0827c8e0e65",
+    "evaluation/grpo2-sft/runs/grpo2-sft-short-clevr.json": "dc73af5214d2a40c2410d238cf6ddd167a9cd919909f3ac847944759fc705818",
+    "evaluation/grpo2-sft/preds/grpo2-sft-short-clevr.jsonl": "0a4187863a850cc6feca2ea11701fd39bfda3e50050ee9643f2d4beca1cc88fa",
+    "evaluation/grpo2-sft/runs/grpo2-sft-short-gqa.json": "bb79ff099603d9f46a03bb9a7fa8049e1ac5c01107eacee4a25cc70638623db9",
+    "evaluation/grpo2-sft/preds/grpo2-sft-short-gqa.jsonl": "7bc3d22c13ab04fad6a71990c837f71cdda67616b8c2e3cffe7ee7cbb0cc5f85",
+    "evaluation/grpo2-sft/runs/grpo2-sft-short-textvqa.json": "8d3a5de523498853697ecf296a8b3ba9ed20ff20f2639d55196b2f06bc8b834b",
+    "evaluation/grpo2-sft/preds/grpo2-sft-short-textvqa.jsonl": "cb99d67ccfa54cb075b9829e84874223da4ac14d62bdae67b655931f7907a421",
+    "evaluation/grpo2-sft/runs/grpo2-sft-short-vqav2.json": "68e6734fea0d8e51abe20c13fac8fa4a5070c193dcd316c64b54b457fa534268",
+    "evaluation/grpo2-sft/preds/grpo2-sft-short-vqav2.jsonl": "789f108a07c3e0d0361fffa804d99519c1695dd5a6f06adac4a3ebf7e8d65f38",
+    "evaluation/grpo8-base/runs/grpo8-base-reasoning-clevr.json": "4ffbb280d50ed829908f1ff5b49555c51739d39ed2eabe3b8adfb700971d3005",
+    "evaluation/grpo8-base/preds/grpo8-base-reasoning-clevr.jsonl": "266df40172f2fd959fd69bef38172ea9775b1963e237c5b44af6b11073692262",
+    "evaluation/grpo8-base/runs/grpo8-base-reasoning-gqa.json": "263e5b77c278c6818c8f5953b956b65a7586d850b6375a06eae3b1af3314e538",
+    "evaluation/grpo8-base/preds/grpo8-base-reasoning-gqa.jsonl": "e42e45bd783509bb941b6337b2c114651504e9a4e0d578a52ec9c2493b554180",
+    "evaluation/grpo8-base/runs/grpo8-base-reasoning-textvqa.json": "cf3f17e665c0ca813f0c7061d2b67040dab0422296c11bcf1a3c84bd259b3b69",
+    "evaluation/grpo8-base/preds/grpo8-base-reasoning-textvqa.jsonl": "09c78b24fdd265324374e06e6022b498e8a94da830a135eb7ace6e69572a3e4f",
+    "evaluation/grpo8-base/runs/grpo8-base-reasoning-vqav2.json": "a70e20fe18c990bcc011013e8c5ab7bee44e7c83548937afb845de3aa1457c16",
+    "evaluation/grpo8-base/preds/grpo8-base-reasoning-vqav2.jsonl": "9aa61a11a0f90865b39d01ccdc20f6465c247dbdce2fb2cf27a165c1c50eea8f",
+    "evaluation/grpo8-base/runs/grpo8-base-short-clevr.json": "7ec521885f024a0323c9a2cce1d8da7d4a28a5f37335367105870f45992b2221",
+    "evaluation/grpo8-base/preds/grpo8-base-short-clevr.jsonl": "32d6cc94c5cad48b9e606537ab6f3b2e0390ddd335f805ff928a1aaeb3c19c55",
+    "evaluation/grpo8-base/runs/grpo8-base-short-gqa.json": "0b95307c47b8f7f4eeb557128ad8507db69c2472270efbb7ab1063d0dda1e2fc",
+    "evaluation/grpo8-base/preds/grpo8-base-short-gqa.jsonl": "fc89b4edf3afa2381ce26960445806260474f332d43825f007179fb3762d3046",
+    "evaluation/grpo8-base/runs/grpo8-base-short-textvqa.json": "f7c8b9c742951a9cbe9efb82122ae0296e929982408d31f19571c2b034d2ccf1",
+    "evaluation/grpo8-base/preds/grpo8-base-short-textvqa.jsonl": "cfddc43803f340efc06ed509ff8c2f162c347bdcc03281dbaa430c0a7a9b265f",
+    "evaluation/grpo8-base/runs/grpo8-base-short-vqav2.json": "4787de9204afc066035f9a01c42244bc2866402c552c0fbf46df17378a5416a2",
+    "evaluation/grpo8-base/preds/grpo8-base-short-vqav2.jsonl": "51564880755fce011a285b53855fc954ebb80b901451cf7a63e3b136a3e61f11",
+    "evaluation/opd2-self/runs/opd2-self-reasoning-clevr.json": "3021b09708056f00ab0dc502db621deb72f0979b450a6204e2eee16f49cc7236",
+    "evaluation/opd2-self/preds/opd2-self-reasoning-clevr.jsonl": "60d00dc72658e9454a5a1573eefdcf109cfa10cea1100527a5993908f07934a8",
+    "evaluation/opd2-self/runs/opd2-self-reasoning-gqa.json": "672b7717de21ce3ef29fe4dcc9d614b09b47fc3d4f818b71d5cee1bec07d62a6",
+    "evaluation/opd2-self/preds/opd2-self-reasoning-gqa.jsonl": "c67cefdb9d79c2ccc73b48f1874b4a1b39d2059a83f88c04976d84877b421f90",
+    "evaluation/opd2-self/runs/opd2-self-reasoning-textvqa.json": "e37bef447d210b897e8c851eb15cd80034c0d2304a45e35ed67841452699216d",
+    "evaluation/opd2-self/preds/opd2-self-reasoning-textvqa.jsonl": "5a518ef1d0050f3c25e84e8f21087686b3f2229c14fc668534e563c8690c4990",
+    "evaluation/opd2-self/runs/opd2-self-reasoning-vqav2.json": "8492acad38184df9d716599f97cc22e4d6fc681a471720555fc9d6a183294d22",
+    "evaluation/opd2-self/preds/opd2-self-reasoning-vqav2.jsonl": "76ba3d8e86e65f4ad134c73e7a3a1fdab46bef76116bc680786703c4c39c2b91",
+    "evaluation/opd2-self/runs/opd2-self-short-clevr.json": "49b19406868bb258aac68b8a77729355367cf6f580641bff237187b1b34844c9",
+    "evaluation/opd2-self/preds/opd2-self-short-clevr.jsonl": "7db899ac120629cecfedfb0526e2b0ae8b93c308392bdf1257d5cb4b9fc18811",
+    "evaluation/opd2-self/runs/opd2-self-short-gqa.json": "25bf72c0fc58f2c95c60fbdcc4094f19a5b05c9815bd0d4830b815b6594167c9",
+    "evaluation/opd2-self/preds/opd2-self-short-gqa.jsonl": "ca6f7e96d63508d85d2e96dac84b61349695aa333ef585ccbecb3faf755a7c68",
+    "evaluation/opd2-self/runs/opd2-self-short-textvqa.json": "656319ae7898549ab61271e2217f22de1f4e5dac5a252bcbdc4e709f08a335a3",
+    "evaluation/opd2-self/preds/opd2-self-short-textvqa.jsonl": "4bc19976bb3689696b017d54b9f1ac564ec6e536c5e583f1216829608fe8554a",
+    "evaluation/opd2-self/runs/opd2-self-short-vqav2.json": "18b21871c6984a0c6eedc09eb460a42c1e8b997708bfa420e1b5d8b5bb653d47",
+    "evaluation/opd2-self/preds/opd2-self-short-vqav2.jsonl": "b619f3ef1137bae46d651adca9b5b749016ebb6a89469b7541c74163e981742e",
+    "evaluation/sft2/runs/sft2-reasoning-clevr.json": "532c7f2596ffe95695e5a7c338e6cb2d5338d51771c9caa83dc73fe48470698c",
+    "evaluation/sft2/preds/sft2-reasoning-clevr.jsonl": "be2d4b319a2636ed4e838a135db7bfbf57b2a67cdd32f9bfb76265113e839617",
+    "evaluation/sft2/runs/sft2-reasoning-gqa.json": "7b49831dc106a4e8a69b671be949e77564fabbc841a56091b40a55e0afc1ff62",
+    "evaluation/sft2/preds/sft2-reasoning-gqa.jsonl": "da6fe3404d223b86a706a9e0e338709bb5098a28c958d84f42bb3b9ef4e28454",
+    "evaluation/sft2/runs/sft2-reasoning-textvqa.json": "f89966667336ee018f8f6e630b783dbf6cad713a76e3b8008b89130a651fb9e7",
+    "evaluation/sft2/preds/sft2-reasoning-textvqa.jsonl": "e867bcccfe040ca92dff4d3b139a682b1df9e5d7cd7e34c81e214b3efeb983eb",
+    "evaluation/sft2/runs/sft2-reasoning-vqav2.json": "bd317896a447ecd55ee716c4758d1bc473b3462b9d79480d8f32c3c5cb0ca663",
+    "evaluation/sft2/preds/sft2-reasoning-vqav2.jsonl": "cbea119f896e7deba2e33b1bccee42388251b8313b816a56e79d33ea6e190fbb",
+    "evaluation/sft2/runs/sft2-short-clevr.json": "5df871bf76ea1a46c7c12d4baa5a7659ccb4640ee5de34ffcc1d7bdb847f36cd",
+    "evaluation/sft2/preds/sft2-short-clevr.jsonl": "0a4187863a850cc6feca2ea11701fd39bfda3e50050ee9643f2d4beca1cc88fa",
+    "evaluation/sft2/runs/sft2-short-gqa.json": "dd6c5ec19a2b03378ed08552c209f638a9433073423560f238b6b47444a59d00",
+    "evaluation/sft2/preds/sft2-short-gqa.jsonl": "c351d49dfff130257c684c510a082481eaebc27b16aed42e235db4227f66d0c4",
+    "evaluation/sft2/runs/sft2-short-textvqa.json": "10f8cc4ac87a5d5fd6e4e9c81ecc3fded62fb6f632636cf2c349b5e67fd66b96",
+    "evaluation/sft2/preds/sft2-short-textvqa.jsonl": "9ccbd40c76c116e3db50090860acaf91fd165673680326f7c5fdc1e8fb3b611d",
+    "evaluation/sft2/runs/sft2-short-vqav2.json": "4ff4441d51ed388cd0385a89366e2c32d914c5ad74de43c9be0d6fc15743e4cc",
+    "evaluation/sft2/preds/sft2-short-vqav2.jsonl": "c8d4b0151ddcb0034c0593d5c14e8b2e664bbea0a8ebac0530f8e480388f5636",
+    "interventions/base2/runs/base2-reasoning-black-clevr.json": "f1b0fe7cb51476a3dfe76d2276b04e60dc633ee3254171d9494391151241b31e",
+    "interventions/base2/preds/base2-reasoning-black-clevr.jsonl": "67bbcd9174eac068765afd9f81f5a0566598240e3b408a84ff2d158acf2d7f62",
+    "interventions/base2/runs/base2-reasoning-black-gqa.json": "3ad0c1df1a6b2dd2f810d0baffc5df08c72cb3a185b31e14f05431a7be82a95b",
+    "interventions/base2/preds/base2-reasoning-black-gqa.jsonl": "d2239cfe527aa8d0ed5a5dea8cf7ee6cd79379c278518b957f1e1f26acf51e7a",
+    "interventions/base2/runs/base2-reasoning-black-textvqa.json": "f86d2f1c077f21aefde01f98599fb1d5c96e8c44eabcc755899b33b7282cfeef",
+    "interventions/base2/preds/base2-reasoning-black-textvqa.jsonl": "579d5f97b570d4efd8311603f0f1c5c8163418fcd99d2199a6018ecff689befb",
+    "interventions/base2/runs/base2-reasoning-black-vqav2.json": "024b8e70f9e66c00350e4d35d1aeb560823a0c84875b3b5537964ae174897605",
+    "interventions/base2/preds/base2-reasoning-black-vqav2.jsonl": "f43c09c1ac13376be128d55d35cca6ae5999153f5f5e436c482203fa161d79fe",
+    "interventions/base2/runs/base2-reasoning-swapped-clevr.json": "e83b0ccda14a3d390139b259ac2f1ec1cf13bf4e63372a6d8bb0c298633a1a56",
+    "interventions/base2/preds/base2-reasoning-swapped-clevr.jsonl": "3eb659fe67de4887cd0622f2bd31a733898184670b73f9022f291176afe0650f",
+    "interventions/base2/runs/base2-reasoning-swapped-gqa.json": "96a6658ae79296d828d683cc39ec6a7f5b8abe75c9d026b2de33bf5edbe73e5c",
+    "interventions/base2/preds/base2-reasoning-swapped-gqa.jsonl": "9b05ed53d3451b2d54d7ed2771eed30ef856fa9ecfccbd3073b66b4acbc1078f",
+    "interventions/base2/runs/base2-reasoning-swapped-textvqa.json": "bb53cc7089ebdce4543c79273e91399a448c82131c151174e3f579d71d404f94",
+    "interventions/base2/preds/base2-reasoning-swapped-textvqa.jsonl": "2ca3f115c65782799204d9f9c0a583e88a035e262299a5d005cf16af7fa4f71d",
+    "interventions/base2/runs/base2-reasoning-swapped-vqav2.json": "7484fcc44ce35cf08ef9b4f81fb247676df0e9a7d4e540fe36e72d8a519d8fd9",
+    "interventions/base2/preds/base2-reasoning-swapped-vqav2.jsonl": "b3619c3bc39ee9fc6f6541f12d47611321dceab3d16b7fe8b341c0576fe28fb4",
+    "interventions/base2/runs/base2-short-black-clevr.json": "5303bd954e3b1ce326d31758182cc4dfd257623f3b1c09d5a8ef831aca6fbb13",
+    "interventions/base2/preds/base2-short-black-clevr.jsonl": "263a5f4a79d6b845671db4840e83a0e4db545a0a6556071e817829f8a6aca91d",
+    "interventions/base2/runs/base2-short-black-gqa.json": "328d9c9a2c77590c0297a6f990925513ead2ba292abb252ac0a7546cfb0e4b7a",
+    "interventions/base2/preds/base2-short-black-gqa.jsonl": "74ccba059f8ed4075690f83bd21b21918497b1e78f9776dceca2084cfaffefa1",
+    "interventions/base2/runs/base2-short-black-textvqa.json": "425f071ab3230a3e2f45c98afc51c206622b69e884c14b14888d2ed0a1cc17ab",
+    "interventions/base2/preds/base2-short-black-textvqa.jsonl": "5ee59de5b0cd17d0a37b38dd723619a30e34540007b854af91ba9d769bc087ec",
+    "interventions/base2/runs/base2-short-black-vqav2.json": "2ac30e64c14703b09fe3ea6ec8278d8cf9c79d526ec248b6a97ee8f2a55188a1",
+    "interventions/base2/preds/base2-short-black-vqav2.jsonl": "372e3071aaaff6c38816f949a09c07a9915387a772e7e3732d23e7daa39498a9",
+    "interventions/base2/runs/base2-short-swapped-clevr.json": "4de6ae69da7ffa714f96ebae42af0d9645642aad86be241f4309147a60b83391",
+    "interventions/base2/preds/base2-short-swapped-clevr.jsonl": "606a22f0310bc4711d1a273b15c9424cff2634d239637cccf35150f0632ab482",
+    "interventions/base2/runs/base2-short-swapped-gqa.json": "8a41971b5a34a1614d17724a68611f6e94532800f538fc11d5fa8dbc55339134",
+    "interventions/base2/preds/base2-short-swapped-gqa.jsonl": "2cff13ca96373800880e7936cdba5958bdf1728e23e23bce9f4bf2953ba48c33",
+    "interventions/base2/runs/base2-short-swapped-textvqa.json": "4da22e8f0a71358452d928f6894863524b8ea12bb2714843487fe894c27ca6ce",
+    "interventions/base2/preds/base2-short-swapped-textvqa.jsonl": "dc99c4cccf76f7d7fb3158e0011113cbb3a4a8eec3f93198eaef85ffabf6632d",
+    "interventions/base2/runs/base2-short-swapped-vqav2.json": "bdde54d6ee571efb62b46b5e63ccdce09cdbdb0f0f2975da485c1f7cc1375368",
+    "interventions/base2/preds/base2-short-swapped-vqav2.jsonl": "dabb287212664088b4b6e6394c0284e6b5ee86d3a7e62ed4368826a227527e11",
+    "interventions/grpo2-base/runs/grpo2-base-reasoning-black-clevr.json": "b39d2f14996df4fbdea90975a7ad2871acc9d54501d7fc6d7c8232ea2ca98572",
+    "interventions/grpo2-base/preds/grpo2-base-reasoning-black-clevr.jsonl": "58cae78905484df23925ffbef275cdad3e5afddf70d5113905f8485d04a320ed",
+    "interventions/grpo2-base/runs/grpo2-base-reasoning-black-gqa.json": "038a13ad84e00d23bc4e128105d6a183e327d1f023e2680e283d6679652d6242",
+    "interventions/grpo2-base/preds/grpo2-base-reasoning-black-gqa.jsonl": "bce096f165e3e5ae639c857c6bb218b552bf2b942e01814906454852cfb77357",
+    "interventions/grpo2-base/runs/grpo2-base-reasoning-black-textvqa.json": "dc24a462b945087d767fcbcb5af884e3b737bfabd7f28fcd6e41d7cc78ecef6e",
+    "interventions/grpo2-base/preds/grpo2-base-reasoning-black-textvqa.jsonl": "bb04a91a4c947caf9b43b24cff396f922220e057c1c185f1689ff1a038be7552",
+    "interventions/grpo2-base/runs/grpo2-base-reasoning-black-vqav2.json": "d99a1c9b1a23c79860f867b069f1d8869e9f4226904e1605e3f6b586ac923cc1",
+    "interventions/grpo2-base/preds/grpo2-base-reasoning-black-vqav2.jsonl": "1f91efaab333d2c6285c0c1683d4f07162b329e582c099a5da0a3c98fa04fc6f",
+    "interventions/grpo2-base/runs/grpo2-base-reasoning-swapped-clevr.json": "38b360ce0829fa108e2153353da79cfc225f5f3320e8f8adcb3fad9f48997c51",
+    "interventions/grpo2-base/preds/grpo2-base-reasoning-swapped-clevr.jsonl": "162a93f683029ef5fc7aed4634e834f51b7cc0c806d5364eb10bb46a7b49a8ca",
+    "interventions/grpo2-base/runs/grpo2-base-reasoning-swapped-gqa.json": "dc0b73bc8340c890ffb1ccc9c46922b20048dad47475c86a58b101534f96c659",
+    "interventions/grpo2-base/preds/grpo2-base-reasoning-swapped-gqa.jsonl": "6663665084b1d387c0d23b1ddf10998cc1969b55c4e8fd2057c1df1b43ef91ed",
+    "interventions/grpo2-base/runs/grpo2-base-reasoning-swapped-textvqa.json": "d58ff93c6030fa4079c0f2ea6ff33de461b9ae03fd481a897e25ba0d0eb89925",
+    "interventions/grpo2-base/preds/grpo2-base-reasoning-swapped-textvqa.jsonl": "f65f257b66d9b2d6f6726e95df45f65f274fe9d68ca8c2025bbcfc1f5c0f1917",
+    "interventions/grpo2-base/runs/grpo2-base-reasoning-swapped-vqav2.json": "276f4b0e4351156bca255bdc6b3599e0b547461780cffbe04aaf646ff2ce02e2",
+    "interventions/grpo2-base/preds/grpo2-base-reasoning-swapped-vqav2.jsonl": "e6d6006fc8ca03590219434411fa1045f5272864caee9ed25fbc7608bccb143e",
+    "interventions/grpo2-base/runs/grpo2-base-short-black-clevr.json": "5c5a857157c1644c5f54909c6a5e8ec5efb8db8ea32b52a364b8edbe8f00a4fd",
+    "interventions/grpo2-base/preds/grpo2-base-short-black-clevr.jsonl": "263a5f4a79d6b845671db4840e83a0e4db545a0a6556071e817829f8a6aca91d",
+    "interventions/grpo2-base/runs/grpo2-base-short-black-gqa.json": "afd358bcd3c7d97d38b5ad5968207b0069cec67aa89b44e38e7a123d30a8da98",
+    "interventions/grpo2-base/preds/grpo2-base-short-black-gqa.jsonl": "3d6299dc211ac1ca804ed1499ded660c6dbfd1c2ace5946a23f6030cdb959d81",
+    "interventions/grpo2-base/runs/grpo2-base-short-black-textvqa.json": "99d75f36aa74ebd486a461bccb30fe6716d951c10c2b77fc7e0e591c213b174a",
+    "interventions/grpo2-base/preds/grpo2-base-short-black-textvqa.jsonl": "766aed61759a9f40f339cf4f922cecbde1130cafda2da1d8679266cd544a9e46",
+    "interventions/grpo2-base/runs/grpo2-base-short-black-vqav2.json": "84eff3d2bb3f25fd228a7ba2b3c7a768431a7cde9172fb1f0afdedde80b322d9",
+    "interventions/grpo2-base/preds/grpo2-base-short-black-vqav2.jsonl": "42dbc6658b62940442801bf664d1142dca4d3f3ebeabdd11a550efe4c9d34a77",
+    "interventions/grpo2-base/runs/grpo2-base-short-swapped-clevr.json": "40f65b1ad21a804c9ddd820109cb7734032c3fd7d5cfb9c4c460a1e488fe0689",
+    "interventions/grpo2-base/preds/grpo2-base-short-swapped-clevr.jsonl": "05561389d4d922ff393df02406f96a8b839a9374dd174a52e054ef76bfb42249",
+    "interventions/grpo2-base/runs/grpo2-base-short-swapped-gqa.json": "acce6f57a29b59b305da835914a8f63b13710c75824f929b30b886b70b01cf56",
+    "interventions/grpo2-base/preds/grpo2-base-short-swapped-gqa.jsonl": "86bddf3b0dff76f79de6fa27003dd3779d6ea4532463ff128a5cd6c3d1d7fd37",
+    "interventions/grpo2-base/runs/grpo2-base-short-swapped-textvqa.json": "ce419a6e46fd8ec86ceebff42ae00bfefeb88de0d3363aec6e84ded7afbb49c8",
+    "interventions/grpo2-base/preds/grpo2-base-short-swapped-textvqa.jsonl": "4e249b7017bb4d3bc6651b713a4c5000009b631a6b78c224daa2bffb52736b18",
+    "interventions/grpo2-base/runs/grpo2-base-short-swapped-vqav2.json": "090008d7c79f9f7cf41df94b2e85f88ce2df7a2b6df0fd27a5a87348da13e202",
+    "interventions/grpo2-base/preds/grpo2-base-short-swapped-vqav2.jsonl": "f850ef87078a1ec6218f1f2b8b542642140a64276254187ee8c761bf307777df",
+    "interventions/grpo2-sft/runs/grpo2-sft-reasoning-black-clevr.json": "98422e0c69cc818736461605b2b124299658ad1f746c8126c29563cb466d0226",
+    "interventions/grpo2-sft/preds/grpo2-sft-reasoning-black-clevr.jsonl": "67bbcd9174eac068765afd9f81f5a0566598240e3b408a84ff2d158acf2d7f62",
+    "interventions/grpo2-sft/runs/grpo2-sft-reasoning-black-gqa.json": "aa6909cdf430ac2ecf81c140e013c884b9ccd37efb4be5151832ba9f2e1c8251",
+    "interventions/grpo2-sft/preds/grpo2-sft-reasoning-black-gqa.jsonl": "80f338a40bee6bc221db5325d15c22fb0a9d7ffc2d22f271df0203e82f86fd11",
+    "interventions/grpo2-sft/runs/grpo2-sft-reasoning-black-textvqa.json": "c37797002e630c8e6836a44da866b250794938ac5f67affee213ba525b218e4b",
+    "interventions/grpo2-sft/preds/grpo2-sft-reasoning-black-textvqa.jsonl": "451296ad6da4448e139b25bcb1bf77e98ce5a1b8766d17e0939894a077e57d79",
+    "interventions/grpo2-sft/runs/grpo2-sft-reasoning-black-vqav2.json": "23f912d92a3a4dd41118bffb7a698899735a93b9b42f9c2d28db44d3a0c6d82b",
+    "interventions/grpo2-sft/preds/grpo2-sft-reasoning-black-vqav2.jsonl": "4f3ce885810122eb35f4b4738644ddce23b45c70573a1b84de5e61d299e5532b",
+    "interventions/grpo2-sft/runs/grpo2-sft-reasoning-swapped-clevr.json": "b23b1b6b43e6b25cf7fe42cca7d4eac348cd7a7637102ffa9258f273c37c57da",
+    "interventions/grpo2-sft/preds/grpo2-sft-reasoning-swapped-clevr.jsonl": "48a991aea0a70bdd5e12b434de7b4bf519f9b07d2055248b195911fcb4c6ae15",
+    "interventions/grpo2-sft/runs/grpo2-sft-reasoning-swapped-gqa.json": "f4ba803302b623591bf0ae04cd84c953b270a904c29668fbf9c7bddf409fa56e",
+    "interventions/grpo2-sft/preds/grpo2-sft-reasoning-swapped-gqa.jsonl": "05f637ef377ae922a04a64ef61f39041b3f30ec6be327aecdca4dcc1e0c3f944",
+    "interventions/grpo2-sft/runs/grpo2-sft-reasoning-swapped-textvqa.json": "8244d3c1895418319a42a8c9a5fa85b427790b679ea1d6da70ff60584b732947",
+    "interventions/grpo2-sft/preds/grpo2-sft-reasoning-swapped-textvqa.jsonl": "388d050ceb6be3478f88cba03c9e0e1de0770e59c2d2765e74f8a884b58e6242",
+    "interventions/grpo2-sft/runs/grpo2-sft-reasoning-swapped-vqav2.json": "f589b84c2c87d05134cb7ea29edfc8e470093cb505f23aa4d3fed8c70d065ce0",
+    "interventions/grpo2-sft/preds/grpo2-sft-reasoning-swapped-vqav2.jsonl": "a212486409fd649eaed8811315310f39d654e8f7fad61e94dd680c0084c9b2f6",
+    "interventions/grpo2-sft/runs/grpo2-sft-short-black-clevr.json": "013f8124737ec571d26003dc800720c3c5b7c257156874e34ee9383d4b41ff08",
+    "interventions/grpo2-sft/preds/grpo2-sft-short-black-clevr.jsonl": "263a5f4a79d6b845671db4840e83a0e4db545a0a6556071e817829f8a6aca91d",
+    "interventions/grpo2-sft/runs/grpo2-sft-short-black-gqa.json": "1a9993887bdae86e7a7255b2b2cb6bc7bb64bfa33ca249c94df8fb87a2042544",
+    "interventions/grpo2-sft/preds/grpo2-sft-short-black-gqa.jsonl": "362331462f0afadb170c78ce9fc92fdaf6b340710e39358f295d466802b17ae7",
+    "interventions/grpo2-sft/runs/grpo2-sft-short-black-textvqa.json": "567d402960638f73171126b88651cf8e89c783054cbb4686ee64e2d486a9de3e",
+    "interventions/grpo2-sft/preds/grpo2-sft-short-black-textvqa.jsonl": "2a74151709c24e0b698cfe67e9df412b4a27cb846832dd7c917ee90e7f416edc",
+    "interventions/grpo2-sft/runs/grpo2-sft-short-black-vqav2.json": "8f919818f2489b8959f826e9902071ed39b109f5d495fa253d00e7a92a5cc749",
+    "interventions/grpo2-sft/preds/grpo2-sft-short-black-vqav2.jsonl": "6f63387d2e5b5fe21b1db69383f56e886397354f43ff2d11f27eb250895735c2",
+    "interventions/grpo2-sft/runs/grpo2-sft-short-swapped-clevr.json": "aed199b49e9be3d099522eff3c9f6ed8a454ade9b99a42dc9e51542c8d9c9034",
+    "interventions/grpo2-sft/preds/grpo2-sft-short-swapped-clevr.jsonl": "05561389d4d922ff393df02406f96a8b839a9374dd174a52e054ef76bfb42249",
+    "interventions/grpo2-sft/runs/grpo2-sft-short-swapped-gqa.json": "98899e3c4c412cdc431fc36f4d3a5e997312d564195af3c035a3698144826609",
+    "interventions/grpo2-sft/preds/grpo2-sft-short-swapped-gqa.jsonl": "61621b4136b93d5d5f99de33e253e099368ce097de5ec8a3d3a9b2046a77d5c8",
+    "interventions/grpo2-sft/runs/grpo2-sft-short-swapped-textvqa.json": "4a8b07e41cdad864279ad72c0690c14a6d7126066766c7a53b62bdd8f108e376",
+    "interventions/grpo2-sft/preds/grpo2-sft-short-swapped-textvqa.jsonl": "8042a41b5037d0d8c0a51a3a8ca643151ef415d9e1631b52c65dd7e0dab45a5c",
+    "interventions/grpo2-sft/runs/grpo2-sft-short-swapped-vqav2.json": "aca47f0ee34460bb1c0b791b395e2158f2925e59b4c458f1622c98e3a83a8cb1",
+    "interventions/grpo2-sft/preds/grpo2-sft-short-swapped-vqav2.jsonl": "9c8e6d77a78f13c6f6da77b4d0c2e43c2df4ecd9ad556a5c8e250d9dd6235b13",
+    "interventions/sft2/runs/sft2-reasoning-black-clevr.json": "0fd856e6ceac6f01cb804be7938c3be2f0bd5799b28c63fdbff41cf989129c1d",
+    "interventions/sft2/preds/sft2-reasoning-black-clevr.jsonl": "67bbcd9174eac068765afd9f81f5a0566598240e3b408a84ff2d158acf2d7f62",
+    "interventions/sft2/runs/sft2-reasoning-black-gqa.json": "83920d28b3a8a271e1f48a362a1dcc748d490695ba69dbbd03fddce5a821abdf",
+    "interventions/sft2/preds/sft2-reasoning-black-gqa.jsonl": "b0a65b989e2bd57cc0e0da19a67d9146e3afca23eb4fb83a3584e30fb322b2ac",
+    "interventions/sft2/runs/sft2-reasoning-black-textvqa.json": "bec084e9139a4d440954e058a82d4bc3a028b3d523ed5a56df6fbc74ea0c69fc",
+    "interventions/sft2/preds/sft2-reasoning-black-textvqa.jsonl": "c42b2a2725f25f615d7bc92f17771f18d63f060aeb1ce31eef7f4fb4c6fc45c0",
+    "interventions/sft2/runs/sft2-reasoning-black-vqav2.json": "84778ef0e0756deff91623e0d5872c8018b9c8c7aa98503b8b91e1b204fd0fe0",
+    "interventions/sft2/preds/sft2-reasoning-black-vqav2.jsonl": "9fe437d684c1a54313bea09df94ec865afd9620f2126a7c6a01d6ae51f2bd2bf",
+    "interventions/sft2/runs/sft2-reasoning-swapped-clevr.json": "5484bf104fd747999f1c15341cd018aefc95d48647be87f798b0976e7910052b",
+    "interventions/sft2/preds/sft2-reasoning-swapped-clevr.jsonl": "4516f4a778981c2ae3f3c207fbfa91f2ddba2e40729ed740dae6cc85540a10ea",
+    "interventions/sft2/runs/sft2-reasoning-swapped-gqa.json": "2dd714d409d87229112939b729a4fa6735defde120c9df09f5b730aacef4cd3e",
+    "interventions/sft2/preds/sft2-reasoning-swapped-gqa.jsonl": "edc5542eba95b004fb51ccf681c081d35bba80688e339e53c819e99b280bd8f2",
+    "interventions/sft2/runs/sft2-reasoning-swapped-textvqa.json": "2a1b430def1dcba5a8091deacd94d4dae9f9bcc16be6e5db9725ed9f5a0c3b0f",
+    "interventions/sft2/preds/sft2-reasoning-swapped-textvqa.jsonl": "5a78ba1eed0d9b57cd62138848c9c3164667a4bd9d398ac4955541fc1493cbe5",
+    "interventions/sft2/runs/sft2-reasoning-swapped-vqav2.json": "7b06a0811a8b36d1c31b811dd1cdcf6839d974eba04a6bf1dcebe98715dbcf9a",
+    "interventions/sft2/preds/sft2-reasoning-swapped-vqav2.jsonl": "83deb675a740222da1bf2fc05b79a648c7103b685aa682431cc50ea3291734ed",
+    "interventions/sft2/runs/sft2-short-black-clevr.json": "0dca12f6ee0bee3242148baa5d254eec21cb65fda00a1f57038598778f62699d",
+    "interventions/sft2/preds/sft2-short-black-clevr.jsonl": "263a5f4a79d6b845671db4840e83a0e4db545a0a6556071e817829f8a6aca91d",
+    "interventions/sft2/runs/sft2-short-black-gqa.json": "2734126d4cdaac4ba233b0b1b36401ceba11e52dca3bd4ee5cd999f8a69717cb",
+    "interventions/sft2/preds/sft2-short-black-gqa.jsonl": "80b9e40dba25dc62d0df539115d2875c23addbd335c3b59b3bf45c62e0d4174a",
+    "interventions/sft2/runs/sft2-short-black-textvqa.json": "55fb1b4fc8bc46c0e4af00dce0f5956eceb3772400791714ae6faa42e504f9ab",
+    "interventions/sft2/preds/sft2-short-black-textvqa.jsonl": "810532abd15f6a4684f10ce984bb492235549d22bd584f5a4e86d3acffb85b65",
+    "interventions/sft2/runs/sft2-short-black-vqav2.json": "f2180d3bcb9679c4693533194ee389265e70b80cd65ecf9c03c3b615e440a894",
+    "interventions/sft2/preds/sft2-short-black-vqav2.jsonl": "e288a1de5106d4d15237390841c64a0dd837ec46b688228286859db817359f17",
+    "interventions/sft2/runs/sft2-short-swapped-clevr.json": "0acdd26152b3b8681dabf3fe7a4e14a97ca5909d4bc31c476a12f6f30cefcb32",
+    "interventions/sft2/preds/sft2-short-swapped-clevr.jsonl": "05561389d4d922ff393df02406f96a8b839a9374dd174a52e054ef76bfb42249",
+    "interventions/sft2/runs/sft2-short-swapped-gqa.json": "0df171c3ee1fcddd491221584a552ac9054f9e3854d6ae4b38b6eda72d3b2f44",
+    "interventions/sft2/preds/sft2-short-swapped-gqa.jsonl": "e5af4fb09fa8d5ecf11c29926ccc3784bec7a28efb009aced85a719f720d93bf",
+    "interventions/sft2/runs/sft2-short-swapped-textvqa.json": "cbfd8e8a98ebe8f3ad60e4ae22568e8622c53fa8def7a17bb7bc01a6d1288761",
+    "interventions/sft2/preds/sft2-short-swapped-textvqa.jsonl": "e0498204e1505c61ad0d23f37f4b947623ccf0c2a2fffafd469acb833e2f1017",
+    "interventions/sft2/runs/sft2-short-swapped-vqav2.json": "6aea66280c14fe89132625c3e68a5a548a3e45aa91feecfa587745a9d28bd536",
+    "interventions/sft2/preds/sft2-short-swapped-vqav2.jsonl": "f519ea8905b9ad7d6358215af46d863cef29dabba650d57d13d11790a0f82757",
+    "training-exposure.json": "36a149125120c50728774fbe5a82c26f9f018028dda9b0ca9153451e5d497b0f"
+  },
+  "interpretation": [
+    "Scores are on fixed materialized subsets; training uses one seed.",
+    "Normalized and lowercase scores reuse the same saved responses.",
+    "Output length does not establish reasoning quality.",
+    "Interventions retain the original image's references. Their scores measure agreement with those references, not accuracy on the changed images."
+  ],
+  "training": {
+    "split_manifest_sha256": "ca9560ad868a2b703fad5c5107a2966a4075f6d428468bafe5a0d185428713b2",
+    "runs": {
+      "results/baselines/training/grpo2-base": {
+        "completed_updates": 300,
+        "updates_without_reward_variation": 43,
+        "prompt_order_sha256": "cf2101eb06de31e80904b1e95e4738ba5158330d9518955ccf7b08956e3959ee",
+        "draw_file_sha256": "9b01e71fddbc1de2edb2168999de873d6973057df7565bf5db12a84c4c932138",
+        "overall": {
+          "prompt_groups": 1200,
+          "unique_questions": 1200,
+          "responses": 9600,
+          "mean_reward": 0.5988541666666667,
+          "all_zero_reward_groups": 264,
+          "all_full_reward_groups": 472,
+          "variable_reward_fraction": 0.38666666666666666
+        },
+        "by_training_membership": {
+          "vqav2/rl_only": {
+            "prompt_groups": 177,
+            "unique_questions": 177,
+            "responses": 1416,
+            "mean_reward": 0.6024011299435028,
+            "all_zero_reward_groups": 36,
+            "all_full_reward_groups": 70,
+            "variable_reward_fraction": 0.4011299435028249
+          },
+          "gqa/sft_train": {
+            "prompt_groups": 407,
+            "unique_questions": 407,
+            "responses": 3256,
+            "mean_reward": 0.6133292383292384,
+            "all_zero_reward_groups": 80,
+            "all_full_reward_groups": 167,
+            "variable_reward_fraction": 0.3931203931203931
+          },
+          "vqav2/sft_train": {
+            "prompt_groups": 434,
+            "unique_questions": 434,
+            "responses": 3472,
+            "mean_reward": 0.5786290322580645,
+            "all_zero_reward_groups": 105,
+            "all_full_reward_groups": 160,
+            "variable_reward_fraction": 0.38940092165898615
+          },
+          "gqa/rl_only": {
+            "prompt_groups": 182,
+            "unique_questions": 182,
+            "responses": 1456,
+            "mean_reward": 0.6112637362637363,
+            "all_zero_reward_groups": 43,
+            "all_full_reward_groups": 75,
+            "variable_reward_fraction": 0.3516483516483517
+          }
+        },
+        "gpu": {
+          "name": "NVIDIA A100 80GB PCIe",
+          "total_bytes": 85094825984,
+          "peak_torch_allocated_bytes": 47919830528,
+          "peak_torch_reserved_bytes": 51514441728
+        }
+      },
+      "results/baselines/training/grpo2-sft": {
+        "completed_updates": 300,
+        "updates_without_reward_variation": 16,
+        "prompt_order_sha256": "cf2101eb06de31e80904b1e95e4738ba5158330d9518955ccf7b08956e3959ee",
+        "draw_file_sha256": "2e8d2a16e6e7dd07bb846b7a0ce6304569bbef1a147c14ab416254bbcded05f4",
+        "overall": {
+          "prompt_groups": 1200,
+          "unique_questions": 1200,
+          "responses": 9600,
+          "mean_reward": 0.5813541666666666,
+          "all_zero_reward_groups": 229,
+          "all_full_reward_groups": 383,
+          "variable_reward_fraction": 0.49
+        },
+        "by_training_membership": {
+          "vqav2/rl_only": {
+            "prompt_groups": 177,
+            "unique_questions": 177,
+            "responses": 1416,
+            "mean_reward": 0.5741525423728814,
+            "all_zero_reward_groups": 36,
+            "all_full_reward_groups": 58,
+            "variable_reward_fraction": 0.4689265536723164
+          },
+          "gqa/sft_train": {
+            "prompt_groups": 407,
+            "unique_questions": 407,
+            "responses": 3256,
+            "mean_reward": 0.6016584766584766,
+            "all_zero_reward_groups": 65,
+            "all_full_reward_groups": 134,
+            "variable_reward_fraction": 0.5110565110565111
+          },
+          "vqav2/sft_train": {
+            "prompt_groups": 434,
+            "unique_questions": 434,
+            "responses": 3472,
+            "mean_reward": 0.5622119815668203,
+            "all_zero_reward_groups": 92,
+            "all_full_reward_groups": 128,
+            "variable_reward_fraction": 0.4930875576036866
+          },
+          "gqa/rl_only": {
+            "prompt_groups": 182,
+            "unique_questions": 182,
+            "responses": 1456,
+            "mean_reward": 0.5885989010989011,
+            "all_zero_reward_groups": 36,
+            "all_full_reward_groups": 63,
+            "variable_reward_fraction": 0.45604395604395603
+          }
+        },
+        "gpu": {
+          "name": "NVIDIA A100 80GB PCIe",
+          "total_bytes": 85094825984,
+          "peak_torch_allocated_bytes": 30060653568,
+          "peak_torch_reserved_bytes": 33550237696
+        }
+      },
+      "results/baselines/training/grpo8-base": {
+        "completed_updates": 300,
+        "updates_without_reward_variation": 110,
+        "prompt_order_sha256": "cf2101eb06de31e80904b1e95e4738ba5158330d9518955ccf7b08956e3959ee",
+        "draw_file_sha256": "93d58790c186a1ea6e2fbdf6bb8c1aad52b04ddb4990cac74b99322faff15249",
+        "overall": {
+          "prompt_groups": 1200,
+          "unique_questions": 1200,
+          "responses": 9600,
+          "mean_reward": 0.6461458333333333,
+          "all_zero_reward_groups": 296,
+          "all_full_reward_groups": 624,
+          "variable_reward_fraction": 0.23333333333333334
+        },
+        "by_training_membership": {
+          "vqav2/rl_only": {
+            "prompt_groups": 177,
+            "unique_questions": 177,
+            "responses": 1416,
+            "mean_reward": 0.644774011299435,
+            "all_zero_reward_groups": 43,
+            "all_full_reward_groups": 98,
+            "variable_reward_fraction": 0.2033898305084746
+          },
+          "gqa/sft_train": {
+            "prompt_groups": 407,
+            "unique_questions": 407,
+            "responses": 3256,
+            "mean_reward": 0.6793611793611793,
+            "all_zero_reward_groups": 85,
+            "all_full_reward_groups": 220,
+            "variable_reward_fraction": 0.25061425061425063
+          },
+          "vqav2/sft_train": {
+            "prompt_groups": 434,
+            "unique_questions": 434,
+            "responses": 3472,
+            "mean_reward": 0.6238479262672811,
+            "all_zero_reward_groups": 117,
+            "all_full_reward_groups": 216,
+            "variable_reward_fraction": 0.23271889400921658
+          },
+          "gqa/rl_only": {
+            "prompt_groups": 182,
+            "unique_questions": 182,
+            "responses": 1456,
+            "mean_reward": 0.6263736263736264,
+            "all_zero_reward_groups": 51,
+            "all_full_reward_groups": 90,
+            "variable_reward_fraction": 0.22527472527472528
+          }
+        },
+        "gpu": {
+          "name": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+          "total_bytes": 101974081536,
+          "peak_torch_allocated_bytes": 62816728576,
+          "peak_torch_reserved_bytes": 65997373440
+        }
+      }
+    },
+    "same_prompt_order": true,
+    "interpretation": "Membership describes the SFT training set; the base-to-RL arm did not receive SFT. Reward variation describes sampled groups, not held-out accuracy. Zero rewards can reflect incorrect answers or missing required answer tags."
+  }
+}

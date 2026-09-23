@@ -10,12 +10,18 @@ export default function Arena() {
   const [preview, setPreview] = useState<string | null>(null)
   const [question, setQuestion] = useState('')
   const [template, setTemplate] = useState<'short' | 'reasoning'>('reasoning')
+  const [selected, setSelected] = useState<string[]>([])
+  const [imageCondition, setImageCondition] = useState<'original' | 'black'>('original')
   const [cards, setCards] = useState<Record<string, CardState>>({})
   const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
   const fileInput = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    fetchModels().then(setModels)
+    fetchModels().then((items) => {
+      setModels(items)
+      setSelected(items.filter((item) => item.loaded).map((item) => item.key))
+    }).catch((error) => setError(String(error)))
   }, [])
 
   const acceptFile = useCallback((file: File | undefined) => {
@@ -25,12 +31,13 @@ export default function Arena() {
   }, [])
 
   const submit = async () => {
-    if (!image || !question.trim() || busy) return
+    if (!image || !question.trim() || busy || !selected.length) return
     setBusy(true)
+    setError('')
     const now = Date.now()
     setCards(
       Object.fromEntries(
-        models.map((m) => [m.key, { ...EMPTY, status: 'streaming', startedAt: now }]),
+        selected.map((key) => [key, { ...EMPTY, status: 'streaming', startedAt: now }]),
       ),
     )
     try {
@@ -48,7 +55,14 @@ export default function Arena() {
             ...c,
             [model]: { ...c[model], status: 'done', finishedAt: Date.now() },
           })),
+        selected,
+        imageCondition,
       )
+    } catch (error) {
+      setError(String(error))
+      setCards((cards) => Object.fromEntries(Object.entries(cards).map(([key, card]) =>
+        [key, { ...card, status: 'done', finishedAt: Date.now() }],
+      )))
     } finally {
       setBusy(false)
     }
@@ -58,6 +72,10 @@ export default function Arena() {
     <div className="grid gap-6 lg:grid-cols-[minmax(280px,340px)_1fr]">
       {/* Left: inputs */}
       <div className="space-y-4">
+        {models.length > 0 && !models.some((model) => model.loaded) && (
+          <p className="text-sm text-ink-300">Live models are unavailable. Open the gallery to explore saved responses without a GPU.</p>
+        )}
+        {error && <p role="alert" className="text-sm text-ink-300">{error}</p>}
         <div
           onClick={() => fileInput.current?.click()}
           onDragOver={(e) => e.preventDefault()}
@@ -109,17 +127,37 @@ export default function Arena() {
           </div>
           <button
             onClick={submit}
-            disabled={!image || !question.trim() || busy}
+            disabled={!image || !question.trim() || busy || !selected.length}
             className="ml-auto rounded-md bg-ember-500 px-5 py-1.5 text-sm font-semibold text-ink-950 transition-opacity disabled:opacity-30"
           >
-            {busy ? 'Judging…' : 'Ask all models'}
+            {busy ? 'Generating…' : 'Compare'}
           </button>
         </div>
+
+        <fieldset className="space-y-2 text-xs text-ink-300" disabled={busy}>
+          <legend className="mb-2">Models</legend>
+          {models.map((model) => <label key={model.key} className="flex gap-2">
+            <input type="checkbox" disabled={!model.loaded} checked={selected.includes(model.key)}
+              onChange={(event) => setSelected((keys) => event.target.checked
+                ? [...keys, model.key] : keys.filter((key) => key !== model.key))} />
+            {model.label}
+          </label>)}
+        </fieldset>
+        <label className="block text-xs text-ink-300">
+          Image input
+          <select value={imageCondition} disabled={busy}
+            onChange={(event) => setImageCondition(event.target.value as 'original' | 'black')}
+            className="ml-3 rounded border border-ink-700 bg-ink-900 p-1">
+            <option value="original">Original image</option>
+            <option value="black">Black image, same dimensions</option>
+          </select>
+        </label>
 
         <p className="text-xs leading-relaxed text-ink-400">
           Three checkpoints of the same 2B model answer side by side: the base model, its
           supervised fine-tune, and the RLVR (GRPO) policy. Try chain-of-thought mode on a
-          counting question to see the training differences.
+          counting question to see the training differences. Repeat with a black image to
+          inspect sensitivity; a changed answer alone does not establish correct grounding.
         </p>
       </div>
 

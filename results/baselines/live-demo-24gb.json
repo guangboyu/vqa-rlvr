@@ -1,0 +1,46 @@
+{
+  "gpu": "NVIDIA GeForce RTX 4090",
+  "resident_pytorch_bytes": 12768385536,
+  "peak_pytorch_bytes": 12995803136,
+  "peak_reserved_pytorch_bytes": 13140754432,
+  "elapsed_seconds": 14.040349113987759,
+  "source_sha256": {
+    "demo/backend/model_manager.py": "aca40aa666f0984a5f5d60c8e8f57ac2e0d9ebcce89717348a17c1429e9411eb",
+    "vqar/data.py": "e9dfd5e0462e3dab0e5123fbab8d819e93c98b6e823a38a75f50ee70bfa444d9",
+    "uv.lock": "91a36d0647e782cf10edf11da067557746ca1d8a3ed9e3273485ae8e7df079e5"
+  },
+  "image_sha256": "87318e0dc2e20797ef6894efe955bcc3ddc8d55d7be414f4bccb7637b18142ad",
+  "models": [
+    {
+      "key": "zero_shot",
+      "label": "Qwen3-VL-2B (zero-shot)",
+      "path": "Qwen/Qwen3-VL-2B-Instruct",
+      "description": "The released Instruct checkpoint, before our VQA fine-tuning.",
+      "revision": "89644892e4d85e24eaac8bacfd4f463576704203"
+    },
+    {
+      "key": "sft",
+      "label": "+ SFT (LoRA)",
+      "path": "/home/guangbo/codes/VQA/checkpoints/merged/sharedpool_20260913_sft_2b",
+      "description": "One epoch on 39,458 VQAv2/GQA short answers, with held-out images excluded.",
+      "revision": null
+    },
+    {
+      "key": "grpo",
+      "label": "+ GRPO (RLVR)",
+      "path": "/home/guangbo/codes/VQA/checkpoints/merged/sharedpool_20260913_grpo_2b_base",
+      "description": "300 correctness-only GRPO updates from Instruct on the shared VQAv2/GQA pool.",
+      "revision": null
+    }
+  ],
+  "question": "Is he on the ground?",
+  "max_new_tokens": 64,
+  "responses": {
+    "sft": "yes",
+    "grpo": "yes",
+    "zero_shot": "yes",
+    "grpo-black": "no",
+    "sft-reasoning": "yes"
+  },
+  "scope": "Three concurrent short responses, one black-image response, and one reasoning-prompt response. This does not establish worst-case memory use."
+}

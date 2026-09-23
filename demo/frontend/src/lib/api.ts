@@ -6,7 +6,10 @@ export interface ModelSpec {
 }
 
 export interface ResultsPayload {
+  comparison: Comparison | null
   runs: Record<string, Record<string, number>>
+  official_runs: Record<string, Record<string, number>>
+  ablation: { weight: number; steps: number; retention: number; run_id: string }[]
   judge_study: {
     results: {
       run_id: string
@@ -17,6 +20,35 @@ export interface ResultsPayload {
     }[]
     judge_spend_usd: number
   } | null
+}
+
+export interface Comparison {
+  training?: {
+    same_prompt_order: boolean | null
+    runs: Record<string, {
+      completed_updates: number
+      updates_without_reward_variation: number
+      overall: { unique_questions: number; variable_reward_fraction: number }
+    }>
+  }
+  runs: Record<string, {
+    template: string
+    datasets: Record<string, {
+      overall: number
+      normalized: number
+      lowercase_official: number
+      n: number
+      mean_output_tokens: number
+      truncated_fraction: number
+      answer_tag_fraction: number
+    }>
+  }>
+  image_interventions: Record<string, Record<string, Record<string, {
+    n: number
+    original_score: number
+    changed_image_score: number
+    normalized_answer_changed_fraction: number
+  }>>>
 }
 
 export async function fetchModels(): Promise<ModelSpec[]> {
@@ -36,11 +68,15 @@ export async function ask(
   template: 'short' | 'reasoning',
   onToken: (model: string, token: string) => void,
   onDone: (model: string) => void,
+  models: string[] = [],
+  imageCondition: 'original' | 'black' = 'original',
 ): Promise<void> {
   const form = new FormData()
   form.append('image', image)
   form.append('question', question)
   form.append('template', template)
+  form.append('models', models.join(','))
+  form.append('image_condition', imageCondition)
 
   const res = await fetch('/api/ask', { method: 'POST', body: form })
   if (!res.ok || !res.body) throw new Error(`ask failed: ${res.status}`)
@@ -58,6 +94,7 @@ export async function ask(
       const data = line.replace(/^data: /, '').trim()
       if (!data || data === '[DONE]') continue
       const event = JSON.parse(data)
+      if (event.error) throw new Error(event.error)
       if (event.done) onDone(event.model)
       else onToken(event.model, event.token)
     }

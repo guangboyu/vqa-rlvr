@@ -1,0 +1,46 @@
+{
+  "base_greedy": {
+    "responses": 20,
+    "mean_official": 0.41,
+    "mean_normalized": 0.61,
+    "mean_tokens": 134.65,
+    "answer_tags": 19,
+    "explanation_proxy": 18,
+    "questions_with_explanation_proxy": 18,
+    "questions_with_full_credit_sample": 11,
+    "at_token_limit": 1
+  },
+  "base_sampled": {
+    "responses": 160,
+    "mean_official": 0.41875,
+    "mean_normalized": 0.54375,
+    "mean_tokens": 127.5125,
+    "answer_tags": 155,
+    "explanation_proxy": 147,
+    "questions_with_explanation_proxy": 20,
+    "questions_with_full_credit_sample": 12,
+    "at_token_limit": 0
+  },
+  "sft_greedy": {
+    "responses": 20,
+    "mean_official": 0.495,
+    "mean_normalized": 0.495,
+    "mean_tokens": 9.7,
+    "answer_tags": 5,
+    "explanation_proxy": 1,
+    "questions_with_explanation_proxy": 1,
+    "questions_with_full_credit_sample": 9,
+    "at_token_limit": 0
+  },
+  "sft_sampled": {
+    "responses": 160,
+    "mean_official": 0.424375,
+    "mean_normalized": 0.430625,
+    "mean_tokens": 13.58125,
+    "answer_tags": 55,
+    "explanation_proxy": 9,
+    "questions_with_explanation_proxy": 6,
+    "questions_with_full_credit_sample": 13,
+    "at_token_limit": 0
+  }
+}

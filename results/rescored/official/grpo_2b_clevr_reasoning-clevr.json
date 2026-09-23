@@ -1,0 +1,52 @@
+{
+  "run_id": "grpo_2b_clevr_reasoning-clevr",
+  "timestamp": "2026-07-12T06:10:27+00:00",
+  "git_sha": "0460b1c",
+  "model": {
+    "base": "checkpoints/merged/grpo_2b_clevr",
+    "preset": "zero_shot_2b_reasoning"
+  },
+  "eval": {
+    "dataset": "clevr",
+    "subset": "clevr_test",
+    "n": 3000,
+    "limit": null,
+    "prompt_template": "reasoning",
+    "metric_variant": "official"
+  },
+  "gen": {
+    "backend": "vllm",
+    "temperature": 0.0,
+    "max_tokens": 512,
+    "max_model_len": 4096
+  },
+  "metrics": {
+    "overall": 0.9983333333333333,
+    "by_answer_type": {
+      "number": 0.9983333333333333
+    }
+  },
+  "config": {
+    "name": "zero_shot_2b_reasoning",
+    "model": "Qwen/Qwen3-VL-2B-Instruct",
+    "backend": "vllm",
+    "template": "reasoning",
+    "datasets": [
+      "vqav2",
+      "gqa",
+      "clevr",
+      "textvqa"
+    ],
+    "max_tokens": 512,
+    "max_model_len": 4096,
+    "gpu_memory_utilization": 0.8
+  },
+  "rescore": {
+    "source_run": "results/runs/grpo_2b_clevr_reasoning-clevr.json",
+    "source_run_sha256": "a38073b6e1ba38e798d1f628d14ab939485ba2ea50246a67297c19bcd7f57160",
+    "source_predictions_sha256": "ccdcb5c6ebc242905f8e3d98b659a26c9b6e193da83a721628de591b317afc14",
+    "qids_sha256": "925119ccc210ddeea1f4f2f840b31db2d093b71002656cdaee3f17972915619d",
+    "scorer_sha256": "3ba4c6b35621edc28568199a10f51351f1941c31b4998aee50eaa31f663126ec",
+    "previous_overall": 0.9983333333333333
+  }
+}

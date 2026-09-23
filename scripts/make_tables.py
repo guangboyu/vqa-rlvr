@@ -1,9 +1,13 @@
-"""Render the README results tables from results/runs/*.json (+ preds for reasoning
-retention). README numbers are pasted from this output — never hand-typed.
+"""Render historical comparisons with an explicit scoring variant.
+
+Official scores come from the generated diagnostics artifact; normalized scores
+come from the original run JSONs. Output length is a proxy, not reasoning quality.
 
 Usage: uv run python scripts/make_tables.py
+       uv run python scripts/make_tables.py --results-dir results/baselines
 """
 
+import argparse
 import json
 import statistics
 from collections import defaultdict
@@ -19,8 +23,13 @@ HEADERS = {
 }
 
 
-def load_rows() -> dict[str, dict[str, float]]:
+def load_rows(metric="official") -> dict[str, dict[str, float]]:
     rows: dict[str, dict[str, float]] = defaultdict(dict)
+    if metric == "official":
+        report = json.loads((RESULTS / "diagnostics.json").read_text())
+        for run_id, scores in report["official_runs"].items():
+            rows[run_id] = {dataset: value / 100 for dataset, value in scores.items()}
+        return rows
     for path in sorted((RESULTS / "runs").glob("*.json")):
         run = json.loads(path.read_text())
         if "eval" not in run:  # placeholder record (e.g. OOM not-run)
@@ -59,14 +68,70 @@ def reasoning_retention(run_id: str) -> str:
     return f"{100 * reasoned / len(lengths):.0f}% (median {statistics.median(lengths):.0f} ch)"
 
 
+def load_matched_results(directory):
+    """Compare fresh runs only when questions, scoring, and decoding match."""
+    protocols, runs = {}, defaultdict(dict)
+    for path in sorted(directory.rglob("runs/*.json")):
+        record = json.loads(path.read_text())
+        evaluation = record["eval"]
+        dataset, template = evaluation["dataset"], evaluation["prompt_template"]
+        key = (template, dataset, evaluation["image_mode"])
+        identity = {
+            "questions": record["qids_sha256"],
+            "fingerprint": record["dataset_fingerprint"],
+            "evaluation": evaluation,
+            "generation": record["gen"],
+            "source": record["source_sha256"],
+            "versions": record["versions"],
+        }
+        if key in protocols and protocols[key] != identity:
+            raise ValueError(f"Evaluation protocol differs: {path}")
+        protocols[key] = identity
+        run = record["run_id"].removesuffix(f"-{dataset}")
+        if dataset in runs[run]:
+            raise ValueError(f"Duplicate run/dataset: {path}")
+        runs[run][dataset] = record
+    if not runs:
+        raise ValueError(f"No evaluation results in {directory}")
+    return runs
+
+
+def print_matched_results(directory):
+    runs = load_matched_results(directory)
+    print("Scores on the materialized held-out subsets; accuracy in percent.\n")
+    print("| Run | VQAv2 | GQA | CLEVR counting | TextVQA |")
+    print("|---|---:|---:|---:|---:|")
+    for run, datasets in sorted(runs.items()):
+        values = [f"{100 * datasets[d]['metrics']['overall']:.2f}" if d in datasets else "—"
+                  for d in DATASETS]
+        print(f"| {run} | " + " | ".join(values) + " |")
+    print("\n| Run | Dataset | Questions | Mean output tokens | Truncated | Answer tags |")
+    print("|---|---|---:|---:|---:|---:|")
+    for run, datasets in sorted(runs.items()):
+        for dataset, record in sorted(datasets.items()):
+            metrics = record["metrics"]
+            print(f"| {run} | {dataset} | {record['eval']['n']} | "
+                  f"{metrics['mean_output_tokens']:.1f} | "
+                  f"{100 * metrics['truncated_fraction']:.2f}% | "
+                  f"{100 * metrics['answer_tag_fraction']:.2f}% |")
+
+
 def main() -> None:
-    rows = load_rows()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--metric", choices=("official", "normalized"), default="official")
+    parser.add_argument("--results-dir", type=Path,
+                        help="render fresh matched evaluation folders instead of historical tables")
+    args = parser.parse_args()
+    if args.results_dir:
+        print_matched_results(args.results_dir)
+        return
+    rows = load_rows(args.metric)
+    print(f"Scoring: {args.metric}. Historical training runs; see README errata and data overlap.")
 
     print_table(
-        "Main results — short template (direct answer)",
+        "Historical results — short template (direct answer)",
         rows,
         [
-            ("nanoVLM-460M zero-shot", "zero_shot_nanovlm"),
             ("Qwen3-VL-2B zero-shot", "zero_shot_2b"),
             ("2B + SFT", "sft_2b"),
             ("2B + SFT + GRPO", "grpo_2b_main_sft"),
@@ -103,25 +168,56 @@ def main() -> None:
     )
 
     print("\n### Reward-design ablation (base policy, VQAv2+GQA mix)\n")
-    print("| Format weight | Steps | CoT retention (GQA) | VQAv2 | GQA | CLEVR |")
+    print("| Format weight | Steps | Outputs >100 characters (GQA) | VQAv2 | GQA | CLEVR |")
     print("|---|---|---|---|---|---|")
     for label, run_id, steps in [
         ("0.0 (correctness only)", "grpo_2b_fmt0_reasoning", 300),
         ("0.2", "grpo_2b_main_base_reasoning", 500),
         ("0.5", "grpo_2b_fmt05_reasoning", 300),
     ]:
-        r = rows.get(run_id, {})
         print(
             f"| {label} | {steps} | {reasoning_retention(run_id)} | "
             f"{cell(rows, run_id, 'vqav2')} | {cell(rows, run_id, 'gqa')} | "
             f"{cell(rows, run_id, 'clevr')} |"
         )
 
+    print("\n### Learning-signal comparison — GRPO vs distillation family (reasoning protocol)\n")
+    print("| Arm | Steps | Outputs >100 characters (GQA) | VQAv2 | GQA | CLEVR | TextVQA |")
+    print("|---|---|---|---|---|---|---|")
+    for label, run_id, steps in [
+        ("2B zero-shot (reasoning)", "zero_shot_2b_reasoning", 0),
+        ("GRPO, EM reward (fixedreward)", "grpo_2b_fmt0_fixedreward_reasoning", 300),
+        ("OPD, reverse-KL to 8B", "opd_2b_main_reasoning", 300),
+        ("Self-distill, gold-conditioned 2B", "opd_self_2b_main_reasoning", 300),
+        ("Self-distill, seed 43 (replication)", "opd_self_2b_main_s43_reasoning", 300),
+        ("8B teacher (reference: untrained zero-shot)", "zero_shot_8b_reasoning", 0),
+        ("Self-distill, 8B student (L40S)", "opd_self_8b_main_reasoning", 300),
+        ("GRPO 8B, EM reward (RTX6000)", "grpo_8b_fmt0_reasoning", 300),
+    ]:
+        print(
+            f"| {label} | {steps} | {reasoning_retention(run_id)} | "
+            f"{cell(rows, run_id, 'vqav2')} | {cell(rows, run_id, 'gqa')} | "
+            f"{cell(rows, run_id, 'clevr')} | {cell(rows, run_id, 'textvqa')} |"
+        )
+
+    print_table(
+        "OPD reference — short template (direct answer)",
+        rows,
+        [
+            ("2B zero-shot", "zero_shot_2b"),
+            ("GRPO, EM reward (fixedreward)", "grpo_2b_fmt0_fixedreward"),
+            ("OPD, reverse-KL to 8B", "opd_2b_main"),
+            ("Self-distill, gold-conditioned 2B", "opd_self_2b_main"),
+        ],
+        datasets=["vqav2", "gqa"],
+    )
+
     study_path = RESULTS / "judge_study.json"
     if study_path.exists():
         print("\n### LLM-judge study (Haiku; EM-miss rescue analysis)\n")
         study = json.loads(study_path.read_text())
-        print("| Run | EM acc | Judge rescue rate | Judge-corrected acc | Agreement on EM hits |")
+        print("| Run | EM acc | Judge rescue rate | Historical judge-adjusted score | "
+              "Agreement on EM hits |")
         print("|---|---|---|---|---|")
         for r in study["results"]:
             corrected = r["judge_corrected_accuracy"] * 100

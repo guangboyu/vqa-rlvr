@@ -1,0 +1,45 @@
+{
+  "run_id": "opd_self_2b_main_s43_reasoning-vqav2",
+  "timestamp": "2026-08-06T15:57:57+00:00",
+  "git_sha": "bbdeebe",
+  "model": {
+    "base": "checkpoints/merged/opd_self_2b_main_s43",
+    "preset": "zero_shot_2b_reasoning"
+  },
+  "eval": {
+    "dataset": "vqav2",
+    "subset": "vqav2_eval",
+    "n": 5000,
+    "limit": null,
+    "prompt_template": "reasoning"
+  },
+  "gen": {
+    "backend": "vllm",
+    "temperature": 0.0,
+    "max_tokens": 512,
+    "max_model_len": 4096
+  },
+  "metrics": {
+    "overall": 0.6846800000000001,
+    "by_answer_type": {
+      "number": 0.6364444444444445,
+      "other": 0.5722222222222223,
+      "yes/no": 0.8541010320478002
+    }
+  },
+  "config": {
+    "name": "zero_shot_2b_reasoning",
+    "model": "Qwen/Qwen3-VL-2B-Instruct",
+    "backend": "vllm",
+    "template": "reasoning",
+    "datasets": [
+      "vqav2",
+      "gqa",
+      "clevr",
+      "textvqa"
+    ],
+    "max_tokens": 512,
+    "max_model_len": 4096,
+    "gpu_memory_utilization": 0.8
+  }
+}

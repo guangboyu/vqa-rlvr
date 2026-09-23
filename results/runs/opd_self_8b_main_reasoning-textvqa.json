@@ -1,0 +1,43 @@
+{
+  "run_id": "opd_self_8b_main_reasoning-textvqa",
+  "timestamp": "2026-08-08T03:16:44+00:00",
+  "git_sha": "b192177",
+  "model": {
+    "base": "checkpoints/merged/opd_self_8b_main",
+    "preset": "zero_shot_8b_reasoning"
+  },
+  "eval": {
+    "dataset": "textvqa",
+    "subset": "textvqa_eval",
+    "n": 2000,
+    "limit": null,
+    "prompt_template": "reasoning"
+  },
+  "gen": {
+    "backend": "vllm",
+    "temperature": 0.0,
+    "max_tokens": 512,
+    "max_model_len": 4096
+  },
+  "metrics": {
+    "overall": 0.7795,
+    "by_answer_type": {
+      "all": 0.7795
+    }
+  },
+  "config": {
+    "name": "zero_shot_8b_reasoning",
+    "model": "Qwen/Qwen3-VL-8B-Instruct",
+    "backend": "vllm",
+    "template": "reasoning",
+    "datasets": [
+      "vqav2",
+      "gqa",
+      "clevr",
+      "textvqa"
+    ],
+    "max_tokens": 512,
+    "max_model_len": 4096,
+    "gpu_memory_utilization": 0.88
+  }
+}

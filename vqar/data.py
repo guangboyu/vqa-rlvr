@@ -8,10 +8,10 @@ Memory notes (30GB-RAM WSL2 box): images are read with decode=False and passed
 through as bytes — never decoded, never held in a list. Only CLEVR is decoded,
 one image at a time, because its RGBA sources need RGB conversion.
 
-Train subsets for SFT and RL are sampled in a single deterministic assignment pass
-so they are image-disjoint by construction. Eval splits are officially disjoint
-from train (VQAv2: train2014 vs val2014 images; GQA: train_balanced vs
-testdev_balanced; CLEVR: held-out shards of the R1-V set never used for training).
+Source-ID assignment alone does not guarantee image disjointness: COCO/VG images
+can appear under different IDs or across VQAv2 and GQA. Run scripts.check_data
+after materialization; its training views hold dev/evaluation images out while
+allowing SFT training examples to be reused in RL.
 """
 
 from collections.abc import Iterator
@@ -21,6 +21,20 @@ from PIL import Image as PILImage
 
 from vqar.config import MAX_PIXELS
 from vqar.inference import extract_answer
+
+SOURCE_REVISIONS = {
+    "HuggingFaceM4/the_cauldron": "847a98a779b1652d65111daf20c972dfcd333605",
+    "lmms-lab/VQAv2": "32665d35052eb4a6d4414851c3c829a72754915a",
+    "lmms-lab/GQA": "a6e72d6e1b912da88af8b2f9eba05d5ea8ec2dd8",
+    "leonardPKU/clevr_cogen_a_train": "d5a8da66aa97c9c19ebe4075b7c7f777fef850a6",
+    "lmms-lab/textvqa": "9c0699cd19768ac5ab97568f6b3cbac4c0062884",
+}
+
+
+def _load_source(repo_id, *args, **kwargs):
+    """Pin new materializations; historical downloads may predate these revisions."""
+    return load_dataset(repo_id, *args, revision=SOURCE_REVISIONS[repo_id], **kwargs)
+
 
 PROMPT_SHORT = "{question}\nAnswer the question using a single word or phrase."
 PROMPT_REASONING = (
@@ -69,7 +83,7 @@ def _clean_cauldron_answer(text: str) -> str:
 def _vqav2_assignments(rows: Dataset, n_sft: int, n_rl: int) -> dict[str, list[tuple[int, int]]]:
     """Walk shuffled image-rows and assign (row, qa) pairs: SFT quota first, then RL.
 
-    An image's QAs are never split across buckets, so the subsets are image-disjoint.
+    These are storage buckets; checked RL views can also reuse the SFT bucket.
     """
     texts = rows.select_columns(["texts"])  # never touches the image column
     out: dict[str, list[tuple[int, int]]] = {"sft": [], "rl": []}
@@ -101,7 +115,7 @@ def _vqav2_generate(rows: Dataset, assignments: list[tuple[int, int]]) -> Iterat
 
 def load_vqav2_train(n_sft: int, n_rl: int, seed: int) -> tuple[Dataset, Dataset]:
     """Flatten the_cauldron/vqav2 (multi-QA per image) into SFT and RL QA subsets."""
-    rows = load_dataset("HuggingFaceM4/the_cauldron", "vqav2", split="train").shuffle(seed=seed)
+    rows = _load_source("HuggingFaceM4/the_cauldron", "vqav2", split="train").shuffle(seed=seed)
     rows = rows.cast_column("images", Sequence(Image(decode=False)))
     assignments = _vqav2_assignments(rows, n_sft, n_rl)
     return (
@@ -123,7 +137,7 @@ def _vqav2_eval_generate(rows: Dataset) -> Iterator[dict]:
 
 
 def load_vqav2_eval(n: int, seed: int) -> Dataset:
-    rows = load_dataset("lmms-lab/VQAv2", split="validation").shuffle(seed=seed).select(range(n))
+    rows = _load_source("lmms-lab/VQAv2", split="validation").shuffle(seed=seed).select(range(n))
     rows = rows.cast_column("image", Image(decode=False))
     return _build(_vqav2_eval_generate, rows=rows)
 
@@ -154,13 +168,13 @@ def _gqa_generate(instructions: list[dict], payloads: dict[str, dict]) -> Iterat
 
 
 def _gqa_images(config: str, split: str) -> Dataset:
-    images = load_dataset("lmms-lab/GQA", config, split=split)
+    images = _load_source("lmms-lab/GQA", config, split=split)
     return images.cast_column("image", Image(decode=False))
 
 
 def load_gqa_train(n_sft: int, n_rl: int, seed: int) -> tuple[Dataset, Dataset]:
     """Sample GQA balanced-train QAs: SFT quota first, then RL from unused images only."""
-    instructions = load_dataset(
+    instructions = _load_source(
         "lmms-lab/GQA", "train_balanced_instructions", split="train"
     ).shuffle(seed=seed)
     images = _gqa_images("train_balanced_images", "train")
@@ -185,7 +199,7 @@ def load_gqa_train(n_sft: int, n_rl: int, seed: int) -> tuple[Dataset, Dataset]:
 def load_gqa_eval() -> Dataset:
     """Full official testdev_balanced split (12,578 questions)."""
     instructions = list(
-        load_dataset("lmms-lab/GQA", "testdev_balanced_instructions", split="testdev")
+        _load_source("lmms-lab/GQA", "testdev_balanced_instructions", split="testdev")
     )
     images = _gqa_images("testdev_balanced_images", "testdev")
     payloads = _gqa_image_payloads(images, {row["imageId"] for row in instructions})
@@ -207,7 +221,7 @@ def _clevr_generate(rows: Dataset, start: int, count: int, tag: str) -> Iterator
 
 def load_clevr(n_rl: int, n_val: int, n_test: int, seed: int) -> dict[str, Dataset]:
     """Split the R1-V CLEVR-CoGenT counting set into held-out test/val and an RL pool."""
-    rows = load_dataset("leonardPKU/clevr_cogen_a_train", split="train").shuffle(seed=seed)
+    rows = _load_source("leonardPKU/clevr_cogen_a_train", split="train").shuffle(seed=seed)
     return {
         "test": _build(_clevr_generate, rows=rows, start=0, count=n_test, tag="test"),
         "val": _build(_clevr_generate, rows=rows, start=n_test, count=n_val, tag="val"),
@@ -228,6 +242,6 @@ def _textvqa_generate(rows: Dataset) -> Iterator[dict]:
 
 
 def load_textvqa_eval(n: int, seed: int) -> Dataset:
-    rows = load_dataset("lmms-lab/textvqa", split="validation").shuffle(seed=seed).select(range(n))
+    rows = _load_source("lmms-lab/textvqa", split="validation").shuffle(seed=seed).select(range(n))
     rows = rows.cast_column("image", Image(decode=False))
     return _build(_textvqa_generate, rows=rows)

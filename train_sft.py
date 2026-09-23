@@ -10,19 +10,19 @@ Usage:
 """
 
 import argparse
-import json
 import os
-import subprocess
+from dataclasses import replace
 from pathlib import Path
 
 import torch
-from datasets import concatenate_datasets, load_from_disk
 from peft import LoraConfig
 from transformers import AutoModelForImageTextToText, AutoProcessor, BitsAndBytesConfig
 from trl import SFTConfig, SFTTrainer
 
 from vqar import config
 from vqar.data import PROMPT_SHORT, cap_pixels
+from vqar.splits import load_training_subsets, split_dev, split_provenance
+from vqar.training import last_complete_checkpoint, write_run_config, write_training_summary
 
 os.environ.setdefault("WANDB_PROJECT", "vqa-rlvr")
 
@@ -50,14 +50,15 @@ def to_sft_columns(batch: dict) -> dict:
     }
 
 
-def load_datasets(preset: config.SFTPreset):
-    ds = concatenate_datasets(
-        [load_from_disk(str(ROOT / "data" / name)) for name in preset.subsets]
-    ).shuffle(seed=preset.seed)
-    ds = ds.select_columns(["image", "question", "answers"])
-    train = ds.select(range(DEV_SLICE, len(ds))).with_transform(to_sft_columns)
-    dev = ds.select(range(DEV_SLICE)).with_transform(to_sft_columns)
-    return train, dev
+def load_datasets(preset: config.SFTPreset, legacy: bool = False):
+    ds = load_training_subsets(ROOT / "data", preset.subsets, preset.seed, legacy)
+    if legacy:
+        train, dev = ds.select(range(DEV_SLICE, len(ds))), ds.select(range(DEV_SLICE))
+    else:
+        train, dev = split_dev(ds, DEV_SLICE)
+    columns = ["image", "question", "answers"]
+    return (train.select_columns(columns).with_transform(to_sft_columns),
+            dev.select_columns(columns).with_transform(to_sft_columns))
 
 
 def build_model(preset: config.SFTPreset):
@@ -83,15 +84,33 @@ def build_model(preset: config.SFTPreset):
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--preset", required=True, choices=sorted(config.SFT_PRESETS))
+    parser.add_argument("--model", default=None, help="override base model or pinned snapshot")
+    parser.add_argument("--hardware", choices=config.HARDWARE_PROFILES, default="legacy")
+    parser.add_argument("--legacy-splits", action="store_true", help="reproduce historical splits")
     parser.add_argument("--max-steps", type=int, default=-1, help="cap steps (sanity runs)")
+    parser.add_argument("--run-name", default=None)
+    parser.add_argument("--run-dir", type=Path, default=None)
+    parser.add_argument("--save-steps", type=int, default=250)
+    parser.add_argument("--save-total-limit", type=int, default=2,
+                        help="keep this many saved checkpoints; 0 keeps all")
+    parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--no-wandb", action="store_true")
     args = parser.parse_args()
+    if args.save_total_limit < 0:
+        parser.error("--save-total-limit must be nonnegative")
 
     preset = config.SFT_PRESETS[args.preset]
-    train_ds, dev_ds = load_datasets(preset)
-    model, processor = build_model(preset)
+    if args.model:
+        preset = replace(preset, model=args.model)
+    preset = config.for_hardware(preset, args.hardware)
+    train_ds, dev_ds = load_datasets(preset, args.legacy_splits)
+    if args.dry_run:
+        print(f"hardware={args.hardware}; train={len(train_ds)}, dev={len(dev_ds)}")
+        print(f"completion: {train_ds[0]['completion']}")
+        return
 
-    output_dir = ROOT / "checkpoints" / preset.name
+    run_name = args.run_name or preset.name
+    output_dir = args.run_dir / "checkpoints" if args.run_dir else ROOT / "checkpoints" / run_name
     sft_config = SFTConfig(
         output_dir=str(output_dir),
         per_device_train_batch_size=preset.per_device_batch_size,
@@ -103,6 +122,7 @@ def main() -> None:
         lr_scheduler_type="cosine",
         warmup_ratio=preset.warmup_ratio,
         max_length=preset.max_length,
+        completion_only_loss=True,
         bf16=True,
         gradient_checkpointing=True,
         gradient_checkpointing_kwargs={"use_reentrant": False},
@@ -111,8 +131,8 @@ def main() -> None:
         eval_strategy="steps",
         eval_steps=250,
         save_strategy="steps",
-        save_steps=250,
-        save_total_limit=2,
+        save_steps=args.save_steps,
+        save_total_limit=args.save_total_limit or None,
         dataloader_num_workers=2,  # WSL2: keep worker memory low
         dataloader_pin_memory=False,
         # The messages/image columns are produced on the fly by with_transform from
@@ -120,7 +140,7 @@ def main() -> None:
         remove_unused_columns=False,
         seed=preset.seed,
         report_to=[] if args.no_wandb else ["wandb"],
-        run_name=preset.name,
+        run_name=run_name,
     )
     peft_config = LoraConfig(
         r=preset.lora_r,
@@ -129,6 +149,13 @@ def main() -> None:
         target_modules=list(preset.lora_targets),
         task_type="CAUSAL_LM",
     )
+    write_run_config(output_dir, {
+        "preset": config.dump(preset), "policy_model": preset.model,
+        "overrides": {"hardware": args.hardware, "max_steps": args.max_steps},
+        "data": split_provenance(ROOT / "data", args.legacy_splits),
+        "samples": {"train": len(train_ds), "dev": len(dev_ds)},
+    }, sft_config)
+    model, processor = build_model(preset)
     trainer = SFTTrainer(
         model=model,
         args=sft_config,
@@ -137,16 +164,17 @@ def main() -> None:
         processing_class=processor,
         peft_config=peft_config,
     )
-    trainer.train()
-    trainer.save_model(str(output_dir))
 
-    git_sha = subprocess.run(
-        ["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True
-    ).stdout.strip()
-    (output_dir / "run_config.json").write_text(
-        json.dumps({"preset": config.dump(preset), "git_sha": git_sha,
-                    "max_steps": args.max_steps}, indent=2)
-    )
+    from scripts.hf_preempt_callback import JsonlMetrics, PreemptCallback, install_signal_flag
+
+    install_signal_flag()
+    trainer.add_callback(PreemptCallback())
+    if args.run_dir:
+        trainer.add_callback(JsonlMetrics(str(args.run_dir / "metrics.jsonl")))
+    trainer.train(resume_from_checkpoint=last_complete_checkpoint(output_dir))
+    trainer.save_model(str(output_dir))
+    write_training_summary(trainer, output_dir)
+
     print(f"adapter saved -> {output_dir}")
 
 

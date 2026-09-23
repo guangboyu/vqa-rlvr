@@ -1,0 +1,52 @@
+{
+  "run_id": "sft_8b-clevr",
+  "timestamp": "2026-07-12T09:10:55+00:00",
+  "git_sha": "0460b1c",
+  "model": {
+    "base": "checkpoints/merged/sft_8b",
+    "preset": "zero_shot_8b"
+  },
+  "eval": {
+    "dataset": "clevr",
+    "subset": "clevr_test",
+    "n": 3000,
+    "limit": null,
+    "prompt_template": "short",
+    "metric_variant": "official"
+  },
+  "gen": {
+    "backend": "vllm",
+    "temperature": 0.0,
+    "max_tokens": 64,
+    "max_model_len": 4096
+  },
+  "metrics": {
+    "overall": 0.9283333333333333,
+    "by_answer_type": {
+      "number": 0.9283333333333333
+    }
+  },
+  "config": {
+    "name": "zero_shot_8b",
+    "model": "Qwen/Qwen3-VL-8B-Instruct",
+    "backend": "vllm",
+    "template": "short",
+    "datasets": [
+      "vqav2",
+      "gqa",
+      "clevr",
+      "textvqa"
+    ],
+    "max_tokens": 64,
+    "max_model_len": 4096,
+    "gpu_memory_utilization": 0.88
+  },
+  "rescore": {
+    "source_run": "results/runs/sft_8b-clevr.json",
+    "source_run_sha256": "6707b572d8ddd8483587db64c5c3b011e0835a3346f270363f10ccf4294fb208",
+    "source_predictions_sha256": "e9400223b5cce4e384b11b6881ad641d5fd7a9f67af934ab97df90b640bf777d",
+    "qids_sha256": "925119ccc210ddeea1f4f2f840b31db2d093b71002656cdaee3f17972915619d",
+    "scorer_sha256": "3ba4c6b35621edc28568199a10f51351f1941c31b4998aee50eaa31f663126ec",
+    "previous_overall": 0.9283333333333333
+  }
+}

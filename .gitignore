@@ -11,17 +11,16 @@ data/*
 checkpoints/
 wandb/
 results/preds/
+results/baselines/**/preds/
+results/baselines/training/
+results/baselines/source/
 .judge_cache/
-
-# Personal study notes (not part of the release)
-learn/
 
 # Secrets & misc
 .env
 *.log
+# Local release bundles and their manifests
+artifacts/
 
 # The manifest defines the benchmark (sizes, seeds, qid fingerprints) — versioned.
 !data/manifest.json
-
-# Personal resume material (not part of the release)
-experience_temp.md

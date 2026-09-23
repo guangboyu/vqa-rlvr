@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import Arena from './components/Arena'
 import Dashboard from './components/Dashboard'
+import Gallery from './components/Gallery'
 
-type View = 'arena' | 'dashboard'
+type View = 'arena' | 'dashboard' | 'gallery'
 
 export default function App() {
-  const [view, setView] = useState<View>('arena')
+  const [view, setView] = useState<View>('gallery')
 
   return (
     <div className="min-h-screen bg-ink-950 text-ink-100">
@@ -16,11 +17,11 @@ export default function App() {
               VQA <span className="text-ember-500">Arena</span>
             </h1>
             <p className="text-xs text-ink-400">
-              base vs SFT vs RLVR — Qwen3-VL post-training, live on one RTX 4090
+              Learn from recorded examples, compare results, or run live models on a 24 GB GPU
             </p>
           </div>
           <nav className="ml-auto flex gap-1 font-mono text-sm">
-            {(['arena', 'dashboard'] as const).map((v) => (
+            {(['gallery', 'dashboard', 'arena'] as const).map((v) => (
               <button
                 key={v}
                 onClick={() => setView(v)}
@@ -43,7 +44,7 @@ export default function App() {
         </div>
       </header>
       <main className="mx-auto max-w-7xl px-6 py-8">
-        {view === 'arena' ? <Arena /> : <Dashboard />}
+        {view === 'arena' ? <Arena /> : view === 'dashboard' ? <Dashboard /> : <Gallery />}
       </main>
     </div>
   )

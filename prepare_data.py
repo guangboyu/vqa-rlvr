@@ -1,6 +1,7 @@
 """Materialize fixed, seeded dataset subsets to data/ so training and eval never
-touch the raw sources. Re-running reproduces identical subsets (fixed seeds) and
-writes data/manifest.json recording exactly what was sampled.
+touch the raw sources. Source revisions and fixed seeds are recorded in the
+manifest. Existing materializations are preserved; select a new output directory
+to build another version.
 
 Usage:
     uv run python prepare_data.py                # all subsets
@@ -65,11 +66,21 @@ def build(only: str | None) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--only", choices=["vqav2", "gqa", "clevr", "textvqa"], default=None)
+    parser.add_argument("--out-dir", type=Path, default=DATA_DIR)
     args = parser.parse_args()
+    output_dir = args.out_dir
+    existing = [
+        p.name
+        for p in output_dir.glob("*")
+        if p.is_dir()
+        and p.name.startswith(tuple(name + "_" for name in SIZES if args.only in (None, name)))
+    ]
+    if existing:
+        raise SystemExit(f"Already materialized: {existing}. Use check_data or a new --out-dir.")
 
-    DATA_DIR.mkdir(exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
     shutil.rmtree(BUILD_CACHE, ignore_errors=True)  # scratch from a killed prior run
-    manifest_path = DATA_DIR / "manifest.json"
+    manifest_path = output_dir / "manifest.json"
     manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
     manifest.setdefault("sizes", {}).update(
         {k: v for k, v in SIZES.items() if args.only in (None, k)}
@@ -77,10 +88,11 @@ def main() -> None:
 
     try:
         for name, ds in build(args.only).items():
-            out = DATA_DIR / name
+            out = output_dir / name
             ds.save_to_disk(str(out))
             manifest.setdefault("subsets", {})[name] = {
                 "n": len(ds),
+                "source_revisions": data.SOURCE_REVISIONS,
                 "qids_sha": hashlib.sha256(",".join(ds["qid"]).encode()).hexdigest(),
             }
             print(f"{name}: {len(ds)} examples -> {out}")

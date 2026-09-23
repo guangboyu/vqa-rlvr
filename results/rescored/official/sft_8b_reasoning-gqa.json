@@ -1,0 +1,56 @@
+{
+  "run_id": "sft_8b_reasoning-gqa",
+  "timestamp": "2026-07-12T09:43:12+00:00",
+  "git_sha": "0460b1c",
+  "model": {
+    "base": "checkpoints/merged/sft_8b",
+    "preset": "zero_shot_8b_reasoning"
+  },
+  "eval": {
+    "dataset": "gqa",
+    "subset": "gqa_eval",
+    "n": 12578,
+    "limit": null,
+    "prompt_template": "reasoning",
+    "metric_variant": "official"
+  },
+  "gen": {
+    "backend": "vllm",
+    "temperature": 0.0,
+    "max_tokens": 512,
+    "max_model_len": 4096
+  },
+  "metrics": {
+    "overall": 0.5044522181586898,
+    "by_answer_type": {
+      "choose": 0.6713906111603188,
+      "compare": 0.6740237691001698,
+      "logical": 0.7165834719911259,
+      "query": 0.3435709037472447,
+      "verify": 0.6927175843694494
+    }
+  },
+  "config": {
+    "name": "zero_shot_8b_reasoning",
+    "model": "Qwen/Qwen3-VL-8B-Instruct",
+    "backend": "vllm",
+    "template": "reasoning",
+    "datasets": [
+      "vqav2",
+      "gqa",
+      "clevr",
+      "textvqa"
+    ],
+    "max_tokens": 512,
+    "max_model_len": 4096,
+    "gpu_memory_utilization": 0.88
+  },
+  "rescore": {
+    "source_run": "results/runs/sft_8b_reasoning-gqa.json",
+    "source_run_sha256": "a8676a49a38a0c31a48301423109c15c328fd5c2f9ce95531765654ca06c2cf4",
+    "source_predictions_sha256": "f894551ed83abf4eb2923a3ec9e7ba131560ef1770f847e7d0a73318ca624e34",
+    "qids_sha256": "7f5cbd3ddc7fd9414982546f5200bba92924c7532a507b695f57887b653460c1",
+    "scorer_sha256": "3ba4c6b35621edc28568199a10f51351f1941c31b4998aee50eaa31f663126ec",
+    "previous_overall": 0.507870885673398
+  }
+}
