@@ -313,8 +313,17 @@ def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
         # The per-update diagnostics stay in the exposure file; the demo needs the totals.
         "exposure": {run: {key: value for key, value in summary.items() if key != "diagnostics"}
                      for run, summary in exposure["runs"].items()},
+        "same_prompt_order": exposure["same_prompt_order"],
+        **historical_studies(root / "results"),
     }
     return blocks, export
+
+
+def historical_studies(results: Path) -> dict:
+    """July studies the dashboard's history view shows beside the July runs."""
+    diagnostics = json.loads((results / "diagnostics.json").read_text())
+    judge = json.loads((results / "judge_study.json").read_text())
+    return {"retention_ablation": diagnostics["ablation"], "judge_study": judge}
 
 
 def fill(text: str, blocks: dict[str, str]) -> str:

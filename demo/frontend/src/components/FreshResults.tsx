@@ -1,26 +1,23 @@
 import { useState } from 'react'
-import type { Comparison } from '../lib/api'
+import { columnLabel, testCell, type Report } from '../lib/api'
 
-const DATASETS = ['vqav2', 'gqa', 'clevr', 'textvqa'] as const
-const LABELS: Record<string, string> = {
-  vqav2: 'VQAv2', gqa: 'GQA', clevr: 'CLEVR counting', textvqa: 'TextVQA',
-  base2: '2B Instruct', sft2: '2B + SFT', 'grpo2-base': '2B + GRPO',
-  'grpo2-sft': '2B + SFT + GRPO', base8: '8B Instruct', 'grpo8-base': '8B + GRPO',
-  'opd2-self': '2B + gold-conditioned OPD',
-}
-const ORDER = ['base2', 'sft2', 'grpo2-base', 'grpo2-sft', 'base8', 'grpo8-base', 'opd2-self']
-const percent = (value: number | undefined) => value == null ? '—' : (value * 100).toFixed(2)
+const percent = (value: number | null | undefined) =>
+  value == null ? '—' : (value * 100).toFixed(2)
+// The recorded image interventions cover the first 128 test questions of each dataset.
+const INTERVENTION_TIER = 'first-128'
 const selectStyle = 'rounded border border-ink-700 bg-ink-900 p-2'
 const cellStyle = 'px-3 py-2 text-right font-mono'
 
-export default function FreshResults({ comparison }: { comparison: Comparison }) {
+export default function FreshResults({ report }: { report: Report }) {
   const [template, setTemplate] = useState('short')
-  const [metric, setMetric] = useState<'overall' | 'normalized'>('overall')
-  const [dataset, setDataset] = useState<string>('vqav2')
-  const rows = Object.entries(comparison.runs)
-    .filter(([, run]) => run.template === template)
-    .map(([id, run]) => ({ id, arm: id.replace(`-${template}`, ''), ...run }))
-    .sort((a, b) => ORDER.indexOf(a.arm) - ORDER.indexOf(b.arm))
+  const [metric, setMetric] = useState<'official' | 'normalized'>('official')
+  const [dataset, setDataset] = useState<string>(report.datasets[0]?.name ?? '')
+  const armName = (label: string) => report.arms.find(a => a.label === label)?.name ?? label
+  const rows = report.arms.map(arm => ({
+    arm: arm.label,
+    datasets: Object.fromEntries(report.datasets.map(d =>
+      [d.name, testCell(report, arm.label, d.name, template)])),
+  }))
 
   return <div className="space-y-6">
     <div>
@@ -37,36 +34,39 @@ export default function FreshResults({ comparison }: { comparison: Comparison })
         <option value="short">Short answer</option><option value="reasoning">Reasoning</option>
       </select></label>
       <label>Scoring <select value={metric}
-        onChange={e => setMetric(e.target.value as 'overall' | 'normalized')} className={selectStyle}>
-        <option value="overall">Dataset-author accuracy</option>
+        onChange={e => setMetric(e.target.value as 'official' | 'normalized')} className={selectStyle}>
+        <option value="official">Dataset-author accuracy</option>
         <option value="normalized">Normalized answer matching</option>
       </select></label>
     </div>
     <section className="overflow-x-auto rounded-lg border border-ink-700 bg-ink-900 p-5">
       <h3 className="font-display text-lg text-ink-50">Answer accuracy (%)</h3>
       <p className="mt-1 text-xs text-ink-400">
-        5,000 VQAv2 · 12,578 GQA · 3,000 CLEVR counting · 2,000 TextVQA.
-        Scoring choices reuse the same responses.
+        {report.datasets.map(d => {
+          const n = rows.map(row => row.datasets[d.name]?.n).find(value => value != null)
+          return `${n?.toLocaleString() ?? '—'} ${d.display_name}`
+        }).join(' · ')}. Scoring choices reuse the same responses.
       </p>
       <table className="mt-3 w-full text-sm">
         <thead><tr className="border-b border-ink-700 text-ink-400">
           <th className="py-2 text-left font-normal">Model</th>
-          {DATASETS.map(d => <th key={d} className={`${cellStyle} font-normal`}>{LABELS[d]}</th>)}
+          {report.datasets.map(d => <th key={d.name} className={`${cellStyle} font-normal`}>
+            {columnLabel(d)}</th>)}
         </tr></thead>
-        <tbody>{rows.map(row => <tr key={row.id} className="border-b border-ink-800 last:border-0">
-          <td className="py-2 text-ink-100">{LABELS[row.arm] ?? row.arm}</td>
-          {DATASETS.map(d => <td key={d} className={cellStyle}>
-            {percent(row.datasets[d]?.[metric])}
+        <tbody>{rows.map(row => <tr key={row.arm} className="border-b border-ink-800 last:border-0">
+          <td className="py-2 text-ink-100">{armName(row.arm)}</td>
+          {report.datasets.map(d => <td key={d.name} className={cellStyle}>
+            {percent(row.datasets[d.name]?.[metric]?.overall)}
           </td>)}
         </tr>)}</tbody>
       </table>
     </section>
-    {comparison.training && <section className="overflow-x-auto rounded-lg border border-ink-700 bg-ink-900 p-5">
+    {Object.keys(report.exposure).length > 0 && <section className="overflow-x-auto rounded-lg border border-ink-700 bg-ink-900 p-5">
       <h3 className="font-display text-lg text-ink-50">How much GRPO feedback is available?</h3>
       <p className="mt-1 text-xs leading-relaxed text-ink-400">
         Eight responses form a prompt group. Identical rewards give zero group advantages.
         These counts describe sampled training responses, not held-out accuracy.
-        {comparison.training.same_prompt_order && ' The complete prompt order matches across these runs.'}
+        {report.same_prompt_order && ' The complete prompt order matches across these runs.'}
       </p>
       <table className="mt-3 w-full text-sm">
         <thead><tr className="border-b border-ink-700 text-ink-400">
@@ -74,10 +74,10 @@ export default function FreshResults({ comparison }: { comparison: Comparison })
           {['Distinct questions', 'Groups with varied rewards (%)', 'Updates without reward variation']
             .map(label => <th key={label} className={`${cellStyle} font-normal`}>{label}</th>)}
         </tr></thead>
-        <tbody>{Object.entries(comparison.training.runs).map(([path, run]) => {
+        <tbody>{Object.entries(report.exposure).map(([path, run]) => {
           const arm = path.split('/').pop() ?? path
           return <tr key={path} className="border-b border-ink-800 last:border-0">
-            <td className="py-2">{LABELS[arm] ?? arm}</td>
+            <td className="py-2">{armName(arm)}</td>
             <td className={cellStyle}>{run.overall.unique_questions.toLocaleString()}</td>
             <td className={cellStyle}>{percent(run.overall.variable_reward_fraction)}</td>
             <td className={cellStyle}>{run.updates_without_reward_variation} / {run.completed_updates}</td>
@@ -87,7 +87,7 @@ export default function FreshResults({ comparison }: { comparison: Comparison })
     </section>}
     <label className="flex items-center gap-3 text-sm">Inspect a dataset
       <select value={dataset} onChange={e => setDataset(e.target.value)} className={selectStyle}>
-        {DATASETS.map(d => <option key={d} value={d}>{LABELS[d]}</option>)}
+        {report.datasets.map(d => <option key={d.name} value={d.name}>{d.display_name}</option>)}
       </select>
     </label>
     <section className="overflow-x-auto rounded-lg border border-ink-700 bg-ink-900 p-5">
@@ -104,12 +104,12 @@ export default function FreshResults({ comparison }: { comparison: Comparison })
         </tr></thead>
         <tbody>{rows.map(row => {
           const d = row.datasets[dataset]
-          return <tr key={row.id} className="border-b border-ink-800 last:border-0">
-            <td className="py-2">{LABELS[row.arm] ?? row.arm}</td>
-            <td className={cellStyle}>{d?.mean_output_tokens.toFixed(1) ?? '—'}</td>
+          return <tr key={row.arm} className="border-b border-ink-800 last:border-0">
+            <td className="py-2">{armName(row.arm)}</td>
+            <td className={cellStyle}>{d?.mean_output_tokens?.toFixed(1) ?? '—'}</td>
             <td className={cellStyle}>{percent(d?.truncated_fraction)}</td>
             <td className={cellStyle}>{percent(d?.answer_tag_fraction)}</td>
-            <td className={cellStyle}>{percent(d?.lowercase_official)}</td>
+            <td className={cellStyle}>{percent(d?.official_on_lowercased_answers)}</td>
           </tr>
         })}</tbody>
       </table>
@@ -127,15 +127,17 @@ export default function FreshResults({ comparison }: { comparison: Comparison })
           {['Original (%)', 'Black (%)', 'Swapped (%)'].map(label =>
             <th key={label} className={`${cellStyle} font-normal`}>{label}</th>)}
         </tr></thead>
-        <tbody>{rows.map(row => {
-          const d = comparison.image_interventions[row.id]?.[dataset]
-          return <tr key={row.id} className="border-b border-ink-800 last:border-0">
-            <td className="py-2">{LABELS[row.arm] ?? row.arm}</td>
-            <td className={cellStyle}>{percent(d?.black?.original_score)}</td>
-            <td className={cellStyle}>{percent(d?.black?.changed_image_score)}</td>
-            <td className={cellStyle}>{percent(d?.swapped?.changed_image_score)}</td>
-          </tr>
-        })}</tbody>
+        <tbody>{rows.filter(row => testCell(report, row.arm, dataset, template, 'black', INTERVENTION_TIER))
+          .map(row => {
+            const black = testCell(report, row.arm, dataset, template, 'black', INTERVENTION_TIER)
+            const swapped = testCell(report, row.arm, dataset, template, 'swapped', INTERVENTION_TIER)
+            return <tr key={row.arm} className="border-b border-ink-800 last:border-0">
+              <td className="py-2">{armName(row.arm)}</td>
+              <td className={cellStyle}>{percent(black?.paired_with_original?.original.official)}</td>
+              <td className={cellStyle}>{percent(black?.official?.overall)}</td>
+              <td className={cellStyle}>{percent(swapped?.official?.overall)}</td>
+            </tr>
+          })}</tbody>
       </table>
     </section>
   </div>

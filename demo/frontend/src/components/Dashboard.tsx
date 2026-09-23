@@ -1,14 +1,8 @@
 import { Fragment, useEffect, useState } from 'react'
-import { fetchResults, type ResultsPayload } from '../lib/api'
+import { columnLabel, fetchResults, historyScores, type Report } from '../lib/api'
 import FreshResults from './FreshResults'
 
-const DATASETS = ['vqav2', 'gqa', 'clevr', 'textvqa'] as const
-const DATASET_LABELS: Record<string, string> = {
-  vqav2: 'VQAv2',
-  gqa: 'GQA',
-  clevr: 'CLEVR',
-  textvqa: 'TextVQA (OOD)',
-}
+// July runs are named by their historical run ids; the dataset columns come from the report.
 const BASELINE = 'zero_shot_2b_reasoning'
 
 const MAIN_ROWS: [string, string][] = [
@@ -48,7 +42,7 @@ function Section({ title, note, children }: {
 }
 
 export default function Dashboard() {
-  const [data, setData] = useState<ResultsPayload | null>(null)
+  const [data, setData] = useState<Report | null>(null)
   const [variant, setVariant] = useState<'official' | 'normalized'>('official')
   const [history, setHistory] = useState(false)
 
@@ -57,25 +51,34 @@ export default function Dashboard() {
   }, [])
 
   if (!data) return <p className="text-sm text-ink-400">Loading results…</p>
-  if (data.comparison && !history) return (
+  const datasets = data.datasets.map(d => d.name)
+  const labels = Object.fromEntries(data.datasets.map(d => [d.name, columnLabel(d)]))
+  const questions = data.datasets.map(d => {
+    const n = Math.max(0, ...data.history.filter(h => h.dataset === d.name).map(h => h.metrics.n))
+    return `${n.toLocaleString()} ${d.display_name}`
+  }).join(', ')
+  const corrected = data.cells.length > 0
+  if (corrected && !history) return (
     <div className="space-y-5">
-      <FreshResults comparison={data.comparison} />
+      <FreshResults report={data} />
       <button onClick={() => setHistory(true)} className="text-sm text-ink-300 underline">
         Explore the historical experiments and their limitations
       </button>
     </div>
   )
-  const officialAvailable = Object.keys(data.official_runs).length > 0
-  const runs = variant === 'official' && officialAvailable ? data.official_runs : data.runs
+  const official = historyScores(data, 'official')
+  const officialAvailable = Object.keys(official).length > 0
+  const runs = variant === 'official' && officialAvailable ? official
+    : historyScores(data, 'normalized')
   const baseline = runs[BASELINE] ?? {}
   const deltas = TRANSFER_ROWS.map(([, id]) =>
-    DATASETS.map((d) => runs[id]?.[d] != null && baseline[d] != null ? runs[id][d] - baseline[d] : null),
+    datasets.map((d) => runs[id]?.[d] != null && baseline[d] != null ? runs[id][d] - baseline[d] : null),
   )
   const maxAbs = Math.max(1, ...deltas.flat().map((value) => Math.abs(value ?? 0)))
 
   return (
     <div className="space-y-6">
-      {data.comparison && <button onClick={() => setHistory(false)}
+      {corrected && <button onClick={() => setHistory(false)}
         className="text-sm text-ink-300 underline">Back to the corrected comparison</button>}
       <div className="flex flex-wrap items-center gap-3 text-sm">
         <label htmlFor="metric">Scoring protocol</label>
@@ -94,14 +97,14 @@ export default function Dashboard() {
       </p>
       <Section
         title="Accuracy under the reasoning prompt"
-        note="Greedy decoding: 5,000 VQAv2, 12,578 GQA test-dev, 3,000 CLEVR counting, and 2,000 TextVQA questions."
+        note={`Greedy decoding: ${questions} questions.`}
       >
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-ink-700 text-left font-mono text-xs text-ink-400">
               <th className="py-2 pr-4 font-normal">model</th>
-              {DATASETS.map((d) => (
-                <th key={d} className="px-3 py-2 text-right font-normal">{DATASET_LABELS[d]}</th>
+              {datasets.map((d) => (
+                <th key={d} className="px-3 py-2 text-right font-normal">{labels[d]}</th>
               ))}
             </tr>
           </thead>
@@ -109,7 +112,7 @@ export default function Dashboard() {
             {MAIN_ROWS.map(([label, id]) => (
               <tr key={id} className="border-b border-ink-800 last:border-0">
                 <td className="py-2 pr-4 text-ink-100">{label}</td>
-                {DATASETS.map((d) => {
+                {datasets.map((d) => {
                   const v = runs[id]?.[d]
                   const best = Math.max(...MAIN_ROWS.map(([, r]) => runs[r]?.[d] ?? 0))
                   return (
@@ -129,11 +132,11 @@ export default function Dashboard() {
           title="Transfer matrix — where does RLVR generalize?"
           note="Δ accuracy vs zero-shot (reasoning mode). Rows: GRPO training set. Amber = gain, blue = loss."
         >
-          <div className="grid" style={{ gridTemplateColumns: 'auto repeat(4, 1fr)', gap: 2 }}>
+          <div className="grid" style={{ gridTemplateColumns: `auto repeat(${datasets.length}, 1fr)`, gap: 2 }}>
             <div />
-            {DATASETS.map((d) => (
+            {datasets.map((d) => (
               <div key={d} className="px-1 pb-1 text-center font-mono text-[10px] text-ink-400">
-                {DATASET_LABELS[d]}
+                {labels[d]}
               </div>
             ))}
             {TRANSFER_ROWS.map(([label], i) => (
@@ -141,12 +144,12 @@ export default function Dashboard() {
                 <div className="flex items-center pr-2 font-mono text-[11px] text-ink-300">
                   {label}
                 </div>
-                {DATASETS.map((d, j) => {
+                {datasets.map((d, j) => {
                   const delta = deltas[i][j]
                   return (
                     <div
                       key={`${label}-${d}`}
-                      title={delta == null ? 'Not evaluated' : `train ${label} → eval ${DATASET_LABELS[d]}: ${delta.toFixed(1)}`}
+                      title={delta == null ? 'Not evaluated' : `train ${label} → eval ${labels[d]}: ${delta.toFixed(1)}`}
                       className="flex h-12 items-center justify-center rounded font-mono text-sm text-ink-50"
                       style={{ background: delta == null ? '#202631' : deltaColor(delta, maxAbs) }}
                     >
@@ -168,7 +171,7 @@ export default function Dashboard() {
           note="Historical retention proxy: share of GQA completions longer than 100 characters."
         >
           <div className="space-y-3">
-            {data.ablation?.map((arm) => (
+            {data.retention_ablation?.map((arm) => (
               <div key={arm.weight}>
                 <div className="mb-1 flex justify-between font-mono text-[11px] text-ink-400">
                   <span>weight {arm.weight.toFixed(1)} · {arm.steps} steps</span>

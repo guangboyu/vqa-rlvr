@@ -1,4 +1,5 @@
 import io
+import json
 
 import pytest
 from PIL import Image
@@ -67,3 +68,12 @@ def test_black_image_condition_preserves_question_and_dimensions(monkeypatch):
         )
         assert "[DONE]" in response.text
     assert received == [("zero_shot", (9, 7), ((0, 0), (0, 0), (0, 0)), "What color?")]
+
+
+def test_dashboard_reads_the_report_export(monkeypatch):
+    monkeypatch.delenv("VQA_LIVE_MODELS", raising=False)
+    with TestClient(backend.app) as client:
+        served = client.get("/api/results").json()
+    export = json.loads((backend.ROOT / "results" / "report.json").read_text())
+    assert served == export
+    assert [d["name"] for d in served["datasets"]][-1] == "textvqa"  # OOD columns last

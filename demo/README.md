@@ -18,10 +18,10 @@ uv run --frozen uvicorn demo.backend.app:app --host 127.0.0.1 --port 8000
 Open `http://127.0.0.1:8000`. For frontend development, `npm run dev` serves Vite
 on port 5173 and proxies `/api` and `/examples` to port 8000.
 
-The dashboard opens the corrected comparison in `results/baselines/comparison.json`,
-kept as the campaign recorded it; `python -m scripts.report` regenerates the same numbers
-from the evaluation records. Switch between short and reasoning prompts, inspect scoring
-and response behavior, and compare fixed image interventions.
+The dashboard reads `results/report.json`, which `python -m scripts.report` writes from
+the same evaluation records as every table in the README and `docs/supplementary/`, so the
+two cannot disagree. Switch between short and reasoning prompts, inspect scoring and
+response behavior, and compare fixed image interventions.
 Historical experiments remain accessible with their original limitations;
 judge-adjusted scores are separate from official benchmark accuracy.
 
@@ -29,7 +29,7 @@ judge-adjusted scores are separate from official benchmark accuracy.
 
 Prepare the three 2B model paths listed in `backend/model_manager.py`. The default
 lineup uses the pinned Instruct revision and the corrected SFT/base-to-GRPO models
-from the [comparison walkthrough](../docs/baselines.md). Fresh adapters are prepared
+from the [corrected campaign](../docs/supplementary/results.md). Fresh adapters are prepared
 locally and have not been published. Historical Hub adapters correspond to older runs.
 Then enable model loading:
 

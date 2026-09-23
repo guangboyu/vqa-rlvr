@@ -18,6 +18,7 @@ from fastapi.staticfiles import StaticFiles
 from PIL import Image
 
 from demo.backend.model_manager import LINEUP, PROMPTS, ModelManager
+from vqar.eval.examples import black_image
 
 ROOT = Path(__file__).parent.parent.parent
 DIST = Path(__file__).parent.parent / "frontend" / "dist"
@@ -60,7 +61,7 @@ async def ask(
     pil = Image.open(io.BytesIO(await image.read())).convert("RGB")
     pil.thumbnail((1024, 1024))  # bound vision tokens for interactive latency
     if image_condition == "black":
-        pil = Image.new("RGB", pil.size)
+        pil = black_image(pil.size)
 
     queue: asyncio.Queue = asyncio.Queue()
     loop = asyncio.get_running_loop()
@@ -97,22 +98,8 @@ async def ask(
 
 @app.get("/api/results")
 def results() -> dict:
-    runs = {}
-    for path in sorted((ROOT / "results" / "runs").glob("*.json")):
-        run = json.loads(path.read_text())
-        if "eval" not in run:
-            continue
-        dataset = run["eval"]["dataset"]
-        run_id = run["run_id"].removesuffix(f"-{dataset}")
-        runs.setdefault(run_id, {})[dataset] = round(run["metrics"]["overall"] * 100, 1)
-    study_path = ROOT / "results" / "judge_study.json"
-    judge = json.loads(study_path.read_text()) if study_path.exists() else None
-    diagnostic_path = ROOT / "results" / "diagnostics.json"
-    diagnostics = json.loads(diagnostic_path.read_text()) if diagnostic_path.exists() else {}
-    comparison_path = ROOT / "results" / "baselines" / "comparison.json"
-    comparison = json.loads(comparison_path.read_text()) if comparison_path.exists() else None
-    return {"runs": runs, "judge_study": judge, "ablation": diagnostics.get("ablation", []),
-            "official_runs": diagnostics.get("official_runs", {}), "comparison": comparison}
+    """The report builder's export: the same records as every table in the repository."""
+    return json.loads((ROOT / "results" / "report.json").read_text())
 
 
 @app.get("/api/gallery")

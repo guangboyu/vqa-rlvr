@@ -84,10 +84,15 @@ def image_donors(rows, image_mode: str) -> list[int]:
     return donors
 
 
+def black_image(size: tuple[int, int]) -> PILImage.Image:
+    """A black RGB image of the given size, so the vision-token count is unchanged."""
+    return PILImage.new("RGB", size)
+
+
 def black_like(image: bytes) -> bytes:
-    """A black RGB image with the original size, so the vision-token count is unchanged."""
+    """The black image with the original's size, PNG-encoded."""
     with PILImage.open(io.BytesIO(image)) as original:
-        blank = PILImage.new("RGB", original.size)
+        blank = black_image(original.size)
     buffer = io.BytesIO()
     blank.save(buffer, format="PNG")
     return buffer.getvalue()
