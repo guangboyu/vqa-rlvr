@@ -10,7 +10,7 @@ from vqar.config import MAX_PIXELS
 from vqar.registry import DATASETS, PROMPTS
 
 IMAGE_MODES = ("original", "black", "swapped")
-EVAL_ROLES = ("dev", "test")
+EVAL_ROLES = ("dev", "test", "rl")  # rl only for the learnability pre-check
 EXTRACTION_RULE = "last_answer_tag_or_full_text"
 # The corrected campaign's rule; retention reports it beside mean output tokens.
 ANSWER_TAG_RULE = "raw text contains </answer>"
@@ -38,6 +38,9 @@ class Protocol:
         spec = DATASETS[self.dataset]
         if self.role not in EVAL_ROLES:
             raise ValueError(f"evaluation role must be one of {EVAL_ROLES}")
+        if self.role == "rl" and self.samples < 2:
+            raise ValueError("the rl role is read only by learnability protocols, which "
+                             "sample a group of at least two responses")
         if self.role not in spec.subsets:
             raise ValueError(f"{self.dataset} has no {self.role} role")
         if self.prompt not in PROMPTS:

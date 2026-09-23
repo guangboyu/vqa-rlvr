@@ -10,7 +10,7 @@ from datasets import Image
 from PIL import Image as PILImage
 
 from vqar.eval.protocol import Protocol
-from vqar.splits import load_role, read_split
+from vqar.splits import SEED, load_role, read_split
 
 
 @dataclass(frozen=True)
@@ -35,23 +35,27 @@ def to_example(row: dict) -> Example:
 
 
 def select_rows(protocol: Protocol, data_dir: Path, limit: int | None = None):
-    """The rows a protocol evaluates, in the split file's order, and the identity of that data.
+    """The rows a protocol evaluates and the identity of that data.
 
-    The identity names the source subsets and hashes the ordered (subset, row, question id)
-    selection, so it changes exactly when the evaluated rows change; editing another role
-    of the same split file leaves it alone. Swapped images also pin the donor of each row.
-    `limit` overrides the tier's question count (historical records only).
+    Dev and test rows keep the split file's order. The rl role (read only by the
+    learnability pre-check) is shuffled with the training seed, so a tier is a random sample
+    of the dataset's pool; a run that mixes datasets shuffles the combined pool, so its draw
+    order differs. The identity names the source subsets and hashes the ordered
+    (subset, row, question id) selection, so it changes exactly when the evaluated rows
+    change; editing another role of the same split file leaves it alone. Swapped images
+    also pin the donor of each row. `limit` overrides the tier's question count
+    (historical records only).
     """
-    rows = load_role(data_dir, [protocol.dataset], protocol.role, seed=None)
+    order = SEED if protocol.role == "rl" else None
+    rows = load_role(data_dir, [protocol.dataset], protocol.role, seed=order)
     split = read_split(data_dir, protocol.dataset)
     parts = split["roles"][protocol.role]
-    selection = [[part["subset"], index] for part in parts for index in part["indices"]]
     limit = limit or Protocol.TIERS[protocol.tier]
     if limit is not None:
         rows = rows.select(range(min(limit, len(rows))))
-        selection = selection[:limit]
     rows = rows.cast_column("image", Image(decode=False))
-    selection = [entry + [qid] for entry, qid in zip(selection, rows["qid"], strict=True)]
+    selection = [list(entry) for entry in zip(rows["source_subset"], rows["source_row"],
+                                              rows["qid"], strict=True)]
     data = {"subsets": {part["subset"]: split["subsets"][part["subset"]]["fingerprint"]
                         for part in parts},
             "selection_sha256": sha256_json(selection)}

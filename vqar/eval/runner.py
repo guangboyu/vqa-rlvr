@@ -196,7 +196,47 @@ def summarize(lines: list[dict], dataset: str) -> dict:
                              abs_tol=1e-12)
             for line in lines
         )
+    if len(lines) > metrics["n"]:
+        metrics.update(sampled_metrics(lines, dataset))
     return metrics
+
+
+def sampled_metrics(lines: list[dict], dataset: str) -> dict:
+    """pass@k per scorer variant, and learnability under the training reward.
+
+    pass@k is the share of questions with at least one fully correct sample. Learnability
+    scores each sample with the GRPO correctness reward (the tagged answer, normalized
+    scorer), so it counts the prompts whose sample group would carry a learning signal:
+    those whose pass rate lies strictly between 0 and 1.
+    """
+    from vqar.rewards import correctness_reward
+
+    by_question = defaultdict(list)
+    for line in lines:
+        by_question[line["qid"]].append(line)
+    k = len(next(iter(by_question.values())))
+    result = {"samples_per_question": k, "pass_at_k": {}}
+    for variant in SCORER_VARIANTS:
+        if lines[0]["scores"][variant] is None:
+            result["pass_at_k"][variant] = None
+            continue
+        result["pass_at_k"][variant] = sum(
+            max(line["scores"][variant] for line in group) >= 1.0 - 1e-12
+            for group in by_question.values()
+        ) / len(by_question)
+    pass_rates = []
+    for group in by_question.values():
+        rewards = correctness_reward(
+            prompts=None, completions=[line["raw"] for line in group],
+            answers=[line["answers"] for line in group], dataset=[dataset] * len(group))
+        pass_rates.append(sum(reward >= 1.0 - 1e-12 for reward in rewards))
+    histogram = {f"{hits}/{k}": pass_rates.count(hits) for hits in range(k + 1)}
+    result["learnability"] = {
+        "rule": "GRPO correctness reward: normalized score of the tagged answer",
+        "correct_samples_histogram": histogram,
+        "fraction_between_0_and_1": sum(0 < hits < k for hits in pass_rates) / len(pass_rates),
+    }
+    return result
 
 
 def load_progress(directory: Path, identity: dict, qids: list[str], samples: int) -> list[dict]:

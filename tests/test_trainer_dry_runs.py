@@ -3,25 +3,12 @@
 import importlib
 
 import pytest
-from fixtures import png, save_subset, write_splits
-
-LAYOUT = {  # subset -> (dataset, references per question)
-    "vqav2_sft": ("vqav2", 1), "vqav2_rl": ("vqav2", 1), "vqav2_eval": ("vqav2", 10),
-    "gqa_sft": ("gqa", 1), "gqa_rl": ("gqa", 1), "gqa_eval": ("gqa", 1),
-    "clevr_rl": ("clevr", 1), "clevr_val": ("clevr", 1), "clevr_test": ("clevr", 1),
-    "textvqa_eval": ("textvqa", 10),
-}
+from fixtures import every_dataset
 
 
 @pytest.fixture
 def repo(tmp_path, monkeypatch):
-    data = tmp_path / "data"
-    for number, (subset, (dataset, references)) in enumerate(LAYOUT.items()):
-        save_subset(data, subset, dataset, [
-            (f"{subset}-{i}", png(20 * number + i), "How many?", ["2"] * references, "number")
-            for i in range(3)
-        ])
-    write_splits(data, ["vqav2", "gqa", "clevr", "textvqa"])
+    every_dataset(tmp_path / "data")
     import train_sft
     import vqar.rl
 

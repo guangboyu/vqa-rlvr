@@ -154,6 +154,21 @@ first → last. KL is absent because these runs used no KL penalty.
 | `opd2-self` | 0.64 → 0.61 | 0.507 | 0.75 → 0.68 | 0.000 | 150 → 132 | 1,200 |
 <!-- /report:diagnostics -->
 
+## Learnability of the RL pool
+
+Before an RL run, `python -m scripts.learnability` takes a seeded random sample of each
+dataset's RL pool, draws a group of eight responses per prompt from the starting model with
+the run's rollout settings, and scores them with the GRPO correctness reward. Only prompts whose responses are neither all
+right nor all wrong give GRPO a gradient.
+
+<!-- report:learnability -->
+| Model | Dataset | Prompts | Samples each | Learnable (%) | Never correct (%) | Always correct (%) |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| `base2` | CLEVR counting | 500 | 8 | 48.4 | 0.0 | 51.6 |
+| `base2` | GQA | 500 | 8 | 42.0 | 26.6 | 31.4 |
+| `base2` | VQAv2 | 500 | 8 | 47.8 | 19.8 | 32.4 |
+<!-- /report:learnability -->
+
 ## Learning curves
 
 Each point evaluates a saved adapter on the dev tier through vLLM's LoRA serving rather

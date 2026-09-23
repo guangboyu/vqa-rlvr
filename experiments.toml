@@ -1,5 +1,7 @@
 # The experiment matrix: the arms the report shows, and the protocols each arm is evaluated
 # under. Records match arms by label. `python -m scripts.report` regenerates the tables.
+# The matrix declares accuracy cells; the corrected campaign's image-intervention records
+# (first 128 questions) predate the tiers and are reported without being declared here.
 
 [[arms]]
 label = "base2"

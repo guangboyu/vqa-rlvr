@@ -8,12 +8,11 @@ only in the labeled history table, never beside the corrected campaign.
 
 import json
 import re
-import tomllib
-from dataclasses import dataclass
 from pathlib import Path
 from typing import NamedTuple
 
 from vqar.eval.legacy import july_records
+from vqar.eval.matrix import Arm, load_matrix
 from vqar.eval.record import RunRecord
 from vqar.registry import DATASETS
 
@@ -24,23 +23,12 @@ BLOCK = re.compile(r"(<!-- report:(?P<name>[\w-]+) -->\n)(?P<body>.*?)(<!-- /rep
 PROMPT_ORDER = ("short", "reasoning")
 
 
-@dataclass(frozen=True)
-class Arm:
-    label: str
-    name: str
-    model: str
-    revision: str | None = None
-    gpu_memory_utilization: float = 0.8
-
-
-def load_matrix(path: Path) -> tuple[list[Arm], list[dict]]:
-    """The arms and protocols declared in the experiment matrix file."""
-    matrix = tomllib.loads(Path(path).read_text())
-    return [Arm(**arm) for arm in matrix["arms"]], matrix.get("protocols", [])
-
-
 class Cell(NamedTuple):
-    """Where a record sits in the tables; `step` is None except for checkpoint evaluations."""
+    """Where a record sits in the tables; `step` is None except for checkpoint evaluations.
+
+    Greedy decoding is the default; sampled records (temperature, samples) get cells of
+    their own.
+    """
 
     arm: str
     dataset: str
@@ -49,6 +37,8 @@ class Cell(NamedTuple):
     prompt: str
     image_mode: str
     step: int | None
+    temperature: float = 0
+    samples: int = 1
 
 
 def load_cells(records_dir: Path) -> dict[Cell, RunRecord]:
@@ -58,7 +48,7 @@ def load_cells(records_dir: Path) -> dict[Cell, RunRecord]:
         record = RunRecord.load(path)
         p = record.protocol
         key = Cell(record.model["label"], p["dataset"], p["role"], p["tier"], p["prompt"],
-                   p["image_mode"], record.model.get("step"))
+                   p["image_mode"], record.model.get("step"), p["temperature"], p["samples"])
         if key in cells:
             raise ValueError(f"Two records claim one table cell {key}: {cells[key].path}, {path}")
         cells[key] = record
@@ -165,7 +155,7 @@ def interventions_table(arms: list[Arm], cells: dict) -> str:
             for mode in ("black", "swapped"):
                 found = {cell.dataset: record for cell, record in cells.items()
                          if (cell.arm, cell.prompt, cell.image_mode) == (arm.label, prompt, mode)
-                         and cell.step is None}
+                         and cell.role == "test" and cell.step is None and cell.samples == 1}
                 if not found:
                     continue
                 row = [arm.name, prompt, mode]
@@ -209,7 +199,7 @@ def curves_table(cells: dict) -> str:
     points = sorted(
         ((record.model["run"], cell.step, cell.dataset, cell.prompt), record)
         for cell, record in cells.items()
-        if cell.role == "dev" and cell.step is not None
+        if cell.role == "dev" and cell.step is not None and cell.samples == 1
     )
     if not points:
         return "No checkpoint dev evaluations have been recorded yet.\n"
@@ -269,6 +259,26 @@ def diagnostics_table(exposure: dict) -> str:
                   "Clip fraction (mean)", "Completion tokens", "Distinct prompts"], rows, 1)
 
 
+def learnability_table(cells: dict) -> str:
+    """Learnability pre-checks: sampled responses to RL pool prompts under the reward rule."""
+    rows = []
+    for cell, record in sorted(cells.items(), key=lambda item: str(item[0])):
+        if cell.role != "rl":
+            continue
+        learnability = record.metrics["learnability"]
+        histogram = learnability["correct_samples_histogram"]
+        k = record.metrics["samples_per_question"]
+        rows.append([f"`{cell.arm}`", DATASETS[cell.dataset].display_name,
+                     f"{record.metrics['n']:,}", str(k),
+                     percent(learnability["fraction_between_0_and_1"], 1),
+                     percent(histogram[f"0/{k}"] / record.metrics["n"], 1),
+                     percent(histogram[f"{k}/{k}"] / record.metrics["n"], 1)])
+    if not rows:
+        return "No learnability pre-check has been recorded yet.\n"
+    return table(["Model", "Dataset", "Prompts", "Samples each", "Learnable (%)",
+                  "Never correct (%)", "Always correct (%)"], rows, 2)
+
+
 def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
     """Every markdown block, and the JSON export for the demo."""
     arms, _ = load_matrix(root / "experiments.toml")
@@ -284,6 +294,7 @@ def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
         "curves": curves_table(cells),
         "exposure": exposure_table(exposure),
         "diagnostics": diagnostics_table(exposure),
+        "learnability": learnability_table(cells),
         "history": history_table(history),
     }
     export = {

@@ -83,11 +83,8 @@ def main() -> None:
     except ValueError as error:
         parser.error(str(error))
 
-    model = ModelRef(args.model, args.revision, args.label, args.run, args.step)
-    # Pin a Hub model to the commit its records name, so generation loads exactly that.
-    revision = model.identity()["weights"].get("revision")
-    model = ModelRef(args.model, revision, args.label, args.run, args.step)
-    generator = VLLMGenerator(args.model, revision, args.max_model_len,
+    model = ModelRef(args.model, args.revision, args.label, args.run, args.step).pinned()
+    generator = VLLMGenerator(model.path, model.revision, args.max_model_len,
                               args.gpu_memory_utilization)
     for protocol in cells:
         cell = find_cell(model, protocol, data_dir=args.data_dir, records_dir=args.records_dir)

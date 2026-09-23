@@ -1,0 +1,117 @@
+{
+  "schema": "run-record/1",
+  "legacy": false,
+  "model_id": "dec3ad6e3a1c306cd9a470b55b5f1859b34d784e64366f39c36ddea3ae7b9187",
+  "protocol_id": "fdb19e6372104810b9c0d58a4c73ec9ea3caf73b76386180420f9596d0a01108",
+  "model": {
+    "source": "Qwen/Qwen3-VL-2B-Instruct",
+    "label": "base2",
+    "run": null,
+    "step": null,
+    "weights": {
+      "hub": "Qwen/Qwen3-VL-2B-Instruct",
+      "revision": "89644892e4d85e24eaac8bacfd4f463576704203"
+    }
+  },
+  "protocol": {
+    "dataset": "gqa",
+    "ladder": "in-domain",
+    "role": "rl",
+    "tier": "dev",
+    "question_limit": 500,
+    "prompt": "reasoning",
+    "prompt_text": "{question}\nFirst think step by step inside <think> </think> tags, then write only the final answer inside <answer> </answer> tags.",
+    "max_tokens": 640,
+    "temperature": 1.0,
+    "samples": 8,
+    "image_mode": "original",
+    "max_pixels": 786432,
+    "scorers": {
+      "official": "exact_string_match/v1",
+      "normalized": "exact_match/v1"
+    },
+    "extraction": "last_answer_tag_or_full_text",
+    "answer_tag_rule": "raw text contains </answer>",
+    "data": {
+      "subsets": {
+        "gqa_rl": "9e1c4cb5499c8971",
+        "gqa_sft": "290bdf6a14fb0f7f"
+      },
+      "selection_sha256": "510737b6134db61a7c72302b303281ff5d80f70ccdc98010aac94de578c52836"
+    },
+    "seed": 0
+  },
+  "metrics": {
+    "n": 500,
+    "official": {
+      "overall": 0.35375,
+      "by_answer_type": {
+        "choose": 0.8360655737704918,
+        "compare": 0.20454545454545456,
+        "logical": 0.48674242424242425,
+        "query": 0.26037549407114624,
+        "verify": 0.23509174311926606
+      }
+    },
+    "normalized": {
+      "overall": 0.563,
+      "by_answer_type": {
+        "choose": 0.8381147540983607,
+        "compare": 0.4772727272727273,
+        "logical": 0.7613636363636364,
+        "query": 0.34634387351778656,
+        "verify": 0.8004587155963303
+      }
+    },
+    "mean_output_tokens": 130.306,
+    "truncated_fraction": 0.00475,
+    "answer_tag_fraction": 0.97425,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.554,
+    "answers_scored_differently": 837,
+    "samples_per_question": 8,
+    "pass_at_k": {
+      "official": 0.62,
+      "normalized": 0.734
+    },
+    "learnability": {
+      "rule": "GRPO correctness reward: normalized score of the tagged answer",
+      "correct_samples_histogram": {
+        "0/8": 133,
+        "1/8": 23,
+        "2/8": 23,
+        "3/8": 18,
+        "4/8": 26,
+        "5/8": 18,
+        "6/8": 35,
+        "7/8": 67,
+        "8/8": 157
+      },
+      "fraction_between_0_and_1": 0.42
+    }
+  },
+  "provenance": {
+    "code_version": "d9ad735bef1736e1a109ebe3c471240b66899e85",
+    "uncommitted_changes": true,
+    "source_sha256": {
+      "vqar/eval/__init__.py": "2aa88c809409a57502d0d9b2893e14c3b5bf99d971bceefcc1ed4716ef295f81",
+      "vqar/eval/examples.py": "d414ffc71bd0da4a759c7253c00ae764a357299561d28922afeb4cc6276b7fb0",
+      "vqar/eval/protocol.py": "7d75429bba501ad40b0cfa34e3d0eed620f1c0fe0ab3334f3d57e88be96e8406",
+      "vqar/eval/record.py": "27f749e9f7f8088d4d255c8d2ecf16a42fe73caee190ebbca07cd3a16d72a3a4",
+      "vqar/eval/runner.py": "423b8ad669aab120222c9cfa7029de801d8bfd9afb6876c51e65c9d06d2d269b",
+      "vqar/inference.py": "6e1fa96ae36b72592ba17a5dc46c259726e71be779429902ce006833c0126485",
+      "vqar/config.py": "56485c5c1116f182e9e5970a119a023d1e96a814ef407b2d5418cdf50e6fd84e",
+      "vqar/metrics.py": "3a18e4b64783f1b09025a0f79faed934f3ab6671a5c63d85216d55c2bddcf5cb",
+      "vqar/registry.py": "7dc2faf566c4544e574057d6a67eb826cf15b62648c2bfe6738adfc9c2721d0b",
+      "vqar/splits.py": "ee74a44a39b21181266b12207da5f1d02d8c8c19b2e2033c41fadbe89d0b4acd",
+      "uv.lock": "91a36d0647e782cf10edf11da067557746ca1d8a3ed9e3273485ae8e7df079e5"
+    },
+    "versions": {
+      "torch": "2.11.0+cu129",
+      "transformers": "5.13.0",
+      "vllm": "0.23.0+cu129",
+      "datasets": "5.0.0"
+    },
+    "timestamp": "2026-09-23T12:44:32+00:00"
+  }
+}

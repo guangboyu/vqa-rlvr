@@ -3,7 +3,7 @@
 import functools
 import hashlib
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 from vqar.eval.protocol import Protocol
@@ -35,6 +35,12 @@ class ModelRef:
         if self.adapter:
             identity["adapter"] = self.adapter
         return identity
+
+    def pinned(self) -> "ModelRef":
+        """This model with a Hub revision resolved to its commit, so generation loads
+        exactly the weights its records name."""
+        weights = self.identity()["weights"]
+        return replace(self, revision=weights.get("base", weights).get("revision"))
 
 
 def weights_sha256(directory: Path) -> str:

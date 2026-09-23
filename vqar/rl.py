@@ -14,6 +14,7 @@ from vqar.training import ROOT
 # Keep the historical image geometry for comparable runs. Preserve aspect ratio
 # within a fixed canvas so rollout and training use the same vision-token budget.
 RL_IMAGE_SIZE = 608  # 19x19 = 361 vision tokens/image
+ROLLOUT_TEMPERATURE = 1.0
 
 
 def to_uniform_canvas(image):
@@ -154,7 +155,7 @@ def grpo_config(preset, output_dir: Path, run_name: str, model_init_kwargs: dict
         learning_rate=preset.learning_rate,
         max_steps=max_steps,
         max_completion_length=preset.max_completion_length,
-        temperature=1.0,
+        temperature=ROLLOUT_TEMPERATURE,
         beta=beta,
         reward_weights=reward_weights,
         use_vllm=True,

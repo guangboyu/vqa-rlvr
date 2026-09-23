@@ -114,6 +114,9 @@ def load_role(data_dir: Path, datasets, role: str, seed: int | None = SEED):
                                                                 qid_hash(subset)):
                 raise ValueError(f"{name} changed since its split file was written; rebuild it.")
             subset = subset.add_column("image_key", entry["image_keys"])
+            # Where each row came from, so shuffled rows can still be identified.
+            subset = subset.add_column("source_subset", [name] * len(subset))
+            subset = subset.add_column("source_row", list(range(len(subset))))
             parts.append(subset.select(part["indices"]))
     rows = concatenate_datasets(parts)
     return rows if seed is None else rows.shuffle(seed=seed)
