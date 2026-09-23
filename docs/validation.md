@@ -188,9 +188,7 @@ For independent reproduction, save these files as `vqav2.py`, `textvqa.py`, and
 ```bash
 uv run --frozen python -m scripts.check_metrics --sources-dir path/to/evaluators \
   --output results/metric-parity-reproduction.json
-uv run --frozen python -m scripts.rescore --metric official
-uv run --frozen python -m scripts.make_diagnostics
-uv run --frozen python -m scripts.make_tables --metric official
+uv run --frozen python -m scripts.report
 ```
 
 Original VQA normalization is conditional: unanimous answers can bypass
@@ -221,8 +219,8 @@ and should not be treated as a random sample.
 
 - Reproduce the single-reference reward edge case with
   `uv run --frozen pytest tests/test_metrics.py tests/test_rewards.py`.
-- Compare official and normalized scores on the same saved predictions with
-  `scripts.rescore` and `scripts.make_tables`; inspect an example in the gallery.
+- Compare official and normalized scores on the same saved predictions in
+  `docs/supplementary/results.md`; inspect an example in the gallery.
 - Inspect `run_config.json` and `run_summary.json` after a two-update GRPO check.
   Count prompt groups, response tokens, zero-variance rewards, and actual updates.
 - Read `train_opd.py` alongside the token-level checks in `results/validation.json`.

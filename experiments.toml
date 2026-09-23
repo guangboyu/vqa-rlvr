@@ -1,0 +1,47 @@
+# The experiment matrix: the arms the report shows, and the protocols each arm is evaluated
+# under. Records match arms by label. `python -m scripts.report` regenerates the tables.
+
+[[arms]]
+label = "base2"
+name = "Instruct 2B"
+model = "Qwen/Qwen3-VL-2B-Instruct"
+revision = "89644892e4d85e24eaac8bacfd4f463576704203"
+
+[[arms]]
+label = "sft2"
+name = "SFT"
+model = "checkpoints/merged/sharedpool_20260913_sft_2b"
+
+[[arms]]
+label = "grpo2-base"
+name = "Instruct → GRPO"
+model = "checkpoints/merged/sharedpool_20260913_grpo_2b_base"
+
+[[arms]]
+label = "grpo2-sft"
+name = "SFT → GRPO"
+model = "checkpoints/merged/sharedpool_20260913_grpo_2b_sft"
+
+[[arms]]
+label = "opd2-self"
+name = "Instruct → gold-conditioned OPD"
+model = "checkpoints/merged/sharedpool_20260913_opd_2b_self"
+
+[[arms]]
+label = "base8"
+name = "Instruct 8B"
+model = "Qwen/Qwen3-VL-8B-Instruct"
+revision = "0c351dd01ed87e9c1b53cbc748cba10e6187ff3b"
+gpu_memory_utilization = 0.88
+
+[[arms]]
+label = "grpo8-base"
+name = "Instruct 8B → GRPO"
+model = "checkpoints/merged/sharedpool_20260913_grpo_8b_base"  # rebuild: see docs
+gpu_memory_utilization = 0.88
+
+[[protocols]]
+datasets = ["vqav2", "gqa", "clevr", "textvqa"]
+prompts = ["short", "reasoning"]
+role = "test"
+tier = "full"

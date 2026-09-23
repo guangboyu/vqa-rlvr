@@ -50,15 +50,28 @@ matched evaluation under both prompts.
 
 ## Corrected 2B results
 
-Dataset-author accuracy (%), greedy short answers, one training seed. Both GRPO
-arms use the same 1,200 training questions in the same order for 300 updates.
+Dataset-author (official) accuracy, %, with the normalized scorer in parentheses;
+greedy decoding, one training seed. Both 2B GRPO arms use the same 1,200 training
+questions in the same order for 300 updates.
 
-| Starting point and training | VQAv2 | GQA | CLEVR counting | TextVQA |
-|---|---:|---:|---:|---:|
-| Instruct | 77.87 | 59.45 | 97.67 | 80.55 |
-| SFT | 79.87 | 62.35 | 99.40 | 79.83 |
-| Instruct → GRPO | 78.02 | 59.55 | 98.27 | 80.38 |
-| SFT → GRPO | 79.85 | 62.44 | 99.40 | 79.82 |
+<!-- report:matrix -->
+| Arm | Prompt | VQAv2 | GQA | CLEVR counting | TextVQA (far-OOD) |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Instruct 2B | short | 77.87 (77.91) | 59.45 (59.46) | 97.67 (97.67) | 80.55 (80.56) |
+| Instruct 2B | reasoning | 55.06 (64.68) | 36.13 (51.95) | 87.13 (87.13) | 69.60 (69.61) |
+| SFT | short | 79.87 (79.89) | 62.35 (62.35) | 99.40 (99.40) | 79.83 (79.86) |
+| SFT | reasoning | 67.99 (68.17) | 56.61 (57.00) | 92.10 (92.10) | 68.78 (68.79) |
+| Instruct → GRPO | short | 78.02 (78.06) | 59.55 (59.55) | 98.27 (98.27) | 80.38 (80.39) |
+| Instruct → GRPO | reasoning | 61.79 (69.01) | 44.90 (54.09) | 86.10 (86.10) | 74.23 (74.22) |
+| SFT → GRPO | short | 79.85 (79.87) | 62.44 (62.44) | 99.40 (99.40) | 79.82 (79.84) |
+| SFT → GRPO | reasoning | 69.18 (70.80) | 53.70 (54.86) | 97.80 (97.80) | 74.28 (74.28) |
+| Instruct → gold-conditioned OPD | short | 77.79 (77.83) | 59.72 (59.72) | 97.73 (97.73) | 80.36 (80.36) |
+| Instruct → gold-conditioned OPD | reasoning | 68.61 (69.23) | 51.35 (51.58) | 87.10 (87.10) | 72.65 (72.65) |
+| Instruct 8B | short | 81.18 (81.22) | 61.66 (61.66) | 99.67 (99.67) | 83.98 (84.00) |
+| Instruct 8B | reasoning | 63.67 (68.75) | 46.84 (52.27) | 96.97 (96.97) | 75.31 (75.31) |
+| Instruct 8B → GRPO | short | 81.12 (81.16) | 61.78 (61.78) | 99.57 (99.57) | 84.07 (84.09) |
+| Instruct 8B → GRPO | reasoning | 77.37 (78.63) | 59.43 (59.82) | 97.30 (97.30) | 80.78 (80.80) |
+<!-- /report:matrix -->
 
 SFT improves three datasets; adding this short GRPO run changes its short-answer
 scores by less than 0.1 percentage points each. Under the reasoning prompt,
@@ -136,12 +149,12 @@ suite is not reproduced by an accuracy-only score.
 
 `evaluate.py` scores every prediction with both variants: `official` (the dataset
 authors' evaluator, the primary column) and `normalized` (the historical rule, shown
-beside it). Training rewards retain their separate, documented rules. Existing prediction and result files are preserved. To rescore them and
-refresh the dashboard:
+beside it). Training rewards retain their separate, documented rules. Every table
+comes from the stored evaluation records; regenerate them, and the dashboard's data,
+with:
 
 ```bash
-uv run --frozen python -m scripts.rescore --metric official
-uv run --frozen python -m scripts.make_diagnostics
+uv run --frozen python -m scripts.report
 ```
 
 The new scorers matched the authors' evaluator code on **626,074 saved predictions
@@ -149,8 +162,8 @@ across 89 runs**, with zero per-question mismatches. For GQA this validates the
 author's accuracy expression, not its full evaluation suite. Source versions and
 reproduction steps are in [validation notes](docs/validation.md).
 
-[`results/diagnostics.json`](results/diagnostics.json) contains generated official
-and historical scores with source hashes. Original `results/*.json` and
+[`results/diagnostics.json`](results/diagnostics.json) keeps the July runs' official
+scores with source hashes, as recorded. Original `results/*.json` and
 `results/preds/` remain historical artifacts. Do not combine their scores across
 metric variants without labeling the change.
 

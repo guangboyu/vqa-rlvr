@@ -18,10 +18,10 @@ uv run --frozen uvicorn demo.backend.app:app --host 127.0.0.1 --port 8000
 Open `http://127.0.0.1:8000`. For frontend development, `npm run dev` serves Vite
 on port 5173 and proxies `/api` and `/examples` to port 8000.
 
-The dashboard opens the corrected comparison in `results/baselines/comparison.json`
-when available. Switch between short and reasoning prompts, inspect scoring and
-response behavior, and compare fixed image interventions. Its summaries are
-recreated by `python -m scripts.summarize_comparison results/baselines`.
+The dashboard opens the corrected comparison in `results/baselines/comparison.json`,
+kept as the campaign recorded it; `python -m scripts.report` regenerates the same numbers
+from the evaluation records. Switch between short and reasoning prompts, inspect scoring
+and response behavior, and compare fixed image interventions.
 Historical experiments remain accessible with their original limitations;
 judge-adjusted scores are separate from official benchmark accuracy.
 
@@ -52,6 +52,6 @@ Live inference uses Transformers and bounds image size for responsiveness, so it
 responses can differ from the recorded vLLM evaluations.
 
 Recorded examples retain their prediction run IDs and questions. Refresh them with
-`uv run --frozen python -m scripts.make_diagnostics --gallery-only` after restoring
+`uv run --frozen python -m scripts.make_gallery` after restoring
 the predictions and VQAv2 evaluation subset. The generator prefers the completed
 four-arm comparison; historical examples remain available when those files are absent.

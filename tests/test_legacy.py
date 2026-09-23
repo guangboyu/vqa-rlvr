@@ -75,6 +75,15 @@ def test_a_saved_score_that_the_harness_disagrees_with_is_rejected(data_dir, tmp
         corrected_records(baselines, data_dir, {"arm": {"sha256": "w"}})
 
 
+def test_predictions_for_other_questions_are_rejected(data_dir, tmp_path):
+    baselines = tmp_path / "results" / "baselines"
+    (q1, t1, a1, y1), _ = QUESTIONS
+    write_campaign_run(baselines, "evaluation", "arm-short", "original", None, [
+        prediction("q9", t1, a1, y1, "cat", 1.0), prediction(q1, t1, a1, y1, "cat", 1.0)])
+    with pytest.raises(ValueError, match="questions differ from the current split files"):
+        corrected_records(baselines, data_dir, {"arm": {"sha256": "w"}})
+
+
 def test_july_runs_carry_both_variants_when_rescored(tmp_path):
     results = tmp_path / "results"
     (results / "runs").mkdir(parents=True)

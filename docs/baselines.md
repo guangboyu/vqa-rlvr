@@ -186,18 +186,19 @@ scores are not ground-truth accuracy on altered images.
 ## Inspect saved evidence without a GPU
 
 ```bash
-uv run --frozen python -m scripts.make_tables \
-  --results-dir results/baselines/evaluation
-uv run --frozen python -m scripts.summarize_comparison results/baselines
+uv run --frozen python -m scripts.report
 uv run --frozen python -m scripts.summarize_training \
   results/baselines/training/grpo2-base results/baselines/training/grpo2-sft \
   results/baselines/training/grpo8-base --output results/baselines/training-exposure.json
-uv run --frozen python -m scripts.make_diagnostics --gallery-only
+uv run --frozen python -m scripts.make_gallery
 ```
 
-Tables reject mismatched question cohorts, evaluation code, scorer settings, or
-decoding. The comparison report adds normalized scoring, a lowercase diagnostic,
-response length, truncation, answer-tag rates, and paired image interventions.
+The report reads the stored evaluation records; each record names its protocol, so
+cells evaluated under different questions, prompts, scorers, or decoding never share a
+column. It adds normalized scoring, a lowercase diagnostic, response length,
+truncation, answer-tag rates, and paired image interventions. With the saved
+predictions present, `pytest tests/test_legacy.py` recomputes every stored campaign
+record from them.
 The training report checks the actual prompt order and measures reward variation.
 Regenerating it also needs the materialized training-data bundle; its saved JSON
 is already included. Saved samples of training completions are included under

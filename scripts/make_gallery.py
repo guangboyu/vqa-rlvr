@@ -1,9 +1,11 @@
-"""Build dashboard summaries and recorded examples from saved predictions."""
+"""Rebuild the demo's recorded gallery from saved predictions: python -m scripts.make_gallery
+
+Needs the corrected campaign's predictions and the VQAv2 test subset; without them the
+recorded gallery stays as it is."""
 
 import argparse
 import hashlib
 import json
-import statistics
 from pathlib import Path
 
 from vqar.inference import extract_answer
@@ -211,70 +213,7 @@ def make_gallery():
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--rescored-dir", type=Path, default=ROOT / "results/rescored/official")
-    parser.add_argument("--gallery-only", action="store_true",
-                        help="refresh recorded examples without rebuilding historical tables")
-    args = parser.parse_args()
-    if args.gallery_only:
-        make_gallery()
-        return
-    official, sources, inventory = {}, {}, {}
-    paths = sorted(args.rescored_dir.glob("*.json"))
-    if not paths:
-        raise SystemExit("No rescored runs found; run python -m scripts.rescore --metric official.")
-    for path in paths:
-        run = json.loads(path.read_text())
-        if run["eval"].get("metric_variant") != "official":
-            raise ValueError(f"{path} does not use the official scoring variant")
-        dataset = run["eval"]["dataset"]
-        name = run["run_id"].removesuffix(f"-{dataset}")
-        official.setdefault(name, {})[dataset] = round(run["metrics"]["overall"] * 100, 1)
-        sources[run["run_id"]] = run["rescore"]
-        model_name = Path(run.get("model", {}).get("base", "")).name
-        config_path = ROOT / "checkpoints" / model_name / "run_config.json"
-        training_config = json.loads(config_path.read_text()) if config_path.is_file() else None
-        inventory[run["run_id"]] = {
-            "model": run.get("model"),
-            "generation": run.get("gen"),
-            "evaluation": run["eval"],
-            "generation_git_sha": run.get("git_sha"),
-            "training_config": training_config,
-            "training_status": "not established by evaluation artifact",
-        }
-
-    ablation = []
-    for weight, steps, name in [
-        (0.0, 300, "grpo_2b_fmt0_reasoning"),
-        (0.2, 500, "grpo_2b_main_base_reasoning"),
-        (0.5, 300, "grpo_2b_fmt05_reasoning"),
-    ]:
-        path = ROOT / "results/preds" / f"{name}-gqa.jsonl"
-        if not path.exists():
-            continue
-        records = [json.loads(line) for line in path.read_text().splitlines()]
-        lengths = [len(record["raw"]) for record in records]
-        ablation.append(
-            dict(
-                weight=weight,
-                steps=steps,
-                run_id=name,
-                n=len(lengths),
-                retention=round(100 * sum(n > 100 for n in lengths) / len(lengths), 1),
-                median_characters=statistics.median(lengths),
-                source_sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
-            )
-        )
-    result = {
-        "retention_definition": "raw completion longer than 100 characters",
-        "official_runs": official,
-        "ablation": ablation,
-        "sources": sources,
-        "run_inventory": inventory,
-    }
-    path = ROOT / "results/diagnostics.json"
-    path.write_text(json.dumps(result, indent=2) + "\n")
-    print(f"{path}: {len(sources)} scored runs, {len(ablation)} retention summaries")
+    argparse.ArgumentParser(description=__doc__).parse_args()
     make_gallery()
 
 
