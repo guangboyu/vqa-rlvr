@@ -1,8 +1,8 @@
-"""Run presets: named, frozen dataclass configs selected via --preset <name>.
+"""Training presets: named, frozen dataclass configs selected via --preset <name>.
 
-Every entrypoint takes a preset name plus a handful of override flags; the resolved
-config is serialized into the run's results JSON and W&B config for reproducibility.
-Presets are added milestone by milestone (eval → sft → grpo).
+Every trainer takes a preset name plus a handful of override flags; the resolved config
+is serialized into the run's provenance and W&B config for reproducibility. Evaluation
+settings are declared as protocols in `vqar.eval` instead.
 """
 
 from dataclasses import asdict, dataclass, replace
@@ -38,37 +38,6 @@ RL_RECIPE = dict(
 )
 
 HARDWARE_PROFILES = ("legacy", "24gb", "80gb", "96gb")
-
-
-@dataclass(frozen=True)
-class EvalPreset:
-    name: str
-    model: str  # HF model id or local path to a merged checkpoint
-    template: str = "short"  # a vqar.registry.PROMPTS name
-    datasets: tuple[str, ...] = ()  # empty: every registered dataset with a test role
-    max_tokens: int = 64  # 256+ needed for the reasoning template
-    max_model_len: int = 4096
-    gpu_memory_utilization: float = 0.8
-
-
-EVAL_PRESETS: dict[str, EvalPreset] = {
-    p.name: p
-    for p in [
-        EvalPreset(name="zero_shot_2b", model=MODEL_2B),
-        # 17GB of bf16 weights: give vLLM most of the card or KV-cache allocation fails
-        EvalPreset(name="zero_shot_8b", model=MODEL_8B, gpu_memory_utilization=0.88),
-        EvalPreset(
-            name="zero_shot_2b_reasoning", model=MODEL_2B, template="reasoning", max_tokens=512
-        ),
-        EvalPreset(
-            name="zero_shot_8b_reasoning",
-            model=MODEL_8B,
-            template="reasoning",
-            max_tokens=512,
-            gpu_memory_utilization=0.88,
-        ),
-    ]
-}
 
 
 @dataclass(frozen=True)

@@ -18,6 +18,9 @@ the RL reward).
 
 import re
 
+# Bump when any scorer's behavior changes: it is part of every evaluation protocol's identity.
+SCORING_VERSION = 1
+
 CONTRACTIONS = {
     "aint": "ain't", "arent": "aren't", "cant": "can't", "couldve": "could've",
     "couldnt": "couldn't", "couldn'tve": "couldn't've", "couldnt've": "couldn't've",

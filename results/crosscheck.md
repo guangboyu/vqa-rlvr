@@ -9,7 +9,7 @@ community-standard harness before any training claims are made.
 - Task: GQA testdev_balanced (identical underlying population for both harnesses).
 - lmms-eval: `0.7.2` (source install @ `047ec52`), task `gqa`, `--limit 1000`
   (first 1000 testdev docs), transformers backend, sdpa attention.
-- Ours: `evaluate.py --preset zero_shot_2b --datasets gqa` — vLLM backend, full
+- Ours: `evaluate.py --preset zero_shot_2b --datasets gqa` (July command line) — vLLM backend, full
   12,578-question testdev, same "answer using a single word or phrase" prompt suffix.
 
 ## Result

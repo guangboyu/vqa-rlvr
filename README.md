@@ -134,9 +134,9 @@ benchmark server. CLEVR uses a local partition of a counting subset. GQA's broad
 consistency, validity, plausibility, distribution, and attention-based grounding
 suite is not reproduced by an accuracy-only score.
 
-`evaluate.py` now defaults to `--metric official`; `--metric normalized` preserves
-the historical scoring variant. Training rewards retain their separate, documented
-rules. Existing prediction and result files are preserved. To rescore them and
+`evaluate.py` scores every prediction with both variants: `official` (the dataset
+authors' evaluator, the primary column) and `normalized` (the historical rule, shown
+beside it). Training rewards retain their separate, documented rules. Existing prediction and result files are preserved. To rescore them and
 refresh the dashboard:
 
 ```bash
@@ -193,14 +193,15 @@ and position-alignment limitations above apply; they have not been silently repl
 | 2B GRPO from base | [vqa-rlvr-grpo-2b-main-base](https://huggingface.co/omnifish123/vqa-rlvr-grpo-2b-main-base) |
 | 2B SFT then GRPO | [vqa-rlvr-grpo-2b-main-sft](https://huggingface.co/omnifish123/vqa-rlvr-grpo-2b-main-sft) |
 
-To evaluate a newly trained adapter, merge it into its recorded base and choose a
-fresh evaluation run ID:
+To evaluate a newly trained adapter, merge it into its recorded base, then evaluate
+it. Each (model, dataset, prompt) cell writes one record under `results/records/`;
+a cell that already has a record is skipped:
 
 ```bash
 uv run --frozen python scripts/merge_adapter.py runs/grpo-smoke/checkpoints \
   --out checkpoints/merged/grpo-smoke
-uv run --frozen python evaluate.py --preset zero_shot_2b_reasoning \
-  --model checkpoints/merged/grpo-smoke --run-id grpo-smoke-official --limit 100
+uv run --frozen python evaluate.py --model checkpoints/merged/grpo-smoke \
+  --label grpo-smoke --prompts short reasoning --tier smoke
 ```
 
 ## Repository map

@@ -1,0 +1,334 @@
+"""The evaluation harness through its interface: run_eval with a scripted generator."""
+
+import base64
+import io
+import json
+
+import pytest
+from datasets import Dataset
+from PIL import Image as PILImage
+
+from vqar.data import FEATURES
+from vqar.eval import ModelRef, Protocol, RunRecord, find_cell, protocol_identity, run_eval
+
+
+def png(shade: int, size=(4, 4)) -> bytes:
+    buffer = io.BytesIO()
+    PILImage.new("RGB", size, (shade, shade, shade)).save(buffer, format="PNG")
+    return buffer.getvalue()
+
+
+def save_subset(data_dir, name, dataset, rows):
+    records = [
+        {"dataset": dataset, "qid": qid, "image": {"bytes": image, "path": None},
+         "question": question, "answers": answers, "answer_type": answer_type}
+        for qid, image, question, answers, answer_type in rows
+    ]
+    Dataset.from_list(records, features=FEATURES).save_to_disk(str(data_dir / name))
+
+
+@pytest.fixture
+def data_dir(tmp_path):
+    directory = tmp_path / "data"
+    save_subset(directory, "vqav2_eval", "vqav2", [
+        ("q1", png(10), "What animal?", ["cat"] * 10, "other"),
+        ("q2", png(20), "Is it red?", ["yes"] * 10, "yes/no"),
+        ("q3", png(30), "How many?", ["2"] * 7 + ["3"] * 3, "number"),
+    ])
+    save_subset(directory, "gqa_eval", "gqa", [
+        ("g1", png(40), "Which side?", ["left"], "choose"),
+        ("g2", png(40), "What color?", ["blue"], "query"),
+        ("g3", png(50), "Is there a dog?", ["no"], "verify"),
+    ])
+    return directory
+
+
+@pytest.fixture
+def model(tmp_path):
+    directory = tmp_path / "merged-model"
+    directory.mkdir()
+    (directory / "model.safetensors").write_bytes(b"weights")
+    return ModelRef(str(directory), label="tiny")
+
+
+def image_shade(messages) -> int:
+    url = next(part["image_url"]["url"] for part in messages[0]["content"]
+               if part["type"] == "image_url")
+    with PILImage.open(io.BytesIO(base64.b64decode(url.split(",", 1)[1]))) as image:
+        return image.convert("L").getpixel((0, 0))
+
+
+class ScriptedGenerator:
+    """Answers each question from a script; can fail after a number of calls."""
+
+    def __init__(self, script, fail_after_calls=None):
+        self.script = script
+        self.fail_after_calls = fail_after_calls
+        self.questions = []
+
+    def generate(self, conversations, *, max_tokens, temperature, samples, seed):
+        if self.fail_after_calls is not None and len(self.questions) >= self.fail_after_calls:
+            raise RuntimeError("interrupted")
+        self.questions.append([])
+        outputs = []
+        for messages in conversations:
+            text = next(part["text"] for part in messages[0]["content"]
+                        if part["type"] == "text")
+            question = next(q for q in self.script if text.startswith(q))
+            self.questions[-1].append(question)
+            reply = self.script[question]
+            if callable(reply):
+                reply = reply(messages)
+            outputs.append([{"text": reply, "output_tokens": len(reply.split()),
+                             "finish_reason": "length" if reply == "" else "stop"}] * samples)
+        return outputs
+
+
+SCRIPT = {
+    "What animal?": "Cat",  # official VQAv2 keeps case on unanimous answers; normalized does not
+    "Is it red?": "<answer>yes</answer>",
+    "How many?": "",
+    "Which side?": "left",
+    "What color?": "the blue",  # GQA official is a raw string match
+    "Is there a dog?": "<answer>No</answer>",
+}
+
+
+def test_record_carries_both_scorer_variants_and_behavior(data_dir, model, tmp_path):
+    record = run_eval(model, Protocol("vqav2"), ScriptedGenerator(SCRIPT),
+                      data_dir=data_dir, records_dir=tmp_path / "records")
+    official, normalized = record.metrics["official"], record.metrics["normalized"]
+    assert official["overall"] == pytest.approx(1 / 3)
+    assert normalized["overall"] == pytest.approx(2 / 3)
+    assert normalized["by_answer_type"] == {"number": 0.0, "other": 1.0, "yes/no": 1.0}
+    assert record.metrics["n"] == 3
+    assert record.metrics["answer_tag_fraction"] == pytest.approx(1 / 3)
+    assert record.metrics["empty_answer_fraction"] == pytest.approx(1 / 3)
+    assert record.metrics["truncated_fraction"] == pytest.approx(1 / 3)
+    assert record.metrics["mean_output_tokens"] == pytest.approx(2 / 3)
+    lines = [json.loads(line) for line in record.predictions_path().read_text().splitlines()]
+    assert [line["qid"] for line in lines] == ["q1", "q2", "q3"]
+    assert lines[0]["scores"] == {"official": 0.0, "normalized": 1.0}
+    assert set(lines[1]) == {"qid", "sample", "question", "raw", "prediction", "scores",
+                             "answers", "answer_type", "image_qid", "output_tokens",
+                             "finish_reason"}
+
+
+def test_gqa_official_scorer_is_a_raw_string_match(data_dir, model, tmp_path):
+    record = run_eval(model, Protocol("gqa"), ScriptedGenerator(SCRIPT),
+                      data_dir=data_dir, records_dir=tmp_path / "records")
+    assert record.metrics["official"]["overall"] == pytest.approx(1 / 3)
+    assert record.metrics["normalized"]["overall"] == pytest.approx(1.0)
+
+
+def test_repeating_a_cell_is_a_cache_hit(data_dir, model, tmp_path):
+    first = run_eval(model, Protocol("vqav2"), ScriptedGenerator(SCRIPT),
+                     data_dir=data_dir, records_dir=tmp_path / "records")
+    generator = ScriptedGenerator(SCRIPT)
+    again = run_eval(model, Protocol("vqav2", max_tokens=64), generator,
+                     data_dir=data_dir, records_dir=tmp_path / "records")
+    assert generator.questions == []
+    assert again == first
+    assert RunRecord.load(first.path) == first
+
+
+def test_a_different_model_or_protocol_is_a_new_cell(data_dir, model, tmp_path):
+    records = tmp_path / "records"
+    run_eval(model, Protocol("vqav2"), ScriptedGenerator(SCRIPT),
+             data_dir=data_dir, records_dir=records)
+    (tmp_path / "merged-model" / "model.safetensors").write_bytes(b"other weights")
+    retrained = ScriptedGenerator(SCRIPT)
+    run_eval(model, Protocol("vqav2"), retrained, data_dir=data_dir, records_dir=records)
+    reasoning = ScriptedGenerator(SCRIPT)
+    run_eval(model, Protocol("vqav2", prompt="reasoning"), reasoning,
+             data_dir=data_dir, records_dir=records)
+    assert retrained.questions and reasoning.questions
+    assert len(list(records.rglob("*.json"))) == 3
+
+
+def test_interrupted_run_resumes_from_saved_batches(data_dir, model, tmp_path):
+    records = tmp_path / "records"
+    with pytest.raises(RuntimeError, match="interrupted"):
+        run_eval(model, Protocol("vqav2"), ScriptedGenerator(SCRIPT, fail_after_calls=1),
+                 data_dir=data_dir, records_dir=records, batch_size=2)
+    resumed = ScriptedGenerator(SCRIPT)
+    record = run_eval(model, Protocol("vqav2"), resumed,
+                      data_dir=data_dir, records_dir=records, batch_size=2)
+    assert resumed.questions == [["How many?"]]
+    assert record.metrics["n"] == 3
+    assert not list(records.rglob("*.progress"))
+
+
+def test_black_images_keep_size_and_labels(data_dir, model, tmp_path):
+    script = dict(SCRIPT, **{q: (lambda m: "black" if image_shade(m) == 0 else "lit")
+                             for q in ("What animal?", "Is it red?", "How many?")})
+    generator = ScriptedGenerator(script)
+    record = run_eval(model, Protocol("vqav2", image_mode="black"), generator,
+                      data_dir=data_dir, records_dir=tmp_path / "records")
+    lines = [json.loads(line) for line in record.predictions_path().read_text().splitlines()]
+    assert {line["prediction"] for line in lines} == {"black"}
+    assert [line["image_qid"] for line in lines] == ["q1", "q2", "q3"]
+    assert lines[0]["answers"] == ["cat"] * 10
+
+
+def test_swapped_images_come_from_a_different_picture(data_dir, model, tmp_path):
+    script = dict(SCRIPT, **{q: (lambda m: str(image_shade(m)))
+                             for q in ("Which side?", "What color?", "Is there a dog?")})
+    record = run_eval(model, Protocol("gqa", image_mode="swapped"), ScriptedGenerator(script),
+                      data_dir=data_dir, records_dir=tmp_path / "records")
+    lines = [json.loads(line) for line in record.predictions_path().read_text().splitlines()]
+    # g1 and g2 share one picture, so neither may donate to the other.
+    assert [line["image_qid"] for line in lines] == ["g3", "g3", "g1"]
+    assert [line["prediction"] for line in lines] == ["50", "50", "40"]
+
+
+def test_smoke_tier_caps_the_question_count(data_dir, model, tmp_path, monkeypatch):
+    monkeypatch.setitem(Protocol.TIERS, "smoke", 2)
+    record = run_eval(model, Protocol("vqav2", tier="smoke"), ScriptedGenerator(SCRIPT),
+                      data_dir=data_dir, records_dir=tmp_path / "records")
+    assert record.metrics["n"] == 2
+    assert record.protocol["tier"] == "smoke"
+
+
+def test_protocol_identity_ignores_field_order_and_code_hashes(data_dir, model, tmp_path):
+    data = {"fingerprint": "abc", "qids_sha256": "def", "split_sha256": None}
+    identity = protocol_identity(Protocol("gqa", prompt="reasoning"), data)
+    reordered = dict(reversed(list(identity.items())))
+    assert Protocol.id_of(reordered) == Protocol.id_of(identity)
+    assert identity["prompt_text"].startswith("{question}\nFirst think")
+    assert identity["max_tokens"] == 512
+    record = run_eval(model, Protocol("gqa"), ScriptedGenerator(SCRIPT),
+                      data_dir=data_dir, records_dir=tmp_path / "records")
+    assert "source_sha256" in record.provenance
+    assert "source_sha256" not in json.dumps(record.protocol)
+
+
+def test_protocol_rejects_unknown_or_inconsistent_fields():
+    with pytest.raises(ValueError, match="unknown dataset"):
+        Protocol("coco")
+    with pytest.raises(ValueError, match="no dev role"):
+        Protocol("textvqa", role="dev")
+    with pytest.raises(ValueError, match="greedy decoding draws one sample"):
+        Protocol("gqa", samples=4)
+    with pytest.raises(ValueError, match="image mode"):
+        Protocol("gqa", image_mode="blurred")
+
+
+@pytest.fixture
+def dev_data_dir(tmp_path):
+    """Two SFT pools whose second image the split manifest reserves for dev."""
+    from datasets import load_from_disk
+
+    from vqar.splits import VERSION, qid_hash
+
+    directory = tmp_path / "dev-data"
+    entries = {}
+    for name, answer in (("vqav2", "yes"), ("gqa", "left")):
+        subset = f"{name}_sft"
+        save_subset(directory, subset, name, [
+            (f"{name}-a", png(1), "Is it red?", [answer], ""),
+            (f"{name}-b", png(2), "Which side?", [answer], ""),
+        ])
+        saved = load_from_disk(str(directory / subset))
+        entries[subset] = {"fingerprint": saved._fingerprint, "qids_sha256": qid_hash(saved),
+                           "image_keys": ["train-image", "dev-image"],
+                           "retained_indices": [0, 1]}
+    manifest = {"version": VERSION, "subsets": entries,
+                "sft_dev": {"subsets": list(entries), "seed": 42, "image_keys": ["dev-image"]}}
+    (directory / "split_manifest.json").write_text(json.dumps(manifest))
+    return directory
+
+
+def test_dev_role_uses_manifest_images_and_skips_unscorable_official(dev_data_dir, model,
+                                                                     tmp_path):
+    script = {"Is it red?": "yes", "Which side?": "Yes"}
+    record = run_eval(model, Protocol("vqav2", role="dev"), ScriptedGenerator(script),
+                      data_dir=dev_data_dir, records_dir=tmp_path / "records")
+    lines = [json.loads(line) for line in record.predictions_path().read_text().splitlines()]
+    assert [line["qid"] for line in lines] == ["vqav2-b"]
+    # The authors' VQAv2 evaluator needs ten annotators; dev keeps one reference.
+    assert record.metrics["official"] is None
+    assert record.metrics["normalized"]["overall"] == 1.0
+    assert record.protocol["data"]["split_sha256"]
+
+
+def test_dev_role_rejects_changed_sources(dev_data_dir, model, tmp_path):
+    path = dev_data_dir / "split_manifest.json"
+    manifest = json.loads(path.read_text())
+    manifest["subsets"]["gqa_sft"]["qids_sha256"] = "changed"
+    path.write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match="changed since the split check"):
+        run_eval(model, Protocol("gqa", role="dev"), ScriptedGenerator({}),
+                 data_dir=dev_data_dir, records_dir=tmp_path / "records")
+
+
+def interrupted_cell(data_dir, model, records):
+    """Leave one saved batch of two questions behind, as a crash would."""
+    with pytest.raises(RuntimeError, match="interrupted"):
+        run_eval(model, Protocol("vqav2"), ScriptedGenerator(SCRIPT, fail_after_calls=1),
+                 data_dir=data_dir, records_dir=records, batch_size=2)
+    return find_cell(model, Protocol("vqav2"), data_dir=data_dir,
+                     records_dir=records).path.with_suffix(".progress")
+
+
+def test_resume_ignores_an_unfinished_write(data_dir, model, tmp_path):
+    progress = interrupted_cell(data_dir, model, tmp_path / "records")
+    (progress / "batch-00000002.tmp").write_text('[{"qid":')
+    record = run_eval(model, Protocol("vqav2"), ScriptedGenerator(SCRIPT),
+                      data_dir=data_dir, records_dir=tmp_path / "records", batch_size=2)
+    assert record.metrics["n"] == 3
+
+
+@pytest.mark.parametrize("damage, message", [
+    ("identity", "belongs to another evaluation"),
+    ("unlabelled", "has no identity"),
+    ("gap", "Missing or overlapping"),
+    ("qids", "do not match the evaluation subset"),
+])
+def test_resume_rejects_damaged_progress(data_dir, model, tmp_path, damage, message):
+    progress = interrupted_cell(data_dir, model, tmp_path / "records")
+    batch = progress / "batch-00000000.json"
+    if damage == "identity":
+        (progress / "identity.json").write_text('{"model": "another"}')
+    elif damage == "unlabelled":
+        (progress / "identity.json").unlink()
+    elif damage == "gap":
+        batch.rename(progress / "batch-00000001.json")
+    else:
+        lines = json.loads(batch.read_text())
+        lines[0]["qid"] = "wrong"
+        batch.write_text(json.dumps(lines))
+    with pytest.raises(ValueError, match=message):
+        run_eval(model, Protocol("vqav2"), ScriptedGenerator(SCRIPT),
+                 data_dir=data_dir, records_dir=tmp_path / "records", batch_size=2)
+
+
+def test_swapping_needs_two_different_pictures(tmp_path, model):
+    directory = tmp_path / "same"
+    save_subset(directory, "gqa_eval", "gqa", [
+        ("g1", png(40), "Which side?", ["left"], "choose"),
+        ("g2", png(40), "What color?", ["blue"], "query"),
+    ])
+    with pytest.raises(ValueError, match="at least two different images"):
+        run_eval(model, Protocol("gqa", image_mode="swapped"), ScriptedGenerator(SCRIPT),
+                 data_dir=directory, records_dir=tmp_path / "records")
+
+
+def test_a_changed_chat_template_is_a_new_model(data_dir, model, tmp_path):
+    records = tmp_path / "records"
+    run_eval(model, Protocol("gqa"), ScriptedGenerator(SCRIPT),
+             data_dir=data_dir, records_dir=records)
+    (tmp_path / "merged-model" / "chat_template.jinja").write_text("{{ messages }}")
+    generator = ScriptedGenerator(SCRIPT)
+    run_eval(model, Protocol("gqa"), generator, data_dir=data_dir, records_dir=records)
+    assert generator.questions
+
+
+def test_generator_must_return_every_sample(data_dir, model, tmp_path):
+    class Short(ScriptedGenerator):
+        def generate(self, conversations, **kwargs):
+            return [samples[:1] for samples in super().generate(conversations, **kwargs)]
+
+    with pytest.raises(ValueError, match="2 samples per question"):
+        run_eval(model, Protocol("gqa", temperature=1.0, samples=2), Short(SCRIPT),
+                 data_dir=data_dir, records_dir=tmp_path / "records")

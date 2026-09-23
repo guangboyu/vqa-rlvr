@@ -1,288 +1,106 @@
-"""Evaluate a model on the materialized eval subsets.
+"""Evaluate a model on registered datasets through the harness in `vqar.eval`.
 
-Writes one results JSON per dataset to results/runs/ (committed) and per-example
-predictions to results/preds/ for error analysis. All README tables
-are generated from these JSONs by scripts/make_tables.py — never hand-typed.
+Each (model, dataset, prompt) cell writes one RunRecord under results/records/ with both
+scorer variants and a predictions sidecar. A cell that already has a record is skipped, and
+an interrupted cell resumes from its saved batches.
 
 Usage:
-    uv run python evaluate.py --preset zero_shot_2b --limit 200      # smoke run
-    uv run python evaluate.py --preset zero_shot_8b
-    uv run python evaluate.py --preset zero_shot_2b --model checkpoints/merged/sft_2b \
-        --run-id sft_2b                                              # eval a merged ckpt
+    uv run python evaluate.py --model Qwen/Qwen3-VL-2B-Instruct --label base2 --tier smoke
+    uv run python evaluate.py --model checkpoints/merged/sharedpool_20260913_sft_2b \\
+        --label sft2 --prompts short reasoning
+    uv run python evaluate.py --model Qwen/Qwen3-VL-2B-Instruct --role dev --dry-run
 """
 
 import argparse
-import hashlib
-import importlib.metadata
-import io
-import json
-import subprocess
-from collections import defaultdict
-from dataclasses import replace
-from datetime import UTC, datetime
 from pathlib import Path
 
-from datasets import Image, load_from_disk
-from PIL import Image as PILImage
-
-from vqar import config
-from vqar.inference import build_messages, extract_answer, generate_vllm_records, load_vllm
-from vqar.registry import DATASETS, PROMPTS, datasets_with_role, score
-from vqar.splits import image_keys, load_training_subsets, split_dev, split_provenance
-
-ROOT = Path(__file__).parent
+from vqar.eval import ModelRef, Protocol, find_cell, run_eval
+from vqar.eval.protocol import IMAGE_MODES
+from vqar.eval.runner import DATA_DIR, RECORDS_DIR
+from vqar.inference import VLLMGenerator
+from vqar.registry import DATASETS, PROMPTS
 
 
-def load_subset(dataset: str, split: str, data_dir: Path):
-    """Use frozen dev images for prompt and checkpoint selection."""
-    if split == "eval":
-        return load_from_disk(str(data_dir / DATASETS[dataset].subsets["test"])), {}
-    manifest = json.loads((data_dir / "split_manifest.json").read_text())
-    spec = manifest["sft_dev"]
-    if DATASETS[dataset].subsets.get("sft") not in spec["subsets"]:
-        raise ValueError(f"The frozen dev split has no {DATASETS[dataset].display_name} images.")
-    _, dev = split_dev(load_training_subsets(data_dir, spec["subsets"], spec["seed"]))
-    selected = dev.select([i for i, name in enumerate(dev["dataset"]) if name == dataset])
-    return selected, split_provenance(data_dir, legacy=False)
+def protocols(args) -> list[Protocol]:
+    datasets = args.datasets or [name for name in DATASETS if has_role(name, args.role)]
+    return [
+        Protocol(dataset, prompt=prompt, role=args.role, tier=args.tier,
+                 image_mode=args.image_mode, max_tokens=args.max_tokens,
+                 temperature=args.temperature, samples=args.samples, seed=args.seed)
+        for dataset in datasets
+        for prompt in args.prompts
+    ]
 
 
-def git_sha() -> str:
-    out = subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True)
-    return out.stdout.strip() or "unknown"
+def has_role(dataset: str, role: str) -> bool:
+    try:
+        Protocol(dataset, role=role)
+    except ValueError:
+        return False
+    return True
 
 
-def atomic_json(path: Path, value):
-    temporary = path.with_suffix(".tmp")
-    temporary.write_text(json.dumps(value, ensure_ascii=False) + "\n")
-    temporary.replace(path)
-
-
-def load_progress(directory: Path, identity: dict, qids, resume: bool):
-    """Accept only complete, contiguous batches from this exact evaluation."""
-    state = directory / "identity.json"
-    if state.exists():
-        if not resume:
-            raise FileExistsError(f"{directory} exists; use --resume or a new --run-id.")
-        if json.loads(state.read_text()) != identity:
-            raise ValueError(f"Evaluation settings or inputs changed: {directory}")
-    else:
-        directory.mkdir(parents=True, exist_ok=True)
-        atomic_json(state, identity)
-    records = []
-    for path in sorted(directory.glob("batch-*.json")):
-        if path.name != f"batch-{len(records):08d}.json":
-            raise ValueError(f"Missing or overlapping evaluation batch: {path}")
-        batch = json.loads(path.read_text())
-        expected = list(qids[len(records):len(records) + len(batch)])
-        if not batch or [r["qid"] for r in batch] != expected:
-            raise ValueError(f"Prediction IDs do not match the evaluation subset: {path}")
-        records.extend(batch)
-    return records
-
-
-def image_payload(row):
-    payload = row["image"]
-    return payload["bytes"] if payload["bytes"] is not None else Path(payload["path"]).read_bytes()
-
-
-def swap_indices(keys):
-    """Choose a deterministic different image, keeping questions and labels fixed."""
-    if len(set(keys)) < 2:
-        raise ValueError("Swapped-image evaluation needs at least two different images.")
-    donors = []
-    for i, key in enumerate(keys):
-        j = (i + 1) % len(keys)
-        while keys[j] == key:
-            j = (j + 1) % len(keys)
-        donors.append(j)
-    return donors
-
-
-def evaluate_dataset(llm, preset, dataset, ds, records, progress, batch_size, metric, image_mode):
-    template = PROMPTS[preset.template].text
-    donors = swap_indices(image_keys(ds)) if image_mode == "swapped" else None
-    for start in range(len(records), len(ds), batch_size):
-        rows = list(ds.select(range(start, min(start + batch_size, len(ds)))))
-        conversations, image_qids = [], []
-        for offset, row in enumerate(rows):
-            donor = ds[donors[start + offset]] if donors is not None else row
-            payload = image_payload(donor)
-            if image_mode == "black":
-                with PILImage.open(io.BytesIO(payload)) as original:
-                    blank = PILImage.new("RGB", original.size)
-                buffer = io.BytesIO()
-                blank.save(buffer, format="PNG")
-                payload = buffer.getvalue()
-            conversations.append(build_messages(row["question"], payload, template))
-            image_qids.append(donor["qid"])
-        outputs = generate_vllm_records(llm, conversations, preset.max_tokens)
-        batch = []
-        for row, output, image_qid in zip(rows, outputs, image_qids, strict=True):
-            text = output.pop("text")
-            pred = extract_answer(text)
-            batch.append({
-                "qid": row["qid"], "question": row["question"], "prediction": pred,
-                "raw": text, "score": score(dataset, pred, row["answers"], metric),
-                "answers": row["answers"], "answer_type": row["answer_type"],
-                "image_qid": image_qid, **output,
-            })
-        atomic_json(progress / f"batch-{start:08d}.json", batch)
-        records.extend(batch)
-        print(f"{dataset}: saved {len(records)}/{len(ds)}", flush=True)
-    return summarize(records)
-
-
-def summarize(records):
-    if not records:
-        raise ValueError("Evaluation subset is empty.")
-    by_type = defaultdict(list)
-    for record in records:
-        by_type[record["answer_type"] or "all"].append(record["score"])
-    n = len(records)
-    return {
-        "overall": sum(r["score"] for r in records) / n,
-        "by_answer_type": {t: sum(v) / len(v) for t, v in sorted(by_type.items())},
-        "mean_output_tokens": sum(r["output_tokens"] for r in records) / n,
-        "truncated_fraction": sum(r["finish_reason"] == "length" for r in records) / n,
-        "answer_tag_fraction": sum("</answer>" in r["raw"] for r in records) / n,
-        "empty_answer_fraction": sum(not r["prediction"] for r in records) / n,
-        "n": n,
-    }
+def describe(record) -> str:
+    official, normalized = record.metrics["official"], record.metrics["normalized"]
+    scores = [f"normalized {normalized['overall']:.4f}"]
+    if official is not None:
+        scores.insert(0, f"official {official['overall']:.4f}")
+    return f"{', '.join(scores)}, n={record.metrics['n']}"
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--preset", required=True, choices=sorted(config.EVAL_PRESETS))
-    parser.add_argument("--model", default=None, help="override model path (merged checkpoint)")
-    parser.add_argument("--datasets", nargs="+", default=None,
-                        choices=datasets_with_role("test"))
-    parser.add_argument("--limit", type=int, default=None, help="cap examples per dataset")
-    parser.add_argument("--run-id", default=None, help="results file prefix (default: preset)")
-    parser.add_argument("--metric", choices=("official", "normalized"), default="official")
-    parser.add_argument("--results-dir", type=Path, default=ROOT / "results")
-    parser.add_argument("--resume", action="store_true", help="resume matching saved batches")
+    parser = argparse.ArgumentParser(description=__doc__,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--model", required=True, help="Hub id or local merged checkpoint")
+    parser.add_argument("--revision", default=None, help="Hub revision to pin")
+    parser.add_argument("--label", default=None, help="records folder name (default: basename)")
+    parser.add_argument("--run", default=None, help="training run that produced the model")
+    parser.add_argument("--step", type=int, default=None, help="training step of the model")
+    parser.add_argument("--datasets", nargs="+", choices=sorted(DATASETS), default=None,
+                        help="default: every dataset with the chosen role")
+    parser.add_argument("--prompts", nargs="+", choices=sorted(PROMPTS), default=["short"])
+    parser.add_argument("--role", choices=("test", "dev"), default="test")
+    parser.add_argument("--tier", choices=tuple(Protocol.TIERS), default="full")
+    parser.add_argument("--image-mode", choices=IMAGE_MODES, default="original")
+    parser.add_argument("--max-tokens", type=int, default=None,
+                        help="default: the prompt template's budget")
+    parser.add_argument("--temperature", type=float, default=0.0)
+    parser.add_argument("--samples", type=int, default=1)
+    parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--batch-size", type=int, default=128)
-    parser.add_argument("--image-mode", choices=("original", "black", "swapped"),
-                        default="original")
-    parser.add_argument("--split", choices=("eval", "dev"), default="eval")
-    parser.add_argument("--template", choices=sorted(PROMPTS), default=None)
-    parser.add_argument("--max-tokens", type=int, default=None)
+    parser.add_argument("--gpu-memory-utilization", type=float, default=0.8,
+                        help="0.88 leaves an 8B model enough KV cache on one card")
+    parser.add_argument("--max-model-len", type=int, default=4096)
+    parser.add_argument("--data-dir", type=Path, default=DATA_DIR)
+    parser.add_argument("--records-dir", type=Path, default=RECORDS_DIR)
     parser.add_argument("--dry-run", action="store_true",
-                        help="check data and settings without a GPU")
+                        help="resolve every cell and report cached ones without a GPU")
     args = parser.parse_args()
-    if args.batch_size < 1 or (args.limit is not None and args.limit < 1):
-        parser.error("batch-size and limit must be positive")
-    if args.max_tokens is not None and args.max_tokens < 1:
-        parser.error("max-tokens must be positive")
+    if args.batch_size < 1:
+        parser.error("batch-size must be positive")
+    try:
+        cells = protocols(args)
+    except ValueError as error:
+        parser.error(str(error))
 
-    preset = config.EVAL_PRESETS[args.preset]
-    preset = replace(preset, template=args.template or preset.template,
-                     max_tokens=args.max_tokens or preset.max_tokens)
-    model = args.model or preset.model
-    suffix = f"_{args.split}_{preset.template}" if args.split != "eval" or args.template else ""
-    run_id = args.run_id or f"{preset.name}_{args.metric}{suffix}"
-    dev_datasets = datasets_with_role("sft")  # the frozen dev split is carved from SFT pools
-    if args.split == "dev":
-        default = dev_datasets
-    else:
-        default = list(preset.datasets) or datasets_with_role("test")
-    datasets = args.datasets or default
-    if args.split == "dev" and set(datasets) - set(dev_datasets):
-        parser.error(f"the frozen dev split contains only {', '.join(dev_datasets)}")
-    for dataset in datasets:
-        if (args.split == "dev" and args.metric == "official"
-                and "dev" not in DATASETS[dataset].official_roles):
-            parser.error(f"{DATASETS[dataset].display_name} dev has single-reference answers; "
-                         "use --metric normalized")
-
-    runs_dir = args.results_dir / "runs"
-    preds_dir = args.results_dir / "preds"
-    source_hashes = {
-        name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
-        for name in ("evaluate.py", "vqar/inference.py", "vqar/metrics.py", "vqar/config.py",
-                     "vqar/data.py", "vqar/registry.py", "vqar/splits.py", "uv.lock")
-    }
-    prepared = []
-    for dataset in datasets:
-        out = runs_dir / f"{run_id}-{dataset}.json"
-        predictions = preds_dir / f"{run_id}-{dataset}.jsonl"
-        if not args.resume and (out.exists() or predictions.exists()):
-            raise FileExistsError(f"{out} or its predictions exist; choose a new --run-id.")
-        ds, split_info = load_subset(dataset, args.split, ROOT / "data")
-        fingerprint = ds._fingerprint
-        if args.limit:
-            ds = ds.select(range(min(args.limit, len(ds))))
-        ds = ds.cast_column("image", Image(decode=False))
-        qids = list(ds["qid"])
-        identity = {
-            "model": model, "preset": config.dump(preset), "dataset": dataset,
-            "fingerprint": fingerprint,
-            "qids_sha256": hashlib.sha256(json.dumps(qids).encode()).hexdigest(),
-            "metric": args.metric, "image_mode": args.image_mode, "batch_size": args.batch_size,
-            "source_sha256": source_hashes,
-            "split": args.split, "split_provenance": split_info,
-            "prompt_text": PROMPTS[preset.template].text,
-        }
-        # JSON round-trip also normalizes tuples in preset fields for strict resume checks.
-        identity = json.loads(json.dumps(identity))
+    model = ModelRef(args.model, args.revision, args.label, args.run, args.step)
+    # Pin a Hub model to the commit its records name, so generation loads exactly that.
+    revision = model.identity()["weights"].get("revision")
+    model = ModelRef(args.model, revision, args.label, args.run, args.step)
+    generator = VLLMGenerator(args.model, revision, args.max_model_len,
+                              args.gpu_memory_utilization)
+    for protocol in cells:
+        cell = find_cell(model, protocol, data_dir=args.data_dir, records_dir=args.records_dir)
         if args.dry_run:
-            print(json.dumps({"dataset": dataset, "n": len(ds), **identity}, indent=2))
+            state = "cached" if cell.cached else "missing"
+            print(f"{protocol.slug()}: {state}, {cell.questions} questions, "
+                  f"protocol {cell.protocol_id[:10]} -> {cell.path}")
             continue
-        progress = args.results_dir / "progress" / f"{run_id}-{dataset}"
-        if (args.resume and (out.exists() or predictions.exists())
-                and not (progress / "identity.json").exists()):
-            raise ValueError(f"{out} has no resumable provenance; choose a new --run-id.")
-        records = load_progress(progress, identity, qids, args.resume)
-        prepared.append((dataset, ds, identity, progress, records, out, predictions))
-    if args.dry_run:
-        return
-    llm = None
-    runs_dir.mkdir(parents=True, exist_ok=True)
-    preds_dir.mkdir(parents=True, exist_ok=True)
-    for dataset, ds, identity, progress, records, out, predictions in prepared:
-        if len(records) < len(ds) and llm is None:
-            llm = load_vllm(model, preset.max_model_len, preset.gpu_memory_utilization)
-        metrics = evaluate_dataset(llm, preset, dataset, ds, records, progress,
-                                   args.batch_size, args.metric, args.image_mode)
-        result = {
-            "run_id": f"{run_id}-{dataset}",
-            "timestamp": datetime.now(UTC).isoformat(timespec="seconds"),
-            "git_sha": git_sha(),
-            "source_sha256": source_hashes,
-            "qids_sha256": identity["qids_sha256"],
-            "dataset_fingerprint": identity["fingerprint"],
-            "versions": {name: importlib.metadata.version(name)
-                         for name in ("torch", "transformers", "vllm", "datasets")},
-            "model": {"base": model, "preset": preset.name},
-            "eval": {
-                "dataset": dataset,
-                "subset": DATASETS[dataset].subsets["test"] if args.split == "eval" else "sft_dev",
-                "split": args.split,
-                "split_provenance": identity["split_provenance"],
-                "n": metrics["n"],
-                "limit": args.limit,
-                "prompt_template": preset.template,
-                "prompt_text": PROMPTS[preset.template].text,
-                "metric_variant": args.metric,
-                "answer_extraction": "last_answer_tag_or_full_text",
-                "image_mode": args.image_mode,
-            },
-            "gen": {
-                "backend": "vllm",
-                "temperature": 0.0,
-                "max_tokens": preset.max_tokens,
-                "max_model_len": preset.max_model_len,
-            },
-            "metrics": {k: v for k, v in metrics.items() if k != "n"},
-            "config": config.dump(preset),
-        }
-        temporary = predictions.with_suffix(".tmp")
-        with temporary.open("w") as f:
-            for record in records:
-                f.write(json.dumps(record, ensure_ascii=False) + "\n")
-        temporary.replace(predictions)
-        atomic_json(out, result)
-        print(f"{dataset}: overall={metrics['overall']:.4f} n={metrics['n']} -> {out}")
+        cached = cell.cached
+        record = run_eval(model, protocol, generator, data_dir=args.data_dir,
+                          records_dir=args.records_dir, batch_size=args.batch_size)
+        print(f"{protocol.slug()}: {describe(record)}{' (cached)' if cached else ''} "
+              f"-> {record.path}")
 
 
 if __name__ == "__main__":

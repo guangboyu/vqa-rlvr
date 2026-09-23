@@ -14,6 +14,9 @@ results/preds/
 results/baselines/**/preds/
 results/baselines/training/
 results/baselines/source/
+# Evaluation predictions and unfinished batches stay local; the records are versioned.
+results/records/**/*.predictions.jsonl
+results/records/**/*.progress/
 .judge_cache/
 
 # Secrets & misc

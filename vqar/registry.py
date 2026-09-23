@@ -22,6 +22,7 @@ Scorer = Callable[[str, list[str]], float]
 class Prompt:
     name: str
     text: str  # formatted with question=...
+    max_tokens: int  # default generation budget for this template
     diagnostic: bool = False  # only for controlled prompt studies, never in headline tables
 
 
@@ -32,27 +33,31 @@ _ANSWER_INSTRUCTION = (
 PROMPTS: dict[str, Prompt] = {
     p.name: p
     for p in [
-        Prompt("short", "{question}\nAnswer the question using a single word or phrase."),
+        Prompt("short", "{question}\nAnswer the question using a single word or phrase.", 64),
         Prompt(
             "reasoning",
             "{question}\n"
             "First think step by step inside <think> </think> tags, then write only the final "
             "answer inside <answer> </answer> tags.",
+            512,
         ),
         Prompt(
             "direct",
             "{question}\nOutput an empty <think></think> block. " + _ANSWER_INSTRUCTION,
+            512,
             diagnostic=True,
         ),
         Prompt(
             "brief",
             "{question}\nGive at most one sentence of reasoning inside <think> </think> tags. "
             + _ANSWER_INSTRUCTION,
+            512,
             diagnostic=True,
         ),
         Prompt(
             "stepwise",
             "{question}\nThink step by step inside <think> </think> tags. " + _ANSWER_INSTRUCTION,
+            512,
             diagnostic=True,
         ),
     ]

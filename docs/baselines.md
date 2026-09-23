@@ -164,31 +164,23 @@ evaluation subsets. The short prompt allows 64 output tokens; the reasoning
 prompt allows 512. Both prompts matter: a stronger short-answer baseline can
 change the interpretation of an apparent reasoning-prompt gain.
 
+The recorded files come from an earlier revision of `evaluate.py`. The current harness
+evaluates the same cells, with both scorer variants in every record:
+
 ```bash
-evaluate_arm() (
-  set -e
-  ARM=$1
-  MODEL=$2
-  SIZE=$3
-  for TEMPLATE in short reasoning; do
-    PRESET="zero_shot_$SIZE"
-    if [ "$TEMPLATE" = reasoning ]; then PRESET="${PRESET}_reasoning"; fi
-    uv run --frozen python evaluate.py --preset "$PRESET" --model "$MODEL" \
-      --run-id "$ARM-$TEMPLATE" --metric official --batch-size 128 --resume \
-      --results-dir "results/baselines/evaluation/$ARM"
-  done
-)
-evaluate_arm base2 "$BASE_2B" 2b
-evaluate_arm sft2 checkpoints/merged/sharedpool_20260913_sft_2b 2b
-evaluate_arm grpo2-base checkpoints/merged/sharedpool_20260913_grpo_2b_base 2b
-evaluate_arm grpo2-sft checkpoints/merged/sharedpool_20260913_grpo_2b_sft 2b
+evaluate_arm() {
+  uv run --frozen python evaluate.py --model "$2" --label "$1" --prompts short reasoning
+}
+evaluate_arm base2 "$BASE_2B"
+evaluate_arm sft2 checkpoints/merged/sharedpool_20260913_sft_2b
+evaluate_arm grpo2-base checkpoints/merged/sharedpool_20260913_grpo_2b_base
+evaluate_arm grpo2-sft checkpoints/merged/sharedpool_20260913_grpo_2b_sft
 ```
 
-For image sensitivity, repeat those evaluations with `--limit 128 --batch-size 128`
-and `--image-mode black` or `swapped`. Use run IDs `$ARM-$TEMPLATE-$MODE` and
-`--results-dir results/baselines/interventions/$ARM`. Original-image scores come
-from the first matching batch of the full evaluation. These interventions keep
-the original references; their scores are not ground-truth accuracy on altered images.
+For image sensitivity, add `--image-mode black` or `swapped`. The recorded
+interventions used the first 128 test questions; the harness's nearest tier is
+`--tier dev` (the first 500). Interventions keep the original references, so their
+scores are not ground-truth accuracy on altered images.
 
 ## Inspect saved evidence without a GPU
 
