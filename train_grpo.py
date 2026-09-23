@@ -29,6 +29,7 @@ from vqar.training import (
     add_common_arguments,
     check_rl_precision,
     checkpoint_dir,
+    evaluate_checkpoints_next,
     load_kwargs,
     lora_config,
     parse_arguments,
@@ -108,7 +109,9 @@ def main() -> None:
         peft_config=peft_config,
         rollout_func=make_chat_rollout(),
     )
-    run_training(trainer, output, args.run_dir, log_draws=True)
+    completed = run_training(trainer, output, args.run_dir, log_draws=True)
+    if completed and not args.no_dev_eval:
+        evaluate_checkpoints_next(output)
 
 
 if __name__ == "__main__":

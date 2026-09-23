@@ -266,14 +266,18 @@ def dump(preset) -> dict:
     return asdict(preset)
 
 
+def is_large(preset_name: str) -> bool:
+    """8B recipes; snapshot hashes and merged checkpoint paths do not reveal model size."""
+    return "8b" in preset_name.split("_")
+
+
 def for_hardware(preset, hardware: str):
     """Adjust precision and memory placement, keeping learning rates and batch geometry."""
     if hardware not in HARDWARE_PROFILES:
         raise ValueError(f"unknown hardware profile: {hardware}")
     if hardware in ("legacy", "24gb"):
         return preset
-    # Snapshot hashes and merged checkpoint paths do not reliably identify model size.
-    large_model = "8b" in preset.name.split("_")
+    large_model = is_large(preset.name)
     if isinstance(preset, SFTPreset):
         return replace(preset, quantize_4bit=False)
     # Reserve about 29 GB for an 8B engine or 12 GB for a 2B engine.

@@ -238,6 +238,37 @@ def exposure_table(exposure: dict) -> str:
                   "Updates without reward variation", "Mean reward"], rows, 1)
 
 
+def diagnostics_table(exposure: dict) -> str:
+    """Training signals per RL run: reward and dead-group share from every update's draws,
+    entropy and completion length from the trainer's logs; first → last unless marked."""
+    def trend(rows, name, digits=2):
+        values = [row[name] for row in rows or [] if name in row]
+        return "—" if not values else f"{values[0]:.{digits}f} → {values[-1]:.{digits}f}"
+
+    def mean(rows, name):
+        values = [row[name] for row in rows or [] if name in row]
+        return "—" if not values else f"{sum(values) / len(values):.3f}"
+
+    def window(rows, name, size=10):
+        """Mean of the first and of the last `size` updates: one update is only 4 prompts."""
+        values = [row[name] for row in rows or []]
+        if not values:
+            return "—"
+        first, last = values[:size], values[-size:]
+        return f"{sum(first) / len(first):.2f} → {sum(last) / len(last):.2f}"
+
+    rows = []
+    for run, summary in exposure["runs"].items():
+        diagnostics = summary["diagnostics"]
+        updates, logged = diagnostics["reward_per_update"], diagnostics["logged"]
+        rows.append([f"`{Path(run).name}`", window(updates, "reward_mean"),
+                     mean(updates, "zero_variance_group_fraction"), trend(logged, "entropy"),
+                     mean(logged, "clip_fraction"), trend(logged, "completion_length", 0),
+                     f"{diagnostics['distinct_prompts']:,}"])
+    return table(["Run", "Reward (first → last 10 updates)", "Dead groups (mean)", "Entropy",
+                  "Clip fraction (mean)", "Completion tokens", "Distinct prompts"], rows, 1)
+
+
 def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
     """Every markdown block, and the JSON export for the demo."""
     arms, _ = load_matrix(root / "experiments.toml")
@@ -252,6 +283,7 @@ def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
         "interventions": interventions_table(arms, cells),
         "curves": curves_table(cells),
         "exposure": exposure_table(exposure),
+        "diagnostics": diagnostics_table(exposure),
         "history": history_table(history),
     }
     export = {
@@ -267,7 +299,9 @@ def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
              "prompt": record.protocol["prompt"], "metrics": record.metrics}
             for record in history
         ],
-        "exposure": exposure["runs"],
+        # The per-update diagnostics stay in the exposure file; the demo needs the totals.
+        "exposure": {run: {key: value for key, value in summary.items() if key != "diagnostics"}
+                     for run, summary in exposure["runs"].items()},
     }
     return blocks, export
 

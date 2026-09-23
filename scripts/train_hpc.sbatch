@@ -1,5 +1,6 @@
 #!/bin/bash
-# HPC3: one RTX6000 job and at most one failure successor.
+# HPC3: one RTX6000 job and at most one failure successor. A completed run goes on to
+# evaluate every kept adapter on the dev tier in the same job.
 # Submit with --job-name and --output; create the output directory first.
 # Arguments: source-directory run-directory training-entrypoint [training options].
 #SBATCH --partition=free-gpu32
@@ -40,7 +41,8 @@ sys.exit(0 if path.exists() and json.loads(path.read_text())["completed"] else 1
 PY
 }
 if completed; then
-    exit 0
+    # Training is done; finish its dev evaluation (cached cells are skipped).
+    exec .venv/bin/python scripts/evaluate_checkpoints.py "$RUN/checkpoints"
 fi
 
 if [ "$CHAIN_LEFT" -gt 0 ]; then

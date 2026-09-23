@@ -10,6 +10,7 @@ Long jobs also need a successor job; scripts/train_hpc.sbatch arranges one.
 """
 
 import json
+import shutil
 import signal
 import time
 from pathlib import Path
@@ -88,3 +89,27 @@ class JsonlMetrics(TrainerCallback):
         if not _STOP["requested"]:
             event = "done" if state.global_step >= state.max_steps else "stopped"
             self._emit(step=state.global_step, event=event)
+
+
+ADAPTER_FILES = ("adapter_model.safetensors", "adapter_config.json")
+
+
+class KeepAdapters(TrainerCallback):
+    """Copy the LoRA adapter of every scheduled save (each --save-steps multiple and the
+    last step) to <output>/adapters/step-N before checkpoint rotation deletes it, so the
+    dev evaluation can score each one. Time-based preemption saves are not curve points."""
+
+    def on_save(self, args, state, control, **kwargs):
+        step = state.global_step
+        if step % args.save_steps and step != state.max_steps:
+            return
+        checkpoint = Path(args.output_dir) / f"checkpoint-{step}"
+        kept = Path(args.output_dir) / "adapters" / f"step-{step}"
+        if kept.exists() or not (checkpoint / ADAPTER_FILES[0]).exists():
+            return
+        partial = kept.with_name(kept.name + ".tmp")
+        shutil.rmtree(partial, ignore_errors=True)
+        partial.mkdir(parents=True)
+        for name in ADAPTER_FILES:
+            shutil.copy2(checkpoint / name, partial / name)
+        partial.rename(kept)

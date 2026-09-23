@@ -81,6 +81,8 @@ splits reproduce from the archived July code, not from this tree.
 ## Small GPU checks
 
 Use a fresh run directory. These commands are validation runs, not benchmark results.
+Each completed run keeps every saved adapter and then evaluates them on the dev tier
+(`scripts/evaluate_checkpoints.py`); `--no-dev-eval` skips that step.
 
 ```bash
 uv run --frozen python train_sft.py --preset sft_2b --hardware 24gb \

@@ -20,6 +20,7 @@ class ModelRef:
     label: str | None = None  # names the records folder; defaults to the directory name
     run: str | None = None  # training run that produced it, when known
     step: int | None = None  # training step of that checkpoint, when known
+    adapter: str | None = None  # LoRA adapter directory served on top of `path`
 
     def identity(self) -> dict:
         local = Path(self.path)
@@ -27,8 +28,13 @@ class ModelRef:
             weights = {"sha256": weights_sha256(local), "config_sha256": config_sha256(local)}
         else:
             weights = {"hub": self.path, "revision": hub_revision(self.path, self.revision)}
-        return {"source": self.path, "label": self.label or local.name, "run": self.run,
-                "step": self.step, "weights": weights}
+        if self.adapter:
+            weights = {"base": weights, "adapter_sha256": adapter_sha256(Path(self.adapter))}
+        identity = {"source": self.path, "label": self.label or local.name, "run": self.run,
+                    "step": self.step, "weights": weights}
+        if self.adapter:
+            identity["adapter"] = self.adapter
+        return identity
 
 
 def weights_sha256(directory: Path) -> str:
@@ -67,6 +73,15 @@ def config_sha256(directory: Path) -> str:
         if (directory / name).is_file():
             digest.update(f"{name}:{hashlib.sha256((directory / name).read_bytes()).hexdigest()}\n"
                           .encode())
+    return digest.hexdigest()
+
+
+def adapter_sha256(directory: Path) -> str:
+    """A LoRA adapter's identity: its weights and its configuration (rank, targets)."""
+    digest = hashlib.sha256()
+    for name in ("adapter_model.safetensors", "adapter_config.json"):
+        digest.update(f"{name}:{hashlib.sha256((directory / name).read_bytes()).hexdigest()}\n"
+                      .encode())
     return digest.hexdigest()
 
 

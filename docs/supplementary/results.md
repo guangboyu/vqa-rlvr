@@ -126,7 +126,10 @@ accuracy on the new image.
 | SFT → GRPO | reasoning | swapped | 57.5 → 27.4 (80%) | 53.9 → 21.1 (76%) | 97.7 → 16.4 (84%) | 78.2 → 1.0 (99%) |
 <!-- /report:interventions -->
 
-## What each GRPO run trained on
+## What each RL run trained on
+
+The OPD run logs the same correctness reward for diagnosis; its learning signal is the
+teacher's token scores, so its reward columns do not drive its updates.
 
 <!-- report:exposure -->
 | Run | Updates | Questions | Responses | Groups with varied rewards (%) | Updates without reward variation | Mean reward |
@@ -134,9 +137,27 @@ accuracy on the new image.
 | `grpo2-base` | 300 | 1,200 | 9,600 | 38.67 | 43 | 0.599 |
 | `grpo2-sft` | 300 | 1,200 | 9,600 | 49.00 | 16 | 0.581 |
 | `grpo8-base` | 300 | 1,200 | 9,600 | 23.33 | 110 | 0.646 |
+| `opd2-self` | 300 | 1,200 | 9,600 | 49.25 | 21 | 0.588 |
 <!-- /report:exposure -->
 
+Training signals. The reward (mean of the first and of the last ten updates) and the share
+of prompt groups whose samples all scored the same (no gradient) come from every update's
+saved draws; entropy and completion length are the trainer's logs (every ten updates),
+first → last. KL is absent because these runs used no KL penalty.
+
+<!-- report:diagnostics -->
+| Run | Reward (first → last 10 updates) | Dead groups (mean) | Entropy | Clip fraction (mean) | Completion tokens | Distinct prompts |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `grpo2-base` | 0.62 → 0.61 | 0.613 | 0.73 → 0.63 | 0.000 | 154 → 139 | 1,200 |
+| `grpo2-sft` | 0.27 → 0.63 | 0.510 | 1.08 → 0.90 | 0.000 | 30 → 110 | 1,200 |
+| `grpo8-base` | 0.62 → 0.67 | 0.767 | 0.40 → 0.12 | 0.000 | 133 → 13 | 1,200 |
+| `opd2-self` | 0.64 → 0.61 | 0.507 | 0.75 → 0.68 | 0.000 | 150 → 132 | 1,200 |
+<!-- /report:diagnostics -->
+
 ## Learning curves
+
+Each point evaluates a saved adapter on the dev tier through vLLM's LoRA serving rather
+than a merged copy; on 500 VQAv2 dev questions the two agreed on 496 answers.
 
 <!-- report:curves -->
 No checkpoint dev evaluations have been recorded yet.

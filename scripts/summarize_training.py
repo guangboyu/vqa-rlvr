@@ -1,4 +1,4 @@
-"""Summarize actual GRPO prompt exposure and reward variation from saved draws.
+"""Summarize actual GRPO prompt exposure, reward variation, and training diagnostics.
 
 Usage: python -m scripts.summarize_training runs/base runs/sft-rl --output exposure.json
 This uses completed updates, dropping duplicate attempts after checkpoint resume.
@@ -9,6 +9,8 @@ import hashlib
 import json
 from collections import defaultdict
 from pathlib import Path
+
+from vqar.training import training_diagnostics
 
 
 def completed_draws(path, steps, group_size):
@@ -91,6 +93,7 @@ def summarize_run(directory, sft_questions, splits, split_sha):
         "overall": group_summary(groups),
         "by_training_membership": {key: group_summary(value) for key, value in buckets.items()},
         "gpu": summary.get("gpu"),
+        "diagnostics": training_diagnostics(summary["logs"], path),
     }
 
 

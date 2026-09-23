@@ -44,15 +44,28 @@ def build_messages(question: str, images: list[bytes], template: str) -> list[di
 
 class VLLMGenerator:
     """The production generator for `vqar.eval.run_eval`: one vLLM engine, loaded on first
-    use so that cached cells never start it."""
+    use so that cached cells never start it. With `max_lora_rank`, the same engine also
+    serves LoRA adapters on top of the model (see `with_adapter`)."""
 
     def __init__(self, model: str, revision: str | None = None, max_model_len: int = 4096,
-                 gpu_memory_utilization: float = 0.8):
+                 gpu_memory_utilization: float = 0.8, max_lora_rank: int | None = None):
         self.settings = dict(model=model, revision=revision, max_model_len=max_model_len,
-                             gpu_memory_utilization=gpu_memory_utilization)
+                             gpu_memory_utilization=gpu_memory_utilization,
+                             max_lora_rank=max_lora_rank)
         self._llm = None
+        self._adapters = {}
 
-    def generate(self, conversations, *, max_tokens, temperature, samples, seed):
+    def with_adapter(self, path: str) -> "AdapterGenerator":
+        """A generator for the model with one LoRA adapter applied, sharing this engine."""
+        if self.settings["max_lora_rank"] is None:
+            raise ValueError("Create the generator with max_lora_rank to serve adapters.")
+        from vllm.lora.request import LoRARequest
+
+        number = self._adapters.setdefault(path, len(self._adapters) + 1)
+        return AdapterGenerator(self, LoRARequest(f"adapter-{number}", number, path))
+
+    def generate(self, conversations, *, max_tokens, temperature, samples, seed,
+                 lora_request=None):
         """Per conversation, `samples` completions with token counts and stop reasons."""
         from vllm import SamplingParams
 
@@ -63,7 +76,8 @@ class VLLMGenerator:
         outputs = []
         chunk = 256
         for i in range(0, len(conversations), chunk):
-            for result in self._llm.chat(conversations[i : i + chunk], params, use_tqdm=False):
+            for result in self._llm.chat(conversations[i : i + chunk], params, use_tqdm=False,
+                                         lora_request=lora_request):
                 outputs.append([
                     {"text": response.text, "output_tokens": len(response.token_ids),
                      "finish_reason": response.finish_reason}
@@ -72,12 +86,25 @@ class VLLMGenerator:
         return outputs
 
 
+class AdapterGenerator:
+    """One LoRA adapter on a shared engine; the same interface as VLLMGenerator."""
+
+    def __init__(self, engine: VLLMGenerator, lora_request):
+        self.engine = engine
+        self.lora_request = lora_request
+
+    def generate(self, conversations, **kwargs):
+        return self.engine.generate(conversations, lora_request=self.lora_request, **kwargs)
+
+
 def load_vllm(model: str, max_model_len: int, gpu_memory_utilization: float,
-              revision: str | None = None):
+              revision: str | None = None, max_lora_rank: int | None = None):
     from vllm import LLM
 
     from vqar.config import MAX_PIXELS
 
+    lora = {} if max_lora_rank is None else dict(enable_lora=True, max_lora_rank=max_lora_rank,
+                                                  max_loras=1)
     return LLM(
         model=model,
         revision=revision,
@@ -87,4 +114,5 @@ def load_vllm(model: str, max_model_len: int, gpu_memory_utilization: float,
         # Same pixel budget as training; also keeps large images (TextVQA is >1MP)
         # from exceeding max_model_len in vision tokens.
         mm_processor_kwargs={"max_pixels": MAX_PIXELS},
+        **lora,
     )

@@ -41,7 +41,9 @@ uv run --frozen python train_grpo.py --preset grpo_2b_main --hardware 24gb \
 ```
 
 These two-step runs check execution, not model quality. They train separate SFT and
-base-to-GRPO controls. [Hardware instructions](docs/hardware.md) cover larger models,
+base-to-GRPO controls. Every completed run then evaluates each saved adapter on the dev
+tier with both prompts, which produces its learning curve; add `--no-dev-eval` to skip
+that step. [Hardware instructions](docs/hardware.md) cover larger models,
 resolved run metadata, and checkpoint resumption. [Validation notes](docs/validation.md)
 explain the verified behavior and remaining limits.
 The [full comparison walkthrough](docs/baselines.md) covers shared SFT/RL training

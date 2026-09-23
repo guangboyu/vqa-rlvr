@@ -31,6 +31,8 @@ def add_common_arguments(parser: argparse.ArgumentParser, presets: dict,
                         help="keep this many saved checkpoints; 0 keeps all")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--no-wandb", action="store_true")
+    parser.add_argument("--no-dev-eval", action="store_true",
+                        help="skip evaluating every saved adapter on the dev tier afterwards")
 
 
 def parse_arguments(parser: argparse.ArgumentParser):
@@ -94,12 +96,16 @@ def lora_config(preset):
     return LoraConfig(**kwargs)
 
 
-def run_training(trainer, output: Path, run_dir: Path | None, log_draws: bool = False) -> None:
+def run_training(trainer, output: Path, run_dir: Path | None, log_draws: bool = False) -> bool:
     """Train with preemption safety: periodic and signal-triggered complete checkpoints,
-    metrics.jsonl in cluster mode, and resumption from the last complete save."""
-    from vqar.preemption import JsonlMetrics, PreemptCallback, install_signal_flag
+    metrics.jsonl in cluster mode, and resumption from the last complete save. Every
+    saved adapter is kept for the dev evaluation. Returns whether training completed."""
+    from vqar.preemption import JsonlMetrics, KeepAdapters, PreemptCallback, install_signal_flag
 
     install_signal_flag()
+    # Keep the adapter copy before the completion marker, so a complete checkpoint
+    # always has its curve point.
+    trainer.add_callback(KeepAdapters())
     trainer.add_callback(PreemptCallback())
     if run_dir:
         trainer.add_callback(JsonlMetrics(str(run_dir / "metrics.jsonl")))
@@ -111,7 +117,81 @@ def run_training(trainer, output: Path, run_dir: Path | None, log_draws: bool = 
     trainer.train(resume_from_checkpoint=last)
     trainer.save_model(str(output))
     write_training_summary(trainer, output)
+    draws = run_dir / "prompt_draws.jsonl" if run_dir and log_draws else None
+    (output / "diagnostics.json").write_text(
+        json.dumps(training_diagnostics(trainer.state.log_history, draws), indent=2) + "\n")
     print(f"adapter saved -> {output}")
+    return trainer.state.global_step >= trainer.state.max_steps
+
+
+# Trainer log keys behind each diagnostic; a key appears only when its trainer logs it.
+# The Trainer averages over its logging interval (every `logging_steps` updates).
+DIAGNOSTICS = {
+    "loss": "loss", "eval_loss": "eval_loss", "token_accuracy": "mean_token_accuracy",
+    "reward_mean": "reward", "reward_std": "reward_std",
+    "zero_variance_group_fraction": "frac_reward_zero_std", "kl": "kl",
+    "entropy": "entropy", "clip_fraction": "clip_ratio/region_mean",
+    "completion_length": "completions/mean_length", "tokens_seen": "num_tokens",
+    "opd_reverse_kl": "opd/reverse_kl_per_token",
+}
+
+
+def training_diagnostics(logs: list[dict], draws: Path | None = None) -> dict:
+    """What happened during training: the Trainer's logged signals, and, for RL runs, the
+    reward of every update from the saved prompt draws. Reward hacking and dead updates
+    (every sampled group scored the same) show up here first."""
+    logged = []
+    for entry in logs:
+        values = {name: entry[key] for name, key in DIAGNOSTICS.items() if key in entry}
+        if values:
+            logged.append({"step": entry["step"], **values})
+    per_update, distinct = None, None
+    if draws is not None and draws.exists():
+        per_update, distinct = reward_per_update(draws)
+    return {"logged": logged, "reward_per_update": per_update, "distinct_prompts": distinct,
+            # Filled from the learnability pre-check of the pool sample when one was run.
+            "learnability_fraction": None}
+
+
+def reward_per_update(draws: Path) -> tuple[list[dict], int]:
+    """Mean and spread of the reward in each update, and the share of prompt groups whose
+    samples all scored the same (no GRPO gradient). A resumed update keeps its last draw."""
+    latest = {}
+    for line in draws.read_text().splitlines():
+        record = json.loads(line)
+        latest[record["step_before_update"]] = record
+    updates, prompts = [], set()
+    for step, record in sorted(latest.items()):
+        groups = {}
+        for dataset, qid, score in zip(record["dataset"], record["qid"], record["scores"],
+                                       strict=True):
+            groups.setdefault((dataset, qid), []).append(score)
+            prompts.add((dataset, qid))
+        scores = record["scores"]
+        mean = sum(scores) / len(scores)
+        updates.append({
+            "update": step + 1, "reward_mean": mean,
+            "reward_std": (sum((s - mean) ** 2 for s in scores) / len(scores)) ** 0.5,
+            "zero_variance_group_fraction":
+                sum(max(g) - min(g) <= 1e-12 for g in groups.values()) / len(groups),
+        })
+    return updates, len(prompts)
+
+
+def evaluate_checkpoints_next(output: Path) -> None:
+    """Replace this process with the dev evaluation of every kept adapter.
+
+    Exec rather than a subprocess: the training process's GPU memory is released in full
+    before the evaluation engine starts, which matters on a 24 GB card.
+    """
+    import sys
+
+    if "wandb" in sys.modules:
+        sys.modules["wandb"].finish()
+    sys.stdout.flush()
+    sys.stderr.flush()
+    script = ROOT / "scripts" / "evaluate_checkpoints.py"
+    os.execv(sys.executable, [sys.executable, str(script), str(output)])
 
 
 def write_run_config(output_dir: Path, record: dict, training_args) -> None:

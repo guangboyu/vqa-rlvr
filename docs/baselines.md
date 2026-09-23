@@ -189,7 +189,8 @@ scores are not ground-truth accuracy on altered images.
 uv run --frozen python -m scripts.report
 uv run --frozen python -m scripts.summarize_training \
   results/baselines/training/grpo2-base results/baselines/training/grpo2-sft \
-  results/baselines/training/grpo8-base --output results/baselines/training-exposure.json
+  results/baselines/training/grpo8-base results/baselines/training/opd2-self \
+  --output results/baselines/training-exposure.json
 uv run --frozen python -m scripts.make_gallery
 ```
 
@@ -318,8 +319,10 @@ support lessons about these runs, not claims of universal method superiority.
 
 ## Checkpoint storage
 
-All three trainers keep the latest two saved checkpoints by default. Add
-`--save-total-limit 0` to preserve every save, as in the OPD command above.
+All three trainers keep the latest two full checkpoints by default; add
+`--save-total-limit 0` to preserve every one (optimizer and RNG state included), as in
+the OPD command above. The adapter of every scheduled save is kept either way, under
+`checkpoints/adapters/`, for the dev-tier learning curve.
 Keep active runs and current final models nearby; archive useful intermediate
 and historical checkpoints to a separate disk after the run. Preserve the full
 checkpoint directory (including optimizer, scheduler, RNG, and completion marker),

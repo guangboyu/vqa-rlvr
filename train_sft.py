@@ -19,6 +19,7 @@ from vqar.training import (
     ROOT,
     add_common_arguments,
     checkpoint_dir,
+    evaluate_checkpoints_next,
     load_kwargs,
     lora_config,
     parse_arguments,
@@ -134,7 +135,9 @@ def main() -> None:
         processing_class=processor,
         peft_config=peft_config,
     )
-    run_training(trainer, output, args.run_dir)
+    completed = run_training(trainer, output, args.run_dir)
+    if completed and not args.no_dev_eval:
+        evaluate_checkpoints_next(output)
 
 
 if __name__ == "__main__":

@@ -7932,6 +7932,65 @@
     "peak_torch_allocated_bytes": 62816728576,
     "peak_torch_reserved_bytes": 65997373440
    }
+  },
+  "results/baselines/training/opd2-self": {
+   "completed_updates": 300,
+   "updates_without_reward_variation": 21,
+   "prompt_order_sha256": "cf2101eb06de31e80904b1e95e4738ba5158330d9518955ccf7b08956e3959ee",
+   "draw_file_sha256": "92760f49f372b323f8f0cb021c345f8da148601ffdd80254b375c18bb5d84918",
+   "overall": {
+    "prompt_groups": 1200,
+    "unique_questions": 1200,
+    "responses": 9600,
+    "mean_reward": 0.5876041666666667,
+    "all_zero_reward_groups": 256,
+    "all_full_reward_groups": 353,
+    "variable_reward_fraction": 0.4925
+   },
+   "by_training_membership": {
+    "vqav2/rl_only": {
+     "prompt_groups": 177,
+     "unique_questions": 177,
+     "responses": 1416,
+     "mean_reward": 0.5953389830508474,
+     "all_zero_reward_groups": 37,
+     "all_full_reward_groups": 52,
+     "variable_reward_fraction": 0.4971751412429379
+    },
+    "gqa/sft_train": {
+     "prompt_groups": 407,
+     "unique_questions": 407,
+     "responses": 3256,
+     "mean_reward": 0.5942874692874693,
+     "all_zero_reward_groups": 79,
+     "all_full_reward_groups": 123,
+     "variable_reward_fraction": 0.5036855036855037
+    },
+    "vqav2/sft_train": {
+     "prompt_groups": 434,
+     "unique_questions": 434,
+     "responses": 3472,
+     "mean_reward": 0.5754608294930875,
+     "all_zero_reward_groups": 95,
+     "all_full_reward_groups": 123,
+     "variable_reward_fraction": 0.4976958525345622
+    },
+    "gqa/rl_only": {
+     "prompt_groups": 182,
+     "unique_questions": 182,
+     "responses": 1456,
+     "mean_reward": 0.5940934065934066,
+     "all_zero_reward_groups": 45,
+     "all_full_reward_groups": 55,
+     "variable_reward_fraction": 0.45054945054945056
+    }
+   },
+   "gpu": {
+    "name": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+    "total_bytes": 101974081536,
+    "peak_torch_allocated_bytes": 30028367872,
+    "peak_torch_reserved_bytes": 33516683264
+   }
   }
  }
 }
