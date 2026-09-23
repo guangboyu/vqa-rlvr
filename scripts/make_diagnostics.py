@@ -13,11 +13,20 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 def intervention_example(output: Path):
-    """One recorded contrast: changed answers need not be grounded answers."""
+    """One recorded contrast: changed answers need not be grounded answers.
+
+    Its probe images and responses live in the research archive; without them, the card
+    already recorded in the gallery is kept unchanged.
+    """
     directory = ROOT / "idea-stage/battery/swap_probes"
     source = ROOT / "idea-stage/battery/audit/raw/battery_Qwen3-VL-2B-Instruct.json"
     if not source.exists():
-        return None
+        recorded = output / "gallery.json"
+        cards = json.loads(recorded.read_text()) if recorded.exists() else []
+        kept = next((c for c in cards if c["title"] == "Image sensitivity is not enough"), None)
+        print("Intervention card: research archive absent; "
+              + ("keeping the recorded card." if kept else "no recorded card to keep."))
+        return kept
     records = [json.loads(line) for line in (directory / "probes.jsonl").read_text().splitlines()]
     records = [r for r in records if r["qid"] == "201030621"]
     raw = json.loads(source.read_text())["components"]["swap_probes"]["raw"]

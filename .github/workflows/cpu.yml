@@ -8,6 +8,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install pytest ruff pillow datasets anthropic fastapi python-multipart httpx
+      - run: pip install pytest ruff==0.15.21 pillow datasets anthropic fastapi python-multipart httpx
       - run: ruff check .
       - run: python -m pytest

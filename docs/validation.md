@@ -158,11 +158,7 @@ sampling protocols must accompany a result. One base greedy response hit the
 [All 360 responses](../results/sft-samples/predictions.jsonl),
 [summary counts](../results/sft-samples/analysis.json), and
 [run and merge metadata](../results/sft-samples/summary.json) are included.
-To reproduce with the existing 2B SFT adapter and materialized data:
-
-```bash
-uv run --frozen python -m scripts.compare_sft --output-dir runs/sft-comparison
-```
+The sampling script that produced them is kept in the research archive, not in this tree.
 
 The measured comparison took 215 seconds after loading on an RTX 4090. An fp32
 LoRA merge check on one fixed next-token distribution had maximum logit difference
@@ -228,8 +224,7 @@ and should not be treated as a random sample.
   Count prompt groups, response tokens, zero-variance rewards, and actual updates.
 - Read `train_opd.py` alongside the token-level checks in `results/validation.json`.
   Follow which prompt gets the reference answer and where advantages are detached.
-- Use the Arena's original/black-image toggle, or the existing
-  `idea-stage/battery/run_battery.py --help`, to study image sensitivity. Keep
+- Use the Arena's original/black-image toggle to study image sensitivity. Keep
   attention-based grounding and counterfactual sensitivity as separate measures.
 
 Human verifier calibration and a new medical task remain later decisions.

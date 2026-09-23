@@ -92,8 +92,8 @@ which uses GSM8K/MATH-derived SFT data and RL from the same problem sources.
 That report does not give an exact shared-question count. Our own manifest and
 draw logs make the reuse explicit.
 
-Use the [materialized data bundle](../artifacts/README.md) for the exact recorded
-question subsets. It is prepared locally; public hosting is pending. A fresh
+Use the materialized data bundle for the exact recorded question subsets. It is
+prepared locally; public hosting is pending. A fresh
 `prepare_data.py` download records source revisions but is not guaranteed to
 recreate the earlier materialization. Five duplicate image/question pairs remain
 within training, including one conflicting count label. They were recorded and
@@ -240,7 +240,8 @@ are separate from the held-out comparison and do not establish better reasoning.
 
 Use the bf16 `grpo_8b_fmt0` preset with `--hardware 96gb` or `80gb`. It has the
 same learning rate `1e-5`, group size, batch geometry, and 300-update budget as
-the 2B GRPO controls. The older quantized `grpo_8b_main` is a different recipe.
+the 2B GRPO controls. The earlier quantized 8B recipe is retired; its runs remain as
+historical results.
 
 ```bash
 uv run --frozen hf download Qwen/Qwen3-VL-8B-Instruct \

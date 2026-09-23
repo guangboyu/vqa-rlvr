@@ -181,9 +181,6 @@
       "gqa": 46.8,
       "textvqa": 75.6,
       "vqav2": 63.0
-    },
-    "zero_shot_nanovlm": {
-      "textvqa": 59.7
     }
   },
   "ablation": [
@@ -1119,14 +1116,6 @@
       "qids_sha256": "7b93c42a039734f47bb72e104abae962d6114f5fbdbfb05ca71dce267d24a3f0",
       "scorer_sha256": "3ba4c6b35621edc28568199a10f51351f1941c31b4998aee50eaa31f663126ec",
       "previous_overall": 0.68172
-    },
-    "zero_shot_nanovlm-textvqa": {
-      "source_run": "results/runs/zero_shot_nanovlm-textvqa.json",
-      "source_run_sha256": "f27fdc46df66f98fd2e78071714e731b682943f5c623db2a055fe3db0f85e6d7",
-      "source_predictions_sha256": "9a97fbf1e26b7cad68630cb0d53da3ccb9122564fe7bcc48606b74c38429fac7",
-      "qids_sha256": "06fe623dd201040ba8dfa98f35efb44bedabaa5eb7a56f6c897ff2c950ebd6b5",
-      "scorer_sha256": "3ba4c6b35621edc28568199a10f51351f1941c31b4998aee50eaa31f663126ec",
-      "previous_overall": 0.59725
     }
   },
   "run_inventory": {
@@ -7223,28 +7212,6 @@
         "metric_variant": "official"
       },
       "generation_git_sha": "682afe7",
-      "training_config": null,
-      "training_status": "not established by evaluation artifact"
-    },
-    "zero_shot_nanovlm-textvqa": {
-      "model": {
-        "base": "lusxvr/nanoVLM-460M-8k",
-        "preset": "zero_shot_nanovlm"
-      },
-      "generation": {
-        "backend": "nanovlm",
-        "temperature": 0.0,
-        "max_tokens": 48
-      },
-      "evaluation": {
-        "dataset": "textvqa",
-        "subset": "textvqa_eval",
-        "n": 2000,
-        "limit": null,
-        "prompt_template": "short",
-        "metric_variant": "official"
-      },
-      "generation_git_sha": "dceca4b",
       "training_config": null,
       "training_status": "not established by evaluation artifact"
     }

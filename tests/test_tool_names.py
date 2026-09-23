@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parent.parent
 # Spelled backwards so this file does not trip its own check.
 BANNED = tuple(word[::-1] for word in ("edualc", "xedoc"))
 # The judge study's pinned model id is data, not attribution.
-ALLOWED = {"vqar/judge.py": (f'MODEL = "{MODEL}"',)}
+ALLOWED_PATH, ALLOWED_SNIPPET = "vqar/judge.py", f'MODEL = "{MODEL}"'
 
 
 def tracked_files() -> list[str]:
@@ -24,15 +24,15 @@ def tracked_files() -> list[str]:
     return [path for path in listing.stdout.decode().split("\0") if path]
 
 
-def banned_words(path: str) -> list[str]:
-    found = [word for word in BANNED if word in path.lower()]
+def banned_words(path: str) -> set[str]:
+    text = path
     file = ROOT / path
     if file.is_file() and not file.is_symlink():
-        text = file.read_bytes().decode("utf-8", errors="ignore")
-        for allowed in ALLOWED.get(path, ()):
-            text = text.replace(allowed, "")
-        found += [word for word in BANNED if word in text.lower()]
-    return found
+        content = file.read_bytes().decode("utf-8", errors="ignore")
+        if path == ALLOWED_PATH:
+            content = content.replace(ALLOWED_SNIPPET, "")
+        text += "\n" + content
+    return {word for word in BANNED if word in text.lower()}
 
 
 def test_tracked_files_name_no_tools():
@@ -40,8 +40,6 @@ def test_tracked_files_name_no_tools():
     assert not offenders, offenders
 
 
-def test_allowlist_matches_the_judge_module():
+def test_allowlisted_snippet_is_still_in_the_judge_module():
     # A stale allowlist would silently stop guarding the judge module.
-    for path, snippets in ALLOWED.items():
-        text = (ROOT / path).read_text()
-        assert all(snippet in text for snippet in snippets), path
+    assert ALLOWED_SNIPPET in (ROOT / ALLOWED_PATH).read_text()

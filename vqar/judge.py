@@ -60,8 +60,7 @@ class Judge:
         if self._client is None:
             import anthropic
 
-            # The key lives in the project .env rather than the shell environment,
-            # so other tools in the same shell do not pick it up.
+            # Fallback: read the key from the project .env when the shell has none.
             if not os.environ.get("ANTHROPIC_API_KEY"):
                 env_file = Path(__file__).parent.parent / ".env"
                 if env_file.exists():

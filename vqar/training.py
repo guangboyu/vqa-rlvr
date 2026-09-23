@@ -50,8 +50,7 @@ def check_rl_precision(preset) -> None:
     if preset.quantize_4bit:
         raise ValueError(
             "NF4 student weights are unsafe with the current TRL/vLLM synchronization. "
-            "Use a 2B bf16 preset on 24 GB, or --hardware 80gb/96gb for 8B. "
-            "The legacy preset is retained to document the failed configuration."
+            "Use a 2B bf16 preset on 24 GB, or --hardware 80gb/96gb for 8B."
         )
 
 
