@@ -14,6 +14,7 @@ Usage:
 """
 
 import argparse
+import json
 from pathlib import Path
 
 from vqar.config import MAX_PIXELS
@@ -52,6 +53,13 @@ def describe(record) -> str:
     return f"{', '.join(scores)}, n={record.metrics['n']}"
 
 
+def adapter_rank(adapter: str | None) -> int | None:
+    """The LoRA rank the engine must accept to serve `adapter`, or None without one."""
+    if adapter is None:
+        return None
+    return json.loads((Path(adapter) / "adapter_config.json").read_text())["r"]
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -60,6 +68,9 @@ def main() -> None:
     parser.add_argument("--label", default=None, help="records folder name (default: basename)")
     parser.add_argument("--run", default=None, help="training run that produced the model")
     parser.add_argument("--step", type=int, default=None, help="training step of the model")
+    parser.add_argument("--adapter", default=None,
+                        help="LoRA adapter served unmerged on top of --model (the trained policy "
+                        "exactly; a bf16 merge rounds part of a small adapter away)")
     parser.add_argument("--datasets", nargs="+", choices=sorted(DATASETS), default=None,
                         help="default: every dataset with the chosen role")
     parser.add_argument("--prompts", nargs="+", choices=sorted(PROMPTS), default=["short"])
@@ -92,9 +103,13 @@ def main() -> None:
     except ValueError as error:
         parser.error(str(error))
 
-    model = ModelRef(args.model, args.revision, args.label, args.run, args.step).pinned()
+    model = ModelRef(args.model, args.revision, args.label, args.run, args.step,
+                     args.adapter).pinned()
     generator = VLLMGenerator(model.path, model.revision, args.max_model_len,
-                              args.gpu_memory_utilization, max_pixels=args.max_pixels)
+                              args.gpu_memory_utilization,
+                              max_lora_rank=adapter_rank(args.adapter), max_pixels=args.max_pixels)
+    if args.adapter:
+        generator = generator.with_adapter(args.adapter)
     for protocol in cells:
         cell = find_cell(model, protocol, data_dir=args.data_dir, records_dir=args.records_dir)
         if args.dry_run:
