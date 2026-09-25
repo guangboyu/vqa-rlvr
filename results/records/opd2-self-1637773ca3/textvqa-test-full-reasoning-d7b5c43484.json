@@ -1,0 +1,87 @@
+{
+  "schema": "run-record/1",
+  "legacy": false,
+  "model_id": "1637773ca3d7e13142c1c2332e7c028d323294cf1517bcd6f55dd983292c519f",
+  "protocol_id": "d7b5c434842ea669848b856e97421781d6aaa91ec591fc20e53353f262025b48",
+  "model": {
+    "source": "/home/guangbo/codes/VQA/checkpoints/merged/sharedpool_20260913_opd_2b_self",
+    "label": "opd2-self",
+    "run": null,
+    "step": null,
+    "weights": {
+      "sha256": "12d69ca61050cbeaf6c315670d3566266fb6b6fefff76611714d2c13df803fe8",
+      "config_sha256": "956859bbf348ffbcbdecd094686e060f471981471aab95056f53652ac6031279"
+    }
+  },
+  "protocol": {
+    "dataset": "textvqa",
+    "ladder": "far-ood",
+    "role": "test",
+    "tier": "full",
+    "question_limit": null,
+    "prompt": "reasoning",
+    "prompt_text": "{question}\nFirst think step by step inside <think> </think> tags, then write only the final answer inside <answer> </answer> tags.",
+    "max_tokens": 512,
+    "temperature": 0.0,
+    "samples": 1,
+    "image_mode": "original",
+    "max_pixels": 786432,
+    "scorers": {
+      "official": "textvqa_accuracy/v1",
+      "normalized": "vqa_accuracy/v1"
+    },
+    "extraction": "last_answer_tag_or_full_text",
+    "answer_tag_rule": "raw text contains </answer>",
+    "data": {
+      "subsets": {
+        "textvqa_eval": "057210ff77bf2061"
+      },
+      "selection_sha256": "1a7bf46dbdfc928ba1ffde05fbe30bb29bb1543e9e0516188bed3f7853a2877d"
+    }
+  },
+  "metrics": {
+    "n": 5000,
+    "official": {
+      "overall": 0.7287,
+      "by_answer_type": {
+        "all": 0.7287
+      }
+    },
+    "normalized": {
+      "overall": 0.72872,
+      "by_answer_type": {
+        "all": 0.72872
+      }
+    },
+    "mean_output_tokens": 106.002,
+    "truncated_fraction": 0.0154,
+    "answer_tag_fraction": 0.9594,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.7287,
+    "answers_scored_differently": 1
+  },
+  "provenance": {
+    "code_version": "73b90d8af7b4e43a41de497079c1c53c208a04d8",
+    "uncommitted_changes": true,
+    "source_sha256": {
+      "vqar/eval/__init__.py": "2aa88c809409a57502d0d9b2893e14c3b5bf99d971bceefcc1ed4716ef295f81",
+      "vqar/eval/examples.py": "87d4fb122f1acd3b533d5fdaddf82bad560ee01e085de4a83ba839cd7de4066d",
+      "vqar/eval/protocol.py": "27af6f3a684d19349c29010c44256ffb6c86808342e8f776ba29609939fab11d",
+      "vqar/eval/record.py": "23b76d9215439ab41bea399a4d228f3141be06e84146bfdd6e8eecf7a68953fb",
+      "vqar/eval/runner.py": "ad85da9b9728ffae57295b17be85248b29f026cfe017817bde4c6f28fcbaa6c0",
+      "vqar/inference.py": "90ef365182adac3e0d19aacd250d46b5961196cccd0a13c63d0b81b61f4d34e1",
+      "vqar/config.py": "c17053f0aba7257fd1f0bdfe88f6a73c432a71f7dc22d16d6beda74b72da0202",
+      "vqar/metrics.py": "3a18e4b64783f1b09025a0f79faed934f3ab6671a5c63d85216d55c2bddcf5cb",
+      "vqar/registry.py": "401d4dd128c69b8f5cfb933fc91800acf4abb38c41c257ea16c171f49d6a7e3a",
+      "vqar/splits.py": "d33608bf54ca3bd57543f65feb06dcc111d467712ca57de8455dceb1e235150c",
+      "uv.lock": "91a36d0647e782cf10edf11da067557746ca1d8a3ed9e3273485ae8e7df079e5"
+    },
+    "versions": {
+      "torch": "2.11.0+cu129",
+      "transformers": "5.13.0",
+      "vllm": "0.23.0+cu129",
+      "datasets": "5.0.0"
+    },
+    "timestamp": "2026-09-25T04:17:07+00:00"
+  }
+}

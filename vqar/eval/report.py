@@ -11,6 +11,7 @@ import re
 from pathlib import Path
 from typing import NamedTuple
 
+from vqar.config import MAX_PIXELS
 from vqar.eval.legacy import july_records
 from vqar.eval.matrix import Arm, load_matrix
 from vqar.eval.record import RunRecord, record_files
@@ -40,6 +41,7 @@ class Cell(NamedTuple):
     step: int | None
     temperature: float = 0
     samples: int = 1
+    max_pixels: int = MAX_PIXELS
 
 
 def load_cells(records_dir: Path, data_dir: Path | None = None) -> dict[Cell, RunRecord]:
@@ -56,7 +58,8 @@ def load_cells(records_dir: Path, data_dir: Path | None = None) -> dict[Cell, Ru
             continue
         p = record.protocol
         key = Cell(record.model["label"], p["dataset"], p["role"], p["tier"], p["prompt"],
-                   p["image_mode"], record.model.get("step"), p["temperature"], p["samples"])
+                   p["image_mode"], record.model.get("step"), p["temperature"], p["samples"],
+                   p["max_pixels"])
         if key in cells:
             raise ValueError(f"Two records claim one table cell {key}: {cells[key].path}, {path}")
         cells[key] = record
@@ -299,8 +302,22 @@ def paired_deltas(results: Path) -> list[dict]:
     return json.loads(path.read_text()) if path.exists() else []
 
 
+def resolution_table(arms: list[Arm], rows: list[dict]) -> str:
+    """The same arm under a larger image budget: the change, with its paired interval."""
+    names = {arm.label: arm.name for arm in arms}
+    lines = [[names.get(r["candidate"], r["candidate"]), DATASETS[r["dataset"]].display_name,
+              r["prompt"], r["variant"],
+              f"{r['reference_max_pixels'] / 1e6:.2f} → {r['candidate_max_pixels'] / 1e6:.2f}",
+              f"{r['delta']:+.2f} [{r['low']:+.2f}, {r['high']:+.2f}]"]
+             for r in rows if r.get("contrast") == "max_pixels"]
+    if not lines:
+        return "No larger image budget has been evaluated yet.\n"
+    return table(["Arm", "Dataset", "Prompt", "Scorer", "Megapixels", "Change"], lines, 4)
+
+
 def deltas_table(arms: list[Arm], rows: list[dict]) -> str:
     """Paired differences, candidate − reference, with 95% bootstrap intervals (points)."""
+    rows = [row for row in rows if "contrast" not in row]
     if not rows:
         return "No paired comparison has been computed yet.\n"
     names = {arm.label: arm.name for arm in arms}
@@ -337,12 +354,14 @@ def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
         "diagnostics": diagnostics_table(exposure),
         "learnability": learnability_table(cells),
         "deltas": deltas_table(arms, paired_deltas(root / "results")),
+        "resolution": resolution_table(arms, paired_deltas(root / "results")),
         "history": history_table(history),
     }
     export = {
         "arms": [{"label": arm.label, "name": arm.name} for arm in arms],
         "datasets": [{"name": name, "display_name": DATASETS[name].display_name,
                       "ladder": DATASETS[name].ladder} for name in ordered_datasets()],
+        "max_pixels": MAX_PIXELS,  # the image budget of the headline cells
         "cells": [
             {**cell._asdict(), "legacy": record.legacy, "metrics": record.metrics}
             for cell, record in sorted(cells.items(), key=lambda item: str(item[0]))

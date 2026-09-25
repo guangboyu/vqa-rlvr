@@ -36,6 +36,10 @@ def run_eval(model: ModelRef, protocol: Protocol, generator, *, data_dir: Path =
     per conversation, `samples` dicts with text, output_tokens, and finish_reason. Batches
     are saved as they finish, so an interrupted run resumes where it stopped.
     """
+    engine_pixels = getattr(generator, "max_pixels", protocol.max_pixels)
+    if engine_pixels != protocol.max_pixels:
+        raise ValueError(f"The protocol's image budget is {protocol.max_pixels} pixels, but the "
+                         f"generator resizes images to {engine_pixels}.")
     rows, model_identity, identity, path = resolve(model, protocol, data_dir, records_dir)
     if path.exists():
         cached = RunRecord.load(path)

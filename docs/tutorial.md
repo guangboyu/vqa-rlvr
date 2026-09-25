@@ -34,7 +34,7 @@ Expected:
 vqav2 (in-domain): {'sft': 19553, 'rl': 27553, 'dev': 447, 'test': 5000}
 gqa (in-domain): {'sft': 19905, 'rl': 27885, 'dev': 59, 'test': 12578}
 clevr (in-domain): {'rl': 8000, 'dev': 3000, 'test': 3000}
-textvqa (far-ood): {'test': 2000}
+textvqa (far-ood): {'test': 5000}
 no held-out image in any training pool; report: data/splits/overlap-report.json
 ```
 

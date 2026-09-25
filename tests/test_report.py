@@ -126,3 +126,17 @@ def test_paired_differences_show_the_interval_per_dataset():
     lines = deltas_table(arms, [row]).splitlines()
     assert lines[2].startswith("| Tuned − Base | short | official | — | +1.50 [-0.25, +3.00] |")
     assert deltas_table(arms, []) == "No paired comparison has been computed yet.\n"
+
+
+def test_a_larger_image_budget_is_reported_as_a_paired_change():
+    from vqar.eval.matrix import Arm
+    from vqar.eval.report import deltas_table, resolution_table
+
+    arms = [Arm("base", "Base", "m")]
+    row = {"contrast": "max_pixels", "reference": "base", "candidate": "base",
+           "dataset": "textvqa", "prompt": "short", "variant": "official",
+           "reference_max_pixels": 786432, "candidate_max_pixels": 16777216,
+           "n": 5, "delta": 2.0, "low": 1.0, "high": 3.0}
+    lines = resolution_table(arms, [row]).splitlines()
+    assert lines[2] == "| Base | TextVQA | short | official | 0.79 → 16.78 | +2.00 [+1.00, +3.00] |"
+    assert deltas_table(arms, [row]) == "No paired comparison has been computed yet.\n"

@@ -31,6 +31,7 @@ class Protocol:
     temperature: float = 0.0  # 0 is greedy decoding
     samples: int = 1
     seed: int = 0  # used only when sampling
+    max_pixels: int = MAX_PIXELS  # image budget the engine resizes to; the model's own is 16.8 MP
 
     def __post_init__(self):
         if self.dataset not in DATASETS:
@@ -50,6 +51,8 @@ class Protocol:
             raise ValueError(f"image mode must be one of {IMAGE_MODES}")
         if self.samples < 1 or (self.max_tokens is not None and self.max_tokens < 1):
             raise ValueError("samples and max_tokens must be positive")
+        if self.max_pixels < 1:
+            raise ValueError("max_pixels must be positive")
         if self.temperature == 0 and self.samples != 1:
             raise ValueError("greedy decoding draws one sample; set a temperature to sample")
 
@@ -74,7 +77,8 @@ class Protocol:
     def slug(self) -> str:
         return slug({"dataset": self.dataset, "role": self.role, "tier": self.tier,
                      "prompt": self.prompt, "image_mode": self.image_mode,
-                     "temperature": self.temperature, "samples": self.samples})
+                     "temperature": self.temperature, "samples": self.samples,
+                     "max_pixels": self.max_pixels})
 
     @staticmethod
     def id_of(identity: dict) -> str:
@@ -88,6 +92,8 @@ def slug(identity: dict) -> str:
         parts.append(identity["image_mode"])
     if identity["temperature"] > 0:
         parts.append(f"t{identity['temperature']:g}k{identity['samples']}")
+    if identity.get("max_pixels", MAX_PIXELS) != MAX_PIXELS:
+        parts.append(f"px{identity['max_pixels']}")
     return "-".join(parts)
 
 
@@ -110,7 +116,7 @@ def protocol_identity(protocol: Protocol, data: dict) -> dict:
         "temperature": protocol.temperature,
         "samples": protocol.samples,
         "image_mode": protocol.image_mode,
-        "max_pixels": MAX_PIXELS,  # the image budget the generator resizes to
+        "max_pixels": protocol.max_pixels,  # the image budget the generator resizes to
         "scorers": {"official": scorer_version(spec.official),
                     "normalized": scorer_version(spec.normalized)},
         "extraction": EXTRACTION_RULE,

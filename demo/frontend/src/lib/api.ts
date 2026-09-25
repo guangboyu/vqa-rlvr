@@ -8,6 +8,7 @@ export interface ModelSpec {
 /** The report builder's export (results/report.json): the same records as every table. */
 export interface Report {
   arms: { label: string; name: string }[]
+  max_pixels: number
   datasets: { name: string; display_name: string; ladder: string }[]
   cells: Cell[]
   history: { run: string; dataset: string; prompt: string; metrics: CellMetrics }[]
@@ -40,6 +41,7 @@ export interface Cell {
   step: number | null
   temperature: number
   samples: number
+  max_pixels: number
   legacy: boolean
   metrics: CellMetrics
 }
@@ -64,7 +66,7 @@ export function testCell(report: Report, arm: string, dataset: string, prompt: s
                          imageMode = 'original', tier = 'full'): CellMetrics | undefined {
   return report.cells.find(c => c.arm === arm && c.dataset === dataset && c.prompt === prompt
     && c.image_mode === imageMode && c.tier === tier && c.role === 'test' && c.step === null
-    && c.samples === 1)?.metrics
+    && c.samples === 1 && c.max_pixels === report.max_pixels)?.metrics
 }
 
 /** A dataset's column heading: OOD datasets say so. */

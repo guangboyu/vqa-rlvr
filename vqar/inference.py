@@ -15,6 +15,8 @@ vLLM notes (single RTX 4090, WSL2):
 import base64
 import os
 
+from vqar.config import MAX_PIXELS
+
 os.environ.setdefault("VLLM_ATTENTION_BACKEND", "FLASH_ATTN")
 os.environ.setdefault("VLLM_USE_FLASHINFER_SAMPLER", "0")
 
@@ -36,10 +38,12 @@ class VLLMGenerator:
     serves LoRA adapters on top of the model (see `with_adapter`)."""
 
     def __init__(self, model: str, revision: str | None = None, max_model_len: int = 4096,
-                 gpu_memory_utilization: float = 0.8, max_lora_rank: int | None = None):
+                 gpu_memory_utilization: float = 0.8, max_lora_rank: int | None = None,
+                 max_pixels: int = MAX_PIXELS):
+        self.max_pixels = max_pixels  # every protocol run on this engine must declare it
         self.settings = dict(model=model, revision=revision, max_model_len=max_model_len,
                              gpu_memory_utilization=gpu_memory_utilization,
-                             max_lora_rank=max_lora_rank)
+                             max_lora_rank=max_lora_rank, max_pixels=max_pixels)
         self._llm = None
         self._adapters = {}
 
@@ -86,10 +90,9 @@ class AdapterGenerator:
 
 
 def load_vllm(model: str, max_model_len: int, gpu_memory_utilization: float,
-              revision: str | None = None, max_lora_rank: int | None = None):
+              revision: str | None = None, max_lora_rank: int | None = None,
+              max_pixels: int = MAX_PIXELS):
     from vllm import LLM
-
-    from vqar.config import MAX_PIXELS
 
     lora = {} if max_lora_rank is None else dict(enable_lora=True, max_lora_rank=max_lora_rank,
                                                   max_loras=1)
@@ -99,8 +102,8 @@ def load_vllm(model: str, max_model_len: int, gpu_memory_utilization: float,
         max_model_len=max_model_len,
         gpu_memory_utilization=gpu_memory_utilization,
         limit_mm_per_prompt={"image": 1},
-        # Same pixel budget as training; also keeps large images (TextVQA is >1MP)
+        # By default the training pixel budget; it also keeps large images (TextVQA is >1MP)
         # from exceeding max_model_len in vision tokens.
-        mm_processor_kwargs={"max_pixels": MAX_PIXELS},
+        mm_processor_kwargs={"max_pixels": max_pixels},
         **lora,
     )

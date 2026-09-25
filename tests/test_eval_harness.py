@@ -340,3 +340,26 @@ def test_reports_skip_the_saved_batches_of_a_running_cell(data_dir, model, tmp_p
              records_dir=records)
     assert interrupted_cell(data_dir, model, records).is_dir()
     assert [cell.dataset for cell in load_cells(records)] == ["gqa"]
+
+
+class Budgeted(ScriptedGenerator):
+    """A generator whose engine resizes images to a declared pixel budget."""
+
+    def __init__(self, script, max_pixels):
+        super().__init__(script)
+        self.max_pixels = max_pixels
+
+
+def test_a_larger_image_budget_is_its_own_cell_and_must_match_the_engine(data_dir, model,
+                                                                         tmp_path):
+    records = tmp_path / "records"
+    default = run_eval(model, Protocol("gqa"), ScriptedGenerator(SCRIPT), data_dir=data_dir,
+                       records_dir=records)
+    larger = Protocol("gqa", max_pixels=4 * default.protocol["max_pixels"])
+    with pytest.raises(ValueError, match="resizes images to"):
+        run_eval(model, larger, Budgeted(SCRIPT, default.protocol["max_pixels"]),
+                 data_dir=data_dir, records_dir=records)
+    record = run_eval(model, larger, Budgeted(SCRIPT, larger.max_pixels), data_dir=data_dir,
+                      records_dir=records)
+    assert record.protocol_id != default.protocol_id
+    assert record.path.name.startswith("gqa-test-full-short-px")

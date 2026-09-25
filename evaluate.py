@@ -14,6 +14,7 @@ Usage:
 import argparse
 from pathlib import Path
 
+from vqar.config import MAX_PIXELS
 from vqar.eval import ModelRef, Protocol, find_cell, run_eval
 from vqar.eval.protocol import IMAGE_MODES
 from vqar.eval.runner import DATA_DIR, RECORDS_DIR
@@ -26,7 +27,8 @@ def protocols(args) -> list[Protocol]:
     return [
         Protocol(dataset, prompt=prompt, role=args.role, tier=args.tier,
                  image_mode=args.image_mode, max_tokens=args.max_tokens,
-                 temperature=args.temperature, samples=args.samples, seed=args.seed)
+                 temperature=args.temperature, samples=args.samples, seed=args.seed,
+                 max_pixels=args.max_pixels)
         for dataset in datasets
         for prompt in args.prompts
     ]
@@ -71,6 +73,9 @@ def main() -> None:
     parser.add_argument("--gpu-memory-utilization", type=float, default=0.8,
                         help="0.88 leaves an 8B model enough KV cache on one card")
     parser.add_argument("--max-model-len", type=int, default=4096)
+    parser.add_argument("--max-pixels", type=int, default=MAX_PIXELS,
+                        help="image budget; raise --max-model-len with it (16384 vision "
+                        "tokens at the model's own 16.8 MP default)")
     parser.add_argument("--data-dir", type=Path, default=DATA_DIR)
     parser.add_argument("--records-dir", type=Path, default=RECORDS_DIR)
     parser.add_argument("--dry-run", action="store_true",
@@ -85,7 +90,7 @@ def main() -> None:
 
     model = ModelRef(args.model, args.revision, args.label, args.run, args.step).pinned()
     generator = VLLMGenerator(model.path, model.revision, args.max_model_len,
-                              args.gpu_memory_utilization)
+                              args.gpu_memory_utilization, max_pixels=args.max_pixels)
     for protocol in cells:
         cell = find_cell(model, protocol, data_dir=args.data_dir, records_dir=args.records_dir)
         if args.dry_run:

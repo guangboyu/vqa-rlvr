@@ -14,33 +14,34 @@ recorded demo runs without a GPU.
 ## Results
 
 Official accuracy (%), with the normalized scorer in parentheses, on the full test subsets:
-5,000 VQAv2, 12,578 GQA, 3,000 CLEVR counting, and 2,000 TextVQA questions. Greedy
-decoding, one training seed per arm. The short prompt asks for a single word or phrase; the
-reasoning prompt asks for step-by-step thinking and a tagged final answer.
+5,000 VQAv2, 12,578 GQA, 3,000 CLEVR counting, and 5,000 TextVQA questions (its whole
+validation split). Greedy decoding, one training seed per arm. The short prompt asks for a
+single word or phrase; the reasoning prompt asks for step-by-step thinking and a tagged final
+answer.
 
 <!-- report:matrix -->
 | Arm | Prompt | VQAv2 | GQA | CLEVR counting | TextVQA (far-OOD) |
 | --- | --- | ---: | ---: | ---: | ---: |
 | Instruct 2B | short | 77.87 (77.91) | 59.45 (59.46) | 97.67 (97.67) | 80.53 (80.55) |
-| Instruct 2B | reasoning | 55.06 (64.68) | 36.13 (51.95) | 87.13 (87.13) | — |
-| SFT | short | 79.87 (79.89) | 62.35 (62.35) | 99.40 (99.40) | — |
-| SFT | reasoning | 67.99 (68.17) | 56.61 (57.00) | 92.10 (92.10) | — |
-| Instruct → GRPO | short | 78.02 (78.06) | 59.55 (59.55) | 98.27 (98.27) | — |
-| Instruct → GRPO | reasoning | 61.79 (69.01) | 44.90 (54.09) | 86.10 (86.10) | — |
-| SFT → GRPO | short | 79.85 (79.87) | 62.44 (62.44) | 99.40 (99.40) | — |
-| SFT → GRPO | reasoning | 69.18 (70.80) | 53.70 (54.86) | 97.80 (97.80) | — |
-| Instruct → gold-conditioned OPD | short | 77.79 (77.83) | 59.72 (59.72) | 97.73 (97.73) | — |
-| Instruct → gold-conditioned OPD | reasoning | 68.61 (69.23) | 51.35 (51.58) | 87.10 (87.10) | — |
-| Instruct 8B | short | 81.18 (81.22) | 61.66 (61.66) | 99.67 (99.67) | — |
-| Instruct 8B | reasoning | 63.67 (68.75) | 46.84 (52.27) | 96.97 (96.97) | — |
-| Instruct 8B → GRPO | short | 81.12 (81.16) | 61.78 (61.78) | 99.57 (99.57) | — |
-| Instruct 8B → GRPO | reasoning | 77.37 (78.63) | 59.43 (59.82) | 97.30 (97.30) | — |
+| Instruct 2B | reasoning | 55.06 (64.68) | 36.13 (51.95) | 87.13 (87.13) | 69.74 (69.75) |
+| SFT | short | 79.87 (79.89) | 62.35 (62.35) | 99.40 (99.40) | 80.08 (80.10) |
+| SFT | reasoning | 67.99 (68.17) | 56.61 (57.00) | 92.10 (92.10) | 68.86 (68.87) |
+| Instruct → GRPO | short | 78.02 (78.06) | 59.55 (59.55) | 98.27 (98.27) | 80.56 (80.57) |
+| Instruct → GRPO | reasoning | 61.79 (69.01) | 44.90 (54.09) | 86.10 (86.10) | 74.06 (74.06) |
+| SFT → GRPO | short | 79.85 (79.87) | 62.44 (62.44) | 99.40 (99.40) | 80.10 (80.12) |
+| SFT → GRPO | reasoning | 69.18 (70.80) | 53.70 (54.86) | 97.80 (97.80) | 74.58 (74.59) |
+| Instruct → gold-conditioned OPD | short | 77.79 (77.83) | 59.72 (59.72) | 97.73 (97.73) | 80.59 (80.60) |
+| Instruct → gold-conditioned OPD | reasoning | 68.61 (69.23) | 51.35 (51.58) | 87.10 (87.10) | 72.87 (72.87) |
+| Instruct 8B | short | 81.18 (81.22) | 61.66 (61.66) | 99.67 (99.67) | 83.49 (83.51) |
+| Instruct 8B | reasoning | 63.67 (68.75) | 46.84 (52.27) | 96.97 (96.97) | 74.00 (74.00) |
+| Instruct 8B → GRPO | short | 81.12 (81.16) | 61.78 (61.78) | 99.57 (99.57) | 83.67 (83.69) |
+| Instruct 8B → GRPO | reasoning | 77.37 (78.63) | 59.43 (59.82) | 97.30 (97.30) | 80.46 (80.47) |
 <!-- /report:matrix -->
 
 **1. RL recovers reasoning-prompt accuracy.** Under the reasoning prompt, 300 GRPO updates
-from Instruct raise official accuracy by 6.7 points on VQAv2, 8.8 on GQA, and 4.6 on
-TextVQA at 2B, and by 13.7, 12.6, and 5.5 at 8B. The normalized scorer confirms gains
-beyond answer formatting (2B: +4.3, +2.1, +4.6; 8B: +9.9, +7.6, +5.5). At 8B the
+from Instruct raise official accuracy by 6.7 points on VQAv2, 8.8 on GQA, and 4.3 on
+TextVQA at 2B, and by 13.7, 12.6, and 6.5 at 8B. The normalized scorer confirms gains
+beyond answer formatting (2B: +4.3, +2.1, +4.3; 8B: +9.9, +7.6, +6.5). At 8B the
 reasoning prompt ends within 3.8 points of the short prompt on VQAv2, down from 17.5.
 
 **2. No arm passes its own short-answer ceiling.** In all 28 arm and dataset pairs, the
@@ -51,7 +52,7 @@ any dataset (official).
 **3. SFT is what moves the ceiling.** One epoch of short-answer SFT raises short-prompt
 official accuracy by 2.0 points on VQAv2 and 2.9 on GQA, and GRPO after SFT keeps that
 gain (within 0.1 points) while adding reasoning-prompt accuracy on CLEVR counting (+5.7)
-and TextVQA (+5.5), under both scorers.
+and TextVQA (+5.7), under both scorers.
 
 The scorer matters under the reasoning prompt. The authors' evaluators compare some
 answers case-sensitively (VQAv2 when all annotators agree, GQA always), and for Instruct
@@ -84,12 +85,14 @@ reproduce each arm.
 | VQAv2 | 5,000 | VQA ten-annotator accuracy with its answer processing |
 | GQA | 12,578 | exact answer match |
 | CLEVR counting | 3,000 | exact count |
-| TextVQA (far-OOD) | 2,000 | MMF/EvalAI answer processing, ten-annotator accuracy |
+| TextVQA (far-OOD) | 5,000 (all of validation) | MMF/EvalAI answer processing, ten-annotator accuracy |
 
 These are fixed subsets materialized by this repository, not benchmark-server
 submissions; GQA's consistency and grounding metrics are outside an accuracy score. The
 official scorers reproduce the authors' evaluator code on 626,074 saved predictions from
 89 runs with no per-question mismatch ([validation](docs/supplementary/validation.md)).
+The [evaluation](docs/supplementary/evaluation.md) page describes the harness in the terms
+public harnesses use and lists where it departs from their practice.
 
 `evaluate.py` runs one model under a declared protocol (dataset, role, tier, prompt,
 decoding, image mode) and writes a record with both scorer variants and every prediction.
