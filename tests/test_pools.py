@@ -7,7 +7,7 @@ import pytest
 from fixtures import every_dataset
 
 from vqar import config
-from vqar.pools import VERSION, filtered_pool, load_pool, pool_path, provenance
+from vqar.pools import VERSION, RefillStream, filtered_pool, load_pool, pool_path, provenance
 
 
 @pytest.fixture
@@ -81,3 +81,41 @@ def test_a_filtered_pool_keeps_questions_with_mixed_outcomes():
         ("vqav2", "b"), ("gqa", "d"), ("gqa", "e")]
     assert pool["datasets"] == ["gqa", "vqav2"]
     assert pool["selection"]["keep"] == "1 <= correct samples <= 7"
+
+
+def test_refill_draws_are_seeded_per_update_and_skip_the_updates_own_questions():
+    keys = tuple(("gqa", str(i)) for i in range(20))
+    stream = RefillStream(keys, seed=42)
+    first = list(stream.draws(update=3, exclude=[("gqa", "0"), ("gqa", "1")]))
+    assert sorted(first) == list(range(2, 20))  # every other row once, then exhausted
+    assert list(stream.draws(update=3, exclude=[("gqa", "0"), ("gqa", "1")])) == first
+    assert list(RefillStream(keys, seed=42).draws(update=4))[:5] != first[:5]
+    assert list(RefillStream(keys, seed=7).draws(update=3))[:5] != first[:5]
+
+
+def test_a_resumed_update_redraws_the_same_replacements():
+    # Nothing is saved with a checkpoint: the order is a function of seed and update.
+    keys = tuple(("vqav2", str(i)) for i in range(1000))
+    before = RefillStream(keys, seed=42).draws(update=250)
+    before = [next(before) for _ in range(6)]
+    after = RefillStream(keys, seed=42).draws(update=250)
+    assert [next(after) for _ in range(6)] == before
+
+
+def test_the_refill_stream_reads_a_pools_ids_without_its_image_transform(data_dir):
+    from vqar.rl import load_rl_dataset
+
+    rows = load_rl_dataset(config.GRPO_PRESETS["grpo_2b_main"], data_dir)
+    stream = RefillStream.over(rows, seed=42)
+    assert len(stream.keys) == len(rows) == 10
+    index = next(stream.draws(update=0))
+    assert (rows[index]["dataset"], rows[index]["qid"]) == stream.keys[index]
+    assert stream.provenance()["pool_rows"] == 10
+
+
+def test_an_off_refill_leaves_the_recorded_preset_unchanged():
+    preset = config.GRPO_PRESETS["grpo_2b_main"]
+    assert "refill_rounds" not in config.dump(preset)
+    assert config.dump(replace(preset, refill_rounds=2))["refill_rounds"] == 2
+    with pytest.raises(ValueError, match="nonnegative"):
+        replace(preset, refill_rounds=-1)
