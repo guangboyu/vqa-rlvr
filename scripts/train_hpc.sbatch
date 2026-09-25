@@ -19,8 +19,6 @@ ENTRY=$3
 shift 3
 SELF="$REPO/scripts/train_hpc.sbatch"
 CHAIN_LEFT=${CHAIN_LEFT:-1}
-# Fail promptly on an allocated GPU that the driver cannot access.
-nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
 cd "$REPO"
 export HF_HOME=/pub/guangboy/hf
 export HF_HUB_OFFLINE=1
@@ -48,11 +46,14 @@ fi
 if [ "$CHAIN_LEFT" -gt 0 ]; then
     NEXT=$(sbatch --parsable --job-name="$SLURM_JOB_NAME" \
         --cpus-per-task="$SLURM_CPUS_PER_TASK" --mem="${SLURM_MEM_PER_NODE}M" \
-        --output="$RUN/slurm-%j.log" --export=ALL,CHAIN_LEFT=$((CHAIN_LEFT - 1)) \
+        --output="$RUN/slurm-%j.log" --export=ALL,CHAIN_LEFT=$((CHAIN_LEFT - 1)) ${AVOID_NODES:+--exclude=$AVOID_NODES} \
         --dependency=afternotok:"$SLURM_JOB_ID" \
         "$SELF" "$REPO" "$RUN" "$ENTRY" "$@")
     printf '%s\n' "$NEXT" > "$RUN/successor-job.txt"
 fi
+# Fail promptly on an allocated GPU that the driver cannot access; the successor is queued.
+# A node that keeps failing goes into AVOID_NODES, which every successor excludes.
+nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
 
 .venv/bin/python "$ENTRY" --run-dir "$RUN" --no-wandb "$@" &
 PID=$!

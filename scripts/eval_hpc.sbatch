@@ -16,7 +16,6 @@ REPO=$1
 shift
 SELF="$REPO/scripts/eval_hpc.sbatch"
 CHAIN_LEFT=${CHAIN_LEFT:-1}
-nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
 cd "$REPO"
 export HF_HOME=/pub/guangboy/hf
 export HF_HUB_OFFLINE=1
@@ -28,9 +27,10 @@ if [ "$CHAIN_LEFT" -gt 0 ]; then
     sbatch --parsable --job-name="$SLURM_JOB_NAME" \
         --cpus-per-task="$SLURM_CPUS_PER_TASK" --mem="${SLURM_MEM_PER_NODE}M" \
         --output="$(scontrol show job "$SLURM_JOB_ID" | sed -n 's/^ *StdOut=//p')" \
-        --export=ALL,CHAIN_LEFT=$((CHAIN_LEFT - 1)) \
+        --export=ALL,CHAIN_LEFT=$((CHAIN_LEFT - 1)) ${AVOID_NODES:+--exclude=$AVOID_NODES} \
         --dependency=afternotok:"$SLURM_JOB_ID" "$SELF" "$REPO" "$@"
 fi
+nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
 
 case "$1" in
     *.py) exec .venv/bin/python "$@" ;;
