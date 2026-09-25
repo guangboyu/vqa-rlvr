@@ -109,6 +109,9 @@ class GRPOPreset:
     vllm_gpu_memory_utilization: float = 0.3
     rollout_prompt: str = "reasoning"  # template the rollouts answer; its answer rule scores them
     pool: str | None = None  # a declared pool of rl-role questions; None: the whole role
+    # DAPO dynamic sampling: at most this many extra generation rounds per update replace
+    # groups whose answers all scored the same. 0 (off) keeps the fixed-compute baseline.
+    refill_rounds: int = 0
     lora_r: int = 16
     lora_alpha: int = 32
     lora_targets: tuple[str, ...] = (
@@ -125,6 +128,8 @@ class GRPOPreset:
     def __post_init__(self):
         if len(self.rewards) != len(self.reward_weights):
             raise ValueError(f"{self.name}: each reward needs a weight")
+        if self.refill_rounds < 0:
+            raise ValueError(f"{self.name}: refill_rounds must be nonnegative")
 
 
 GRPO_PRESETS: dict[str, GRPOPreset] = {
@@ -273,9 +278,18 @@ OPD_PRESETS: dict[str, OPDPreset] = {
 }
 
 
+# Opt-in fields added after runs were launched, with their off value. Left off, they are
+# not written, so earlier run configs and the auto-resume check against them stay the same.
+OPT_IN_FIELDS = {"refill_rounds": 0}
+
+
 def dump(preset) -> dict:
     """Serialize any preset dataclass to a plain dict for results JSONs and W&B."""
-    return asdict(preset)
+    record = asdict(preset)
+    for name, off in OPT_IN_FIELDS.items():
+        if name in record and record[name] == off:
+            del record[name]
+    return record
 
 
 def is_large(preset_name: str) -> bool:

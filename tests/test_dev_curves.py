@@ -111,6 +111,35 @@ def test_diagnostics_keep_logged_signals_and_every_updates_reward(tmp_path):
     assert training_diagnostics(logs)["reward_per_update"] is None
 
 
+def refill_round(step, round_, qids, scores, kept):
+    """One generation round's draw record: groups of two answers each."""
+    return {"step_before_update": step, "round": round_, "dataset": ["gqa"] * len(qids),
+            "qid": qids, "scores": scores, "kept": kept}
+
+
+def test_refilled_updates_report_the_kept_rows_and_what_they_attempted(tmp_path):
+    draws = tmp_path / "prompt_draws.jsonl"
+    records = [
+        # Update 1: b is dead, replaced in round 1 by c (dead) and in round 2 by d (live).
+        refill_round(0, 0, ["a", "a", "b", "b"], [1, 0, 1, 1], [True, True, False, False]),
+        refill_round(0, 1, ["c", "c"], [0, 0], [False, False]),
+        refill_round(0, 2, ["d", "d"], [0, 1], [True, True]),
+        # Update 2: an interrupted attempt, then the resumed one, which hits the cap and
+        # keeps its earliest dead group to fill the batch.
+        refill_round(1, 0, ["e", "e", "f", "f"], [1, 1, 0, 0], [False] * 4),
+        refill_round(1, 0, ["e", "e", "f", "f"], [0, 1, 0, 0], [True, True, True, True]),
+        refill_round(1, 1, ["g", "g"], [1, 1], [False, False]),
+    ]
+    draws.write_text("".join(json.dumps(record) + "\n" for record in records))
+    first, second = training_diagnostics([], draws)["reward_per_update"]
+    assert first == {"update": 1, "reward_mean": 0.5, "reward_std": 0.5,
+                     "zero_variance_group_fraction": 0.0, "attempted_groups": 4,
+                     "attempted_rollouts": 8, "refill_rounds": 2}
+    assert (second["reward_mean"], second["zero_variance_group_fraction"]) == (0.25, 0.5)
+    assert (second["attempted_groups"], second["refill_rounds"]) == (3, 1)
+    assert training_diagnostics([], draws)["distinct_prompts"] == 4  # a, d, e, f
+
+
 class FakeTrainer:
     """Records the wiring run_training performs; trains by jumping to the last step."""
 

@@ -4,15 +4,22 @@ A run draws from its datasets' whole rl roles unless it names a declared pool: a
 those roles saved as data/pools/<name>.json together with how it was chosen. Loading a
 pool checks every member against the rl roles, which the global held-out check already
 keeps free of dev and test images, so a pool cannot leak held-out questions.
+
+A run that refills dead groups (DAPO dynamic sampling) draws its replacement questions
+from the same pool through a RefillStream.
 """
 
 import hashlib
 import json
+import random
+from collections.abc import Iterable, Iterator
+from dataclasses import dataclass
 from pathlib import Path
 
 from vqar.splits import load_role
 
 VERSION = "rl-pool-v1"
+REFILL_VERSION = "refill-stream-v1"
 
 
 def pool_path(data_dir: Path, name: str) -> Path:
@@ -74,3 +81,43 @@ def filtered_pool(name: str, records: list, low: int, high: int) -> dict:
             "datasets": sorted({s["dataset"] for s in sources}),
             "selection": {"keep": f"{low} <= correct samples <= {high}", "records": sources},
             "members": members}
+
+
+@dataclass(frozen=True)
+class RefillStream:
+    """Replacement questions for dead groups, drawn from the run's own pool.
+
+    Each update has its own stream: a generator seeded with the run seed and the update
+    number visits the pool's rows in a fixed order, never twice in one update, and skips the
+    questions the update already drew. It depends on nothing else, so a resumed update
+    redraws the same replacements and checkpoints need no extra state. The stream is
+    separate from the main sampler's order (a torch permutation of the same rows), so a
+    refill does not pull the next updates' questions forward; a question can still appear
+    both as a refill and later in the main order.
+    """
+
+    keys: tuple[tuple[str, str], ...]  # (dataset, qid) of each pool row, in the pool's order
+    seed: int
+
+    @classmethod
+    def over(cls, rows, seed: int) -> "RefillStream":
+        """The stream over a loaded pool; reads only its ID columns, never its images."""
+        ids = rows.with_format(None).select_columns(["dataset", "qid"])
+        return cls(tuple(zip(ids["dataset"], ids["qid"], strict=True)), seed)
+
+    def draws(self, update: int, exclude: Iterable[tuple[str, str]] = ()) -> Iterator[int]:
+        """Row indices of update `update`'s replacements, in draw order."""
+        rng = random.Random(f"refill:{self.seed}:{update}")  # str seeds hash stably
+        skip, visited = set(exclude), set()
+        while len(visited) < len(self.keys):
+            index = rng.randrange(len(self.keys))
+            if index in visited:
+                continue
+            visited.add(index)
+            if self.keys[index] not in skip:
+                yield index
+
+    def provenance(self) -> dict:
+        """Recorded with a refilling run: enough to replay every update's draw order."""
+        return {"version": REFILL_VERSION, "seed": self.seed, "pool_rows": len(self.keys),
+                "order": "random.Random('refill:<seed>:<update>'), no repeats in an update"}

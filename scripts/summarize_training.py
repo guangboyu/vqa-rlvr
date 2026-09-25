@@ -10,20 +10,16 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
-from vqar.training import training_diagnostics
+from vqar.training import trained_draws, training_diagnostics
 
 
 def completed_draws(path, steps, group_size):
-    latest = {}
-    for line in path.read_text().splitlines():
-        record = json.loads(line)
-        step = record["step_before_update"]
-        if step < steps:
-            latest[step] = record
-    if sorted(latest) != list(range(steps)):
+    """The prompt groups each completed update trained on (kept groups, for refills)."""
+    trained = {step: rows for step, rows in trained_draws(path).items() if step < steps}
+    if sorted(trained) != list(range(steps)):
         raise ValueError(f"{path}: missing draws for completed updates")
     groups = []
-    for step, record in sorted(latest.items()):
+    for step, record in sorted(trained.items()):
         rows = list(zip(record["dataset"], record["qid"], record["scores"], strict=True))
         if len(rows) % group_size:
             raise ValueError(f"{path}: incomplete rollout group at step {step}")
