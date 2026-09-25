@@ -119,3 +119,17 @@ counts and stop reasons. For a paired image-sensitivity check, evaluate the orig
 cell, then the same tier with `--image-mode black` or `--image-mode swapped`. A swap uses
 another image from the same evaluation subset; this measures prediction sensitivity, not
 causal isolation of the image encoder.
+
+## Cluster job failures seen
+
+These failures stop a job before training, so they show in the Slurm log, not in the
+training signals ([monitoring](monitoring.md)).
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| Job fails within seconds: `Unable to determine the device handle for GPU0` | a node with a broken GPU; it frees quickly and keeps attracting jobs | exclude the node (`--exclude`, and `AVOID_NODES` for the failure successors of `scripts/train_hpc.sbatch` and `scripts/eval_hpc.sbatch`) |
+| vLLM start-up fails offline: `IncompleteSnapshotError ... .gitattributes, README.md missing` | vLLM resolves the model through `snapshot_download(local_files_only=True)`, which rejects a cache missing any listed file | add the missing files at the pinned revision to the cluster cache |
+| `FileNotFoundError` for a file that exists, while importing a library | a transient shared-storage error | none; the failure successor resumes the run |
+
+Both job scripts queue their failure successor before the GPU check, so a job on a bad node
+still leaves a successor.

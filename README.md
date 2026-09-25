@@ -123,7 +123,8 @@ the three 2B models on a 24 GB GPU.
 The [tutorial](docs/tutorial.md) runs the 2B pipeline on one 24 GB GPU: data, split check,
 evaluation, the learnability pre-check, two-step SFT and GRPO runs with their dev-tier
 learning curves, and the tables. The [hardware notes](docs/supplementary/hardware.md)
-cover the 80/96 GB profiles, resumption, and measured memory.
+cover the 80/96 GB profiles, resumption, and measured memory; [monitoring](docs/supplementary/monitoring.md)
+covers what to watch while an RL run trains and how to plot it.
 
 ## History and corrections
 

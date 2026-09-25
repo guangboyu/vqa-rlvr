@@ -112,7 +112,9 @@ both prompts; the two-step GRPO run above takes about three minutes including th
 and prints lines such as `step 2 vqav2-dev-dev-short: normalized 0.7181`. Those records
 form the run's learning curve and stay in `runs/<run>/checkpoints/dev-records/`;
 `--no-dev-eval` skips the step. A run interrupted at any point resumes from its last
-complete checkpoint when started again with the same `--run-dir`.
+complete checkpoint when started again with the same `--run-dir`. While a longer run
+trains, `python -m scripts.watch_training runs/grpo-smoke/metrics.jsonl` prints its health
+signals with warning flags; [monitoring](supplementary/monitoring.md) explains each one.
 
 To start GRPO from the SFT model instead, merge the adapter and pass the merge:
 

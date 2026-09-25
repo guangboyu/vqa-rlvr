@@ -22,7 +22,7 @@ LOGGED_PANELS = (
     ("entropy (nats/token)", "entropy"),
     ("response length (tokens)", "completions/mean_length"),
     ("sampler-trainer log-prob gap", "sampling/sampling_logp_difference/mean"),
-    ("gradient norm", "grad_norm"),
+    ("gradient norm (zeros dropped: no live group)", "grad_norm"),
 )
 
 
@@ -74,21 +74,24 @@ def pyplot():
     return plt
 
 
-def plot_health(runs: list[Path], out: Path, window: int) -> None:
+def plot_health(runs: list[tuple[Path, str]], out: Path, window: int) -> None:
+    """Six panels of logged signals, one colour per (run directory, legend label)."""
     plt = pyplot()
 
     fig, axes = plt.subplots(2, 3, figsize=(13, 6.5), constrained_layout=True)
     panels = list(zip(axes.flat, LOGGED_PANELS, strict=False))
-    for run, color in zip(runs, plt.rcParams["axes.prop_cycle"].by_key()["color"],
-                          strict=False):
+    for (run, label), color in zip(runs, plt.rcParams["axes.prop_cycle"].by_key()["color"],
+                                   strict=False):
         lines = logged_lines(run / "metrics.jsonl")
         for ax, (title, key) in panels:
-            points = [(e["step"], e[key]) for e in lines if e.get(key) is not None]
+            # A logged gradient norm of exactly 0 means that update had no live group.
+            points = [(e["step"], e[key]) for e in lines
+                      if e.get(key) is not None and not (key == "grad_norm" and e[key] == 0)]
             if points:
                 steps, values = zip(*points, strict=True)
                 ax.plot(steps, values, color=color, alpha=0.25, linewidth=0.8)
                 ax.plot(steps, rolling_mean(list(values), max(1, window // 10)),
-                        color=color, label=run.name)
+                        color=color, label=label)
             ax.set_title(title)
         ax = axes.flat[5]
         for kind, style in (("all_right", "-"), ("all_wrong", "--")):
@@ -108,10 +111,10 @@ def plot_health(runs: list[Path], out: Path, window: int) -> None:
     print(f"-> {out}")
 
 
-def plot_curves(runs: list[Path], out: Path) -> None:
+def plot_curves(runs: list[tuple[Path, str]], out: Path) -> None:
     plt = pyplot()
 
-    curves = {run: dev_curves(run) for run in runs}
+    curves = {run: dev_curves(run) for run, _ in runs}
     names = sorted({name for c in curves.values() for name in c})
     if not names:
         print("no dev records yet")
@@ -119,14 +122,14 @@ def plot_curves(runs: list[Path], out: Path) -> None:
     fig, axes = plt.subplots(1, len(names), figsize=(3.4 * len(names), 3.2),
                              constrained_layout=True, squeeze=False)
     for ax, name in zip(axes[0], names, strict=True):
-        for run in runs:
+        for run, label in runs:
             if name in curves[run]:
                 steps, accuracy, counts = curves[run][name]
                 # One binomial standard error: dev sets are small, so read steps against it.
                 errors = [(a * (1 - a) / n) ** 0.5 for a, n in zip(accuracy, counts,
                                                                     strict=True)]
                 ax.errorbar(steps, accuracy, yerr=errors, marker="o", markersize=3,
-                            capsize=2, label=run.name)
+                            capsize=2, label=label)
                 size = counts[0]
         ax.set_title(f"dev: {name} (n={size})")
         ax.set_xlabel("update")
@@ -144,10 +147,16 @@ def main():
     parser.add_argument("--out", type=Path, required=True, help="training-health figure")
     parser.add_argument("--curves", type=Path, default=None, help="dev learning-curve figure")
     parser.add_argument("--window", type=int, default=20, help="updates per rolling mean")
+    parser.add_argument("--labels", nargs="+", default=None,
+                        help="legend names, one per run (default: directory names)")
     args = parser.parse_args()
-    plot_health(args.runs, args.out, args.window)
+    labels = args.labels or [run.name for run in args.runs]
+    if len(labels) != len(args.runs):
+        parser.error("give one label per run")
+    runs = list(zip(args.runs, labels, strict=True))
+    plot_health(runs, args.out, args.window)
     if args.curves:
-        plot_curves(args.runs, args.curves)
+        plot_curves(runs, args.curves)
 
 
 if __name__ == "__main__":

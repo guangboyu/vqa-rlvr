@@ -26,5 +26,5 @@ def test_health_figure_is_written_from_metrics_alone(tmp_path):
     lines = [{"step": s, "reward": 0.5, "entropy": 0.7, "completions/mean_length": 100,
               "grad_norm": 0.2} for s in (10, 20, 30)]
     (run / "metrics.jsonl").write_text("".join(json.dumps(e) + "\n" for e in lines))
-    plot_health([run], tmp_path / "health.png", window=10)
+    plot_health([(run, "run")], tmp_path / "health.png", window=10)
     assert (tmp_path / "health.png").stat().st_size > 0
