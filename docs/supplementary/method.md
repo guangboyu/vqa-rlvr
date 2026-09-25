@@ -73,8 +73,8 @@ with accumulation 4, at most 640 completion tokens, no KL penalty. The pinned TR
 configuration uses DAPO token-level loss reduction, group reward scaling,
 weighted-sum-then-normalize reward aggregation, token-level policy ratios clipped
 symmetrically at 0.2, and vLLM sampling correction with `sequence_mask` and an upper
-ratio of 3. Dynamic resampling of zero-variance groups is off, so this is not the
-complete DAPO recipe. The settings live in [`vqar/config.py`](../../vqar/config.py) and are
+ratio of 3. Dynamic resampling of zero-variance groups is off in the campaign's runs (see
+refilling dead groups below), so this is not the complete DAPO recipe. The settings live in [`vqar/config.py`](../../vqar/config.py) and are
 saved with every run.
 
 **Reward.** The correctness reward requires a complete `<answer>...</answer>` tag, then
@@ -86,6 +86,30 @@ beside the normalized one. The tag requirement is the reasoning template's answe
 instead, whose rule scores the whole trimmed response. `--pool <name>` draws prompts from a
 declared pool (`scripts/build_pool.py`, [ADR 0003](../adr/0003-rl-pools-are-declared-files-beside-the-split-files.md))
 rather than the whole rl roles; the campaign's runs used the defaults.
+
+**Refilling dead groups (opt-in).** `train_grpo.py --refill-rounds N` turns on DAPO's
+dynamic sampling. A group is dead when all eight of its answers get the same total reward,
+so it gives GRPO no gradient. After scoring an update's four groups, the trainer drops the
+dead ones, draws as many replacement questions from the same pool, samples and scores
+them, and repeats, for at most `N` extra rounds per update. The update then trains on the
+live groups. If the cap is reached or the pool runs out, the earliest dead groups (the
+update's own questions first) fill the batch, so it always holds four groups. Replacements
+come from a separate stream for each update, seeded by the run seed and the update number
+([`vqar/pools.py`](../../vqar/pools.py)). The stream skips the update's own questions. A
+resumed update draws the same replacements, so checkpoints carry no extra state. Each extra
+round syncs the policy weights into vLLM again before sampling. Logging:
+
+- `prompt_draws.jsonl` gets one record per round, with a `round` number and a `kept` flag
+  for each answer.
+- The trainer logs `refill/attempted_groups`, `refill/live_groups`, and `refill/rounds`.
+- The per-update diagnostics report the reward over the kept answers, plus attempted
+  groups, attempted rollouts, and rounds.
+
+TRL's reward, zero-variance share, and advantages describe the batch that was trained on.
+Completion-length and token counts include every attempted rollout. Refilling changes how
+many rollouts each update generates, so compute per update is no longer fixed. Compare a
+refilling run by attempted rollouts and GPU hours, not only by updates. Every preset
+leaves this option off (`0`).
 
 **OPD.** The same rollout geometry as GRPO. The learning signal is the teacher's token
 log-probability minus the student's rollout-time log-probability. The correctness reward
