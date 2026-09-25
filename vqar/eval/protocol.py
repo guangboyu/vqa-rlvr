@@ -7,10 +7,11 @@ from typing import ClassVar
 
 from vqar import metrics
 from vqar.config import MAX_PIXELS
-from vqar.registry import DATASETS, PROMPTS
+from vqar.registry import DATASETS, PROMPTS, TRAINING_ROLES
 
 IMAGE_MODES = ("original", "black", "swapped")
-EVAL_ROLES = ("dev", "test", "rl")  # rl only for the learnability pre-check
+# Training roles are read only by the learnability pre-check and the screening battery.
+EVAL_ROLES = ("dev", "test", "rl", "sft")
 EXTRACTION_RULE = "last_answer_tag_or_full_text"
 # The corrected campaign's rule; retention reports it beside mean output tokens.
 ANSWER_TAG_RULE = "raw text contains </answer>"
@@ -18,7 +19,12 @@ ANSWER_TAG_RULE = "raw text contains </answer>"
 
 @dataclass(frozen=True)
 class Protocol:
-    """What makes two numbers comparable. `max_tokens=None` takes the prompt's budget."""
+    """What makes two numbers comparable. `max_tokens=None` takes the prompt's budget.
+
+    `screening` lets a greedy protocol read a training role for the dataset screening
+    battery (vqar.eval.screening). It changes what may be evaluated, never the numbers, so
+    it is not part of the identity.
+    """
 
     TIERS: ClassVar[dict[str, int | None]] = {"smoke": 32, "dev": 500, "full": None}
 
@@ -32,6 +38,7 @@ class Protocol:
     samples: int = 1
     seed: int = 0  # used only when sampling
     max_pixels: int = MAX_PIXELS  # image budget the engine resizes to; the model's own is 16.8 MP
+    screening: bool = False
 
     def __post_init__(self):
         if self.dataset not in DATASETS:
@@ -39,9 +46,10 @@ class Protocol:
         spec = DATASETS[self.dataset]
         if self.role not in EVAL_ROLES:
             raise ValueError(f"evaluation role must be one of {EVAL_ROLES}")
-        if self.role == "rl" and self.samples < 2:
-            raise ValueError("the rl role is read only by learnability protocols, which "
-                             "sample a group of at least two responses")
+        if self.role in TRAINING_ROLES and self.samples < 2 and not self.screening:
+            raise ValueError(f"the {self.role} role is read only by learnability protocols, "
+                             "which sample a group of at least two responses, and by the "
+                             "screening battery")
         if self.role not in spec.subsets:
             raise ValueError(f"{self.dataset} has no {self.role} role")
         if self.prompt not in PROMPTS:

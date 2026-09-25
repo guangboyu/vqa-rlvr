@@ -10,6 +10,7 @@ from datasets import Image
 from PIL import Image as PILImage
 
 from vqar.eval.protocol import Protocol
+from vqar.registry import TRAINING_ROLES
 from vqar.splits import SEED, load_role, read_split
 
 
@@ -37,16 +38,16 @@ def to_example(row: dict) -> Example:
 def select_rows(protocol: Protocol, data_dir: Path, limit: int | None = None):
     """The rows a protocol evaluates and the identity of that data.
 
-    Dev and test rows keep the split file's order. The rl role (read only by the
-    learnability pre-check) is shuffled with the training seed, so a tier is a random sample
-    of the dataset's pool; a run that mixes datasets shuffles the combined pool, so its draw
-    order differs. The identity names the source subsets and hashes the ordered
-    (subset, row, question id) selection, so it changes exactly when the evaluated rows
-    change; editing another role of the same split file leaves it alone. Swapped images
-    also pin the donor of each row. `limit` overrides the tier's question count
+    Dev and test rows keep the split file's order. A training role (read only by the
+    learnability pre-check and the screening battery) is shuffled with the training seed,
+    so a tier is a random sample of the dataset's pool; a run that mixes datasets shuffles
+    the combined pool, so its draw order differs. The identity names the source subsets
+    and hashes the ordered (subset, row, question id) selection, so it changes exactly when
+    the evaluated rows change; editing another role of the same split file leaves it alone.
+    Swapped images also pin the donor of each row. `limit` overrides the tier's question count
     (historical records only).
     """
-    order = SEED if protocol.role == "rl" else None
+    order = SEED if protocol.role in TRAINING_ROLES else None
     rows = load_role(data_dir, [protocol.dataset], protocol.role, seed=order)
     split = read_split(data_dir, protocol.dataset)
     parts = split["roles"][protocol.role]

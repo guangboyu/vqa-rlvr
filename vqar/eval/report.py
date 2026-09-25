@@ -15,7 +15,7 @@ from vqar.config import MAX_PIXELS
 from vqar.eval.legacy import july_records
 from vqar.eval.matrix import Arm, load_matrix
 from vqar.eval.record import RunRecord, record_files
-from vqar.registry import DATASETS
+from vqar.registry import DATASETS, TRAINING_ROLES
 from vqar.splits import read_split
 
 ROOT = Path(__file__).resolve().parent.parent.parent
@@ -281,7 +281,7 @@ def learnability_table(cells: dict) -> str:
     """Learnability pre-checks: sampled responses to RL pool prompts under the reward rule."""
     rows = []
     for cell, record in sorted(cells.items(), key=lambda item: str(item[0])):
-        if cell.role != "rl":
+        if cell.role not in TRAINING_ROLES or cell.samples < 2:  # greedy: a screening cell
             continue
         learnability = record.metrics["learnability"]
         histogram = learnability["correct_samples_histogram"]
