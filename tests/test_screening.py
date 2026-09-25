@@ -1,10 +1,17 @@
 """Dataset screening: greedy protocols on a training role, the battery, its measures,
 gates, and ranking."""
 
+import base64
+import io
+import json
+import sys
+
 import pytest
 from fixtures import every_dataset
+from PIL import Image as PILImage
 
-from vqar.eval import ModelRef, Protocol, protocol_identity, run_eval
+from vqar.eval import ModelRef, Protocol, RunRecord, protocol_identity, run_eval, screening
+from vqar.eval.screening import battery
 
 
 class Fixed:
@@ -67,3 +74,182 @@ def test_a_greedy_screening_record_stays_out_of_the_learnability_table(setup):
     assert "learnability" not in record.metrics
     assert learnability_table(load_cells(records)) == \
         "No learnability pre-check has been recorded yet.\n"
+
+
+class Screener:
+    """Right under the short prompt, wrong under the greedy reasoning prompt, wrong on a
+    black image, and right on every other sample."""
+
+    def generate(self, conversations, *, max_tokens, temperature, samples, seed):
+        outputs = []
+        for messages in conversations:
+            text = next(part["text"] for part in messages[0]["content"]
+                        if part["type"] == "text")
+            if image_shade(messages) == 0:
+                replies = ["0"]
+            elif temperature > 0:
+                replies = ["<answer>2</answer>", "<answer>3</answer>"]
+            elif "single word" in text:
+                replies = ["2"]
+            else:
+                replies = ["<answer>3</answer>"]
+            outputs.append([{"text": replies[i % len(replies)], "output_tokens": 2,
+                             "finish_reason": "stop"} for i in range(samples)])
+        return outputs
+
+
+def image_shade(messages) -> int:
+    url = next(part["image_url"]["url"] for part in messages[0]["content"]
+               if part["type"] == "image_url")
+    with PILImage.open(io.BytesIO(base64.b64decode(url.split(",", 1)[1]))) as image:
+        return image.convert("L").getpixel((0, 0))
+
+
+def run_battery(cells, model, data, records):
+    for protocol in cells.protocols().values():
+        run_eval(model, protocol, Screener(), data_dir=data, records_dir=records)
+
+
+def test_the_battery_reads_the_training_pool_with_the_learnability_protocol():
+    from vqar.rl import ROLLOUT_TEMPERATURE
+
+    cells = battery("gqa")
+    assert [p.slug() for p in cells.protocols().values()] == [
+        "gqa-rl-dev-short", "gqa-rl-dev-short-black", "gqa-rl-dev-reasoning",
+        "gqa-rl-dev-reasoning-t1k8"]
+    assert not cells.validation_only
+    assert cells.sampled.temperature == ROLLOUT_TEMPERATURE
+    # The same cell as `scripts.learnability --preset grpo_2b_main --tier dev`.
+    data = {"subsets": {"x": "f"}, "selection_sha256": "s"}
+    assert Protocol.id_of(protocol_identity(cells.sampled, data)).startswith("16c2577d3db92428")
+
+
+def test_a_dataset_without_a_training_pool_is_screened_only_for_validation():
+    assert battery("textvqa") is None
+    cells = battery("textvqa", "first-300", validate_on_test=True)
+    assert cells.role == "test" and cells.validation_only
+    assert cells.short.slug() == "textvqa-test-first-300-short"
+    assert battery("clevr", validate_on_test=True).role == "rl"
+
+
+def test_sampling_measures_from_per_question_counts():
+    result = screening.sampling_measures({"a": 0, "b": 4, "c": 8, "d": 1}, 8)
+    assert result["pass_at_1"] == pytest.approx((0 + 0.5 + 1 + 0.125) / 4)
+    assert result["pass_at_k"] == 0.75
+    assert result["rl_headroom"]["delta"] == pytest.approx(100 * (0.75 - 0.40625))
+    assert result["rl_headroom"]["low"] <= result["rl_headroom"]["delta"]
+    assert result["learnable_share"] == 0.5
+
+
+def test_parse_rate_follows_the_reward_answer_rule():
+    lines = [{"raw": "so <answer>2</answer>"}, {"raw": "2"}, {"raw": "<answer> </answer>"},
+             {"raw": "<answer>a</answer> then <answer>b</answer>"}]
+    assert screening.parse_rate(lines, "reasoning") == 0.5
+    assert screening.parse_rate(lines, "short") == 1.0
+
+
+def test_gates_and_their_boundaries():
+    failed_gates, good = screening.failed_gates, screening.DECLARED["gqa"]
+    assert failed_gates(2_000, good, {"parse_rate": 0.95, "short_accuracy": 0.899}) == []
+    assert failed_gates(1_999, good, {}) == ["training questions"]
+    assert failed_gates(5_000, good, {"parse_rate": 0.949, "short_accuracy": 0.90}) == [
+        "parse rate", "not saturated"]
+    assert failed_gates(5_000, None, {}) == ["split separable", "license"]
+    closed = screening.Declaration("patient", False, "research only", False)
+    assert failed_gates(5_000, closed, {}) == ["split separable", "license"]
+
+
+def row(model, dataset, status, payoff=0.0, headroom=0.0):
+    return {"model": model, "dataset": dataset, "status": status,
+            "reasoning_payoff": {"delta": payoff}, "rl_headroom": {"delta": headroom}}
+
+
+def test_ranking_orders_survivors_by_payoff_then_headroom_per_model():
+    rows = screening.rank([
+        row("m", "rejected-a", "rejected"), row("m", "low", "passed", -5.0, 30.0),
+        row("m", "tie-more-headroom", "passed", 2.0, 20.0),
+        row("m", "tie-less-headroom", "passed", 2.0, 10.0),
+        row("m", "unfinished", "incomplete"), row("n", "other", "passed", -9.0)])
+    assert [(r["model"], r["dataset"], r["rank"]) for r in rows] == [
+        ("m", "tie-more-headroom", 1), ("m", "tie-less-headroom", 2), ("m", "low", 3),
+        ("m", "unfinished", None), ("m", "rejected-a", None), ("n", "other", 1)]
+
+
+def test_the_battery_end_to_end_from_records(setup, monkeypatch):
+    from scripts.screen_datasets import batteries, collect
+
+    data, model, records = setup
+    planned = batteries(["gqa", "textvqa", "clevr"], "dev", validate_on_test=True)
+    for dataset in ("gqa", "textvqa"):
+        run_battery(planned[dataset], model, data, records)
+    monkeypatch.setattr(screening, "MIN_POOL_QUESTIONS", 3)
+    rows = {r["dataset"]: r for r in collect("base", model, planned, data, records)}
+
+    gqa = rows["gqa"]
+    assert gqa["role"] == "rl" and gqa["questions"] == gqa["pool_questions"]
+    assert gqa["reasoning_payoff"]["delta"] == -100.0
+    assert gqa["image_dependence"]["delta"] == 100.0
+    assert (gqa["pass_at_1"], gqa["pass_at_k"], gqa["learnable_share"]) == (0.5, 1.0, 1.0)
+    assert gqa["rl_headroom"]["delta"] == 50.0
+    assert gqa["parse_rate"] == 1.0
+    assert gqa["short_accuracy"] == 1.0
+    assert gqa["failed_gates"] == ["not saturated"] and gqa["status"] == "rejected"
+
+    textvqa = rows["textvqa"]
+    assert textvqa["validation_only"] and textvqa["pool_questions"] == 0
+    assert textvqa["reasoning_payoff"]["delta"] < 0
+    assert "training questions" in textvqa["failed_gates"]
+
+    clevr = rows["clevr"]
+    assert clevr["status"] == "incomplete"
+    assert clevr["missing"] == ["short", "black", "reasoning", "sampled"]
+    assert "reasoning_payoff" not in clevr
+
+    table = screening.markdown(screening.rank(list(rows.values())))
+    assert "test (validation only)" in table
+    assert "rejected: not saturated" in table
+    assert "incomplete: missing short, black, reasoning, sampled" in table
+
+
+def test_older_learnability_records_are_recounted_from_their_predictions(setup):
+    data, model, records = setup
+    record = run_eval(model, battery("gqa").sampled, Screener(), data_dir=data,
+                      records_dir=records)
+    stored = screening.correct_counts(record)
+    assert set(stored.values()) == {4}
+    learnability = {k: v for k, v in record.metrics["learnability"].items()
+                    if k != "correct_samples"}
+    older = RunRecord(record.model, record.protocol,
+                      {**record.metrics, "learnability": learnability}, record.provenance,
+                      path=record.path)
+    assert screening.correct_counts(older) == stored
+
+
+def test_dry_run_lists_the_battery_and_from_records_writes_the_table(setup, tmp_path,
+                                                                     monkeypatch, capsys):
+    from scripts import screen_datasets
+
+    data, model, records = setup
+    matrix = tmp_path / "experiments.toml"
+    matrix.write_text(f'[[arms]]\nlabel = "base"\nname = "Base"\nmodel = "{model.path}"\n')
+    common = ["screen_datasets", "--arms", "base", "--matrix", str(matrix), "--data-dir",
+              str(data), "--records-dir", str(records), "--datasets", "gqa", "textvqa"]
+    monkeypatch.setattr(sys, "argv", [*common, "--dry-run"])
+    screen_datasets.main()
+    printed = capsys.readouterr().out.splitlines()
+    assert printed[0].startswith("base gqa short: gqa-rl-dev-short: missing, ")
+    assert [line.split(": ")[1] for line in printed[:4]] == [
+        "gqa-rl-dev-short", "gqa-rl-dev-short-black", "gqa-rl-dev-reasoning",
+        "gqa-rl-dev-reasoning-t1k8"]
+    assert printed[4].startswith("base textvqa: no training pool")
+
+    run_battery(battery("gqa"), model, data, records)
+    out = tmp_path / "screening"
+    monkeypatch.setattr(sys, "argv", [*common, "--from-records", "--out", str(out)])
+    screen_datasets.main()
+    written = json.loads((out / "screening.json").read_text())
+    assert written["gates"]["min_parse_rate"] == 0.95
+    assert [(r["dataset"], r["status"]) for r in written["rows"]] == [
+        ("gqa", "rejected"), ("textvqa", "rejected")]
+    assert written["rows"][1]["failed_gates"] == ["training questions"]
+    assert "| base | — | GQA | rl |" in (out / "screening.md").read_text()
