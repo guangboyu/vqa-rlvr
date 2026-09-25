@@ -54,3 +54,15 @@ def test_a_flag_that_names_a_preset_field_overrides_it():
     preset = resolve_preset(config.GRPO_PRESETS, args)
     assert (preset.learning_rate, preset.gradient_accumulation) == (3e-5, 16)
     assert preset.max_steps == config.GRPO_PRESETS["grpo_2b_main"].max_steps
+
+
+def test_grpo_dry_run_shows_the_refill_stream_when_refilling(repo, monkeypatch, capsys):
+    import train_grpo
+
+    argv = ["train_grpo.py", "--preset", "grpo_2b_main", "--hardware", "24gb", "--dry-run"]
+    monkeypatch.setattr("sys.argv", argv + ["--refill-rounds", "3"])
+    train_grpo.main()
+    assert "refill: up to 3 extra rounds per update" in capsys.readouterr().out
+    monkeypatch.setattr("sys.argv", argv)
+    train_grpo.main()
+    assert "refill:" not in capsys.readouterr().out

@@ -12,11 +12,13 @@ Usage:
     uv run python train_grpo.py --preset grpo_2b_main --hardware 24gb
     uv run python train_grpo.py --preset grpo_2b_main --rewards correctness format
     uv run python train_grpo.py --preset grpo_2b_main --rollout-prompt short --dry-run
+    uv run python train_grpo.py --preset grpo_2b_main --refill-rounds 3 --dry-run
 """
 
 import argparse
 
 from vqar import config
+from vqar.pools import RefillStream
 from vqar.pools import provenance as pool_provenance
 from vqar.registry import PROMPTS
 from vqar.rl import (
@@ -63,6 +65,9 @@ def main() -> None:
                         help="template the rollouts answer; its answer rule scores them")
     parser.add_argument("--pool", default=None,
                         help="train on a declared pool under data/pools/ (default: whole rl roles)")
+    parser.add_argument("--refill-rounds", type=int, default=None,
+                        help="replace dead groups with up to this many extra generation rounds "
+                        "per update (DAPO dynamic sampling; default 0: off)")
     args = parse_arguments(parser)
     if args.rewards and not args.reward_weights:
         args.reward_weights = [0.2 if name == "format" else 1.0 for name in args.rewards]
@@ -91,20 +96,32 @@ def main() -> None:
         preset, output, run_name, load_kwargs(preset.quantize_4bit), save_steps=args.save_steps,
         save_total_limit=args.save_total_limit, report_to=wandb_reporting(args.no_wandb),
     )
-    write_run_config(output, {
+    train_dataset = load_rl_dataset(preset)
+    refill = RefillStream.over(train_dataset, preset.seed) if preset.refill_rounds else None
+    record = {
         "preset": config.dump(preset), "policy_model": model_path,
         "data": provenance(ROOT / "data", preset.datasets),
         "pool": pool_provenance(ROOT / "data", preset.pool), "hardware": args.hardware,
-    }, training_args)
-    trainer = GRPOTrainer(
+    }
+    if refill:  # absent when off, so earlier run configs still match on resume
+        record["refill"] = refill.provenance()
+    write_run_config(output, record, training_args)
+    trainer_args = dict(
         model=model_path,
         reward_funcs=build_rewards(preset.rewards),
         args=training_args,
-        train_dataset=load_rl_dataset(preset),
+        train_dataset=train_dataset,
         processing_class=processor,
         peft_config=lora_config(preset),
         rollout_func=make_chat_rollout(),
     )
+    if refill:
+        from vqar.refill_trainer import RefillGRPOTrainer
+
+        trainer = RefillGRPOTrainer(**trainer_args, refill=refill,
+                                    refill_rounds=preset.refill_rounds)
+    else:
+        trainer = GRPOTrainer(**trainer_args)
     completed = run_training(trainer, output, args.run_dir, log_draws=True)
     if completed and not args.no_dev_eval:
         evaluate_checkpoints_next(output)

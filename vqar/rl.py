@@ -4,11 +4,15 @@ Heavy libraries (torch, trl, vllm) load inside the functions that need them, so 
 and CPU tests work without them.
 """
 
+import math
+from collections.abc import Callable
+from dataclasses import dataclass, field
 from functools import partial
+from itertools import islice
 from pathlib import Path
 
 from vqar import config
-from vqar.pools import load_pool
+from vqar.pools import RefillStream, load_pool
 from vqar.registry import PROMPTS
 from vqar.training import ROOT
 
@@ -117,6 +121,60 @@ def make_chat_rollout():
     return rollout
 
 
+@dataclass
+class ScoredGroup:
+    """One question's sampled answers, scored. `live` means their total rewards differ, so
+    the group carries a GRPO gradient; `rollout` holds what the trainer needs to train on it."""
+
+    question: dict  # the pool row the answers respond to
+    scores: list[float]  # the first reward per answer, as the draw log records it
+    live: bool
+    rollout: dict = field(default_factory=dict)
+
+
+def fill_live_groups(questions: list[dict], draw: Callable[[int], list[dict]],
+                     score: Callable[[list[dict]], list[ScoredGroup]],
+                     max_rounds: int) -> tuple[list[list[ScoredGroup]], list[ScoredGroup]]:
+    """DAPO dynamic sampling for one update.
+
+    Score the update's questions; while fewer groups are live than there are questions and
+    extra rounds remain, score as many replacement questions from `draw` as groups are
+    missing. The batch is every live group, topped up with the earliest dead groups (the
+    update's own questions first) when the cap is reached or the pool runs out, so the
+    batch keeps its size. Returns the scored groups of every round, and the batch.
+    """
+    target = len(questions)
+    rounds = [score(questions)]
+    live = [group for group in rounds[0] if group.live]
+    while len(live) < target and len(rounds) <= max_rounds:
+        replacements = draw(target - len(live))
+        if not replacements:
+            break
+        rounds.append(score(replacements))
+        live += [group for group in rounds[-1] if group.live]
+    dead = [group for scored in rounds for group in scored if not group.live]
+    return rounds, live + dead[:target - len(live)]
+
+
+def refill_draw_records(step: int, rounds: list[list[ScoredGroup]],
+                        batch: list[ScoredGroup]) -> list[dict]:
+    """One prompt-draw record per generation round: every attempted answer, and whether the
+    update trained on it."""
+    kept = {id(group) for group in batch}
+    records = []
+    for number, groups in enumerate(rounds):
+        record = {"step_before_update": step, "round": number,
+                  "dataset": [], "qid": [], "scores": [], "kept": []}
+        for group in groups:
+            size = len(group.scores)
+            record["dataset"] += [group.question["dataset"]] * size
+            record["qid"] += [group.question["qid"]] * size
+            record["scores"] += [None if math.isnan(s) else s for s in group.scores]
+            record["kept"] += [id(group) in kept] * size
+        records.append(record)
+    return records
+
+
 def dry_run(preset) -> None:
     """Validate the pool, the rollout template, and reward wiring without a model or GPU."""
     from vqar.rewards import REWARDS
@@ -129,6 +187,11 @@ def dry_run(preset) -> None:
     print(f"dataset ok: {len(ds)} prompts from {pool} of {preset.datasets}")
     print(f"rollout prompt: {template.name} (reward reads the {template.answer_rule} answer)")
     print(f"sample question: {row['question'][:80]}")
+    if getattr(preset, "refill_rounds", 0):  # GRPO only
+        stream = RefillStream.over(ds, preset.seed)
+        first = [stream.keys[i] for i in islice(stream.draws(update=0), 3)]
+        print(f"refill: up to {preset.refill_rounds} extra rounds per update replace dead "
+              f"groups; first replacements at update 1 (before excluding its own): {first}")
 
     answer = "<think>x</think><answer>4</answer>" if template.answer_rule == "tagged" else "4"
     for name in preset.rewards:

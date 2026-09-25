@@ -137,6 +137,8 @@ DIAGNOSTICS = {
     "entropy": "entropy", "clip_fraction": "clip_ratio/region_mean",
     "completion_length": "completions/mean_length", "tokens_seen": "num_tokens",
     "opd_reverse_kl": "opd/reverse_kl_per_token",
+    "refill_attempted_groups": "refill/attempted_groups",
+    "refill_live_groups": "refill/live_groups", "refill_rounds": "refill/rounds",
 }
 
 
@@ -277,7 +279,11 @@ def check_rl_precision(preset) -> None:
 
 
 def log_prompt_draws(trainer, path: Path) -> None:
-    """Keep actual rollout IDs; resumed attempts can repeat an unfinished update."""
+    """Keep actual rollout IDs; resumed attempts can repeat an unfinished update. A trainer
+    that refills dead groups records each generation round itself, with the rows it kept."""
+    if hasattr(trainer, "record_draws_to"):
+        trainer.record_draws_to(path)
+        return
     reward = trainer.reward_funcs[0]
 
     @wraps(reward)
