@@ -2,6 +2,10 @@
 
 Usage: python -m scripts.summarize_training runs/base runs/sft-rl --output exposure.json
 This uses completed updates, dropping duplicate attempts after checkpoint resume.
+
+Per run, `dead_groups` gives the mean share of prompt groups that were all right, all wrong,
+or all at one partial score (no gradient; `vqar.training.dead_group_kind`) over the first
+and the last ten updates and the whole run; `diagnostics.reward_per_update` has every update.
 """
 
 import argparse
@@ -10,7 +14,9 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
-from vqar.training import trained_draws, training_diagnostics
+from vqar.training import DEAD_GROUP_KINDS, dead_group_kind, trained_draws, training_diagnostics
+
+WINDOW = 10  # updates; one update holds only a few prompt groups, so single updates are noisy
 
 
 def completed_draws(path, steps, group_size):
@@ -35,18 +41,30 @@ def completed_draws(path, steps, group_size):
 
 def group_summary(groups):
     scores = [score for _, _, _, values in groups for score in values]
+    kinds = [dead_group_kind(values) for _, _, _, values in groups]
     return {
         "prompt_groups": len(groups),
         "unique_questions": len({(dataset, qid) for _, dataset, qid, _ in groups}),
         "responses": len(scores),
         "mean_reward": sum(scores) / len(scores) if scores else None,
-        "all_zero_reward_groups": sum(all(score == 0 for score in v) for _, _, _, v in groups),
-        "all_full_reward_groups": sum(all(score == 1 for score in v) for _, _, _, v in groups),
+        "all_zero_reward_groups": kinds.count("all_wrong"),
+        "all_full_reward_groups": kinds.count("all_right"),
+        "all_partial_reward_groups": kinds.count("all_partial"),
         "variable_reward_fraction": (
             sum(max(v) - min(v) > 1e-12 for _, _, _, v in groups) / len(groups)
             if groups else None
         ),
     }
+
+
+def dead_group_windows(updates: list[dict], size: int = WINDOW) -> dict:
+    """Mean share of each kind of dead group over the first and the last `size` updates and
+    over the whole run."""
+    windows = {f"first_{size}_updates": updates[:size], f"last_{size}_updates": updates[-size:],
+               "all_updates": updates}
+    return {name: {kind: sum(update[f"{kind}_group_fraction"] for update in rows) / len(rows)
+                   for kind in DEAD_GROUP_KINDS}
+            for name, rows in windows.items()}
 
 
 def same_data(recorded: dict, splits: dict[str, dict], split_sha: dict[str, str]) -> bool:
@@ -79,6 +97,7 @@ def summarize_run(directory, sft_questions, splits, split_sha):
         membership = "sft_train" if (dataset, qid) in sft_questions else "rl_only"
         buckets[f"{dataset}/{membership}"].append(group)
     order = [(step, dataset, qid) for step, dataset, qid, _ in groups]
+    diagnostics = training_diagnostics(summary["logs"], path)
     return {
         "completed_updates": summary["steps"],
         "updates_without_reward_variation": summary["steps"] - len({
@@ -89,7 +108,8 @@ def summarize_run(directory, sft_questions, splits, split_sha):
         "overall": group_summary(groups),
         "by_training_membership": {key: group_summary(value) for key, value in buckets.items()},
         "gpu": summary.get("gpu"),
-        "diagnostics": training_diagnostics(summary["logs"], path),
+        "dead_groups": dead_group_windows(diagnostics["reward_per_update"]),
+        "diagnostics": diagnostics,
     }
 
 

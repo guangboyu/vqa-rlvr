@@ -133,9 +133,11 @@ def test_refilled_updates_report_the_kept_rows_and_what_they_attempted(tmp_path)
     draws.write_text("".join(json.dumps(record) + "\n" for record in records))
     first, second = training_diagnostics([], draws)["reward_per_update"]
     assert first == {"update": 1, "reward_mean": 0.5, "reward_std": 0.5,
-                     "zero_variance_group_fraction": 0.0, "attempted_groups": 4,
-                     "attempted_rollouts": 8, "refill_rounds": 2}
+                     "zero_variance_group_fraction": 0.0, "all_right_group_fraction": 0.0,
+                     "all_wrong_group_fraction": 0.0, "all_partial_group_fraction": 0.0,
+                     "attempted_groups": 4, "attempted_rollouts": 8, "refill_rounds": 2}
     assert (second["reward_mean"], second["zero_variance_group_fraction"]) == (0.25, 0.5)
+    assert second["all_wrong_group_fraction"] == 0.5  # the kept dead group f
     assert (second["attempted_groups"], second["refill_rounds"]) == (3, 1)
     assert training_diagnostics([], draws)["distinct_prompts"] == 4  # a, d, e, f
 

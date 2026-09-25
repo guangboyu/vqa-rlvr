@@ -228,7 +228,9 @@ different questions, prompts, scorers, or decoding never share a column. The cam
 records were written from its saved outputs by `python -m scripts.migrate_campaign`. With
 the saved predictions present, rerunning it verifies the stored records, and
 `pytest tests/test_legacy.py` recomputes every campaign number from them. The training summary checks the actual prompt order, counts reward variation
-per update, and embeds each run's diagnostics; regenerating it needs the materialized
+per update, splits the groups without variation into all right, all wrong, and all at one
+partial score (per update, and averaged over the first and the last ten updates), and embeds
+each run's diagnostics; regenerating it needs the materialized
 training data, and its output is already committed.
 
 ## Checkpoint storage

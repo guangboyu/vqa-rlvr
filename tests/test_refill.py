@@ -187,8 +187,9 @@ def test_the_trainer_trains_on_the_refilled_rows_without_sampling_them_again(
         (0, [True, True, False, False]), (1, [False, False]), (2, [True, True])]
     (update,), prompts = reward_per_update(tmp_path / "prompt_draws.jsonl")
     assert update == {"update": 4, "reward_mean": 0.5, "reward_std": 0.5,
-                      "zero_variance_group_fraction": 0.0, "attempted_groups": 4,
-                      "attempted_rollouts": 8, "refill_rounds": 2}
+                      "zero_variance_group_fraction": 0.0, "all_right_group_fraction": 0.0,
+                      "all_wrong_group_fraction": 0.0, "all_partial_group_fraction": 0.0,
+                      "attempted_groups": 4, "attempted_rollouts": 8, "refill_rounds": 2}
     assert prompts == 2
 
 

@@ -8836,6 +8836,7 @@
     "mean_reward": 0.5988541666666667,
     "all_zero_reward_groups": 264,
     "all_full_reward_groups": 472,
+    "all_partial_reward_groups": 0,
     "variable_reward_fraction": 0.38666666666666666
    },
    "by_training_membership": {
@@ -8846,6 +8847,7 @@
      "mean_reward": 0.6024011299435028,
      "all_zero_reward_groups": 36,
      "all_full_reward_groups": 70,
+     "all_partial_reward_groups": 0,
      "variable_reward_fraction": 0.4011299435028249
     },
     "gqa/sft_train": {
@@ -8855,6 +8857,7 @@
      "mean_reward": 0.6133292383292384,
      "all_zero_reward_groups": 80,
      "all_full_reward_groups": 167,
+     "all_partial_reward_groups": 0,
      "variable_reward_fraction": 0.3931203931203931
     },
     "vqav2/sft_train": {
@@ -8864,6 +8867,7 @@
      "mean_reward": 0.5786290322580645,
      "all_zero_reward_groups": 105,
      "all_full_reward_groups": 160,
+     "all_partial_reward_groups": 0,
      "variable_reward_fraction": 0.38940092165898615
     },
     "gqa/rl_only": {
@@ -8873,6 +8877,7 @@
      "mean_reward": 0.6112637362637363,
      "all_zero_reward_groups": 43,
      "all_full_reward_groups": 75,
+     "all_partial_reward_groups": 0,
      "variable_reward_fraction": 0.3516483516483517
     }
    },
@@ -8881,6 +8886,23 @@
     "total_bytes": 85094825984,
     "peak_torch_allocated_bytes": 47919830528,
     "peak_torch_reserved_bytes": 51514441728
+   },
+   "dead_groups": {
+    "first_10_updates": {
+     "all_right": 0.325,
+     "all_wrong": 0.15,
+     "all_partial": 0.0
+    },
+    "last_10_updates": {
+     "all_right": 0.4,
+     "all_wrong": 0.2,
+     "all_partial": 0.0
+    },
+    "all_updates": {
+     "all_right": 0.3933333333333333,
+     "all_wrong": 0.22,
+     "all_partial": 0.0
+    }
    }
   },
   "results/baselines/training/grpo2-sft": {
@@ -8895,6 +8917,7 @@
     "mean_reward": 0.5813541666666666,
     "all_zero_reward_groups": 229,
     "all_full_reward_groups": 383,
+    "all_partial_reward_groups": 0,
     "variable_reward_fraction": 0.49
    },
    "by_training_membership": {
@@ -8905,6 +8928,7 @@
      "mean_reward": 0.5741525423728814,
      "all_zero_reward_groups": 36,
      "all_full_reward_groups": 58,
+     "all_partial_reward_groups": 0,
      "variable_reward_fraction": 0.4689265536723164
     },
     "gqa/sft_train": {
@@ -8914,6 +8938,7 @@
      "mean_reward": 0.6016584766584766,
      "all_zero_reward_groups": 65,
      "all_full_reward_groups": 134,
+     "all_partial_reward_groups": 0,
      "variable_reward_fraction": 0.5110565110565111
     },
     "vqav2/sft_train": {
@@ -8923,6 +8948,7 @@
      "mean_reward": 0.5622119815668203,
      "all_zero_reward_groups": 92,
      "all_full_reward_groups": 128,
+     "all_partial_reward_groups": 0,
      "variable_reward_fraction": 0.4930875576036866
     },
     "gqa/rl_only": {
@@ -8932,6 +8958,7 @@
      "mean_reward": 0.5885989010989011,
      "all_zero_reward_groups": 36,
      "all_full_reward_groups": 63,
+     "all_partial_reward_groups": 0,
      "variable_reward_fraction": 0.45604395604395603
     }
    },
@@ -8940,6 +8967,23 @@
     "total_bytes": 85094825984,
     "peak_torch_allocated_bytes": 30060653568,
     "peak_torch_reserved_bytes": 33550237696
+   },
+   "dead_groups": {
+    "first_10_updates": {
+     "all_right": 0.025,
+     "all_wrong": 0.3,
+     "all_partial": 0.0
+    },
+    "last_10_updates": {
+     "all_right": 0.35,
+     "all_wrong": 0.15,
+     "all_partial": 0.0
+    },
+    "all_updates": {
+     "all_right": 0.31916666666666665,
+     "all_wrong": 0.19083333333333333,
+     "all_partial": 0.0
+    }
    }
   },
   "results/baselines/training/grpo8-base": {
@@ -8954,6 +8998,7 @@
     "mean_reward": 0.6461458333333333,
     "all_zero_reward_groups": 296,
     "all_full_reward_groups": 624,
+    "all_partial_reward_groups": 0,
     "variable_reward_fraction": 0.23333333333333334
    },
    "by_training_membership": {
@@ -8964,6 +9009,7 @@
      "mean_reward": 0.644774011299435,
      "all_zero_reward_groups": 43,
      "all_full_reward_groups": 98,
+     "all_partial_reward_groups": 0,
      "variable_reward_fraction": 0.2033898305084746
     },
     "gqa/sft_train": {
@@ -8973,6 +9019,7 @@
      "mean_reward": 0.6793611793611793,
      "all_zero_reward_groups": 85,
      "all_full_reward_groups": 220,
+     "all_partial_reward_groups": 0,
      "variable_reward_fraction": 0.25061425061425063
     },
     "vqav2/sft_train": {
@@ -8982,6 +9029,7 @@
      "mean_reward": 0.6238479262672811,
      "all_zero_reward_groups": 117,
      "all_full_reward_groups": 216,
+     "all_partial_reward_groups": 0,
      "variable_reward_fraction": 0.23271889400921658
     },
     "gqa/rl_only": {
@@ -8991,6 +9039,7 @@
      "mean_reward": 0.6263736263736264,
      "all_zero_reward_groups": 51,
      "all_full_reward_groups": 90,
+     "all_partial_reward_groups": 0,
      "variable_reward_fraction": 0.22527472527472528
     }
    },
@@ -8999,6 +9048,23 @@
     "total_bytes": 101974081536,
     "peak_torch_allocated_bytes": 62816728576,
     "peak_torch_reserved_bytes": 65997373440
+   },
+   "dead_groups": {
+    "first_10_updates": {
+     "all_right": 0.425,
+     "all_wrong": 0.225,
+     "all_partial": 0.0
+    },
+    "last_10_updates": {
+     "all_right": 0.575,
+     "all_wrong": 0.275,
+     "all_partial": 0.0
+    },
+    "all_updates": {
+     "all_right": 0.52,
+     "all_wrong": 0.24666666666666667,
+     "all_partial": 0.0
+    }
    }
   },
   "results/baselines/training/opd2-self": {
@@ -9013,6 +9079,7 @@
     "mean_reward": 0.5876041666666667,
     "all_zero_reward_groups": 256,
     "all_full_reward_groups": 353,
+    "all_partial_reward_groups": 0,
     "variable_reward_fraction": 0.4925
    },
    "by_training_membership": {
@@ -9023,6 +9090,7 @@
      "mean_reward": 0.5953389830508474,
      "all_zero_reward_groups": 37,
      "all_full_reward_groups": 52,
+     "all_partial_reward_groups": 0,
      "variable_reward_fraction": 0.4971751412429379
     },
     "gqa/sft_train": {
@@ -9032,6 +9100,7 @@
      "mean_reward": 0.5942874692874693,
      "all_zero_reward_groups": 79,
      "all_full_reward_groups": 123,
+     "all_partial_reward_groups": 0,
      "variable_reward_fraction": 0.5036855036855037
     },
     "vqav2/sft_train": {
@@ -9041,6 +9110,7 @@
      "mean_reward": 0.5754608294930875,
      "all_zero_reward_groups": 95,
      "all_full_reward_groups": 123,
+     "all_partial_reward_groups": 0,
      "variable_reward_fraction": 0.4976958525345622
     },
     "gqa/rl_only": {
@@ -9050,6 +9120,7 @@
      "mean_reward": 0.5940934065934066,
      "all_zero_reward_groups": 45,
      "all_full_reward_groups": 55,
+     "all_partial_reward_groups": 0,
      "variable_reward_fraction": 0.45054945054945056
     }
    },
@@ -9058,6 +9129,23 @@
     "total_bytes": 101974081536,
     "peak_torch_allocated_bytes": 30028367872,
     "peak_torch_reserved_bytes": 33516683264
+   },
+   "dead_groups": {
+    "first_10_updates": {
+     "all_right": 0.4,
+     "all_wrong": 0.175,
+     "all_partial": 0.0
+    },
+    "last_10_updates": {
+     "all_right": 0.2,
+     "all_wrong": 0.15,
+     "all_partial": 0.0
+    },
+    "all_updates": {
+     "all_right": 0.2941666666666667,
+     "all_wrong": 0.21333333333333335,
+     "all_partial": 0.0
+    }
    }
   }
  },

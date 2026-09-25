@@ -241,17 +241,23 @@ reward columns do not drive its updates.
 
 The next table follows each run's training signal. The reward (mean of the first and of
 the last ten updates) and the share of prompt groups whose samples all scored the same (no
-gradient) come from every update's saved draws; entropy and completion length are the
-trainer's logs (every ten updates), first → last. KL is absent because these runs used no
-KL penalty.
+gradient) come from every update's saved draws; so does the split of those groups into
+all right (every sample full credit) and all wrong (every sample 0), as means of the first
+and of the last ten updates. Entropy and completion length are the trainer's logs (every
+ten updates), first → last. KL is absent because these runs used no KL penalty.
+
+No group in these runs agreed on a partial score: the RL roles keep one reference answer,
+so the reward is 0 or 1. The 8B run's dead share grows through all-right groups (0.42 →
+0.57); from the SFT start, all-wrong groups halve (0.30 → 0.15) while all-right groups
+rise from 0.03 to 0.35.
 
 <!-- report:diagnostics -->
-| Run | Reward (first → last 10 updates) | Dead groups (mean) | Entropy | Clip fraction (mean) | Completion tokens | Distinct prompts |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| `grpo2-base` | 0.62 → 0.61 | 0.613 | 0.73 → 0.63 | 0.000 | 154 → 139 | 1,200 |
-| `grpo2-sft` | 0.27 → 0.63 | 0.510 | 1.08 → 0.90 | 0.000 | 30 → 110 | 1,200 |
-| `grpo8-base` | 0.62 → 0.67 | 0.767 | 0.40 → 0.12 | 0.000 | 133 → 13 | 1,200 |
-| `opd2-self` | 0.64 → 0.61 | 0.507 | 0.75 → 0.68 | 0.000 | 150 → 132 | 1,200 |
+| Run | Reward (first → last 10 updates) | Dead groups (mean) | All right (first → last 10) | All wrong (first → last 10) | Entropy | Clip fraction (mean) | Completion tokens | Distinct prompts |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `grpo2-base` | 0.62 → 0.61 | 0.613 | 0.33 → 0.40 | 0.15 → 0.20 | 0.73 → 0.63 | 0.000 | 154 → 139 | 1,200 |
+| `grpo2-sft` | 0.27 → 0.63 | 0.510 | 0.03 → 0.35 | 0.30 → 0.15 | 1.08 → 0.90 | 0.000 | 30 → 110 | 1,200 |
+| `grpo8-base` | 0.62 → 0.67 | 0.767 | 0.42 → 0.57 | 0.23 → 0.28 | 0.40 → 0.12 | 0.000 | 133 → 13 | 1,200 |
+| `opd2-self` | 0.64 → 0.61 | 0.507 | 0.40 → 0.20 | 0.17 → 0.15 | 0.75 → 0.68 | 0.000 | 150 → 132 | 1,200 |
 <!-- /report:diagnostics -->
 
 ## Learnability of the RL pool

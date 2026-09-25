@@ -159,6 +159,24 @@ def training_diagnostics(logs: list[dict], draws: Path | None = None) -> dict:
             "learnability_fraction": None}
 
 
+DEAD_GROUP_KINDS = ("all_right", "all_wrong", "all_partial")
+
+
+def dead_group_kind(scores: list[float]) -> str | None:
+    """How a group's samples all scored the same (no GRPO gradient), or None if they differ.
+
+    The correctness reward lies in [0, 1] and gives partial credit on VQAv2 and TextVQA
+    (annotator agreement), so a group can agree on a fractional score. all_right: every
+    sample earned full credit (1); all_wrong: every sample scored 0, including responses
+    with no answer; all_partial: any other shared score.
+    """
+    if max(scores) - min(scores) > 1e-12:
+        return None
+    if scores[0] <= 1e-12:
+        return "all_wrong"
+    return "all_right" if scores[0] >= 1 - 1e-12 else "all_partial"
+
+
 def trained_draws(draws: Path) -> dict[int, dict]:
     """The rows each update trained on, keyed by the step before it.
 
@@ -191,8 +209,9 @@ def kept_rows(records: list[dict]) -> dict:
 
 def reward_per_update(draws: Path) -> tuple[list[dict], int]:
     """Mean and spread of the reward in each update, and the share of prompt groups whose
-    samples all scored the same (no GRPO gradient), over the rows the update trained on.
-    Updates that refilled dead groups also report what they generated to get there."""
+    samples all scored the same (no GRPO gradient), split by `dead_group_kind`, over the
+    rows the update trained on. Updates that refilled dead groups also report what they
+    generated to get there."""
     updates, prompts = [], set()
     for step, rows in trained_draws(draws).items():
         groups = {}
@@ -202,11 +221,13 @@ def reward_per_update(draws: Path) -> tuple[list[dict], int]:
             prompts.add((dataset, qid))
         scores = rows["scores"]
         mean = sum(scores) / len(scores)
+        kinds = [dead_group_kind(group) for group in groups.values()]
         update = {
             "update": step + 1, "reward_mean": mean,
             "reward_std": (sum((s - mean) ** 2 for s in scores) / len(scores)) ** 0.5,
-            "zero_variance_group_fraction":
-                sum(max(g) - min(g) <= 1e-12 for g in groups.values()) / len(groups),
+            "zero_variance_group_fraction": sum(kind is not None for kind in kinds) / len(kinds),
+            **{f"{kind}_group_fraction": kinds.count(kind) / len(kinds)
+               for kind in DEAD_GROUP_KINDS},
         }
         if rows["refilled"]:
             update.update(attempted_groups=rows["attempted_groups"],

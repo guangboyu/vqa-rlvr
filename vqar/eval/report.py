@@ -248,7 +248,9 @@ def exposure_table(exposure: dict) -> str:
 
 def diagnostics_table(exposure: dict) -> str:
     """Training signals per RL run: reward and dead-group share from every update's draws,
-    entropy and completion length from the trainer's logs; first → last unless marked."""
+    with the all-right and all-wrong parts of that share (any rest agreed on a partial
+    score), entropy and completion length from the trainer's logs; first → last unless
+    marked."""
     def trend(rows, name, digits=2):
         values = [row[name] for row in rows or [] if name in row]
         return "—" if not values else f"{values[0]:.{digits}f} → {values[-1]:.{digits}f}"
@@ -270,10 +272,13 @@ def diagnostics_table(exposure: dict) -> str:
         diagnostics = summary["diagnostics"]
         updates, logged = diagnostics["reward_per_update"], diagnostics["logged"]
         rows.append([f"`{Path(run).name}`", window(updates, "reward_mean"),
-                     mean(updates, "zero_variance_group_fraction"), trend(logged, "entropy"),
+                     mean(updates, "zero_variance_group_fraction"),
+                     window(updates, "all_right_group_fraction"),
+                     window(updates, "all_wrong_group_fraction"), trend(logged, "entropy"),
                      mean(logged, "clip_fraction"), trend(logged, "completion_length", 0),
                      f"{diagnostics['distinct_prompts']:,}"])
-    return table(["Run", "Reward (first → last 10 updates)", "Dead groups (mean)", "Entropy",
+    return table(["Run", "Reward (first → last 10 updates)", "Dead groups (mean)",
+                  "All right (first → last 10)", "All wrong (first → last 10)", "Entropy",
                   "Clip fraction (mean)", "Completion tokens", "Distinct prompts"], rows, 1)
 
 
