@@ -36,6 +36,8 @@ def main():
                         help="pool prompts to sample: smoke (32), dev (500), full, or first-N")
     parser.add_argument("--rollout-prompt", default=None,
                         help="score under this template instead of the preset's")
+    parser.add_argument("--max-completion-length", type=int, default=None,
+                        help="score with this rollout budget instead of the preset's")
     parser.add_argument("--gpu-memory-utilization", type=float, default=0.8)
     parser.add_argument("--data-dir", type=Path, default=DATA_DIR)
     parser.add_argument("--records-dir", type=Path, default=RECORDS_DIR)
@@ -44,6 +46,8 @@ def main():
     preset = GRPO_PRESETS[args.preset]
     if args.rollout_prompt:
         preset = replace(preset, rollout_prompt=args.rollout_prompt)
+    if args.max_completion_length:
+        preset = replace(preset, max_completion_length=args.max_completion_length)
     model = ModelRef(args.model or preset.model, args.revision, args.label).pinned()
     generator = VLLMGenerator(model.path, model.revision,
                               gpu_memory_utilization=args.gpu_memory_utilization)

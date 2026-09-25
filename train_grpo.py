@@ -54,6 +54,8 @@ def main() -> None:
                         help="default: 1.0 per reward, 0.2 for format")
     parser.add_argument("--max-steps", type=int, default=None)
     parser.add_argument("--learning-rate", type=float, default=None)
+    parser.add_argument("--max-completion-length", type=int, default=None,
+                        help="rollout token budget; the short template's is 64")
     parser.add_argument("--grad-accum", dest="gradient_accumulation", type=int, default=None)
     parser.add_argument("--batch-size", dest="per_device_batch_size", type=int, default=None)
     parser.add_argument("--datasets", nargs="+", default=None,
