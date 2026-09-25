@@ -4,8 +4,9 @@
 
 A one-off migration: the original files under results/baselines/ stay unchanged and the
 records it writes are versioned. Rerunning it verifies that the stored records still match.
-Weights identities come from the local copies of the merged models; the 8B GRPO merge was
-removed to reclaim disk, so its record keeps the recorded weights hash without config files.
+Weights identities come from the local copies of the merged models. The 8B GRPO merge was
+once removed to reclaim disk; rebuilt from its archived adapter, its single shard hashes to
+the recorded value. Without the rebuild, its records keep that hash and no config hash.
 """
 
 import argparse
@@ -24,9 +25,11 @@ LOCAL_COPIES = {
     "grpo2-base": "checkpoints/merged/sharedpool_20260913_grpo_2b_base",
     "grpo2-sft": "checkpoints/merged/sharedpool_20260913_grpo_2b_sft",
     "opd2-self": "checkpoints/merged/sharedpool_20260913_opd_2b_self",
+    "grpo8-base": "checkpoints/merged/sharedpool_20260913_grpo_8b_base",
 }
 # sha256 of the removed merge's single model.safetensors, from its model-sha256.txt.
 GRPO8_SHARD = "41dc686c5f7a041eea3bcbbb5f3d639df1278f31b034c144e4554cc299d96ae0"
+GRPO8_WEIGHTS = hashlib.sha256(f"model.safetensors:{GRPO8_SHARD}\n".encode()).hexdigest()
 
 
 def campaign_weights(baselines: Path) -> dict[str, dict]:
@@ -34,13 +37,13 @@ def campaign_weights(baselines: Path) -> dict[str, dict]:
     weights = {
         "base2": {"hub": bases["2b"]["repository"], "revision": bases["2b"]["revision"]},
         "base8": {"hub": bases["8b"]["repository"], "revision": bases["8b"]["revision"]},
-        "grpo8-base": {
-            "sha256": hashlib.sha256(f"model.safetensors:{GRPO8_SHARD}\n".encode()).hexdigest(),
-            "config_sha256": None,
-        },
+        "grpo8-base": {"sha256": GRPO8_WEIGHTS, "config_sha256": None},
     }
     for arm, path in LOCAL_COPIES.items():
-        weights[arm] = ModelRef(str(ROOT / path)).identity()["weights"]
+        if (ROOT / path).is_dir():
+            weights[arm] = ModelRef(str(ROOT / path)).identity()["weights"]
+    if weights["grpo8-base"]["sha256"] != GRPO8_WEIGHTS:
+        raise SystemExit("The rebuilt 8B GRPO merge differs from the recorded weights.")
     return weights
 
 

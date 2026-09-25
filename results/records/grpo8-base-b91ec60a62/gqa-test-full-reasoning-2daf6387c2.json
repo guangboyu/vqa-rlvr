@@ -1,0 +1,95 @@
+{
+  "schema": "run-record/1",
+  "legacy": true,
+  "model_id": "b91ec60a62a6ad421248b16f559cc99203a1d67097990456ce7cf4107feed73b",
+  "protocol_id": "2daf6387c20925049551bf2f01e7687d178775071cc93193dce7b8d6227b660c",
+  "model": {
+    "source": "/pub/guangboy/ops/vqa-baselines-20260913/merged/grpo8-base",
+    "label": "grpo8-base",
+    "run": "grpo8-base",
+    "step": null,
+    "weights": {
+      "sha256": "b26a30f43796fcf1516036295360c46b8fd07f06a5d9b4da20241e40d6a967a3",
+      "config_sha256": "318946330bd6e064ebdb3c4be1f9062915af05dc820f65542a74816a188255c3"
+    }
+  },
+  "protocol": {
+    "dataset": "gqa",
+    "ladder": "in-domain",
+    "role": "test",
+    "tier": "full",
+    "question_limit": null,
+    "prompt": "reasoning",
+    "prompt_text": "{question}\nFirst think step by step inside <think> </think> tags, then write only the final answer inside <answer> </answer> tags.",
+    "max_tokens": 512,
+    "temperature": 0.0,
+    "samples": 1,
+    "image_mode": "original",
+    "max_pixels": 786432,
+    "scorers": {
+      "official": "exact_string_match/v1",
+      "normalized": "exact_match/v1"
+    },
+    "extraction": "last_answer_tag_or_full_text",
+    "answer_tag_rule": "raw text contains </answer>",
+    "data": {
+      "subsets": {
+        "gqa_eval": "dac9d13275b76f9b"
+      },
+      "selection_sha256": "6ade0356682c353dbc7803313438bc00cddca0a39f66e28ab7ac059187ab263a"
+    }
+  },
+  "metrics": {
+    "n": 12578,
+    "official": {
+      "overall": 0.5942916202893942,
+      "by_answer_type": {
+        "choose": 0.8441098317094774,
+        "compare": 0.66723259762309,
+        "logical": 0.8064337215751525,
+        "query": 0.4157237325495959,
+        "verify": 0.8197158081705151
+      }
+    },
+    "normalized": {
+      "overall": 0.5981873111782477,
+      "by_answer_type": {
+        "choose": 0.8503100088573959,
+        "compare": 0.66723259762309,
+        "logical": 0.8069883527454242,
+        "query": 0.4216017634092579,
+        "verify": 0.8201598579040853
+      }
+    },
+    "mean_output_tokens": 9.18254094450628,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 1.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.5963587215773573,
+    "answers_scored_differently": 49
+  },
+  "provenance": {
+    "legacy": "corrected campaign, September 2026",
+    "code_version": "unknown",
+    "source_sha256": {
+      "evaluate.py": "c1425859e656bfee70c97b1aeb6a933d780cdaa6ab573a93c6a38ac0ada075a3",
+      "vqar/inference.py": "361778b1e03063c566f79974f224e2781ddb30f6e49ae9020a7518600a7a1665",
+      "vqar/metrics.py": "3ba4c6b35621edc28568199a10f51351f1941c31b4998aee50eaa31f663126ec",
+      "vqar/config.py": "51c3c85c9892993c0dd6a8d09eb0af790cdec1590e2a7f16d8f76950f4614b34",
+      "vqar/data.py": "e9dfd5e0462e3dab0e5123fbab8d819e93c98b6e823a38a75f50ee70bfa444d9",
+      "vqar/splits.py": "33d4f5d32f4386cabb6f8155d4764182a627040ead33f8bc5f1fad9e4182114d",
+      "uv.lock": "91a36d0647e782cf10edf11da067557746ca1d8a3ed9e3273485ae8e7df079e5"
+    },
+    "versions": {
+      "torch": "2.11.0+cu129",
+      "transformers": "5.13.0",
+      "vllm": "0.23.0+cu129",
+      "datasets": "5.0.0"
+    },
+    "timestamp": "2026-09-14T16:18:02+00:00",
+    "migrated_from": {
+      "results/baselines/evaluation/grpo8-base/runs/grpo8-base-reasoning-gqa.json": "263e5b77c278c6818c8f5953b956b65a7586d850b6375a06eae3b1af3314e538",
+      "results/baselines/evaluation/grpo8-base/preds/grpo8-base-reasoning-gqa.jsonl": "e42e45bd783509bb941b6337b2c114651504e9a4e0d578a52ec9c2493b554180"
+    }
+  }
+}

@@ -21,6 +21,7 @@ from vqar.eval.record import RunRecord
 from vqar.eval.runner import paired_with_original, summarize
 from vqar.inference import extract_answer
 from vqar.registry import SCORER_VARIANTS, score
+from vqar.splits import read_split
 
 CAMPAIGN = "corrected campaign, September 2026"
 JULY = "July 2026: inert VQAv2 reward, overlapping image pools"
@@ -63,8 +64,11 @@ def campaign_record(path: Path, baselines: Path, data_dir: Path, weights: dict[s
     dataset, mode = evaluation["dataset"], evaluation["image_mode"]
     protocol = Protocol(dataset, prompt=evaluation["prompt_template"], image_mode=mode,
                         max_tokens=run["gen"]["max_tokens"])
-    partial = evaluation["limit"] is not None
-    selected, data = select_rows(protocol, data_dir, limit=evaluation["limit"])
+    # The campaign scored the first n rows of the test role; TextVQA's role has since grown
+    # from those 2,000 questions to the whole validation split.
+    limit = evaluation["limit"] or evaluation["n"]
+    partial = limit < role_size(data_dir, dataset, protocol.role)
+    selected, data = select_rows(protocol, data_dir, limit=limit)
     qids = list(selected["qid"])
     if [row["qid"] for row in rows] != qids or len(rows) != evaluation["n"]:
         raise ValueError(f"{predictions}: questions differ from the current split files")
@@ -74,7 +78,7 @@ def campaign_record(path: Path, baselines: Path, data_dir: Path, weights: dict[s
             raise ValueError(f"{predictions}: image donors differ from the harness's")
     identity = protocol_identity(protocol, data)
     if partial:
-        identity.update(tier=f"first-{evaluation['limit']}", question_limit=evaluation["limit"])
+        identity.update(tier=f"first-{limit}", question_limit=limit)
     lines = [campaign_line(dataset, row, predictions) for row in rows]
     model = {"source": run["model"]["base"], "label": arm, "run": arm, "step": None,
              "weights": weights[arm]}
@@ -86,6 +90,10 @@ def campaign_record(path: Path, baselines: Path, data_dir: Path, weights: dict[s
     if original is not None:
         metrics["paired_with_original"] = paired_with_original(lines, original)
     return RunRecord(model, identity, metrics, provenance, legacy=True), lines
+
+
+def role_size(data_dir: Path, dataset: str, role: str) -> int:
+    return sum(len(part["indices"]) for part in read_split(data_dir, dataset)["roles"][role])
 
 
 def campaign_line(dataset: str, row: dict, source: Path) -> dict:

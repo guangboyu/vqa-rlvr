@@ -19,7 +19,7 @@
       "train_seed": 42
     },
     "textvqa": {
-      "eval": 2000,
+      "eval": 5000,
       "eval_seed": 0
     }
   },
@@ -61,8 +61,15 @@
       "qids_sha": "7f5cbd3ddc7fd9414982546f5200bba92924c7532a507b695f57887b653460c1"
     },
     "textvqa_eval": {
-      "n": 2000,
-      "qids_sha": "06fe623dd201040ba8dfa98f35efb44bedabaa5eb7a56f6c897ff2c950ebd6b5"
+      "n": 5000,
+      "source_revisions": {
+        "HuggingFaceM4/the_cauldron": "847a98a779b1652d65111daf20c972dfcd333605",
+        "lmms-lab/VQAv2": "32665d35052eb4a6d4414851c3c829a72754915a",
+        "lmms-lab/GQA": "a6e72d6e1b912da88af8b2f9eba05d5ea8ec2dd8",
+        "leonardPKU/clevr_cogen_a_train": "d5a8da66aa97c9c19ebe4075b7c7f777fef850a6",
+        "lmms-lab/textvqa": "9c0699cd19768ac5ab97568f6b3cbac4c0062884"
+      },
+      "qids_sha": "67d059db15fa5e27de8fcaa79f4f52fbc875b04af5996f4896dbcba442e218bb"
     }
   }
 }

@@ -1,0 +1,87 @@
+{
+  "schema": "run-record/1",
+  "legacy": true,
+  "model_id": "b91ec60a62a6ad421248b16f559cc99203a1d67097990456ce7cf4107feed73b",
+  "protocol_id": "eb8f782f268b6633a394e5162b7c59708276486b78e8d62b51f0c80e44c855e3",
+  "model": {
+    "source": "/pub/guangboy/ops/vqa-baselines-20260913/merged/grpo8-base",
+    "label": "grpo8-base",
+    "run": "grpo8-base",
+    "step": null,
+    "weights": {
+      "sha256": "b26a30f43796fcf1516036295360c46b8fd07f06a5d9b4da20241e40d6a967a3",
+      "config_sha256": "318946330bd6e064ebdb3c4be1f9062915af05dc820f65542a74816a188255c3"
+    }
+  },
+  "protocol": {
+    "dataset": "clevr",
+    "ladder": "in-domain",
+    "role": "test",
+    "tier": "full",
+    "question_limit": null,
+    "prompt": "reasoning",
+    "prompt_text": "{question}\nFirst think step by step inside <think> </think> tags, then write only the final answer inside <answer> </answer> tags.",
+    "max_tokens": 512,
+    "temperature": 0.0,
+    "samples": 1,
+    "image_mode": "original",
+    "max_pixels": 786432,
+    "scorers": {
+      "official": "exact_string_match/v1",
+      "normalized": "exact_match/v1"
+    },
+    "extraction": "last_answer_tag_or_full_text",
+    "answer_tag_rule": "raw text contains </answer>",
+    "data": {
+      "subsets": {
+        "clevr_test": "c280312cd5a2a329"
+      },
+      "selection_sha256": "f0b822667ac86331dee7ae9c633771c5af2b763320b397226c221df963f09224"
+    }
+  },
+  "metrics": {
+    "n": 3000,
+    "official": {
+      "overall": 0.973,
+      "by_answer_type": {
+        "number": 0.973
+      }
+    },
+    "normalized": {
+      "overall": 0.973,
+      "by_answer_type": {
+        "number": 0.973
+      }
+    },
+    "mean_output_tokens": 83.42566666666667,
+    "truncated_fraction": 0.009,
+    "answer_tag_fraction": 0.991,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.973,
+    "answers_scored_differently": 0
+  },
+  "provenance": {
+    "legacy": "corrected campaign, September 2026",
+    "code_version": "unknown",
+    "source_sha256": {
+      "evaluate.py": "c1425859e656bfee70c97b1aeb6a933d780cdaa6ab573a93c6a38ac0ada075a3",
+      "vqar/inference.py": "361778b1e03063c566f79974f224e2781ddb30f6e49ae9020a7518600a7a1665",
+      "vqar/metrics.py": "3ba4c6b35621edc28568199a10f51351f1941c31b4998aee50eaa31f663126ec",
+      "vqar/config.py": "51c3c85c9892993c0dd6a8d09eb0af790cdec1590e2a7f16d8f76950f4614b34",
+      "vqar/data.py": "e9dfd5e0462e3dab0e5123fbab8d819e93c98b6e823a38a75f50ee70bfa444d9",
+      "vqar/splits.py": "33d4f5d32f4386cabb6f8155d4764182a627040ead33f8bc5f1fad9e4182114d",
+      "uv.lock": "91a36d0647e782cf10edf11da067557746ca1d8a3ed9e3273485ae8e7df079e5"
+    },
+    "versions": {
+      "torch": "2.11.0+cu129",
+      "transformers": "5.13.0",
+      "vllm": "0.23.0+cu129",
+      "datasets": "5.0.0"
+    },
+    "timestamp": "2026-09-14T16:22:45+00:00",
+    "migrated_from": {
+      "results/baselines/evaluation/grpo8-base/runs/grpo8-base-reasoning-clevr.json": "4ffbb280d50ed829908f1ff5b49555c51739d39ed2eabe3b8adfb700971d3005",
+      "results/baselines/evaluation/grpo8-base/preds/grpo8-base-reasoning-clevr.jsonl": "266df40172f2fd959fd69bef38172ea9775b1963e237c5b44af6b11073692262"
+    }
+  }
+}

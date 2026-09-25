@@ -188,7 +188,9 @@ DATASETS: dict[str, DatasetSpec] = {
             official=metrics.textvqa_accuracy,
             normalized=metrics.vqa_accuracy,
             official_roles=frozenset({"test"}),
-            sizes={"eval": 2_000, "eval_seed": 0},
+            # The whole validation split (5,000 questions) in a seeded order; its first
+            # 2,000 rows are the sample the corrected campaign evaluated.
+            sizes={"eval": 5_000, "eval_seed": 0},
             materialize=_textvqa,
         ),
     ]

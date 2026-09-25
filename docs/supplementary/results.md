@@ -17,20 +17,20 @@ within 512 tokens.
 <!-- report:matrix -->
 | Arm | Prompt | VQAv2 | GQA | CLEVR counting | TextVQA (far-OOD) |
 | --- | --- | ---: | ---: | ---: | ---: |
-| Instruct 2B | short | 77.87 (77.91) | 59.45 (59.46) | 97.67 (97.67) | 80.55 (80.56) |
-| Instruct 2B | reasoning | 55.06 (64.68) | 36.13 (51.95) | 87.13 (87.13) | 69.60 (69.61) |
-| SFT | short | 79.87 (79.89) | 62.35 (62.35) | 99.40 (99.40) | 79.83 (79.86) |
-| SFT | reasoning | 67.99 (68.17) | 56.61 (57.00) | 92.10 (92.10) | 68.78 (68.79) |
-| Instruct → GRPO | short | 78.02 (78.06) | 59.55 (59.55) | 98.27 (98.27) | 80.38 (80.39) |
-| Instruct → GRPO | reasoning | 61.79 (69.01) | 44.90 (54.09) | 86.10 (86.10) | 74.23 (74.22) |
-| SFT → GRPO | short | 79.85 (79.87) | 62.44 (62.44) | 99.40 (99.40) | 79.82 (79.84) |
-| SFT → GRPO | reasoning | 69.18 (70.80) | 53.70 (54.86) | 97.80 (97.80) | 74.28 (74.28) |
-| Instruct → gold-conditioned OPD | short | 77.79 (77.83) | 59.72 (59.72) | 97.73 (97.73) | 80.36 (80.36) |
-| Instruct → gold-conditioned OPD | reasoning | 68.61 (69.23) | 51.35 (51.58) | 87.10 (87.10) | 72.65 (72.65) |
-| Instruct 8B | short | 81.18 (81.22) | 61.66 (61.66) | 99.67 (99.67) | 83.98 (84.00) |
-| Instruct 8B | reasoning | 63.67 (68.75) | 46.84 (52.27) | 96.97 (96.97) | 75.31 (75.31) |
-| Instruct 8B → GRPO | short | 81.12 (81.16) | 61.78 (61.78) | 99.57 (99.57) | 84.07 (84.09) |
-| Instruct 8B → GRPO | reasoning | 77.37 (78.63) | 59.43 (59.82) | 97.30 (97.30) | 80.78 (80.80) |
+| Instruct 2B | short | 77.87 (77.91) | 59.45 (59.46) | 97.67 (97.67) | — |
+| Instruct 2B | reasoning | 55.06 (64.68) | 36.13 (51.95) | 87.13 (87.13) | — |
+| SFT | short | 79.87 (79.89) | 62.35 (62.35) | 99.40 (99.40) | — |
+| SFT | reasoning | 67.99 (68.17) | 56.61 (57.00) | 92.10 (92.10) | — |
+| Instruct → GRPO | short | 78.02 (78.06) | 59.55 (59.55) | 98.27 (98.27) | — |
+| Instruct → GRPO | reasoning | 61.79 (69.01) | 44.90 (54.09) | 86.10 (86.10) | — |
+| SFT → GRPO | short | 79.85 (79.87) | 62.44 (62.44) | 99.40 (99.40) | — |
+| SFT → GRPO | reasoning | 69.18 (70.80) | 53.70 (54.86) | 97.80 (97.80) | — |
+| Instruct → gold-conditioned OPD | short | 77.79 (77.83) | 59.72 (59.72) | 97.73 (97.73) | — |
+| Instruct → gold-conditioned OPD | reasoning | 68.61 (69.23) | 51.35 (51.58) | 87.10 (87.10) | — |
+| Instruct 8B | short | 81.18 (81.22) | 61.66 (61.66) | 99.67 (99.67) | — |
+| Instruct 8B | reasoning | 63.67 (68.75) | 46.84 (52.27) | 96.97 (96.97) | — |
+| Instruct 8B → GRPO | short | 81.12 (81.16) | 61.78 (61.78) | 99.57 (99.57) | — |
+| Instruct 8B → GRPO | reasoning | 77.37 (78.63) | 59.43 (59.82) | 97.30 (97.30) | — |
 <!-- /report:matrix -->
 
 **RL recovers reasoning-prompt accuracy.** Under the reasoning prompt, 300 GRPO updates
@@ -67,13 +67,13 @@ Mean output tokens · share of responses that close an `<answer>` tag.
 <!-- report:behavior -->
 | Arm | VQAv2 | GQA | CLEVR counting | TextVQA (far-OOD) |
 | --- | ---: | ---: | ---: | ---: |
-| Instruct 2B | 148 · 95% | 123 · 97% | 186 · 98% | 106 · 95% |
-| SFT | 21 · 40% | 8 · 20% | 62 · 98% | 33 · 47% |
-| Instruct → GRPO | 141 · 96% | 119 · 98% | 197 · 97% | 101 · 98% |
-| SFT → GRPO | 102 · 97% | 79 · 98% | 24 · 100% | 59 · 99% |
-| Instruct → gold-conditioned OPD | 141 · 93% | 119 · 93% | 206 · 98% | 107 · 96% |
-| Instruct 8B | 118 · 99% | 104 · 99% | 193 · 99% | 109 · 99% |
-| Instruct 8B → GRPO | 9 · 100% | 9 · 100% | 83 · 99% | 12 · 100% |
+| Instruct 2B | 148 · 95% | 123 · 97% | 186 · 98% | — |
+| SFT | 21 · 40% | 8 · 20% | 62 · 98% | — |
+| Instruct → GRPO | 141 · 96% | 119 · 98% | 197 · 97% | — |
+| SFT → GRPO | 102 · 97% | 79 · 98% | 24 · 100% | — |
+| Instruct → gold-conditioned OPD | 141 · 93% | 119 · 93% | 206 · 98% | — |
+| Instruct 8B | 118 · 99% | 104 · 99% | 193 · 99% | — |
+| Instruct 8B → GRPO | 9 · 100% | 9 · 100% | 83 · 99% | — |
 <!-- /report:behavior -->
 
 SFT on short answers shortens reasoning-prompt responses (VQAv2 148 → 21 tokens) and most
@@ -88,13 +88,13 @@ Responses cut off at the token budget · responses with an empty answer, same pr
 <!-- report:failures -->
 | Arm | VQAv2 | GQA | CLEVR counting | TextVQA (far-OOD) |
 | --- | ---: | ---: | ---: | ---: |
-| Instruct 2B | 3.7% · 0.0% | 2.3% · 0.0% | 1.8% · 0.0% | 1.5% · 0.0% |
-| SFT | 1.8% · 0.8% | 0.5% · 0.3% | 1.3% · 0.0% | 2.0% · 0.1% |
-| Instruct → GRPO | 3.7% · 0.0% | 1.8% · 0.0% | 2.7% · 0.0% | 1.4% · 0.0% |
-| SFT → GRPO | 2.8% · 0.0% | 1.9% · 0.0% | 0.2% · 0.0% | 1.1% · 0.0% |
-| Instruct → gold-conditioned OPD | 4.3% · 0.0% | 2.8% · 0.0% | 1.5% · 0.0% | 1.9% · 0.0% |
-| Instruct 8B | 0.9% · 0.0% | 0.4% · 0.0% | 0.7% · 0.0% | 0.4% · 0.0% |
-| Instruct 8B → GRPO | 0.0% · 0.0% | 0.0% · 0.0% | 0.9% · 0.0% | 0.1% · 0.0% |
+| Instruct 2B | 3.7% · 0.0% | 2.3% · 0.0% | 1.8% · 0.0% | — |
+| SFT | 1.8% · 0.8% | 0.5% · 0.3% | 1.3% · 0.0% | — |
+| Instruct → GRPO | 3.7% · 0.0% | 1.8% · 0.0% | 2.7% · 0.0% | — |
+| SFT → GRPO | 2.8% · 0.0% | 1.9% · 0.0% | 0.2% · 0.0% | — |
+| Instruct → gold-conditioned OPD | 4.3% · 0.0% | 2.8% · 0.0% | 1.5% · 0.0% | — |
+| Instruct 8B | 0.9% · 0.0% | 0.4% · 0.0% | 0.7% · 0.0% | — |
+| Instruct 8B → GRPO | 0.0% · 0.0% | 0.0% · 0.0% | 0.9% · 0.0% | — |
 <!-- /report:failures -->
 
 ## Capitalization under the reasoning prompt
@@ -111,31 +111,24 @@ scorer is casing. For Instruct 2B it is nearly all of it: lowercasing closes 9.6
 | Instruct 2B | VQAv2 | 55.06 | 64.64 | 64.68 | 481 |
 | Instruct 2B | GQA | 36.13 | 50.80 | 51.95 | 1,989 |
 | Instruct 2B | CLEVR counting | 87.13 | 87.13 | 87.13 | 0 |
-| Instruct 2B | TextVQA | 69.60 | 69.60 | 69.61 | 1 |
 | SFT | VQAv2 | 67.99 | 68.15 | 68.17 | 9 |
 | SFT | GQA | 56.61 | 56.68 | 57.00 | 50 |
 | SFT | CLEVR counting | 92.10 | 92.10 | 92.10 | 0 |
-| SFT | TextVQA | 68.78 | 68.78 | 68.79 | 2 |
 | Instruct → GRPO | VQAv2 | 61.79 | 68.99 | 69.01 | 361 |
 | Instruct → GRPO | GQA | 44.90 | 53.43 | 54.09 | 1,157 |
 | Instruct → GRPO | CLEVR counting | 86.10 | 86.10 | 86.10 | 0 |
-| Instruct → GRPO | TextVQA | 74.23 | 74.23 | 74.22 | 1 |
 | SFT → GRPO | VQAv2 | 69.18 | 70.76 | 70.80 | 81 |
 | SFT → GRPO | GQA | 53.70 | 54.58 | 54.86 | 145 |
 | SFT → GRPO | CLEVR counting | 97.80 | 97.80 | 97.80 | 0 |
-| SFT → GRPO | TextVQA | 74.28 | 74.28 | 74.28 | 1 |
 | Instruct → gold-conditioned OPD | VQAv2 | 68.61 | 69.21 | 69.23 | 31 |
 | Instruct → gold-conditioned OPD | GQA | 51.35 | 51.43 | 51.58 | 29 |
 | Instruct → gold-conditioned OPD | CLEVR counting | 87.10 | 87.10 | 87.10 | 0 |
-| Instruct → gold-conditioned OPD | TextVQA | 72.65 | 72.65 | 72.65 | 2 |
 | Instruct 8B | VQAv2 | 63.67 | 68.71 | 68.75 | 254 |
 | Instruct 8B | GQA | 46.84 | 51.28 | 52.27 | 682 |
 | Instruct 8B | CLEVR counting | 96.97 | 96.97 | 96.97 | 0 |
-| Instruct 8B | TextVQA | 75.31 | 75.31 | 75.31 | 1 |
 | Instruct 8B → GRPO | VQAv2 | 77.37 | 78.61 | 78.63 | 63 |
 | Instruct 8B → GRPO | GQA | 59.43 | 59.64 | 59.82 | 49 |
 | Instruct 8B → GRPO | CLEVR counting | 97.30 | 97.30 | 97.30 | 0 |
-| Instruct 8B → GRPO | TextVQA | 80.78 | 80.78 | 80.80 | 2 |
 <!-- /report:casing -->
 
 ## Image interventions
