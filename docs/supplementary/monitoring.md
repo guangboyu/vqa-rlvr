@@ -66,7 +66,9 @@ by the starting model goes stale in the same way; refilling dead groups
 **Sampler–trainer gap episode.** In the 1,000-update reasoning run the gap rose from 0.03
 to about 0.2 between updates 300 and 550, then returned to 0.04, while responses moved
 from `<answer>no</answer>` to a spaced `<answer> no </answer>`. The cause is not yet
-established. The importance-sampling correction (`sequence_mask`, ratio capped at 3)
+established. `scripts/check_logprob_gap.py` tests it outside training: it samples rollouts
+as training does, scores the same tokens with the trainer's forward, and splits the gap by
+answer form and by the sampled token's probability. The importance-sampling correction (`sequence_mask`, ratio capped at 3)
 bounds the effect of such tokens on the update. A gap that grows steadily and does not
 come back would point to a weight-synchronization fault instead, the kind of fault the
 retired NF4 student presets produced ([hardware](hardware.md)).
