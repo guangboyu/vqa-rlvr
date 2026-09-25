@@ -279,6 +279,32 @@ def learnability_table(cells: dict) -> str:
                   "Never correct (%)", "Always correct (%)"], rows, 2)
 
 
+def paired_deltas(results: Path) -> list[dict]:
+    path = results / "paired-deltas.json"
+    return json.loads(path.read_text()) if path.exists() else []
+
+
+def deltas_table(arms: list[Arm], rows: list[dict]) -> str:
+    """Paired differences, candidate − reference, with 95% bootstrap intervals (points)."""
+    if not rows:
+        return "No paired comparison has been computed yet.\n"
+    names = {arm.label: arm.name for arm in arms}
+    datasets = ordered_datasets()
+    grouped = {}
+    for row in rows:
+        key = (row["candidate"], row["reference"], row["prompt"], row["variant"])
+        grouped.setdefault(key, {})[row["dataset"]] = row
+    order = {arm.label: i for i, arm in enumerate(arms)}
+    lines = []
+    for (candidate, reference, prompt, variant), found in sorted(
+            grouped.items(), key=lambda item: (order[item[0][0]], order[item[0][1]],
+                                               PROMPT_ORDER.index(item[0][2]), item[0][3])):
+        cells = [f"{r['delta']:+.2f} [{r['low']:+.2f}, {r['high']:+.2f}]" if (r := found.get(d))
+                 else "—" for d in datasets]
+        lines.append([f"{names[candidate]} − {names[reference]}", prompt, variant, *cells])
+    return table(["Comparison", "Prompt", "Scorer", *map(column, datasets)], lines, 3)
+
+
 def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
     """Every markdown block, and the JSON export for the demo."""
     arms, _ = load_matrix(root / "experiments.toml")
@@ -295,6 +321,7 @@ def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
         "exposure": exposure_table(exposure),
         "diagnostics": diagnostics_table(exposure),
         "learnability": learnability_table(cells),
+        "deltas": deltas_table(arms, paired_deltas(root / "results")),
         "history": history_table(history),
     }
     export = {

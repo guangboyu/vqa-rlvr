@@ -87,3 +87,11 @@ def test_an_arm_whose_merge_was_removed_keeps_its_records_unverified(matrix):
     missing = missing_cells([gone], [Protocol("gqa"), Protocol("clevr")], records,
                             matrix / "data", matrix)
     assert [(arm.label, p.dataset) for arm, p in missing] == [("gone", "clevr")]
+
+
+def test_comparisons_pair_each_candidate_with_its_reference(tmp_path):
+    from vqar.eval.matrix import load_comparisons
+
+    (tmp_path / "experiments.toml").write_text(
+        '[[comparisons]]\nreference = "a"\ncandidates = ["b", "c"]\n')
+    assert load_comparisons(tmp_path / "experiments.toml") == [("a", "b"), ("a", "c")]

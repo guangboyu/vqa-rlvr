@@ -47,3 +47,17 @@ datasets = ["vqav2", "gqa", "clevr", "textvqa"]
 prompts = ["short", "reasoning"]
 role = "test"
 tier = "full"
+
+# Paired differences, each candidate minus its reference, on the questions both answered.
+# python -m scripts.paired_deltas computes them from the local predictions.
+[[comparisons]]
+reference = "base2"
+candidates = ["sft2", "grpo2-base", "grpo2-sft", "opd2-self"]
+
+[[comparisons]]
+reference = "sft2"
+candidates = ["grpo2-sft"]
+
+[[comparisons]]
+reference = "base8"
+candidates = ["grpo8-base"]

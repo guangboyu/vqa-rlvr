@@ -906,6 +906,39 @@
   },
   {
    "arm": "base2",
+   "dataset": "textvqa",
+   "role": "test",
+   "tier": "full",
+   "prompt": "short",
+   "image_mode": "original",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "legacy": false,
+   "metrics": {
+    "n": 5000,
+    "official": {
+     "overall": 0.80528,
+     "by_answer_type": {
+      "all": 0.80528
+     }
+    },
+    "normalized": {
+     "overall": 0.8055,
+     "by_answer_type": {
+      "all": 0.8055
+     }
+    },
+    "mean_output_tokens": 3.9652,
+    "truncated_fraction": 0.0006,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.80528,
+    "answers_scored_differently": 4
+   }
+  },
+  {
+   "arm": "base2",
    "dataset": "vqav2",
    "role": "rl",
    "tier": "dev",

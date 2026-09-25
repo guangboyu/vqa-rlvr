@@ -21,7 +21,7 @@ reasoning prompt asks for step-by-step thinking and a tagged final answer.
 <!-- report:matrix -->
 | Arm | Prompt | VQAv2 | GQA | CLEVR counting | TextVQA (far-OOD) |
 | --- | --- | ---: | ---: | ---: | ---: |
-| Instruct 2B | short | 77.87 (77.91) | 59.45 (59.46) | 97.67 (97.67) | — |
+| Instruct 2B | short | 77.87 (77.91) | 59.45 (59.46) | 97.67 (97.67) | 80.53 (80.55) |
 | Instruct 2B | reasoning | 55.06 (64.68) | 36.13 (51.95) | 87.13 (87.13) | — |
 | SFT | short | 79.87 (79.89) | 62.35 (62.35) | 99.40 (99.40) | — |
 | SFT | reasoning | 67.99 (68.17) | 56.61 (57.00) | 92.10 (92.10) | — |

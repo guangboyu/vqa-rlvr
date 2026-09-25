@@ -99,3 +99,15 @@ def test_two_records_for_one_cell_are_an_error(records, tmp_path):
     twin.write_text(first.read_text())
     with pytest.raises(ValueError, match="Two records claim one table cell"):
         load_cells(first.parent.parent)
+
+
+def test_paired_differences_show_the_interval_per_dataset():
+    from vqar.eval.matrix import Arm
+    from vqar.eval.report import deltas_table
+
+    arms = [Arm("base", "Base", "m"), Arm("tuned", "Tuned", "n")]
+    row = {"reference": "base", "candidate": "tuned", "dataset": "gqa", "prompt": "short",
+           "variant": "official", "n": 3, "delta": 1.5, "low": -0.25, "high": 3.0}
+    lines = deltas_table(arms, [row]).splitlines()
+    assert lines[2].startswith("| Tuned − Base | short | official | — | +1.50 [-0.25, +3.00] |")
+    assert deltas_table(arms, []) == "No paired comparison has been computed yet.\n"

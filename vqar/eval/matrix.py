@@ -45,14 +45,25 @@ def load_matrix(path: Path) -> tuple[list[Arm], list[Protocol]]:
     return [Arm(**arm) for arm in matrix["arms"]], protocols
 
 
-def missing_cells(arms: list[Arm], protocols: list[Protocol], records_dir: Path,
-                  data_dir: Path, root: Path) -> list[tuple[Arm, Protocol]]:
-    """Every declared (arm, protocol) cell without a record; raises on a mislabeled record."""
+def load_comparisons(path: Path) -> list[tuple[str, str]]:
+    """(reference, candidate) arm labels whose paired differences the report shows."""
+    matrix = tomllib.loads(Path(path).read_text())
+    return [(entry["reference"], candidate) for entry in matrix.get("comparisons", [])
+            for candidate in entry["candidates"]]
+
+
+def declared_records(arms: list[Arm], protocols: list[Protocol], records_dir: Path,
+                     data_dir: Path, root: Path) -> dict[tuple[str, Protocol], RunRecord]:
+    """The record filling each declared (arm, protocol) cell, where one exists.
+
+    A cell is filled by a record under the arm's label, not tied to a checkpoint step, with
+    exactly the protocol identity declared today. Raises on a record of another model.
+    """
     records = [RunRecord.load(path) for path in record_files(records_dir)]
     expected = {protocol: Protocol.id_of(protocol_identity(protocol,
                                                            select_rows(protocol, data_dir)[1]))
                 for protocol in protocols}
-    missing = []
+    found = {}
     for arm in arms:
         mine = [r for r in records if r.model["label"] == arm.label and r.model["step"] is None]
         if mine and arm.available(root):
@@ -60,6 +71,14 @@ def missing_cells(arms: list[Arm], protocols: list[Protocol], records_dir: Path,
             strangers = [str(r.path) for r in mine if r.model_id != declared]
             if strangers:
                 raise ValueError(f"{arm.label}: records of another model: {strangers}")
-        present = {r.protocol_id for r in mine}
-        missing += [(arm, p) for p in protocols if expected[p] not in present]
-    return missing
+        by_id = {r.protocol_id: r for r in mine}
+        found.update({(arm.label, p): by_id[expected[p]] for p in protocols
+                      if expected[p] in by_id})
+    return found
+
+
+def missing_cells(arms: list[Arm], protocols: list[Protocol], records_dir: Path,
+                  data_dir: Path, root: Path) -> list[tuple[Arm, Protocol]]:
+    """Every declared (arm, protocol) cell without a record; raises on a mislabeled record."""
+    found = declared_records(arms, protocols, records_dir, data_dir, root)
+    return [(arm, p) for arm in arms for p in protocols if (arm.label, p) not in found]
