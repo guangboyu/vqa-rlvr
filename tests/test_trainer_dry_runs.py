@@ -66,3 +66,18 @@ def test_grpo_dry_run_shows_the_refill_stream_when_refilling(repo, monkeypatch, 
     monkeypatch.setattr("sys.argv", argv)
     train_grpo.main()
     assert "refill:" not in capsys.readouterr().out
+
+
+def test_vllm_sleep_is_opt_out_and_left_out_of_the_record_when_on():
+    from argparse import Namespace
+
+    from vqar import config
+    from vqar.training import resolve_preset
+
+    default = resolve_preset(config.GRPO_PRESETS, Namespace(preset="grpo_2b_main",
+                                                             hardware="96gb", vllm_sleep=None))
+    awake = resolve_preset(config.GRPO_PRESETS, Namespace(preset="grpo_2b_main",
+                                                           hardware="96gb", vllm_sleep=False))
+    assert default.vllm_sleep and not awake.vllm_sleep
+    assert "vllm_sleep" not in config.dump(default)
+    assert config.dump(awake)["vllm_sleep"] is False

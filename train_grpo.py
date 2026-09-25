@@ -72,6 +72,8 @@ def main() -> None:
     parser.add_argument("--refill-rounds", type=int, default=None,
                         help="replace dead groups with up to this many extra generation rounds "
                         "per update (DAPO dynamic sampling; default 0: off)")
+    parser.add_argument("--no-vllm-sleep", dest="vllm_sleep", action="store_const", const=False,
+                        default=None, help="keep vLLM awake during training (large cards)")
     parser.add_argument("--rollout-lora", action="store_true", default=None,
                         help="vLLM serves the LoRA adapter unmerged instead of receiving "
                         "adapter-merged bf16 weights each update (default: merged)")

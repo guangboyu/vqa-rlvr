@@ -227,7 +227,7 @@ def grpo_config(preset, output_dir: Path, run_name: str, model_init_kwargs: dict
         reward_weights=list(preset.reward_weights),
         use_vllm=True,
         vllm_mode="colocate",
-        vllm_enable_sleep_mode=True,
+        vllm_enable_sleep_mode=getattr(preset, "vllm_sleep", True),
         vllm_gpu_memory_utilization=preset.vllm_gpu_memory_utilization,
         vllm_max_model_length=2048,  # ~850 image tokens + prompt + completion
         bf16=True,
