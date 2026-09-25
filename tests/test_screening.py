@@ -207,7 +207,7 @@ def test_the_battery_end_to_end_from_records(setup, monkeypatch):
 
     table = screening.markdown(screening.rank(list(rows.values())))
     assert "test (validation only)" in table
-    assert "rejected: not saturated" in table
+    assert "rejected (failed: not saturated)" in table
     assert "incomplete: missing short, black, reasoning, sampled" in table
 
 

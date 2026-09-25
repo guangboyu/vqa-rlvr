@@ -291,7 +291,7 @@ def markdown(rows: list[dict]) -> str:
                   f"{percent(row['pass_at_1'])} → {percent(row['pass_at_k'])}")
         status = row["status"]
         if row["failed_gates"]:
-            status += ": " + ", ".join(row["failed_gates"])
+            status += " (failed: " + ", ".join(row["failed_gates"]) + ")"
         elif row["missing"]:
             status += ": missing " + ", ".join(row["missing"])
         lines.append("| " + " | ".join([
