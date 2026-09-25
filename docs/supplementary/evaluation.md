@@ -53,6 +53,52 @@ predictions with no per-question mismatch.
 - **Learnability.** The share of prompts whose k samples are neither all right nor all wrong
   under the training reward: the prompts that give GRPO a gradient.
 
+## Dataset screening
+
+`scripts/screen_datasets.py` chooses training datasets by measurement. For each registered
+dataset and model it runs one fixed battery on the same questions from the dataset's
+training pool (the `rl` role, else `sft`; the `dev` tier, up to 500 questions in the
+pool's seeded order), never on dev or test rows:
+
+| Measure | Protocols | Definition |
+|---|---|---|
+| Reasoning payoff | short and reasoning prompts, greedy | accuracy(reasoning) − accuracy(short), paired 95% interval |
+| RL headroom | reasoning prompt, 8 samples at T = 1, 640-token budget | pass@8 − pass@1, paired 95% interval |
+| Learnable share | the same samples | questions with 1–7 of 8 samples correct |
+| Image dependence | short prompt, original and black images | accuracy(image) − accuracy(black), paired 95% interval |
+
+Accuracies use the normalized scorer, the only one every role can score. The sampled cell is
+exactly the learnability pre-check of `scripts.learnability --preset grpo_2b_main`, so
+either script reuses the other's record, and "correct" there means the GRPO correctness
+reward: pass@1 is the mean share of correct samples per question, pass@8 the share of
+questions with at least one. The greedy cells read a training role through the protocol's
+`screening` flag, which is not part of the protocol identity.
+
+Hard gates, fixed in `vqar/eval/screening.py` before any candidate is measured:
+
+| Gate | Rule |
+|---|---|
+| training questions | at least 2,000 rows in the training pool role |
+| split separable | declared per dataset, with the unit held out (image or patient) |
+| license | declared usable per dataset |
+| parse rate | at least 95% of the sampled reasoning responses give the reward's answer rule a non-empty answer (a last `<answer>` tag) |
+| not saturated | short-prompt accuracy below 90% |
+
+Survivors are ranked by reasoning payoff, then RL headroom. Every candidate gets a row,
+rejects included with the gates they failed, in `results/screening/screening.{json,md}`.
+A dataset without a training pool (TextVQA) is rejected; `--validate-on-test` screens it on
+its test role instead, labelled validation only, to check the module against known results.
+
+```bash
+python -m scripts.screen_datasets --arms base2 --validate-on-test --dry-run  # the battery
+python -m scripts.screen_datasets --arms base2 --validate-on-test            # missing cells
+python -m scripts.screen_datasets --arms base2 base8 --validate-on-test --from-records
+```
+
+Built from the 2B learnability records alone (before the greedy cells ran), the table
+already shows the sampling measures: pass@1 → pass@8 of 60.9 → 80.2% on VQAv2, 56.3 →
+73.4% on GQA, and 84.9 → 100.0% on CLEVR, with learnable shares of 47.8, 42.0, and 48.4%.
+
 ## Held-out hygiene
 
 Split files list the exact rows of every role. Images are compared by a hash of their
