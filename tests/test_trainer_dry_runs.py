@@ -41,3 +41,16 @@ def test_grpo_dry_run_with_the_short_template_rewards_a_plain_answer(repo, monke
     out = capsys.readouterr().out
     assert "rollout prompt: short (reward reads the plain answer)" in out
     assert "reward correctness:" in out
+
+
+def test_a_flag_that_names_a_preset_field_overrides_it():
+    from argparse import Namespace
+
+    from vqar import config
+    from vqar.training import resolve_preset
+
+    args = Namespace(preset="grpo_2b_main", hardware="24gb", learning_rate=3e-5,
+                     gradient_accumulation=16, max_steps=None)
+    preset = resolve_preset(config.GRPO_PRESETS, args)
+    assert (preset.learning_rate, preset.gradient_accumulation) == (3e-5, 16)
+    assert preset.max_steps == config.GRPO_PRESETS["grpo_2b_main"].max_steps
