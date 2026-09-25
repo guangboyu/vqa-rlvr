@@ -26,12 +26,13 @@ def test_windows_average_logged_lines_and_skip_events(tmp_path):
 
 def test_flags_name_each_warning_sign():
     rows = [
-        {"updates": "1-100", "reward": 0.4, "entropy": 0.8, "logp_gap": 0.03, "dead": 0.5},
+        {"updates": "1-100", "reward": 0.4, "entropy": 0.8, "logp_gap": 0.03, "dead": 0.5,
+         "length": 120},
         {"updates": "101-200", "reward": 0.7, "entropy": 0.1, "logp_gap": 0.2, "dead": 0.9,
-         "truncated": 0.1, "clip": 0.01},
+         "truncated": 0.1, "clip": 0.01, "length": 5},
     ]
     found = " | ".join(flags(rows))
     for sign in ("log-prob gap", "entropy collapsed", "dead", "truncated", "clipping",
-                 "reward moved"):
+                 "reward moved", "shrank"):
         assert sign in found
     assert flags(rows[:1]) == []

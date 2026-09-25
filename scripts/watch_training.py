@@ -33,6 +33,8 @@ MIN_ENTROPY_SHARE = 0.25  # entropy fell below a quarter of its first window
 MAX_DEAD = 0.8  # most groups carry no gradient
 MAX_TRUNCATED = 0.05
 MAX_REWARD_JUMP = 0.15  # between consecutive windows
+MIN_LENGTH_SHARE = 0.25  # responses shrank below a quarter of their first window
+MAX_CLIP = 1e-3  # one pass per batch leaves only bf16 noise in the ratio
 
 
 def logged_lines(path: Path) -> list[dict]:
@@ -64,17 +66,20 @@ def windows(lines: list[dict], size: int) -> list[dict]:
 def flags(rows: list[dict]) -> list[str]:
     found = []
     first_entropy = rows[0].get("entropy") if rows else None
+    first_length = rows[0].get("length") if rows else None
     for previous, row in zip([None] + rows, rows, strict=False):
         span = row["updates"]
         if row.get("logp_gap", 0) > MAX_LOGP_GAP:
             found.append(f"{span}: sampler/trainer log-prob gap {row['logp_gap']:.3f}")
         if first_entropy and row.get("entropy", first_entropy) < MIN_ENTROPY_SHARE * first_entropy:
             found.append(f"{span}: entropy collapsed to {row['entropy']:.3f}")
+        if first_length and row.get("length", first_length) < MIN_LENGTH_SHARE * first_length:
+            found.append(f"{span}: responses shrank to {row['length']:.0f} tokens")
         if row.get("dead", 0) > MAX_DEAD:
             found.append(f"{span}: {row['dead']:.0%} of groups dead")
         if row.get("truncated", 0) > MAX_TRUNCATED:
             found.append(f"{span}: {row['truncated']:.1%} of responses truncated")
-        if row.get("clip", 0) > 0:
+        if row.get("clip", 0) > MAX_CLIP:
             found.append(f"{span}: clipping active ({row['clip']:.3f}) with one pass per batch")
         if previous and abs(row["reward"] - previous["reward"]) > MAX_REWARD_JUMP:
             found.append(f"{span}: reward moved {row['reward'] - previous['reward']:+.2f}; "
