@@ -183,7 +183,13 @@ uv run --frozen python -m scripts.summarize_training \
   results/baselines/training/grpo8-base results/baselines/training/opd2-self \
   --output results/baselines/training-exposure.json
 uv run --frozen python -m scripts.make_gallery
+uv run --frozen python -m scripts.paired_deltas   # needs the local predictions
 ```
+
+For the checks on the [validation](validation.md#parity-with-lmms-eval) page:
+`evaluate.py --max-pixels 16777216 --max-model-len 20480` evaluates a cell at the model's own
+image budget, and `python -m scripts.compare_lmms_eval` pairs an lmms-eval run's logged
+responses with this harness's records.
 
 The report reads the stored records; each names its protocol, so cells evaluated under
 different questions, prompts, scorers, or decoding never share a column. The campaign's
