@@ -120,3 +120,20 @@ def test_report_prints_every_section():
 
 def test_batches_keep_order_and_a_short_tail():
     assert batches([1, 2, 3, 4, 5], 2) == [[1, 2], [3, 4], [5]]
+
+
+def test_an_unmerged_adapter_is_recorded_and_served_at_its_rank(tmp_path):
+    from argparse import Namespace
+
+    from scripts.check_logprob_gap import adapter_rank, settings
+    from vqar.config import GRPO_PRESETS
+
+    (tmp_path / "adapter_config.json").write_text('{"r": 16, "lora_alpha": 32}')
+    assert adapter_rank(str(tmp_path)) == 16
+    args = Namespace(revision=None, adapter=str(tmp_path), questions=4, samples=8,
+                     questions_per_batch=4, seed=0, unmerged_adapter=False)
+    merged = settings(args, GRPO_PRESETS["grpo_2b_main"], "base")
+    assert "vllm_adapter" not in merged  # sample files from merged runs still match
+    args.unmerged_adapter = True
+    assert settings(args, GRPO_PRESETS["grpo_2b_main"], "base") == {
+        **merged, "vllm_adapter": "unmerged"}
