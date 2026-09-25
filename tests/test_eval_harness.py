@@ -363,3 +363,72 @@ def test_a_larger_image_budget_is_its_own_cell_and_must_match_the_engine(data_di
                       records_dir=records)
     assert record.protocol_id != default.protocol_id
     assert record.path.name.startswith("gqa-test-full-short-px")
+
+
+def image_size(messages) -> tuple[int, int]:
+    url = next(part["image_url"]["url"] for part in messages[0]["content"]
+               if part["type"] == "image_url")
+    with PILImage.open(io.BytesIO(base64.b64decode(url.split(",", 1)[1]))) as image:
+        return image.size
+
+
+def test_the_canvas_mode_shows_the_rl_training_image():
+    from vqar.data import to_uniform_canvas
+    from vqar.eval.examples import canvas_like
+    from vqar.rl import to_uniform_canvas as rl_transform
+
+    assert rl_transform is to_uniform_canvas
+    wide = io.BytesIO()
+    PILImage.new("RGB", (40, 20), (200, 0, 0)).save(wide, format="PNG")
+    with PILImage.open(io.BytesIO(canvas_like(wide.getvalue()))) as shown:
+        canvas = shown.convert("RGB")
+    assert canvas.size == (608, 608)
+    # 40x20 scales to 608x304 and sits centered: black bands above and below.
+    assert canvas.getpixel((304, 151)) == (0, 0, 0)
+    assert canvas.getpixel((304, 152)) == (200, 0, 0)
+    assert canvas.getpixel((304, 455)) == (200, 0, 0)
+    assert canvas.getpixel((304, 456)) == (0, 0, 0)
+    with PILImage.open(io.BytesIO(wide.getvalue())) as original:
+        assert canvas.tobytes() == to_uniform_canvas(original).tobytes()
+
+
+def test_canvas_cells_are_their_own_protocol_and_need_no_original_cell(data_dir, model,
+                                                                       tmp_path):
+    script = dict(SCRIPT, **{q: (lambda m: "x".join(map(str, image_size(m))))
+                             for q in ("What animal?", "Is it red?", "How many?")})
+    record = run_eval(model, Protocol("vqav2", image_mode="canvas"), ScriptedGenerator(script),
+                      data_dir=data_dir, records_dir=tmp_path / "records")
+    lines = [json.loads(line) for line in record.predictions_path().read_text().splitlines()]
+    assert {line["prediction"] for line in lines} == {"608x608"}
+    assert record.path.name.startswith("vqav2-test-full-short-canvas-")
+    assert record.protocol["canvas_size"] == 608
+    assert "paired_with_original" not in record.metrics
+    original = protocol_identity(Protocol("vqav2"), record.protocol["data"])
+    assert "canvas_size" not in original
+    changed = {key for key in record.protocol if record.protocol[key] != original.get(key)}
+    assert changed == {"image_mode", "canvas_size"}
+
+
+def test_the_canvas_must_fit_the_image_budget():
+    with pytest.raises(ValueError, match="must hold the RL canvas"):
+        Protocol("gqa", image_mode="canvas", max_pixels=600 * 600)
+
+
+def test_every_stored_record_keeps_its_protocol_identity():
+    """A new protocol field or image mode must not change an existing record's identity."""
+    from vqar.eval.record import record_files
+    from vqar.eval.report import ROOT
+    from vqar.registry import TRAINING_ROLES
+
+    paths = record_files(ROOT / "results" / "records")
+    assert paths
+    for path in paths:
+        stored = RunRecord.load(path).protocol
+        greedy_training_role = stored["role"] in TRAINING_ROLES and stored["samples"] == 1
+        protocol = Protocol(stored["dataset"], prompt=stored["prompt"], role=stored["role"],
+                            tier=stored["tier"], image_mode=stored["image_mode"],
+                            max_tokens=stored["max_tokens"], temperature=stored["temperature"],
+                            samples=stored["samples"], seed=stored.get("seed", 0),
+                            max_pixels=stored["max_pixels"], screening=greedy_training_role)
+        assert protocol_identity(protocol, stored["data"]) == stored, path.name
+        assert path.name.startswith(protocol.slug() + "-"), path.name

@@ -15,6 +15,9 @@ MODEL_8B = "Qwen/Qwen3-VL-8B-Instruct"
 MAX_IMAGE_TOKENS = 768
 PIXELS_PER_TOKEN = 32 * 32  # patch_size 16, merge_size 2 (verified in M0 spike)
 MAX_PIXELS = MAX_IMAGE_TOKENS * PIXELS_PER_TOKEN
+# RL prompt images are padded onto a square canvas of this side (vqar.data.to_uniform_canvas),
+# kept from the historical runs so comparable runs share one geometry.
+RL_IMAGE_SIZE = 608  # 19x19 = 361 vision tokens/image
 
 # Explicit TRL 1.8 defaults. This uses DAPO's loss reduction, not its full recipe.
 RL_RECIPE = dict(

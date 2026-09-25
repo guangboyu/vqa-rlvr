@@ -9,6 +9,7 @@ from pathlib import Path
 from datasets import Image
 from PIL import Image as PILImage
 
+from vqar.data import to_uniform_canvas
 from vqar.eval.protocol import Protocol
 from vqar.registry import TRAINING_ROLES
 from vqar.splits import SEED, load_role, read_split
@@ -90,16 +91,29 @@ def black_image(size: tuple[int, int]) -> PILImage.Image:
     return PILImage.new("RGB", size)
 
 
+def png_bytes(image: PILImage.Image) -> bytes:
+    buffer = io.BytesIO()
+    image.save(buffer, format="PNG")
+    return buffer.getvalue()
+
+
 def black_like(image: bytes) -> bytes:
     """The black image with the original's size, PNG-encoded."""
     with PILImage.open(io.BytesIO(image)) as original:
         blank = black_image(original.size)
-    buffer = io.BytesIO()
-    blank.save(buffer, format="PNG")
-    return buffer.getvalue()
+    return png_bytes(blank)
+
+
+def canvas_like(image: bytes) -> bytes:
+    """The image as RL training shows it: decoded the way the training data loader decodes
+    it (EXIF orientation applied), placed on the RL canvas, and PNG-encoded so the engine
+    receives exactly those pixels."""
+    return png_bytes(to_uniform_canvas(Image().decode_example({"bytes": image, "path": None})))
 
 
 def shown_images(example: Example, donor: Example, image_mode: str) -> list[bytes]:
     if image_mode == "black":
         return [black_like(image) for image in example.images]
+    if image_mode == "canvas":
+        return [canvas_like(image) for image in example.images]
     return donor.images

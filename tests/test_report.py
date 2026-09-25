@@ -140,3 +140,17 @@ def test_a_larger_image_budget_is_reported_as_a_paired_change():
     lines = resolution_table(arms, [row]).splitlines()
     assert lines[2] == "| Base | TextVQA | short | official | 0.79 → 16.78 | +2.00 [+1.00, +3.00] |"
     assert deltas_table(arms, [row]) == "No paired comparison has been computed yet.\n"
+
+
+def test_the_rl_canvas_is_reported_beside_other_image_budgets():
+    from vqar.eval.matrix import Arm
+    from vqar.eval.report import deltas_table, resolution_table
+
+    arms = [Arm("grpo", "GRPO", "m")]
+    row = {"contrast": "canvas", "reference": "grpo", "candidate": "grpo", "dataset": "gqa",
+           "prompt": "reasoning", "variant": "official", "reference_max_pixels": 786432,
+           "canvas_size": 608, "n": 5, "delta": -1.0, "low": -2.0, "high": 0.5}
+    lines = resolution_table(arms, [row]).splitlines()
+    assert lines[2] == ("| GRPO | GQA | reasoning | official | 0.79 → 0.37 (608×608 RL canvas) "
+                        "| -1.00 [-2.00, +0.50] |")
+    assert deltas_table(arms, [row]) == "No paired comparison has been computed yet.\n"

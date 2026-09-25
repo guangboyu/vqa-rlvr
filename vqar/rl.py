@@ -12,26 +12,12 @@ from itertools import islice
 from pathlib import Path
 
 from vqar import config
+from vqar.data import to_uniform_canvas
 from vqar.pools import RefillStream, load_pool
 from vqar.registry import PROMPTS
 from vqar.training import ROOT
 
-# Keep the historical image geometry for comparable runs. Preserve aspect ratio
-# within a fixed canvas so rollout and training use the same vision-token budget.
-RL_IMAGE_SIZE = 608  # 19x19 = 361 vision tokens/image
 ROLLOUT_TEMPERATURE = 1.0
-
-
-def to_uniform_canvas(image):
-    from PIL import Image as PILImage
-
-    image = image.convert("RGB")
-    w, h = image.size
-    scale = RL_IMAGE_SIZE / max(w, h)
-    image = image.resize((max(1, round(w * scale)), max(1, round(h * scale))))
-    canvas = PILImage.new("RGB", (RL_IMAGE_SIZE, RL_IMAGE_SIZE))
-    canvas.paste(image, ((RL_IMAGE_SIZE - image.width) // 2, (RL_IMAGE_SIZE - image.height) // 2))
-    return canvas
 
 
 def to_grpo_columns(batch: dict, template: str) -> dict:

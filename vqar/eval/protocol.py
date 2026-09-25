@@ -6,10 +6,13 @@ from dataclasses import dataclass
 from typing import ClassVar
 
 from vqar import metrics
-from vqar.config import MAX_PIXELS
+from vqar.config import MAX_PIXELS, RL_IMAGE_SIZE
 from vqar.registry import DATASETS, PROMPTS, TRAINING_ROLES
 
-IMAGE_MODES = ("original", "black", "swapped")
+# canvas shows the image as RL training does (vqar.data.to_uniform_canvas).
+IMAGE_MODES = ("original", "black", "swapped", "canvas")
+# Interventions change what the image shows; they pair with the original-image cell.
+INTERVENTIONS = ("black", "swapped")
 # Training roles are read only by the learnability pre-check and the screening battery.
 EVAL_ROLES = ("dev", "test", "rl", "sft")
 EXTRACTION_RULE = "last_answer_tag_or_full_text"
@@ -61,6 +64,9 @@ class Protocol:
             raise ValueError("samples and max_tokens must be positive")
         if self.max_pixels < 1:
             raise ValueError("max_pixels must be positive")
+        if self.image_mode == "canvas" and self.max_pixels < RL_IMAGE_SIZE**2:
+            raise ValueError("the image budget must hold the RL canvas, or the engine "
+                             "would shrink it")
         if self.temperature == 0 and self.samples != 1:
             raise ValueError("greedy decoding draws one sample; set a temperature to sample")
 
@@ -133,4 +139,6 @@ def protocol_identity(protocol: Protocol, data: dict) -> dict:
     }
     if protocol.sampled:
         identity["seed"] = protocol.seed
+    if protocol.image_mode == "canvas":
+        identity["canvas_size"] = RL_IMAGE_SIZE
     return identity

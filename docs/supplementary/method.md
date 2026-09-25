@@ -198,6 +198,14 @@ pairs every answer with the original one. The references stay those of the origi
 image, so a changed-image score measures agreement with them, not accuracy on the new
 image. The recorded interventions used the first 128 test questions of each dataset.
 
+RL shows every prompt image resized to fit and centered on a black 608×608 canvas (361
+vision tokens), while evaluation resizes to at most 768 vision tokens. `--image-mode canvas`
+applies the RL transform (`vqar.data.to_uniform_canvas`) before generation, so an arm can be
+evaluated at the geometry it trained on. It is its own protocol (`-canvas` in the record
+name) and needs no original-image cell; `python -m scripts.paired_deltas` pairs it with the
+same arm's original-image cell, and the report lists the change beside the image-budget
+contrasts.
+
 ## Inspect the saved evidence without a GPU
 
 ```bash

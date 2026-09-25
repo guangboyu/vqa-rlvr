@@ -9,6 +9,8 @@ Usage:
     uv run python evaluate.py --model checkpoints/merged/sharedpool_20260913_sft_2b \\
         --label sft2 --prompts short reasoning
     uv run python evaluate.py --model Qwen/Qwen3-VL-2B-Instruct --role dev --dry-run
+    uv run python evaluate.py --model checkpoints/merged/sharedpool_20260913_grpo_2b_base \\
+        --label grpo2-base --prompts short reasoning --image-mode canvas
 """
 
 import argparse
@@ -63,7 +65,9 @@ def main() -> None:
     parser.add_argument("--prompts", nargs="+", choices=sorted(PROMPTS), default=["short"])
     parser.add_argument("--role", choices=("test", "dev"), default="test")
     parser.add_argument("--tier", choices=tuple(Protocol.TIERS), default="full")
-    parser.add_argument("--image-mode", choices=IMAGE_MODES, default="original")
+    parser.add_argument("--image-mode", choices=IMAGE_MODES, default="original",
+                        help="black and swapped need the original-image cell first; canvas "
+                        "pads each image onto the 608x608 RL training canvas")
     parser.add_argument("--max-tokens", type=int, default=None,
                         help="default: the prompt template's budget")
     parser.add_argument("--temperature", type=float, default=0.0)

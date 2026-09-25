@@ -4,8 +4,9 @@
 
 Reads the comparisons declared in experiments.toml, pairs the two arms' records of every
 declared original-image protocol, pairs any cell evaluated under a larger image budget with
-its default-budget cell, and writes results/paired-deltas.json, which the report turns into
-tables. Needs the predictions beside the records, which stay local.
+its default-budget cell and any cell evaluated on the RL canvas with its original-image cell,
+and writes results/paired-deltas.json, which the report turns into tables. Needs the
+predictions beside the records, which stay local.
 """
 
 import json
@@ -44,22 +45,32 @@ def comparisons() -> list[dict]:
 
 
 def resolution_contrasts() -> list[dict]:
-    """Each cell evaluated under a larger image budget, paired with its default-budget cell."""
+    """Each cell evaluated under a larger image budget, paired with its default-budget cell,
+    and each cell evaluated on the RL canvas, paired with its original-image cell."""
     cells = load_cells(RECORDS_DIR, DATA_DIR)
     rows = []
     for cell, record in cells.items():
-        default = cells.get(cell._replace(max_pixels=MAX_PIXELS))
-        if cell.max_pixels == MAX_PIXELS or default is None:
+        if cell.max_pixels != MAX_PIXELS:
+            reference = cells.get(cell._replace(max_pixels=MAX_PIXELS))
+            kind, change = "max_pixels", f"at {cell.max_pixels} px"
+            images = {"reference_max_pixels": MAX_PIXELS, "candidate_max_pixels": cell.max_pixels}
+        elif cell.image_mode == "canvas":
+            reference = cells.get(cell._replace(image_mode="original"))
+            kind, change = "canvas", "on the RL canvas"
+            images = {"reference_max_pixels": MAX_PIXELS,
+                      "canvas_size": record.protocol["canvas_size"]}
+        else:
+            continue
+        if reference is None:
             continue
         for variant in SCORER_VARIANTS:
             if record.metrics[variant] is None:
                 continue
-            scores = [question_scores(r.predictions_path(), variant) for r in (default, record)]
-            rows.append({"contrast": "max_pixels", "reference": cell.arm,
-                         "candidate": cell.arm, "dataset": cell.dataset, "prompt": cell.prompt,
-                         "variant": variant, "reference_max_pixels": MAX_PIXELS,
-                         "candidate_max_pixels": cell.max_pixels, **paired_bootstrap(*scores)})
-            print(f"{cell.arm} {cell.dataset} {cell.prompt} {variant} at {cell.max_pixels} px: "
+            scores = [question_scores(r.predictions_path(), variant) for r in (reference, record)]
+            rows.append({"contrast": kind, "reference": cell.arm, "candidate": cell.arm,
+                         "dataset": cell.dataset, "prompt": cell.prompt, "variant": variant,
+                         **images, **paired_bootstrap(*scores)})
+            print(f"{cell.arm} {cell.dataset} {cell.prompt} {variant} {change}: "
                   f"{rows[-1]['delta']:+.2f} [{rows[-1]['low']:+.2f}, {rows[-1]['high']:+.2f}]")
     return rows
 

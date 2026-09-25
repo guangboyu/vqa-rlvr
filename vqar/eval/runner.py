@@ -13,7 +13,7 @@ from pathlib import Path
 
 from vqar.answers import extract_answer
 from vqar.eval.examples import image_donors, select_rows, shown_images, to_example
-from vqar.eval.protocol import Protocol, protocol_identity, slug
+from vqar.eval.protocol import INTERVENTIONS, Protocol, protocol_identity, slug
 from vqar.eval.record import ModelRef, RunRecord, model_id, record_path
 from vqar.inference import build_messages
 from vqar.metrics import normalize_answer
@@ -24,8 +24,8 @@ DATA_DIR = ROOT / "data"
 RECORDS_DIR = ROOT / "results" / "records"
 SOURCES = ("vqar/eval/__init__.py", "vqar/eval/examples.py", "vqar/eval/protocol.py",
            "vqar/eval/record.py", "vqar/eval/runner.py", "vqar/inference.py",
-           "vqar/config.py", "vqar/metrics.py", "vqar/registry.py", "vqar/splits.py",
-           "uv.lock")
+           "vqar/config.py", "vqar/data.py", "vqar/metrics.py", "vqar/registry.py",
+           "vqar/splits.py", "uv.lock")
 
 
 def run_eval(model: ModelRef, protocol: Protocol, generator, *, data_dir: Path = DATA_DIR,
@@ -48,7 +48,7 @@ def run_eval(model: ModelRef, protocol: Protocol, generator, *, data_dir: Path =
             raise ValueError(f"{path} holds a different cell; its short ids collide")
         return cached
 
-    if protocol.image_mode != "original":
+    if protocol.image_mode in INTERVENTIONS:
         # Interventions are reported against the same questions with original images.
         original = original_lines(model, protocol, data_dir, records_dir)
         if original is None:
@@ -83,7 +83,7 @@ def run_eval(model: ModelRef, protocol: Protocol, generator, *, data_dir: Path =
         print(f"{protocol.slug()}: saved {start + len(examples)}/{len(rows)}", flush=True)
 
     metrics = summarize(lines, protocol.dataset, protocol.prompt)
-    if protocol.image_mode != "original":
+    if protocol.image_mode in INTERVENTIONS:
         metrics["paired_with_original"] = paired_with_original(lines, original)
     record = RunRecord(model_identity, identity, metrics, provenance())
     saved = record.save(path, lines)
