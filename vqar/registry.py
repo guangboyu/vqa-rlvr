@@ -24,6 +24,13 @@ class Prompt:
     text: str  # formatted with question=...
     max_tokens: int  # default generation budget for this template
     diagnostic: bool = False  # only for controlled prompt studies, never in headline tables
+    answer_rule: str = "tagged"  # how the RL reward reads its answer (vqar.answers)
+
+    def __post_init__(self):
+        from vqar.answers import ANSWER_RULES
+
+        if self.answer_rule not in ANSWER_RULES:
+            raise ValueError(f"{self.name}: unknown answer rule {self.answer_rule!r}")
 
 
 _ANSWER_INSTRUCTION = (
@@ -33,7 +40,8 @@ _ANSWER_INSTRUCTION = (
 PROMPTS: dict[str, Prompt] = {
     p.name: p
     for p in [
-        Prompt("short", "{question}\nAnswer the question using a single word or phrase.", 64),
+        Prompt("short", "{question}\nAnswer the question using a single word or phrase.", 64,
+               answer_rule="plain"),
         Prompt(
             "reasoning",
             "{question}\n"

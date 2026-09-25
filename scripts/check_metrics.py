@@ -15,7 +15,7 @@ import re
 from pathlib import Path
 from types import SimpleNamespace
 
-from vqar.inference import extract_answer
+from vqar.answers import extract_answer
 from vqar.registry import score
 
 

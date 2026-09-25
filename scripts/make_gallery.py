@@ -8,7 +8,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from vqar.inference import extract_answer
+from vqar.answers import extract_answer
 from vqar.registry import score as dataset_score
 
 ROOT = Path(__file__).resolve().parent.parent

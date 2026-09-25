@@ -14,21 +14,9 @@ vLLM notes (single RTX 4090, WSL2):
 
 import base64
 import os
-import re
 
 os.environ.setdefault("VLLM_ATTENTION_BACKEND", "FLASH_ATTN")
 os.environ.setdefault("VLLM_USE_FLASHINFER_SAMPLER", "0")
-
-_ANSWER_TAG = re.compile(r"<answer>(.*?)</answer>", re.DOTALL)
-
-
-def extract_answer(text: str) -> str:
-    """Return the content of the last <answer> tag, or the stripped full text."""
-    matches = _ANSWER_TAG.findall(text)
-    if matches:
-        return matches[-1].strip()
-    return text.strip()
-
 
 def image_to_data_uri(image_bytes: bytes) -> str:
     mime = "image/png" if image_bytes[:4] == b"\x89PNG" else "image/jpeg"

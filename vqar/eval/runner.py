@@ -11,10 +11,11 @@ from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from pathlib import Path
 
+from vqar.answers import extract_answer
 from vqar.eval.examples import image_donors, select_rows, shown_images, to_example
 from vqar.eval.protocol import Protocol, protocol_identity, slug
 from vqar.eval.record import ModelRef, RunRecord, model_id, record_path
-from vqar.inference import build_messages, extract_answer
+from vqar.inference import build_messages
 from vqar.metrics import normalize_answer
 from vqar.registry import DATASETS, PROMPTS, SCORER_VARIANTS
 
@@ -77,7 +78,7 @@ def run_eval(model: ModelRef, protocol: Protocol, generator, *, data_dir: Path =
         lines.extend(batch)
         print(f"{protocol.slug()}: saved {start + len(examples)}/{len(rows)}", flush=True)
 
-    metrics = summarize(lines, protocol.dataset)
+    metrics = summarize(lines, protocol.dataset, protocol.prompt)
     if protocol.image_mode != "original":
         metrics["paired_with_original"] = paired_with_original(lines, original)
     record = RunRecord(model_identity, identity, metrics, provenance())
@@ -159,7 +160,7 @@ def prediction_line(example, image_qid: str, sample: int, output: dict, role: st
             "finish_reason": output["finish_reason"]}
 
 
-def summarize(lines: list[dict], dataset: str) -> dict:
+def summarize(lines: list[dict], dataset: str, prompt: str) -> dict:
     """Both scorer variants overall and per answer type, plus behavior metrics.
 
     With several samples per question, accuracies average over samples (avg@k). Two casing
@@ -197,16 +198,16 @@ def summarize(lines: list[dict], dataset: str) -> dict:
             for line in lines
         )
     if len(lines) > metrics["n"]:
-        metrics.update(sampled_metrics(lines, dataset))
+        metrics.update(sampled_metrics(lines, dataset, prompt))
     return metrics
 
 
-def sampled_metrics(lines: list[dict], dataset: str) -> dict:
+def sampled_metrics(lines: list[dict], dataset: str, prompt: str) -> dict:
     """pass@k per scorer variant, and learnability under the training reward.
 
     pass@k is the share of questions with at least one fully correct sample. Learnability
-    scores each sample with the GRPO correctness reward (the tagged answer, normalized
-    scorer), so it counts the prompts whose sample group would carry a learning signal:
+    scores each sample with the GRPO correctness reward under the prompt's answer rule, so
+    it counts the prompts whose sample group would carry a learning signal:
     those whose pass rate lies strictly between 0 and 1.
     """
     from vqar.rewards import correctness_reward
@@ -224,17 +225,22 @@ def sampled_metrics(lines: list[dict], dataset: str) -> dict:
             max(line["scores"][variant] for line in group) >= 1.0 - 1e-12
             for group in by_question.values()
         ) / len(by_question)
-    pass_rates = []
-    for group in by_question.values():
+    hits = {}
+    for qid, group in by_question.items():
         rewards = correctness_reward(
             prompts=None, completions=[line["raw"] for line in group],
-            answers=[line["answers"] for line in group], dataset=[dataset] * len(group))
-        pass_rates.append(sum(reward >= 1.0 - 1e-12 for reward in rewards))
-    histogram = {f"{hits}/{k}": pass_rates.count(hits) for hits in range(k + 1)}
+            answers=[line["answers"] for line in group], dataset=[dataset] * len(group),
+            rollout_prompt=[prompt] * len(group))
+        hits[qid] = sum(reward >= 1.0 - 1e-12 for reward in rewards)
+    counts = list(hits.values())
+    reads = {"tagged": "the tagged answer", "plain": "the whole response"}
     result["learnability"] = {
-        "rule": "GRPO correctness reward: normalized score of the tagged answer",
-        "correct_samples_histogram": histogram,
-        "fraction_between_0_and_1": sum(0 < hits < k for hits in pass_rates) / len(pass_rates),
+        "rule": "GRPO correctness reward: normalized score of "
+                + reads[PROMPTS[prompt].answer_rule],
+        "correct_samples_histogram": {f"{n}/{k}": counts.count(n) for n in range(k + 1)},
+        "fraction_between_0_and_1": sum(0 < n < k for n in counts) / len(counts),
+        # Per question, so a pool can be selected from the record alone.
+        "correct_samples": hits,
     }
     return result
 

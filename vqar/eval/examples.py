@@ -50,7 +50,7 @@ def select_rows(protocol: Protocol, data_dir: Path, limit: int | None = None):
     rows = load_role(data_dir, [protocol.dataset], protocol.role, seed=order)
     split = read_split(data_dir, protocol.dataset)
     parts = split["roles"][protocol.role]
-    limit = limit or Protocol.TIERS[protocol.tier]
+    limit = limit or Protocol.tier_size(protocol.tier)
     if limit is not None:
         rows = rows.select(range(min(limit, len(rows))))
     rows = rows.cast_column("image", Image(decode=False))

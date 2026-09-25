@@ -101,6 +101,21 @@ def test_two_records_for_one_cell_are_an_error(records, tmp_path):
         load_cells(first.parent.parent)
 
 
+def test_a_record_of_superseded_data_leaves_the_tables_but_stays_on_disk(records, tmp_path):
+    from vqar.eval.record import RunRecord
+
+    first = next(iter(records.values()))
+    stale = dict(first.protocol, data={"subsets": {"vqav2_eval": "an-older-fingerprint"},
+                                       "selection_sha256": "older"})
+    old = RunRecord(first.model, stale, first.metrics, first.provenance)
+    old.save(first.path.parent / "vqav2-test-full-short-older.json", [])
+    directory = first.path.parent.parent
+    with pytest.raises(ValueError, match="Two records claim one table cell"):
+        load_cells(directory)
+    current = load_cells(directory, tmp_path / "data")
+    assert [record.path for record in current.values()] == [r.path for r in records.values()]
+
+
 def test_paired_differences_show_the_interval_per_dataset():
     from vqar.eval.matrix import Arm
     from vqar.eval.report import deltas_table

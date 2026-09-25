@@ -81,7 +81,11 @@ saved with every run.
 scores the tagged answer with the normalized scorer, which falls back to exact match when
 a question has fewer than two references. There is no separate format bonus in these
 runs. Evaluation also accepts untagged answers and reports the dataset authors' scorer
-beside the normalized one.
+beside the normalized one. The tag requirement is the reasoning template's answer rule
+(`vqar/answers.py`): `train_grpo.py --rollout-prompt short` trains under the short template
+instead, whose rule scores the whole trimmed response. `--pool <name>` draws prompts from a
+declared pool (`scripts/build_pool.py`, [ADR 0003](../adr/0003-rl-pools-are-declared-files-beside-the-split-files.md))
+rather than the whole rl roles; the campaign's runs used the defaults.
 
 **OPD.** The same rollout geometry as GRPO. The learning signal is the teacher's token
 log-probability minus the student's rollout-time log-probability. The correctness reward

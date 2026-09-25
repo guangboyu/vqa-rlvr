@@ -22,8 +22,8 @@ from collections.abc import Iterator
 from datasets import Dataset, Features, Image, Sequence, Value, load_dataset
 from PIL import Image as PILImage
 
+from vqar.answers import extract_answer
 from vqar.config import MAX_PIXELS
-from vqar.inference import extract_answer
 from vqar.registry import SOURCE_REVISIONS
 
 

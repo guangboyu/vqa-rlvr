@@ -2,21 +2,19 @@
 
     fn(prompts=..., completions=..., completion_ids=..., **dataset_columns) -> list[float]
 
-Extra columns of the RL dataset (question, answers, dataset) arrive as kwargs, each a
-list aligned with completions. Rewards return raw signals in [0, 1]; relative weighting
-(e.g. format 0.2) is set via GRPOConfig.reward_weights, so ablating a reward is a
-config change, not a code change.
+Extra columns of the RL dataset (question, answers, dataset, rollout_prompt) arrive as
+kwargs, each a list aligned with completions. Rewards return raw signals in [0, 1];
+relative weighting (e.g. format 0.2) is set via GRPOConfig.reward_weights, so ablating a
+reward is a config change, not a code change.
 """
 
-import re
+from vqar.answers import reward_answer
+from vqar.registry import PROMPTS, score
 
-from vqar.registry import score
-
-_ANSWER_TAG = re.compile(r"<answer>(.*?)</answer>", re.DOTALL)
-# Reasoning followed by one short, terminal <answer> tag. Deliberately NOT literal
-# <think> tags: Qwen3-VL writes its chain of thought as plain prose and never samples
-# literal think tags, so a think-tag reward is unearnable (flat 0 over 400 GRPO steps
-# from BOTH the base and SFT policies). Reward the behavior, not magic tokens.
+# The format reward wants reasoning followed by one short, terminal <answer> tag.
+# Deliberately NOT literal <think> tags: Qwen3-VL writes its chain of thought as plain prose
+# and never samples literal think tags, so a think-tag reward is unearnable (flat 0 over 400
+# GRPO steps from BOTH the base and SFT policies). Reward the behavior, not magic tokens.
 _MIN_REASONING_CHARS = 100
 
 
@@ -26,19 +24,13 @@ def _text(completion) -> str:
     return completion[0]["content"]  # conversational format
 
 
-def _strict_answer(text: str) -> str | None:
-    """RL-side extraction is STRICT: no <answer> tag, no reward. The eval-side
-    fallback (score the raw text) let the CLEVR sandbox policy drift to bare
-    digits — RL happily discards formats that aren't load-bearing for reward."""
-    matches = _ANSWER_TAG.findall(text)
-    return matches[-1].strip() if matches else None
-
-
-def correctness_reward(prompts, completions, answers, dataset, **kwargs) -> list[float]:
-    """Verifiable per-dataset match with the dataset's normalized scorer (in [0, 1])."""
+def correctness_reward(prompts, completions, answers, dataset, rollout_prompt,
+                       **kwargs) -> list[float]:
+    """The dataset's normalized score of the answer read by the rollout prompt's rule."""
     out = []
-    for completion, golds, ds in zip(completions, answers, dataset, strict=True):
-        pred = _strict_answer(_text(completion))
+    for completion, golds, ds, template in zip(completions, answers, dataset, rollout_prompt,
+                                               strict=True):
+        pred = reward_answer(_text(completion), PROMPTS[template].answer_rule)
         out.append(0.0 if pred is None else score(ds, pred, golds, "normalized"))
     return out
 

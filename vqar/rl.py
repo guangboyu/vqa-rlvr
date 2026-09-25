@@ -4,11 +4,12 @@ Heavy libraries (torch, trl, vllm) load inside the functions that need them, so 
 and CPU tests work without them.
 """
 
+from functools import partial
 from pathlib import Path
 
 from vqar import config
+from vqar.pools import load_pool
 from vqar.registry import PROMPTS
-from vqar.splits import load_role
 from vqar.training import ROOT
 
 # Keep the historical image geometry for comparable runs. Preserve aspect ratio
@@ -29,12 +30,12 @@ def to_uniform_canvas(image):
     return canvas
 
 
-def to_grpo_columns(batch: dict) -> dict:
-    """GRPO rows: conversational `prompt` + `image`; question/answers/dataset ride
-    along as extra columns that TRL forwards to every reward function."""
+def to_grpo_columns(batch: dict, template: str) -> dict:
+    """GRPO rows: conversational `prompt` + `image`; question/answers/dataset and the
+    rollout template ride along as extra columns that TRL forwards to every reward."""
     return {
         "prompt": [
-            [{"role": "user", "content": PROMPTS["reasoning"].text.format(question=q)}]
+            [{"role": "user", "content": PROMPTS[template].text.format(question=q)}]
             for q in batch["question"]
         ],
         "image": [to_uniform_canvas(img) for img in batch["image"]],
@@ -42,15 +43,16 @@ def to_grpo_columns(batch: dict) -> dict:
         "answers": batch["answers"],
         "dataset": batch["dataset"],
         "qid": batch["qid"],
+        "rollout_prompt": [template] * len(batch["question"]),
     }
 
 
-def load_rl_dataset(preset):
-    """The rl role of the preset's datasets; it already reuses their SFT training rows."""
-    ds = load_role(ROOT / "data", preset.datasets, "rl", preset.seed)
-    return ds.select_columns(["image", "question", "answers", "dataset", "qid"]).with_transform(
-        to_grpo_columns
-    )
+def load_rl_dataset(preset, data_dir: Path | None = None):
+    """The preset's RL pool (its datasets' rl roles, or a declared subset of them) as GRPO
+    rows in the preset's rollout template."""
+    rows = load_pool(data_dir or ROOT / "data", preset.datasets, preset.seed, preset.pool)
+    columns = rows.select_columns(["image", "question", "answers", "dataset", "qid"])
+    return columns.with_transform(partial(to_grpo_columns, template=preset.rollout_prompt))
 
 
 def build_rewards(names: tuple[str, ...]):
@@ -115,33 +117,36 @@ def make_chat_rollout():
     return rollout
 
 
-def dry_run(preset, rewards: tuple[str, ...]) -> None:
-    """Validate dataset shape and reward wiring without touching a model or GPU."""
+def dry_run(preset) -> None:
+    """Validate the pool, the rollout template, and reward wiring without a model or GPU."""
     from vqar.rewards import REWARDS
 
     ds = load_rl_dataset(preset)
     row = ds[0]
-    assert row["prompt"][0]["role"] == "user", row
-    assert "<think>" in row["prompt"][0]["content"]
-    print(f"dataset ok: {len(ds)} prompts from the rl roles of {preset.datasets}")
+    template = PROMPTS[preset.rollout_prompt]
+    assert row["prompt"][0]["content"] == template.text.format(question=row["question"]), row
+    pool = preset.pool or "the whole rl roles"
+    print(f"dataset ok: {len(ds)} prompts from {pool} of {preset.datasets}")
+    print(f"rollout prompt: {template.name} (reward reads the {template.answer_rule} answer)")
     print(f"sample question: {row['question'][:80]}")
 
-    fake_completion = [{"role": "assistant", "content": "<think>x</think><answer>4</answer>"}]
-    for name in rewards:
+    answer = "<think>x</think><answer>4</answer>" if template.answer_rule == "tagged" else "4"
+    for name in preset.rewards:
         value = REWARDS[name](
             prompts=[row["prompt"]],
-            completions=[fake_completion],
+            completions=[[{"role": "assistant", "content": answer}]],
             answers=[row["answers"]],
             dataset=[row["dataset"]],
+            rollout_prompt=[row["rollout_prompt"]],
         )
         print(f"reward {name}: {value}")
     print("dry run OK")
 
 
 def grpo_config(preset, output_dir: Path, run_name: str, model_init_kwargs: dict, *,
-                max_steps: int, beta: float, reward_weights: list[float], batch_size: int,
-                grad_accum: int, save_steps: int, save_total_limit: int, report_to: list[str]):
-    """The GRPO settings both RL trainers use; only the learning signal differs between them."""
+                save_steps: int, save_total_limit: int, report_to: list[str]):
+    """The GRPO settings both RL trainers use, all read from the resolved preset; only the
+    learning signal differs between them."""
     from trl import GRPOConfig
 
     return GRPOConfig(
@@ -150,14 +155,14 @@ def grpo_config(preset, output_dir: Path, run_name: str, model_init_kwargs: dict
         run_name=run_name,
         model_init_kwargs=model_init_kwargs,
         num_generations=preset.num_generations,
-        per_device_train_batch_size=batch_size,
-        gradient_accumulation_steps=grad_accum,
+        per_device_train_batch_size=preset.per_device_batch_size,
+        gradient_accumulation_steps=preset.gradient_accumulation,
         learning_rate=preset.learning_rate,
-        max_steps=max_steps,
+        max_steps=preset.max_steps,
         max_completion_length=preset.max_completion_length,
         temperature=ROLLOUT_TEMPERATURE,
-        beta=beta,
-        reward_weights=reward_weights,
+        beta=preset.kl_beta,
+        reward_weights=list(preset.reward_weights),
         use_vllm=True,
         vllm_mode="colocate",
         vllm_enable_sleep_mode=True,

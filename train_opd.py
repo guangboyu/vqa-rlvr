@@ -16,7 +16,6 @@ Usage:
 import argparse
 import copy
 import math
-from dataclasses import replace
 
 from vqar import config
 from vqar.rl import dry_run, grpo_config, load_rl_dataset, make_chat_rollout, resolve_model
@@ -211,14 +210,11 @@ def main() -> None:
     parser.add_argument("--max-steps", type=int, default=None)
     parser.add_argument("--seed", type=int, default=None, help="seed replication arms")
     args = parse_arguments(parser)
-
     preset = resolve_preset(config.OPD_PRESETS, args)
-    if args.seed is not None:
-        preset = replace(preset, seed=args.seed)
 
     if args.dry_run:
         print(f"hardware={args.hardware}; recipe={config.RL_RECIPE}")
-        dry_run(preset, rewards=("correctness",))
+        dry_run(preset)
         return
 
     check_rl_precision(preset)
@@ -228,14 +224,12 @@ def main() -> None:
     from vqar.rewards import REWARDS
 
     run_name = args.run_name or preset.name
-    student_path = resolve_model(args.model or preset.model)
-    teacher_ref = args.teacher or preset.teacher
-    teacher_path = teacher_ref if teacher_ref == "self" else resolve_model(teacher_ref)
-    max_steps = args.max_steps or preset.max_steps
+    student_path = resolve_model(preset.model)
+    teacher_path = preset.teacher if preset.teacher == "self" else resolve_model(preset.teacher)
 
     processor = AutoProcessor.from_pretrained(student_path, padding_side="left")
 
-    if teacher_ref == "self":
+    if preset.teacher == "self":
         teacher = None  # gold-conditioned base policy scores its own rollouts
     else:
         teacher = AutoModelForImageTextToText.from_pretrained(
@@ -245,25 +239,20 @@ def main() -> None:
 
     output = checkpoint_dir(args.run_dir, run_name)
     training_args = grpo_config(
-        preset, output, run_name, load_kwargs(preset.quantize_4bit), max_steps=max_steps,
-        beta=0.0,
-        reward_weights=[1.0],  # logging only; advantages are replaced by OPD
-        batch_size=preset.per_device_batch_size, grad_accum=preset.gradient_accumulation,
-        save_steps=args.save_steps, save_total_limit=args.save_total_limit,
-        report_to=wandb_reporting(args.no_wandb),
+        preset, output, run_name, load_kwargs(preset.quantize_4bit), save_steps=args.save_steps,
+        save_total_limit=args.save_total_limit, report_to=wandb_reporting(args.no_wandb),
     )
     peft_config = lora_config(preset)
     write_run_config(output, {
         "preset": config.dump(preset), "policy_model": student_path,
         "teacher_model": teacher_path,
         "teacher_log_softmax_dtype": "float32",
-        "data": provenance(ROOT / "data", preset.datasets),
-        "overrides": {"hardware": args.hardware, "max_steps": max_steps},
+        "data": provenance(ROOT / "data", preset.datasets), "hardware": args.hardware,
     }, training_args)
     trainer_cls = make_opd_trainer_cls()
     trainer = trainer_cls(
         model=student_path,
-        reward_funcs=[REWARDS["correctness"]],
+        reward_funcs=[REWARDS[name] for name in preset.rewards],  # logged, not optimized
         args=training_args,
         train_dataset=load_rl_dataset(preset),
         processing_class=processor,

@@ -12,12 +12,28 @@ def completion(text):
 
 
 class TestCorrectness:
+    def test_the_reasoning_template_pays_only_a_tagged_answer(self):
+        r = correctness_reward(
+            prompts=None, completions=[completion("4"), completion("<answer>4</answer>")],
+            answers=[["4"], ["4"]], dataset=["clevr"] * 2, rollout_prompt=["reasoning"] * 2,
+        )
+        assert r == [0.0, 1.0]
+
+    def test_the_short_template_scores_the_whole_response(self):
+        # The short template never asks for tags, so tags would make every reward zero.
+        r = correctness_reward(
+            prompts=None, completions=[completion(" Four. "), completion("It is red.")],
+            answers=[["4"], ["red"]], dataset=["clevr", "gqa"], rollout_prompt=["short"] * 2,
+        )
+        assert r == [1.0, 0.0]
+
     def test_clevr_numeric_match(self):
         r = correctness_reward(
             prompts=None,
             completions=[completion(GOOD)],
             answers=[["4"]],
             dataset=["clevr"],
+            rollout_prompt=["reasoning"],
         )
         assert r == [1.0]
 
@@ -27,13 +43,14 @@ class TestCorrectness:
             completions=[completion("<answer>red</answer>")],
             answers=[["red"] * 2 + ["blue"] * 8],
             dataset=["vqav2"],
+            rollout_prompt=["reasoning"],
         )
         assert 0.0 < r[0] < 1.0
 
     def test_miss(self):
         r = correctness_reward(
             prompts=None, completions=[completion("<answer>7</answer>")],
-            answers=[["4"]], dataset=["clevr"],
+            answers=[["4"]], dataset=["clevr"], rollout_prompt=["reasoning"],
         )
         assert r == [0.0]
 

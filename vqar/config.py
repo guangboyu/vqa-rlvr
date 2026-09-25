@@ -107,6 +107,8 @@ class GRPOPreset:
     reward_weights: tuple[float, ...] = (1.0, 0.2)
     kl_beta: float = 0.0  # modern GRPO practice; one 0.04 sanity run in the sandbox
     vllm_gpu_memory_utilization: float = 0.3
+    rollout_prompt: str = "reasoning"  # template the rollouts answer; its answer rule scores them
+    pool: str | None = None  # a declared pool of rl-role questions; None: the whole role
     lora_r: int = 16
     lora_alpha: int = 32
     lora_targets: tuple[str, ...] = (
@@ -119,6 +121,10 @@ class GRPOPreset:
         "down_proj",
     )
     seed: int = 42
+
+    def __post_init__(self):
+        if len(self.rewards) != len(self.reward_weights):
+            raise ValueError(f"{self.name}: each reward needs a weight")
 
 
 GRPO_PRESETS: dict[str, GRPOPreset] = {
@@ -192,6 +198,12 @@ class OPDPreset:
     teacher_quantize_4bit: bool = True
     teacher_chunk_size: int = 2  # sequences per teacher forward (bounds logit memory)
     vllm_gpu_memory_utilization: float = 0.25  # 0.30 minus room for the teacher
+    # Correctness is logged for diagnosis only; the teacher's token scores drive updates.
+    rewards: tuple[str, ...] = ("correctness",)
+    reward_weights: tuple[float, ...] = (1.0,)
+    kl_beta: float = 0.0
+    rollout_prompt: str = "reasoning"
+    pool: str | None = None
     lora_r: int = 16
     lora_alpha: int = 32
     lora_targets: tuple[str, ...] = (

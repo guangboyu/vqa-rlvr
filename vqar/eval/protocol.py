@@ -45,14 +45,23 @@ class Protocol:
             raise ValueError(f"{self.dataset} has no {self.role} role")
         if self.prompt not in PROMPTS:
             raise ValueError(f"unknown prompt template: {self.prompt}")
-        if self.tier not in self.TIERS:
-            raise ValueError(f"tier must be one of {tuple(self.TIERS)}")
+        self.tier_size(self.tier)  # rejects an unknown tier
         if self.image_mode not in IMAGE_MODES:
             raise ValueError(f"image mode must be one of {IMAGE_MODES}")
         if self.samples < 1 or (self.max_tokens is not None and self.max_tokens < 1):
             raise ValueError("samples and max_tokens must be positive")
         if self.temperature == 0 and self.samples != 1:
             raise ValueError("greedy decoding draws one sample; set a temperature to sample")
+
+    @classmethod
+    def tier_size(cls, tier: str) -> int | None:
+        """Questions a tier takes from the role's order: a named tier, or "first-N"."""
+        if tier in cls.TIERS:
+            return cls.TIERS[tier]
+        count = tier.removeprefix("first-")
+        if tier.startswith("first-") and count.isdigit() and int(count) > 0:
+            return int(count)
+        raise ValueError(f"tier must be one of {tuple(cls.TIERS)} or first-N")
 
     @property
     def budget(self) -> int:
@@ -94,7 +103,7 @@ def protocol_identity(protocol: Protocol, data: dict) -> dict:
         "ladder": spec.ladder,  # frozen before training; OOD columns are never tuned on
         "role": protocol.role,
         "tier": protocol.tier,
-        "question_limit": Protocol.TIERS[protocol.tier],
+        "question_limit": Protocol.tier_size(protocol.tier),
         "prompt": protocol.prompt,
         "prompt_text": PROMPTS[protocol.prompt].text,
         "max_tokens": protocol.budget,

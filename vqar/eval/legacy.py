@@ -15,11 +15,11 @@ import json
 import math
 from pathlib import Path
 
+from vqar.answers import extract_answer
 from vqar.eval.examples import image_donors, select_rows
 from vqar.eval.protocol import Protocol, protocol_identity
 from vqar.eval.record import RunRecord
 from vqar.eval.runner import paired_with_original, summarize
-from vqar.inference import extract_answer
 from vqar.registry import SCORER_VARIANTS, score
 from vqar.splits import read_split
 
@@ -86,7 +86,7 @@ def campaign_record(path: Path, baselines: Path, data_dir: Path, weights: dict[s
     provenance = {"legacy": CAMPAIGN, "code_version": run["git_sha"],
                   "source_sha256": run["source_sha256"], "versions": run["versions"],
                   "timestamp": run["timestamp"], "migrated_from": sources}
-    metrics = summarize(lines, dataset)
+    metrics = summarize(lines, dataset, protocol.prompt)
     if original is not None:
         metrics["paired_with_original"] = paired_with_original(lines, original)
     return RunRecord(model, identity, metrics, provenance, legacy=True), lines

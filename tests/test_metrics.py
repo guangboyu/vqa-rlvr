@@ -108,7 +108,8 @@ class TestSingleReferenceFallback:
         from vqar.rewards import correctness_reward
 
         rewards = correctness_reward(prompts=None, completions=["<answer>yes</answer>"],
-                                     answers=[["yes"]], dataset=["vqav2"])
+                                     answers=[["yes"]], dataset=["vqav2"],
+                                     rollout_prompt=["reasoning"])
         assert rewards == [1.0]
 
 

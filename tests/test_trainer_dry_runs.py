@@ -30,3 +30,14 @@ def test_dry_run_loads_the_trainers_role(repo, module, preset, expected, monkeyp
                                      "--dry-run", "--no-wandb"])
     trainer.main()
     assert expected in capsys.readouterr().out
+
+
+def test_grpo_dry_run_with_the_short_template_rewards_a_plain_answer(repo, monkeypatch, capsys):
+    import train_grpo
+
+    monkeypatch.setattr("sys.argv", ["train_grpo.py", "--preset", "grpo_2b_main", "--hardware",
+                                     "24gb", "--rollout-prompt", "short", "--dry-run"])
+    train_grpo.main()
+    out = capsys.readouterr().out
+    assert "rollout prompt: short (reward reads the plain answer)" in out
+    assert "reward correctness:" in out

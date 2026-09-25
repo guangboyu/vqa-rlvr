@@ -15,6 +15,7 @@ from vqar.eval.legacy import july_records
 from vqar.eval.matrix import Arm, load_matrix
 from vqar.eval.record import RunRecord, record_files
 from vqar.registry import DATASETS
+from vqar.splits import read_split
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 MARKED_FILES = ("README.md", "docs/supplementary/results.md", "docs/supplementary/history.md")
@@ -41,11 +42,18 @@ class Cell(NamedTuple):
     samples: int = 1
 
 
-def load_cells(records_dir: Path) -> dict[Cell, RunRecord]:
-    """Every stored record, keyed by its table cell."""
+def load_cells(records_dir: Path, data_dir: Path | None = None) -> dict[Cell, RunRecord]:
+    """Every stored record, keyed by its table cell.
+
+    With `data_dir`, a record whose data no longer matches the split files there is
+    superseded (for example, a test role that has since grown) and stays out of the tables;
+    it remains on disk as history. Two current records for one cell are an error.
+    """
     cells = {}
     for path in record_files(records_dir):
         record = RunRecord.load(path)
+        if data_dir is not None and not is_current(record, data_dir):
+            continue
         p = record.protocol
         key = Cell(record.model["label"], p["dataset"], p["role"], p["tier"], p["prompt"],
                    p["image_mode"], record.model.get("step"), p["temperature"], p["samples"])
@@ -53,6 +61,13 @@ def load_cells(records_dir: Path) -> dict[Cell, RunRecord]:
             raise ValueError(f"Two records claim one table cell {key}: {cells[key].path}, {path}")
         cells[key] = record
     return cells
+
+
+def is_current(record: RunRecord, data_dir: Path) -> bool:
+    """Whether every subset the record read still has the fingerprint its split file records."""
+    recorded = read_split(data_dir, record.protocol["dataset"])["subsets"]
+    return all(name in recorded and recorded[name]["fingerprint"] == fingerprint
+               for name, fingerprint in record.protocol["data"]["subsets"].items())
 
 
 def ordered_datasets() -> list[str]:
@@ -308,7 +323,7 @@ def deltas_table(arms: list[Arm], rows: list[dict]) -> str:
 def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
     """Every markdown block, and the JSON export for the demo."""
     arms, _ = load_matrix(root / "experiments.toml")
-    cells = load_cells(root / "results" / "records")
+    cells = load_cells(root / "results" / "records", root / "data")
     history = july_records(root / "results")
     exposure = json.loads((root / "results" / "baselines" / "training-exposure.json").read_text())
     blocks = {

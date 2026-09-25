@@ -28,3 +28,4 @@ artifacts/
 # The manifest and split files define the benchmark (sizes, seeds, roles) — versioned.
 !data/manifest.json
 !data/splits/
+!data/pools/

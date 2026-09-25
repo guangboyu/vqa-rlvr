@@ -7,7 +7,7 @@ import importlib.metadata
 import json
 import os
 import subprocess
-from dataclasses import replace
+from dataclasses import fields, replace
 from functools import wraps
 from pathlib import Path
 
@@ -43,11 +43,15 @@ def parse_arguments(parser: argparse.ArgumentParser):
 
 
 def resolve_preset(presets: dict, args):
-    """The named preset with a model override, adjusted to the hardware profile."""
+    """The named preset with every flag that names one of its fields applied, adjusted to
+    the hardware profile. The result is the whole run's recipe: trainers read only it."""
     preset = presets[args.preset]
-    if args.model:
-        preset = replace(preset, model=args.model)
-    return config.for_hardware(preset, args.hardware)
+    overrides = {
+        field.name: tuple(value) if isinstance(value, list) else value
+        for field in fields(preset)
+        if field.name != "name" and (value := getattr(args, field.name, None)) is not None
+    }
+    return config.for_hardware(replace(preset, **overrides), args.hardware)
 
 
 def checkpoint_dir(run_dir: Path | None, run_name: str) -> Path:

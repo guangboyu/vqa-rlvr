@@ -1,4 +1,4 @@
-from vqar.inference import extract_answer
+from vqar.answers import extract_answer
 
 
 def test_plain_text_passthrough():
