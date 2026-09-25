@@ -100,9 +100,16 @@ questions were asked; with one training seed per arm it does not measure seed va
 The headline cells resize images to at most 0.79 megapixels, which no VQAv2, GQA, or CLEVR
 test image exceeds but 826 of the 5,000 TextVQA images do. The same arm evaluated at the
 model's own budget (16.8 megapixels) shows what the cap costs, with a paired 95% interval.
+For Instruct 2B it costs nothing measurable: the full budget changes short-prompt TextVQA by
+−0.1 points and reasoning-prompt TextVQA by −0.7, both intervals including zero.
 
 <!-- report:resolution -->
-No larger image budget has been evaluated yet.
+| Arm | Dataset | Prompt | Scorer | Megapixels | Change |
+| --- | --- | --- | --- | ---: | ---: |
+| Instruct 2B | TextVQA | reasoning | official | 0.79 → 16.78 | -0.65 [-1.34, +0.05] |
+| Instruct 2B | TextVQA | reasoning | normalized | 0.79 → 16.78 | -0.65 [-1.34, +0.05] |
+| Instruct 2B | TextVQA | short | official | 0.79 → 16.78 | -0.09 [-0.41, +0.22] |
+| Instruct 2B | TextVQA | short | normalized | 0.79 → 16.78 | -0.10 [-0.41, +0.21] |
 <!-- /report:resolution -->
 
 ## Response behavior under the reasoning prompt

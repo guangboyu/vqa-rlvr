@@ -68,13 +68,17 @@ Model selection and learning curves use the `dev` role; `test` numbers are repor
 - Per-sample predictions stored, so any number can be rescored or audited.
 - Decontamination of training data against evaluation images.
 
+A parity run against lmms-eval 0.7.3 on the same model matched its scores to 0.09 points on
+GQA; on TextVQA the 1.15-point gap comes entirely from lmms-eval capitalizing each question
+([validation](validation.md#parity-with-lmms-eval)).
+
 ## Where it differs, and why
 
 | Difference | Why | Effect |
 |---|---|---|
 | VQAv2 is a seeded 5,000-question sample of validation, not test-dev | test-dev answers are hidden behind a submission server; full validation (214k) costs about 43 times as much | about ±0.6 points of sampling error; compare arms, not leaderboard numbers |
 | CLEVR counting is a local held-out slice of the R1-V training source | the official CLEVR test has no public answers | no official number to compare with |
-| Images are capped at about 0.79 megapixels | memory and speed on a 24 GB card | no effect on VQAv2, GQA, or CLEVR images; 826 of 5,000 TextVQA images (16.5%) are downscaled |
+| Images are capped at about 0.79 megapixels | memory and speed on a 24 GB card | no effect on VQAv2, GQA, or CLEVR images; 826 of 5,000 TextVQA images (16.5%) are downscaled, and Instruct 2B at the model's own 16.8 MP budget scores −0.1 (short) and −0.7 (reasoning) points, intervals including zero |
 | One training seed per arm | compute; seeds are deferred | intervals measure question sampling only |
 | No model-based judge in the headline | exact scorers are reproducible and cheap | open-ended paraphrases count as wrong under both scorers |
 | Reasoning-prompt generations are not bitwise repeatable | batched vLLM kernels vary with batch composition | differences smaller than the run-to-run spread are not evidence ([validation](validation.md)) |

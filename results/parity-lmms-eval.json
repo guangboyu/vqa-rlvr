@@ -1,0 +1,37 @@
+{
+ "lmms_eval": {
+  "model_args": "model=Qwen/Qwen3-VL-2B-Instruct,revision=89644892e4d85e24eaac8bacfd4f463576704203,max_pixels=786432,mm_processor_kwargs={\"max_pixels\":786432},gpu_memory_utilization=0.8,max_model_len=4096,is_qwen3_vl=True",
+  "version": "0.7.3",
+  "command": "runs/parity-20260924/run.sh (lmms-eval vllm backend, tasks gqa and textvqa_val, max_pixels 786432)"
+ },
+ "model": "base2",
+ "comparisons": [
+  {
+   "dataset": "gqa",
+   "n": 12578,
+   "lmms_eval_score": 0.5936555891238671,
+   "harness_official": 0.5945301319764669,
+   "harness_normalized": 0.5946096358721578,
+   "lmms_responses_under_harness_official": 0.5935760852281762,
+   "lmms_responses_under_harness_normalized": 0.5936555891238671,
+   "identical_responses": 12352
+  },
+  {
+   "dataset": "textvqa",
+   "n": 5000,
+   "lmms_eval_score": 0.79382,
+   "harness_official": 0.80528,
+   "harness_normalized": 0.8055,
+   "lmms_responses_under_harness_official": 0.79382,
+   "lmms_responses_under_harness_normalized": 0.79392,
+   "identical_responses": 3579
+  }
+ ],
+ "textvqa_question_casing": {
+  "finding": "lmms-eval sends TextVQA questions through str.capitalize(); the source questions are lowercase",
+  "probe": "this harness's engine and settings with capitalized questions, all 5,000 validation questions",
+  "n": 5000,
+  "identical_to_lmms_eval": 4852,
+  "official": 0.79368
+ }
+}

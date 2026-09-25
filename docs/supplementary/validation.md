@@ -188,6 +188,28 @@ These details can change scores for capitalization, punctuation, and articles.
 The older normalized scorer remains available for historical comparisons and
 training rewards; it is not silently relabeled official.
 
+## Parity with lmms-eval
+
+The same Instruct 2B model was evaluated with lmms-eval 0.7.3 (its vLLM backend, the same
+0.79 MP image budget) on the full GQA testdev-balanced and TextVQA validation splits, and
+`python -m scripts.compare_lmms_eval` paired its logged responses with this harness's
+short-prompt records question by question
+([results/parity-lmms-eval.json](../../results/parity-lmms-eval.json)).
+
+| | lmms-eval | This harness (official) | lmms-eval's responses, this harness's scorer | Identical responses |
+|---|---:|---:|---:|---:|
+| GQA | 59.37 | 59.45 | 59.36 (normalized: 59.37) | 12,352 of 12,578 (98.2%) |
+| TextVQA | 79.38 | 80.53 | 79.38 | 3,579 of 5,000 (71.6%) |
+
+The scorers agree exactly: lmms-eval's own responses score the same under this harness's
+TextVQA scorer and GQA normalized scorer as under lmms-eval (its GQA match ignores case,
+like the normalized scorer). Any gap is therefore in the responses. On GQA it is 0.09
+points. On TextVQA it is 1.15 points, and it has one cause: lmms-eval passes each TextVQA
+question through Python's `str.capitalize()`, while the source questions are lowercase.
+Asking this harness's engine the capitalized questions reproduced lmms-eval's response on
+4,852 of 5,000 questions (97.0%) and scored 79.37 against lmms-eval's 79.38. The harness
+keeps the source questions as released.
+
 ## Reproducing generations
 
 The current harness reproduces the corrected campaign's saved short-prompt outputs exactly:

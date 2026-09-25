@@ -935,6 +935,40 @@
    "step": null,
    "temperature": 0.0,
    "samples": 1,
+   "max_pixels": 16777216,
+   "legacy": false,
+   "metrics": {
+    "n": 5000,
+    "official": {
+     "overall": 0.69096,
+     "by_answer_type": {
+      "all": 0.69096
+     }
+    },
+    "normalized": {
+     "overall": 0.69104,
+     "by_answer_type": {
+      "all": 0.69104
+     }
+    },
+    "mean_output_tokens": 108.4192,
+    "truncated_fraction": 0.013,
+    "answer_tag_fraction": 0.95,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.69096,
+    "answers_scored_differently": 2
+   }
+  },
+  {
+   "arm": "base2",
+   "dataset": "textvqa",
+   "role": "test",
+   "tier": "full",
+   "prompt": "reasoning",
+   "image_mode": "original",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
    "max_pixels": 786432,
    "legacy": false,
    "metrics": {
@@ -957,6 +991,40 @@
     "empty_answer_fraction": 0.0,
     "official_on_lowercased_answers": 0.69744,
     "answers_scored_differently": 2
+   }
+  },
+  {
+   "arm": "base2",
+   "dataset": "textvqa",
+   "role": "test",
+   "tier": "full",
+   "prompt": "short",
+   "image_mode": "original",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 16777216,
+   "legacy": false,
+   "metrics": {
+    "n": 5000,
+    "official": {
+     "overall": 0.8043399999999999,
+     "by_answer_type": {
+      "all": 0.8043399999999999
+     }
+    },
+    "normalized": {
+     "overall": 0.8045,
+     "by_answer_type": {
+      "all": 0.8045
+     }
+    },
+    "mean_output_tokens": 3.9678,
+    "truncated_fraction": 0.0006,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.8043399999999999,
+    "answers_scored_differently": 3
    }
   },
   {

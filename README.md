@@ -92,7 +92,9 @@ submissions; GQA's consistency and grounding metrics are outside an accuracy sco
 official scorers reproduce the authors' evaluator code on 626,074 saved predictions from
 89 runs with no per-question mismatch ([validation](docs/supplementary/validation.md)).
 The [evaluation](docs/supplementary/evaluation.md) page describes the harness in the terms
-public harnesses use and lists where it departs from their practice.
+public harnesses use and lists where it departs from their practice. Run side by side with
+lmms-eval on the same model, the scorers agree exactly and GQA matches within 0.09 points;
+the 1.15-point TextVQA gap comes from lmms-eval capitalizing each question.
 
 `evaluate.py` runs one model under a declared protocol (dataset, role, tier, prompt,
 decoding, image mode) and writes a record with both scorer variants and every prediction.
