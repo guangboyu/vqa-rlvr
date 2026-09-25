@@ -157,28 +157,60 @@ def training_diagnostics(logs: list[dict], draws: Path | None = None) -> dict:
             "learnability_fraction": None}
 
 
-def reward_per_update(draws: Path) -> tuple[list[dict], int]:
-    """Mean and spread of the reward in each update, and the share of prompt groups whose
-    samples all scored the same (no GRPO gradient). A resumed update keeps its last draw."""
-    latest = {}
+def trained_draws(draws: Path) -> dict[int, dict]:
+    """The rows each update trained on, keyed by the step before it.
+
+    An update logs one record, or, when it refills dead groups, one per generation round
+    (`round` 0, 1, ...) whose `kept` flags mark the rows it trained on. A resumed update
+    repeats its draws, so only its last attempt counts: a record without a round, or with
+    round 0, starts a new attempt. Each entry also counts what the attempt generated."""
+    attempts = {}
     for line in draws.read_text().splitlines():
         record = json.loads(line)
-        latest[record["step_before_update"]] = record
+        if record.get("round", 0) == 0:
+            attempts[record["step_before_update"]] = []
+        attempts[record["step_before_update"]].append(record)
+    return {step: kept_rows(records) for step, records in sorted(attempts.items())}
+
+
+def kept_rows(records: list[dict]) -> dict:
+    """The kept rows of one update's records, plus its attempted rows and rounds."""
+    kept = {"dataset": [], "qid": [], "scores": []}
+    attempted = set()
+    for record in records:
+        flags = record.get("kept", [True] * len(record["qid"]))
+        attempted.update(zip(record["dataset"], record["qid"], strict=True))
+        for name, values in kept.items():
+            values += [value for value, keep in zip(record[name], flags, strict=True) if keep]
+    return {**kept, "attempted_rollouts": sum(len(r["qid"]) for r in records),
+            "attempted_groups": len(attempted), "rounds": len(records),
+            "refilled": any("round" in r for r in records)}
+
+
+def reward_per_update(draws: Path) -> tuple[list[dict], int]:
+    """Mean and spread of the reward in each update, and the share of prompt groups whose
+    samples all scored the same (no GRPO gradient), over the rows the update trained on.
+    Updates that refilled dead groups also report what they generated to get there."""
     updates, prompts = [], set()
-    for step, record in sorted(latest.items()):
+    for step, rows in trained_draws(draws).items():
         groups = {}
-        for dataset, qid, score in zip(record["dataset"], record["qid"], record["scores"],
+        for dataset, qid, score in zip(rows["dataset"], rows["qid"], rows["scores"],
                                        strict=True):
             groups.setdefault((dataset, qid), []).append(score)
             prompts.add((dataset, qid))
-        scores = record["scores"]
+        scores = rows["scores"]
         mean = sum(scores) / len(scores)
-        updates.append({
+        update = {
             "update": step + 1, "reward_mean": mean,
             "reward_std": (sum((s - mean) ** 2 for s in scores) / len(scores)) ** 0.5,
             "zero_variance_group_fraction":
                 sum(max(g) - min(g) <= 1e-12 for g in groups.values()) / len(groups),
-        })
+        }
+        if rows["refilled"]:
+            update.update(attempted_groups=rows["attempted_groups"],
+                          attempted_rollouts=rows["attempted_rollouts"],
+                          refill_rounds=rows["rounds"] - 1)
+        updates.append(update)
     return updates, len(prompts)
 
 
