@@ -130,6 +130,10 @@ class RunRecord:
     def predictions_path(self) -> Path:
         return self.path.with_name(self.path.stem + ".predictions.jsonl")
 
+    def predictions(self) -> list[dict]:
+        """Every saved prediction line; the sidecar stays local, so it may be missing."""
+        return [json.loads(line) for line in self.predictions_path().read_text().splitlines()]
+
     def save(self, path: Path, predictions: list[dict]) -> "RunRecord":
         path.parent.mkdir(parents=True, exist_ok=True)
         record = RunRecord(self.model, self.protocol, self.metrics, self.provenance,

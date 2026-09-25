@@ -192,6 +192,99 @@ scorer is casing. For Instruct 2B it is nearly all of it: lowercasing closes 9.6
 | Instruct 8B → GRPO | TextVQA | 80.46 | 80.46 | 80.47 | 4 |
 <!-- /report:casing -->
 
+## Error analysis
+
+`python -m scripts.error_analysis` reads every declared arm's saved predictions and writes
+[`results/error-analysis.json`](../../results/error-analysis.json); the rules are defined
+in `vqar/eval/errors.py` and copied into that file. A question counts as right when its
+score is at least 0.5: a match, or at least two of the ten annotators on VQAv2 and TextVQA.
+
+A net change hides how many answers moved. For each declared comparison, the questions the
+candidate fixed / broke against its reference (normalized scorer, paired by question):
+
+<!-- report:flips -->
+| Comparison | Prompt | VQAv2 | GQA | CLEVR counting | TextVQA (far-OOD) |
+| --- | --- | ---: | ---: | ---: | ---: |
+| SFT − Instruct 2B | short | 239 / 135 | 841 / 478 | 52 / 0 | 166 / 187 |
+| SFT − Instruct 2B | reasoning | 598 / 421 | 1,600 / 964 | 290 / 141 | 487 / 531 |
+| Instruct → GRPO − Instruct 2B | short | 21 / 12 | 50 / 39 | 18 / 0 | 22 / 19 |
+| Instruct → GRPO − Instruct 2B | reasoning | 414 / 193 | 854 / 584 | 170 / 201 | 388 / 164 |
+| SFT → GRPO − Instruct 2B | short | 237 / 135 | 846 / 471 | 52 / 0 | 158 / 178 |
+| SFT → GRPO − Instruct 2B | reasoning | 544 / 226 | 1,157 / 791 | 363 / 43 | 491 / 231 |
+| SFT → GRPO − SFT | short | 12 / 14 | 58 / 46 | 0 / 0 | 22 / 21 |
+| SFT → GRPO − SFT | reasoning | 509 / 368 | 932 / 1,202 | 199 / 28 | 547 / 243 |
+| Instruct → gold-conditioned OPD − Instruct 2B | short | 32 / 35 | 100 / 68 | 3 / 1 | 48 / 43 |
+| Instruct → gold-conditioned OPD − Instruct 2B | reasoning | 519 / 277 | 906 / 952 | 162 / 163 | 412 / 245 |
+| Instruct 8B → GRPO − Instruct 8B | short | 11 / 14 | 53 / 37 | 0 / 3 | 18 / 12 |
+| Instruct 8B → GRPO − Instruct 8B | reasoning | 611 / 113 | 1,545 / 595 | 48 / 38 | 468 / 141 |
+<!-- /report:flips -->
+
+Instruct → GRPO under the reasoning prompt fixes 854 GQA questions and breaks 584, and
+SFT → GRPO breaks more GQA questions than it fixes. Under the short prompt, RL changes few
+verdicts (21 / 12 on VQAv2 from Instruct 2B).
+
+Why reasoning-prompt answers are wrong, as a share of all test questions (official scorer).
+The first matching reason wins, in the column order: official wrong but normalized right,
+cut off at the token budget, no answer tag, the answer and a reference contain one another
+(a minority annotator's answer, "tan" for "light tan"), anything else. The rules are
+heuristics for triage; a synonym, for example, counts as wrong content.
+
+<!-- report:errors -->
+| Arm | Dataset | Right | Scorer only | Truncated | No answer tag | Partial match | Wrong content |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Instruct 2B | VQAv2 | 55.2 | 9.6 | 3.7 | 1.4 | 18.2 | 11.9 |
+| Instruct 2B | GQA | 36.1 | 15.8 | 2.3 | 0.9 | 7.8 | 37.0 |
+| Instruct 2B | CLEVR counting | 87.1 | 0.0 | 1.8 | 0.0 | 0.0 | 11.1 |
+| Instruct 2B | TextVQA | 70.3 | 0.0 | 1.3 | 3.3 | 13.8 | 11.3 |
+| SFT | VQAv2 | 68.1 | 0.2 | 1.8 | 21.0 | 4.5 | 4.4 |
+| SFT | GQA | 56.6 | 0.4 | 0.5 | 34.6 | 1.0 | 6.9 |
+| SFT | CLEVR counting | 92.1 | 0.0 | 1.3 | 0.6 | 0.0 | 6.0 |
+| SFT | TextVQA | 69.4 | 0.0 | 2.1 | 16.0 | 6.7 | 5.8 |
+| Instruct → GRPO | VQAv2 | 62.0 | 7.2 | 3.7 | 0.0 | 14.7 | 12.4 |
+| Instruct → GRPO | GQA | 44.9 | 9.2 | 1.8 | 0.0 | 6.2 | 37.9 |
+| Instruct → GRPO | CLEVR counting | 86.1 | 0.0 | 2.7 | 0.0 | 0.0 | 11.2 |
+| Instruct → GRPO | TextVQA | 74.7 | 0.0 | 1.2 | 0.1 | 12.3 | 11.7 |
+| SFT → GRPO | VQAv2 | 69.5 | 1.6 | 2.8 | 0.0 | 14.8 | 11.3 |
+| SFT → GRPO | GQA | 53.7 | 1.2 | 1.9 | 0.0 | 6.5 | 36.8 |
+| SFT → GRPO | CLEVR counting | 97.8 | 0.0 | 0.2 | 0.0 | 0.0 | 1.9 |
+| SFT → GRPO | TextVQA | 75.5 | 0.0 | 1.1 | 0.0 | 12.0 | 11.4 |
+| Instruct → gold-conditioned OPD | VQAv2 | 69.0 | 0.6 | 4.3 | 2.9 | 11.4 | 11.7 |
+| Instruct → gold-conditioned OPD | GQA | 51.4 | 0.2 | 2.8 | 4.0 | 5.1 | 36.5 |
+| Instruct → gold-conditioned OPD | CLEVR counting | 87.1 | 0.0 | 1.5 | 0.0 | 0.0 | 11.4 |
+| Instruct → gold-conditioned OPD | TextVQA | 73.6 | 0.0 | 1.5 | 2.5 | 11.1 | 11.2 |
+| Instruct 8B | VQAv2 | 64.0 | 5.1 | 0.9 | 0.3 | 17.8 | 11.9 |
+| Instruct 8B | GQA | 46.8 | 5.4 | 0.4 | 0.7 | 8.2 | 38.5 |
+| Instruct 8B | CLEVR counting | 97.0 | 0.0 | 0.7 | 0.0 | 0.0 | 2.4 |
+| Instruct 8B | TextVQA | 74.8 | 0.0 | 0.5 | 0.6 | 14.0 | 10.1 |
+| Instruct 8B → GRPO | VQAv2 | 77.8 | 1.3 | 0.0 | 0.0 | 11.8 | 9.2 |
+| Instruct 8B → GRPO | GQA | 59.4 | 0.4 | 0.0 | 0.0 | 4.7 | 35.5 |
+| Instruct 8B → GRPO | CLEVR counting | 97.3 | 0.0 | 0.9 | 0.0 | 0.0 | 1.8 |
+| Instruct 8B → GRPO | TextVQA | 81.3 | 0.0 | 0.0 | 0.0 | 10.7 | 7.9 |
+<!-- /report:errors -->
+
+SFT's reasoning-prompt errors are mostly missing tags (34.6% of GQA questions). From
+Instruct 2B, GRPO shrinks casing misses (VQAv2 9.6 → 7.2%) and missing tags (1.4 → 0.0%)
+while wrong content does not shrink (11.9 → 12.4%).
+
+Answer forms that could game an answer checker, as a share of reasoning-prompt responses:
+hedged answers ("red or blue", "red/blue") · several `<answer>` tags · answers over six
+words. The checks read the tagged answer the RL reward reads, so an untagged response is
+never flagged. From Instruct, none of the three rises after GRPO at either size. From SFT,
+GRPO raises hedged and long answers on VQAv2 (0.2 → 0.8% and 0.5 → 2.4%) while the share of
+responses with an answer tag rises from 40% to 97%, to below the Instruct 2B level.
+
+<!-- report:answer-form -->
+| Arm | VQAv2 | GQA | CLEVR counting | TextVQA (far-OOD) |
+| --- | ---: | ---: | ---: | ---: |
+| Instruct 2B | 2.1 · 0.0 · 5.7 | 0.8 · 0.0 · 3.9 | 0.0 · 0.0 · 0.0 | 0.8 · 0.0 · 2.4 |
+| SFT | 0.2 · 0.0 · 0.5 | 0.0 · 0.0 · 0.2 | 0.0 · 0.0 · 0.0 | 0.5 · 0.0 · 1.3 |
+| Instruct → GRPO | 1.0 · 0.0 · 2.9 | 0.2 · 0.0 · 1.7 | 0.0 · 0.0 · 0.0 | 0.8 · 0.0 · 2.0 |
+| SFT → GRPO | 0.8 · 0.0 · 2.4 | 0.1 · 0.0 · 1.3 | 0.0 · 0.0 · 0.0 | 0.6 · 0.0 · 1.7 |
+| Instruct → gold-conditioned OPD | 0.3 · 0.0 · 1.2 | 0.1 · 0.0 · 0.6 | 0.0 · 0.0 · 0.0 | 0.5 · 0.0 · 1.1 |
+| Instruct 8B | 2.6 · 0.0 · 5.4 | 1.5 · 0.0 · 4.6 | 0.0 · 0.0 · 0.0 | 0.9 · 0.0 · 2.6 |
+| Instruct 8B → GRPO | 0.4 · 0.0 · 1.5 | 0.2 · 0.0 · 0.8 | 0.0 · 0.0 · 0.0 | 0.7 · 0.0 · 1.7 |
+<!-- /report:answer-form -->
+
 ## Image interventions
 
 Official score with the original image → with a black or swapped image, on the first 128

@@ -216,6 +216,7 @@ uv run --frozen python -m scripts.summarize_training \
   --output results/baselines/training-exposure.json
 uv run --frozen python -m scripts.make_gallery
 uv run --frozen python -m scripts.paired_deltas   # needs the local predictions
+uv run --frozen python -m scripts.error_analysis  # flips, error kinds, answer forms; same
 ```
 
 For the checks on the [validation](validation.md#parity-with-lmms-eval) page:

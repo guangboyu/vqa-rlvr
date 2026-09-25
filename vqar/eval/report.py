@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import NamedTuple
 
 from vqar.config import MAX_PIXELS
+from vqar.eval.errors import ANSWER_FORM_CHECKS, ERROR_KINDS
 from vqar.eval.legacy import july_records
 from vqar.eval.matrix import Arm, load_matrix
 from vqar.eval.record import RunRecord, record_files
@@ -329,6 +330,19 @@ def resolution_table(arms: list[Arm], rows: list[dict]) -> str:
     return table(["Arm", "Dataset", "Prompt", "Scorer", "Megapixels", "Change"], lines, 4)
 
 
+def by_comparison(arms: list[Arm], rows: list[dict], fields: tuple[str, ...]) -> list:
+    """Rows of arm comparisons grouped by (candidate, reference, prompt, *fields), each
+    group mapping dataset → row, in the declared arm order and then the prompt order."""
+    grouped = {}
+    for row in rows:
+        key = (row["candidate"], row["reference"], row["prompt"], *(row[f] for f in fields))
+        grouped.setdefault(key, {})[row["dataset"]] = row
+    order = {arm.label: i for i, arm in enumerate(arms)}
+    return sorted(grouped.items(), key=lambda item: (order[item[0][0]], order[item[0][1]],
+                                                     PROMPT_ORDER.index(item[0][2]),
+                                                     *item[0][3:]))
+
+
 def deltas_table(arms: list[Arm], rows: list[dict]) -> str:
     """Paired differences, candidate − reference, with 95% bootstrap intervals (points)."""
     rows = [row for row in rows if "contrast" not in row]
@@ -336,19 +350,66 @@ def deltas_table(arms: list[Arm], rows: list[dict]) -> str:
         return "No paired comparison has been computed yet.\n"
     names = {arm.label: arm.name for arm in arms}
     datasets = ordered_datasets()
-    grouped = {}
-    for row in rows:
-        key = (row["candidate"], row["reference"], row["prompt"], row["variant"])
-        grouped.setdefault(key, {})[row["dataset"]] = row
-    order = {arm.label: i for i, arm in enumerate(arms)}
     lines = []
-    for (candidate, reference, prompt, variant), found in sorted(
-            grouped.items(), key=lambda item: (order[item[0][0]], order[item[0][1]],
-                                               PROMPT_ORDER.index(item[0][2]), item[0][3])):
+    for (candidate, reference, prompt, variant), found in by_comparison(arms, rows,
+                                                                        ("variant",)):
         cells = [f"{r['delta']:+.2f} [{r['low']:+.2f}, {r['high']:+.2f}]" if (r := found.get(d))
                  else "—" for d in datasets]
         lines.append([f"{names[candidate]} − {names[reference]}", prompt, variant, *cells])
     return table(["Comparison", "Prompt", "Scorer", *map(column, datasets)], lines, 3)
+
+
+def error_analysis(results: Path) -> dict:
+    path = results / "error-analysis.json"
+    return json.loads(path.read_text()) if path.exists() else {"flips": [], "cells": []}
+
+
+def flips_table(arms: list[Arm], rows: list[dict], variant: str = "normalized") -> str:
+    """Questions the candidate fixed / broke against its reference, paired by question."""
+    rows = [row for row in rows if row["variant"] == variant]
+    if not rows:
+        return "No error analysis has been computed yet.\n"
+    names = {arm.label: arm.name for arm in arms}
+    datasets = ordered_datasets()
+    lines = []
+    for (candidate, reference, prompt), found in by_comparison(arms, rows, ()):
+        cells = [f"{r['wrong_to_right']:,} / {r['right_to_wrong']:,}" if (r := found.get(d))
+                 else "—" for d in datasets]
+        lines.append([f"{names[candidate]} − {names[reference]}", prompt, *cells])
+    return table(["Comparison", "Prompt", *map(column, datasets)], lines, 2)
+
+
+def analyzed_cells(arms: list[Arm], rows: list[dict], prompt: str) -> list[tuple[Arm, dict]]:
+    """Error-analysis cells under one prompt, in arm order and then dataset order."""
+    found = {(row["arm"], row["dataset"]): row for row in rows if row["prompt"] == prompt}
+    return [(arm, found[(arm.label, dataset)]) for arm in arms for dataset in ordered_datasets()
+            if (arm.label, dataset) in found]
+
+
+def errors_table(arms: list[Arm], rows: list[dict], prompt: str = "reasoning") -> str:
+    """Share of all questions right, and wrong for each reason (vqar.eval.errors)."""
+    lines = [[arm.name, DATASETS[row["dataset"]].display_name,
+              *(percent(row["errors"][kind], 1) for kind in ("right", *ERROR_KINDS))]
+             for arm, row in analyzed_cells(arms, rows, prompt)]
+    if not lines:
+        return "No error analysis has been computed yet.\n"
+    return table(["Arm", "Dataset", "Right", "Scorer only", "Truncated", "No answer tag",
+                  "Partial match", "Wrong content"], lines, 2)
+
+
+def answer_form_table(arms: list[Arm], rows: list[dict], prompt: str = "reasoning") -> str:
+    """Hedged answers · several answer tags · answers over six words, % of responses."""
+    datasets = ordered_datasets()
+    found = {}
+    for arm, row in analyzed_cells(arms, rows, prompt):
+        form = row["answer_form"]
+        found.setdefault(arm, {})[row["dataset"]] = " · ".join(
+            percent(form[check], 1) for check in ANSWER_FORM_CHECKS)
+    if not found:
+        return "No error analysis has been computed yet.\n"
+    lines = [[arm.name, *(by_dataset.get(d, "—") for d in datasets)]
+             for arm, by_dataset in found.items()]
+    return table(["Arm", *map(column, datasets)], lines, 1)
 
 
 def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
@@ -357,6 +418,7 @@ def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
     cells = load_cells(root / "results" / "records", root / "data")
     history = july_records(root / "results")
     exposure = json.loads((root / "results" / "baselines" / "training-exposure.json").read_text())
+    errors = error_analysis(root / "results")
     blocks = {
         "matrix": matrix_table(arms, cells),
         "behavior": behavior_table(arms, cells),
@@ -369,6 +431,9 @@ def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
         "learnability": learnability_table(cells),
         "deltas": deltas_table(arms, paired_deltas(root / "results")),
         "resolution": resolution_table(arms, paired_deltas(root / "results")),
+        "flips": flips_table(arms, errors["flips"]),
+        "errors": errors_table(arms, errors["cells"]),
+        "answer-form": answer_form_table(arms, errors["cells"]),
         "history": history_table(history),
     }
     export = {
