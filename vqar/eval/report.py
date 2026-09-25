@@ -13,7 +13,7 @@ from typing import NamedTuple
 
 from vqar.eval.legacy import july_records
 from vqar.eval.matrix import Arm, load_matrix
-from vqar.eval.record import RunRecord
+from vqar.eval.record import RunRecord, record_files
 from vqar.registry import DATASETS
 
 ROOT = Path(__file__).resolve().parent.parent.parent
@@ -44,7 +44,7 @@ class Cell(NamedTuple):
 def load_cells(records_dir: Path) -> dict[Cell, RunRecord]:
     """Every stored record, keyed by its table cell."""
     cells = {}
-    for path in sorted(Path(records_dir).rglob("*.json")):
+    for path in record_files(records_dir):
         record = RunRecord.load(path)
         p = record.protocol
         key = Cell(record.model["label"], p["dataset"], p["role"], p["tier"], p["prompt"],

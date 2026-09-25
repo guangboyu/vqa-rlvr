@@ -156,6 +156,11 @@ class RunRecord:
         return record
 
 
+def record_files(records_dir: Path) -> list[Path]:
+    """Every stored record; an interrupted cell's saved batches one level deeper are not."""
+    return sorted(Path(records_dir).glob("*/*.json"))
+
+
 def record_path(records_dir: Path, model: dict, slug: str, identity: dict) -> Path:
     """Records live under <label>-<model id>/<protocol slug>-<protocol id>.json.
 

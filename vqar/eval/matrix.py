@@ -11,7 +11,7 @@ from pathlib import Path
 
 from vqar.eval.examples import select_rows
 from vqar.eval.protocol import Protocol, protocol_identity
-from vqar.eval.record import ModelRef, RunRecord, model_id
+from vqar.eval.record import ModelRef, RunRecord, model_id, record_files
 
 
 @dataclass(frozen=True)
@@ -48,7 +48,7 @@ def load_matrix(path: Path) -> tuple[list[Arm], list[Protocol]]:
 def missing_cells(arms: list[Arm], protocols: list[Protocol], records_dir: Path,
                   data_dir: Path, root: Path) -> list[tuple[Arm, Protocol]]:
     """Every declared (arm, protocol) cell without a record; raises on a mislabeled record."""
-    records = [RunRecord.load(path) for path in sorted(Path(records_dir).rglob("*.json"))]
+    records = [RunRecord.load(path) for path in record_files(records_dir)]
     expected = {protocol: Protocol.id_of(protocol_identity(protocol,
                                                            select_rows(protocol, data_dir)[1]))
                 for protocol in protocols}

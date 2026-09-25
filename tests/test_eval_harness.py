@@ -330,3 +330,13 @@ def test_interventions_pair_with_the_original_image_cell(data_dir, model, tmp_pa
     assert paired["original"] == {"official": pytest.approx(1 / 3),
                                   "normalized": pytest.approx(2 / 3)}
     assert paired["normalized_answer_changed_fraction"] == pytest.approx(1 / 3)
+
+
+def test_reports_skip_the_saved_batches_of_a_running_cell(data_dir, model, tmp_path):
+    from vqar.eval.report import load_cells
+
+    records = tmp_path / "records"
+    run_eval(model, Protocol("gqa"), ScriptedGenerator(SCRIPT), data_dir=data_dir,
+             records_dir=records)
+    assert interrupted_cell(data_dir, model, records).is_dir()
+    assert [cell.dataset for cell in load_cells(records)] == ["gqa"]

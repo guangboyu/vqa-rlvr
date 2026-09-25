@@ -8,7 +8,7 @@ import pytest
 from fixtures import png, save_subset, write_splits
 
 from vqar.eval.legacy import corrected_records, july_records
-from vqar.eval.record import RunRecord
+from vqar.eval.record import RunRecord, record_files
 
 ROOT = Path(__file__).resolve().parent.parent
 QUESTIONS = [("q1", "What animal?", ["cat"] * 10, "other"),
@@ -114,7 +114,7 @@ def test_every_corrected_campaign_number_is_reproduced_from_saved_predictions():
     comparison = json.loads((CAMPAIGN / "comparison.json").read_text())
     stored = {(r.model["label"], r.protocol["prompt"], r.protocol["dataset"],
                r.protocol["image_mode"]): r
-              for r in map(RunRecord.load, (ROOT / "results" / "records").rglob("*.json"))
+              for r in map(RunRecord.load, record_files(ROOT / "results" / "records"))
               if r.legacy}
     weights = {label: r.model["weights"] for (label, *_), r in stored.items()}
     fresh = corrected_records(CAMPAIGN, ROOT / "data", weights)
