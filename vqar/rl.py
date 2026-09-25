@@ -63,7 +63,7 @@ def resolve_model(model: str) -> str:
     return str(path) if model.startswith("checkpoints/") else model
 
 
-def make_chat_rollout():
+def make_chat_rollout(serve_adapter: bool = False):
     """Custom rollout that generates through vLLM's own chat interface.
 
     TRL 1.8's built-in path hands vLLM processor-pre-expanded prompt token ids PLUS
@@ -73,6 +73,12 @@ def make_chat_rollout():
     ratios ~1e-6) and the M-RoPE crashes. Routing rollouts through llm.chat gives
     one source of truth: vLLM builds prompt ids itself, and the trainer's forward
     re-processes the same PIL deterministically to matching ids.
+
+    With `serve_adapter`, vLLM holds the base weights and applies the policy's adapter
+    unmerged (`vqar.adapter_rollouts`): the rollout passes the current update's adapter
+    with every request and sleeps at level 1, which keeps the base weights in CPU memory.
+    Otherwise TRL merges the adapter into the weights before each update, and level 2
+    discards them until that sync.
     """
 
     def rollout(prompts, trainer):
@@ -87,11 +93,15 @@ def make_chat_rollout():
             max_tokens=trainer.args.max_completion_length,
             logprobs=0,
         )
+        adapter = None
+        if serve_adapter:
+            adapter = generation.adapter_request(trainer.state.global_step)
         if generation.enable_sleep_mode:
             generation.llm.wake_up(tags=["kv_cache"])
-        outputs = generation.llm.chat(conversations, params, use_tqdm=False)
+        outputs = generation.llm.chat(conversations, params, use_tqdm=False,
+                                      lora_request=adapter)
         if generation.enable_sleep_mode:
-            generation.llm.sleep(level=2)
+            generation.llm.sleep(level=1 if serve_adapter else 2)
         completion_ids, logprobs = [], []
         for out in outputs:
             sample = out.outputs[0]
@@ -178,6 +188,9 @@ def dry_run(preset) -> None:
         first = [stream.keys[i] for i in islice(stream.draws(update=0), 3)]
         print(f"refill: up to {preset.refill_rounds} extra rounds per update replace dead "
               f"groups; first replacements at update 1 (before excluding its own): {first}")
+    if getattr(preset, "rollout_lora", False):  # GRPO only
+        print(f"rollouts: vLLM serves the rank-{preset.lora_r} adapter unmerged; "
+              "sleep level 1 keeps the base weights in CPU memory")
 
     answer = "<think>x</think><answer>4</answer>" if template.answer_rule == "tagged" else "4"
     for name in preset.rewards:

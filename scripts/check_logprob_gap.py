@@ -20,7 +20,9 @@ Prompt ids that differ between vLLM and the processor would mean a real bug (the
 would score a different prompt), so every mismatch is counted.
 
 With --adapter, --model is the base: vLLM gets the adapter merged into bf16 weights (as TRL's
-weight sync does) and the trainer side runs base + unmerged LoRA (as training does).
+weight sync does) and the trainer side runs base + unmerged LoRA (as training does). Adding
+--unmerged-adapter serves the adapter to vLLM unmerged instead, as a LoRARequest on the base
+weights (as `train_grpo.py --rollout-lora` does); the trainer side is unchanged.
 
 Stages: `all` (default) generates in a child process, so the engine's GPU memory is released
 before the HF model loads, then scores; `generate` and `score` run one stage each.
@@ -217,6 +219,17 @@ def merge_adapter(base: str, revision: str | None, adapter: str, destination: Pa
     AutoProcessor.from_pretrained(base, revision=revision).save_pretrained(destination)
 
 
+def adapter_rank(adapter: str) -> int:
+    return json.loads((Path(adapter) / "adapter_config.json").read_text())["r"]
+
+
+def served_adapter(adapter: str):
+    """The adapter as vLLM serves it unmerged; one adapter, so one fixed id."""
+    from vllm.lora.request import LoRARequest
+
+    return LoRARequest("adapter-1", 1, str(Path(adapter).resolve()))
+
+
 def generate(args, preset, model_path: str) -> None:
     import tempfile
     from types import SimpleNamespace
@@ -227,8 +240,11 @@ def generate(args, preset, model_path: str) -> None:
 
     rows = load_rows(preset, args.questions, args.data_dir)
     with tempfile.TemporaryDirectory(dir=args.out.parent, prefix="merged-") as scratch:
-        engine_model, revision = model_path, args.revision
-        if args.adapter:
+        engine_model, revision, lora = model_path, args.revision, {}
+        if args.unmerged_adapter:
+            lora = dict(enable_lora=True, max_lora_rank=adapter_rank(args.adapter),
+                        max_loras=1)
+        elif args.adapter:
             merge_adapter(model_path, args.revision, args.adapter, Path(scratch))
             engine_model, revision = scratch, None
         per_batch = args.questions_per_batch * args.samples
@@ -238,12 +254,14 @@ def generate(args, preset, model_path: str) -> None:
                   gpu_memory_utilization=args.gpu_memory_utilization, max_num_seqs=per_batch,
                   max_num_batched_tokens=TRL_MAX_BATCHED_TOKENS,
                   logprobs_mode="processed_logprobs", seed=args.seed,
-                  limit_mm_per_prompt={"image": 1})
+                  limit_mm_per_prompt={"image": 1}, **lora)
+        generation = SimpleNamespace(llm=llm, enable_sleep_mode=False,
+                                     adapter_request=lambda step: served_adapter(args.adapter))
         trainer = SimpleNamespace(
-            vllm_generation=SimpleNamespace(llm=llm, enable_sleep_mode=False),
+            vllm_generation=generation, state=SimpleNamespace(global_step=0),
             args=SimpleNamespace(temperature=ROLLOUT_TEMPERATURE, top_p=TOP_P,
                                  max_completion_length=preset.max_completion_length))
-        rollout = make_chat_rollout()
+        rollout = make_chat_rollout(serve_adapter=args.unmerged_adapter)
         tokenizer = llm.get_tokenizer()
         samples = []
         for batch_number, batch in enumerate(batches(rows, args.questions_per_batch)):
@@ -395,14 +413,17 @@ def write_json(path: Path, payload) -> None:
 
 
 def settings(args, preset, model_path: str) -> dict:
-    return {"model": model_path, "revision": args.revision, "adapter": args.adapter,
-            "preset": preset.name, "datasets": list(preset.datasets), "pool": preset.pool,
-            "seed": preset.seed, "rollout_prompt": preset.rollout_prompt,
-            "questions": args.questions, "samples": args.samples,
-            "questions_per_batch": args.questions_per_batch,
-            "max_completion_length": preset.max_completion_length,
-            "temperature": ROLLOUT_TEMPERATURE, "top_p": TOP_P, "engine_seed": args.seed,
-            "max_model_len": TRL_MAX_MODEL_LEN}
+    record = {"model": model_path, "revision": args.revision, "adapter": args.adapter,
+              "preset": preset.name, "datasets": list(preset.datasets), "pool": preset.pool,
+              "seed": preset.seed, "rollout_prompt": preset.rollout_prompt,
+              "questions": args.questions, "samples": args.samples,
+              "questions_per_batch": args.questions_per_batch,
+              "max_completion_length": preset.max_completion_length,
+              "temperature": ROLLOUT_TEMPERATURE, "top_p": TOP_P, "engine_seed": args.seed,
+              "max_model_len": TRL_MAX_MODEL_LEN}
+    if args.unmerged_adapter:  # absent when merged, so earlier sample files still match
+        record["vllm_adapter"] = "unmerged"
+    return record
 
 
 def main():
@@ -413,6 +434,9 @@ def main():
                         "(default: the preset's model)")
     parser.add_argument("--revision", default=None)
     parser.add_argument("--adapter", default=None, help="LoRA adapter dir on top of --model")
+    parser.add_argument("--unmerged-adapter", action="store_true",
+                        help="with --adapter: vLLM serves it unmerged (a LoRARequest, as "
+                        "train_grpo.py --rollout-lora does) instead of merged into bf16 weights")
     parser.add_argument("--preset", choices=sorted(GRPO_PRESETS), default="grpo_2b_main",
                         help="the training run to mirror: pool, seed, budget, batch geometry")
     parser.add_argument("--datasets", nargs="+", choices=datasets_with_role("rl"), default=None)
@@ -435,6 +459,8 @@ def main():
     parser.add_argument("--out", type=Path, required=True,
                         help="summary JSON; samples go to <stem>.samples.json beside it")
     args = parser.parse_args()
+    if args.unmerged_adapter and not args.adapter:
+        parser.error("--unmerged-adapter needs --adapter")
 
     from vqar.rl import resolve_model
 

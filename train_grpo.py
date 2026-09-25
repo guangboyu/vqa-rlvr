@@ -13,9 +13,11 @@ Usage:
     uv run python train_grpo.py --preset grpo_2b_main --rewards correctness format
     uv run python train_grpo.py --preset grpo_2b_main --rollout-prompt short --dry-run
     uv run python train_grpo.py --preset grpo_2b_main --refill-rounds 3 --dry-run
+    uv run python train_grpo.py --preset grpo_2b_main --rollout-lora --dry-run
 """
 
 import argparse
+from contextlib import nullcontext
 
 from vqar import config
 from vqar.pools import RefillStream
@@ -70,6 +72,9 @@ def main() -> None:
     parser.add_argument("--refill-rounds", type=int, default=None,
                         help="replace dead groups with up to this many extra generation rounds "
                         "per update (DAPO dynamic sampling; default 0: off)")
+    parser.add_argument("--rollout-lora", action="store_true", default=None,
+                        help="vLLM serves the LoRA adapter unmerged instead of receiving "
+                        "adapter-merged bf16 weights each update (default: merged)")
     args = parse_arguments(parser)
     if args.rewards and not args.reward_weights:
         args.reward_weights = [0.2 if name == "format" else 1.0 for name in args.rewards]
@@ -115,18 +120,30 @@ def main() -> None:
         train_dataset=train_dataset,
         processing_class=processor,
         peft_config=lora_config(preset),
-        rollout_func=make_chat_rollout(),
+        rollout_func=make_chat_rollout(serve_adapter=preset.rollout_lora),
     )
-    if refill:
-        from vqar.refill_trainer import RefillGRPOTrainer
+    with rollout_engine(preset.rollout_lora):
+        if refill:
+            from vqar.refill_trainer import RefillGRPOTrainer
 
-        trainer = RefillGRPOTrainer(**trainer_args, refill=refill,
-                                    refill_rounds=preset.refill_rounds)
-    else:
-        trainer = GRPOTrainer(**trainer_args)
+            trainer = RefillGRPOTrainer(**trainer_args, refill=refill,
+                                        refill_rounds=preset.refill_rounds)
+        else:
+            trainer = GRPOTrainer(**trainer_args)
     completed = run_training(trainer, output, args.run_dir, log_draws=True)
+    if preset.rollout_lora:
+        trainer.vllm_generation.adapters.close()
     if completed and not args.no_dev_eval:
         evaluate_checkpoints_next(output)
+
+
+def rollout_engine(serve_adapter: bool):
+    """Where GRPOTrainer is built: with the unmerged-adapter vLLM backend, or TRL's own."""
+    if not serve_adapter:
+        return nullcontext()
+    from vqar.adapter_rollouts import unmerged_adapter_engine
+
+    return unmerged_adapter_engine()
 
 
 if __name__ == "__main__":

@@ -71,7 +71,10 @@ as training does, scores the same tokens with the trainer's forward, and splits 
 answer form and by the sampled token's probability. The importance-sampling correction (`sequence_mask`, ratio capped at 3)
 bounds the effect of such tokens on the update. A gap that grows steadily and does not
 come back would point to a weight-synchronization fault instead, the kind of fault the
-retired NF4 student presets produced ([hardware](hardware.md)).
+retired NF4 student presets produced ([hardware](hardware.md)). Part of the gap is bf16
+rounding of the merged weights: after 300 updates the check gave 0.132 with merged weights
+in vLLM and 0.011 with merged weights on both sides. `--rollout-lora` serves the adapter
+unmerged instead ([method](method.md#training-recipe)).
 
 **Short answers have large, spiky gradient norms.** With one to three tokens per response,
 each token carries a larger share of the loss; norms of 1–10 with spikes to 30 were normal

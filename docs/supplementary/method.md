@@ -111,6 +111,28 @@ many rollouts each update generates, so compute per update is no longer fixed. C
 refilling run by attempted rollouts and GPU hours, not only by updates. Every preset
 leaves this option off (`0`).
 
+**Unmerged adapter rollouts (opt-in).** TRL's colocate sync merges the LoRA adapter into
+the bf16 base weights before each update and loads them into vLLM. At learning rate `1e-5`
+the adapter's change to most weights is far below one bf16 step, so rounding the merged
+weights removes part of what the trainer learned: vLLM samples from a rounded, lagging copy
+of the policy. `scripts/check_logprob_gap.py` measured this on the `vqa-p1-r3refill`
+adapter after 300 updates. vLLM with the merged weights and the trainer (bf16 base plus
+the unmerged fp32 adapter) differ by a mean |Δ log p| of 0.132 per sampled token. The
+Instruct model, with no adapter, gives 0.028; the same adapter merged in bf16 on both sides
+gives 0.011. The gap sits on near-tied tokens: the space before `</answer>` has a median
+probability of 0.905 under vLLM and 0.378 under the trainer. `train_grpo.py --rollout-lora`
+instead keeps the base weights vLLM loaded at start-up and serves the adapter unmerged, as
+the dev evaluation does ([`vqar/adapter_rollouts.py`](../../vqar/adapter_rollouts.py)). At
+an update's first generation the trainer's adapter is written to a node-local temporary
+directory under a new adapter id and passed with every rollout request; refill rounds of
+the same update reuse it. Between rollouts the engine sleeps at level 1, which moves the
+weights to host memory, instead of level 2, which discards them until the next sync. The
+costs are not yet measured: pinned host memory for the offloaded weights (about 4 GB for
+the 2B model, 17 GB for the 8B), one adapter write per update (70 MB for the 2B at rank
+16), and vLLM's LoRA kernels in every rollout. `check_logprob_gap.py --adapter <dir>
+--unmerged-adapter` measures the gap of this mode outside training. Every preset leaves it
+off; the campaign's runs used the merged sync.
+
 **OPD.** The same rollout geometry as GRPO. The learning signal is the teacher's token
 log-probability minus the student's rollout-time log-probability. The correctness reward
 is still logged, for diagnosis only; in the saved completion samples TRL's `advantage`

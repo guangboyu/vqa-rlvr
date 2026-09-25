@@ -115,6 +115,9 @@ class GRPOPreset:
     # DAPO dynamic sampling: at most this many extra generation rounds per update replace
     # groups whose answers all scored the same. 0 (off) keeps the fixed-compute baseline.
     refill_rounds: int = 0
+    # Serve the LoRA adapter unmerged to vLLM (vqar.adapter_rollouts) instead of syncing
+    # adapter-merged bf16 weights. False keeps TRL's merged sync, as in the recorded runs.
+    rollout_lora: bool = False
     lora_r: int = 16
     lora_alpha: int = 32
     lora_targets: tuple[str, ...] = (
@@ -283,7 +286,7 @@ OPD_PRESETS: dict[str, OPDPreset] = {
 
 # Opt-in fields added after runs were launched, with their off value. Left off, they are
 # not written, so earlier run configs and the auto-resume check against them stay the same.
-OPT_IN_FIELDS = {"refill_rounds": 0}
+OPT_IN_FIELDS = {"refill_rounds": 0, "rollout_lora": False}
 
 
 def dump(preset) -> dict:
