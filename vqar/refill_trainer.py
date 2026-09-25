@@ -74,7 +74,9 @@ class RefillGRPOTrainer(GRPOTrainer):
                    for row in rows]
         # The chat rollout sleeps vLLM at level 2, which discards its weights, and TRL syncs
         # them only when global_step changes. Force the sync so every round samples from the
-        # current policy, exactly as an update's first generation does.
+        # current policy, exactly as an update's first generation does. With unmerged
+        # adapter rollouts the sync only wakes the weights a level-1 sleep offloaded, and
+        # every round serves the update's one exported adapter.
         self._last_loaded_step = -1
         (prompt_ids, completion_ids, tool_mask, completions, _, logprobs, extra, images,
          _) = super()._generate(prompts)
