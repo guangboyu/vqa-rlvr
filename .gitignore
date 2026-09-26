@@ -17,6 +17,8 @@ results/baselines/source/
 # Evaluation predictions and unfinished batches stay local; the records are versioned.
 results/records/**/*.predictions.jsonl
 results/records/**/*.progress/
+results/noise-floor/**/*.predictions.jsonl
+results/noise-floor/**/*.progress/
 .judge_cache/
 
 # Secrets & misc
