@@ -7,6 +7,7 @@ import pytest
 from fixtures import png, save_subset, write_splits
 
 from vqar.eval import ModelRef, Protocol, run_eval
+from vqar.eval.matrix import Arm
 from vqar.eval.report import curves_table, load_cells
 from vqar.training import training_diagnostics
 
@@ -79,9 +80,10 @@ def test_each_checkpoint_is_its_own_cell_and_joins_the_curve(tmp_path):
         record = run_eval(model, Protocol("vqav2", role="dev", tier="dev"), Echo(reply),
                           data_dir=data, records_dir=records)
         assert record.model["weights"]["adapter_sha256"]
-    rows = curves_table(load_cells(records)).splitlines()
-    assert rows[2] == "| `run` | 25 | VQAv2 | short | — | 0.00 | 2 |"
-    assert rows[3] == "| `run` | 50 | VQAv2 | short | — | 100.00 | 2 |"
+    arms = [Arm("tuned", "Tuned", "merged", run="run"), Arm("other", "Other", "m", run="x")]
+    rows = curves_table(arms, load_cells(records)).splitlines()
+    assert rows[0] == "| Arm | Dataset | Prompt | 25 | 50 |"
+    assert rows[2:] == ["| Tuned | VQAv2 | short | — (0.0) · 2 | — (100.0) · 2 |"]
 
 
 def test_diagnostics_keep_logged_signals_and_every_updates_reward(tmp_path):

@@ -68,7 +68,7 @@ def test_interventions_show_original_to_changed_scores(records):
 
 
 def test_curves_say_so_when_no_checkpoint_was_evaluated(records):
-    assert curves_table(records) == "No checkpoint dev evaluations have been recorded yet.\n"
+    assert curves_table(ARMS, records) == "No checkpoint dev evaluations have been recorded yet.\n"
 
 
 def test_fill_rejects_an_unknown_block():
@@ -126,6 +126,16 @@ def test_paired_differences_show_the_interval_per_dataset():
     lines = deltas_table(arms, [row]).splitlines()
     assert lines[2].startswith("| Tuned − Base | short | official | — | +1.50 [-0.25, +3.00] |")
     assert deltas_table(arms, []) == "No paired comparison has been computed yet.\n"
+
+
+def test_each_matrix_shows_only_its_declared_comparisons_and_scorers():
+    from vqar.eval.report import declared
+
+    row = {"reference": "base", "candidate": "tuned", "variant": "official"}
+    rows = [row, dict(row, variant="normalized"), dict(row, candidate="other"),
+            dict(row, contrast="canvas", reference="tuned")]
+    assert declared(rows, [("base", "tuned")]) == rows[:2]
+    assert declared(rows, [("base", "tuned")], ("official",)) == [row]
 
 
 def test_a_larger_image_budget_is_reported_as_a_paired_change():

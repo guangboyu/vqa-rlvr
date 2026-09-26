@@ -2,8 +2,9 @@
 
 Tables are markdown blocks between `<!-- report:NAME -->` and `<!-- /report:NAME -->`
 markers in README.md and docs/; a test regenerates them and fails on drift, so no number is
-transcribed by hand. The same numbers go to a JSON export for the demo. July results appear
-only in the labeled history table, never beside the corrected campaign.
+transcribed by hand. The same numbers go to a JSON export for the demo. The named matrices
+in experiments.toml choose each table's arms: the headline tables show the final rerun, and
+the corrected campaign and the July runs appear only in labeled history tables.
 """
 
 import json
@@ -14,9 +15,9 @@ from typing import NamedTuple
 from vqar.config import MAX_PIXELS
 from vqar.eval.errors import ANSWER_FORM_CHECKS, ERROR_KINDS
 from vqar.eval.legacy import july_records
-from vqar.eval.matrix import Arm, load_matrix
+from vqar.eval.matrix import Arm, load_comparisons, load_matrix
 from vqar.eval.record import RunRecord, record_files
-from vqar.registry import DATASETS, TRAINING_ROLES
+from vqar.registry import DATASETS, SCORER_VARIANTS, TRAINING_ROLES
 from vqar.splits import read_split
 
 ROOT = Path(__file__).resolve().parent.parent.parent
@@ -213,24 +214,32 @@ def history_table(records: list[RunRecord]) -> str:
     return table(["July run", "Prompt", *map(column, datasets)], rows, 2)
 
 
-def curves_table(cells: dict) -> str:
-    """Dev-tier learning curves from checkpoint-tagged records."""
-    points = sorted(
-        ((record.model["run"], cell.step, cell.dataset, cell.prompt), record)
-        for cell, record in cells.items()
-        if cell.role == "dev" and cell.step is not None and cell.samples == 1
-    )
-    if not points:
+def curves_table(arms: list[Arm], cells: dict) -> str:
+    """Dev-tier learning curves: each arm's training run at every checkpoint it kept, as
+    official (normalized) accuracy · mean output tokens, one column per step."""
+    runs = {arm.run for arm in arms if arm.run}
+    curves = {}
+    for cell, record in cells.items():
+        run = record.model.get("run")
+        if cell.role == "dev" and cell.step is not None and cell.samples == 1 and run in runs:
+            curves.setdefault((run, cell.dataset, cell.prompt), {})[cell.step] = record
+    if not curves:
         return "No checkpoint dev evaluations have been recorded yet.\n"
-    rows = []
-    for (run, step, dataset, prompt), record in points:
+
+    def point(record):
+        if record is None:
+            return "—"
         official = record.metrics["official"]
-        rows.append([f"`{run}`", str(step), DATASETS[dataset].display_name, prompt,
-                     percent(official["overall"] if official else None),
-                     percent(record.metrics["normalized"]["overall"]),
-                     f"{record.metrics['mean_output_tokens']:.0f}"])
-    return table(["Run", "Step", "Dataset", "Prompt", "Official", "Normalized", "Mean tokens"],
-                 rows, 4)
+        return (f"{percent(official['overall'] if official else None, 1)} "
+                f"({percent(record.metrics['normalized']['overall'], 1)}) · "
+                f"{record.metrics['mean_output_tokens']:.0f}")
+
+    steps = sorted({step for curve in curves.values() for step in curve})
+    rows = [[arm.name, DATASETS[dataset].display_name, prompt,
+             *(point(curve.get(step)) for step in steps)]
+            for arm in arms for dataset in ordered_datasets() for prompt in PROMPT_ORDER
+            if (curve := curves.get((arm.run, dataset, prompt)))]
+    return table(["Arm", "Dataset", "Prompt", *map(str, steps)], rows, 3)
 
 
 def exposure_table(exposure: dict) -> str:
@@ -292,20 +301,28 @@ def learnability_table(cells: dict) -> str:
         learnability = record.metrics["learnability"]
         histogram = learnability["correct_samples_histogram"]
         k = record.metrics["samples_per_question"]
-        rows.append([f"`{cell.arm}`", DATASETS[cell.dataset].display_name,
+        rows.append([f"`{cell.arm}`", DATASETS[cell.dataset].display_name, cell.prompt,
                      f"{record.metrics['n']:,}", str(k),
                      percent(learnability["fraction_between_0_and_1"], 1),
                      percent(histogram[f"0/{k}"] / record.metrics["n"], 1),
                      percent(histogram[f"{k}/{k}"] / record.metrics["n"], 1)])
     if not rows:
         return "No learnability pre-check has been recorded yet.\n"
-    return table(["Model", "Dataset", "Prompts", "Samples each", "Learnable (%)",
-                  "Never correct (%)", "Always correct (%)"], rows, 2)
+    return table(["Model", "Dataset", "Prompt", "Prompts", "Samples each", "Learnable (%)",
+                  "Never correct (%)", "Always correct (%)"], rows, 3)
 
 
 def paired_deltas(results: Path) -> list[dict]:
     path = results / "paired-deltas.json"
     return json.loads(path.read_text()) if path.exists() else []
+
+
+def declared(rows: list[dict], comparisons: list[tuple[str, str]],
+             variants: tuple[str, ...] = SCORER_VARIANTS) -> list[dict]:
+    """The arm-comparison rows of one matrix's declared pairs, under the given scorers."""
+    pairs = set(comparisons)
+    return [row for row in rows if "contrast" not in row and row["variant"] in variants
+            and (row["reference"], row["candidate"]) in pairs]
 
 
 def image_change(row: dict) -> str:
@@ -414,26 +431,43 @@ def answer_form_table(arms: list[Arm], rows: list[dict], prompt: str = "reasonin
 
 def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
     """Every markdown block, and the JSON export for the demo."""
-    arms, _ = load_matrix(root / "experiments.toml")
+    toml = root / "experiments.toml"
+    arms, _ = load_matrix(toml, "headline")
+    recipe, _ = load_matrix(toml, "recipe")
+    corrected, _ = load_matrix(toml, "corrected")
+    every_arm, _ = load_matrix(toml)
     cells = load_cells(root / "results" / "records", root / "data")
     history = july_records(root / "results")
-    exposure = json.loads((root / "results" / "baselines" / "training-exposure.json").read_text())
+    exposure = json.loads((root / "results" / "training-exposure.json").read_text())
+    corrected_exposure = json.loads(
+        (root / "results" / "baselines" / "training-exposure.json").read_text())
+    deltas = paired_deltas(root / "results")
     errors = error_analysis(root / "results")
+    comparisons = load_comparisons(toml, "headline")
     blocks = {
         "matrix": matrix_table(arms, cells),
         "behavior": behavior_table(arms, cells),
         "failures": failures_table(arms, cells),
         "casing": casing_table(arms, cells),
-        "interventions": interventions_table(arms, cells),
-        "curves": curves_table(cells),
+        # Only the corrected campaign's arms have image-intervention records.
+        "interventions": interventions_table(corrected, cells),
+        "curves": curves_table(arms, cells),
         "exposure": exposure_table(exposure),
         "diagnostics": diagnostics_table(exposure),
         "learnability": learnability_table(cells),
-        "deltas": deltas_table(arms, paired_deltas(root / "results")),
-        "resolution": resolution_table(arms, paired_deltas(root / "results")),
-        "flips": flips_table(arms, errors["flips"]),
+        "deltas": deltas_table(arms, declared(deltas, comparisons)),
+        "resolution": resolution_table(every_arm, deltas),
+        "flips": flips_table(arms, declared(errors["flips"], comparisons)),
         "errors": errors_table(arms, errors["cells"]),
         "answer-form": answer_form_table(arms, errors["cells"]),
+        "recipe": deltas_table(recipe, declared(deltas, load_comparisons(toml, "recipe"),
+                                                ("official",))),
+        "corrected": matrix_table(corrected, cells),
+        "corrected-deltas": deltas_table(corrected, declared(
+            deltas, load_comparisons(toml, "corrected"))),
+        "corrected-behavior": behavior_table(corrected, cells),
+        "corrected-exposure": exposure_table(corrected_exposure),
+        "corrected-diagnostics": diagnostics_table(corrected_exposure),
         "history": history_table(history),
     }
     export = {

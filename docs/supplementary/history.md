@@ -1,5 +1,6 @@
 # History: the July runs, the reward erratum, and the claims ledger
 
+<!-- TODO(final rerun): the intro and the claims ledger still call the corrected campaign the source of every headline number; the final rerun now is. Rewrite. -->
 The project's first campaign ran in July 2026. Two defects in it were found later: an
 inert VQAv2 training reward and training pools that shared images with the evaluation
 sets. The corrected campaign of September 2026 fixed both and supplies every headline
@@ -46,6 +47,100 @@ completions stayed longer than 100 characters, against 23.5% with the defective 
 slightly higher accuracy (74.7 against 72.9, normalized scorer, reasoning prompt). The corrected campaign,
 with held-out image pools and the multimodal padding fix, did not reproduce the removal at
 2B; the ledger below records this as open.
+
+## The corrected campaign (September 13 recipe)
+
+The corrected campaign supplied the headline numbers until the final rerun under the frozen
+recipe. Its RL arms ran 300 updates and sampled rollouts from adapter-merged bf16 weights;
+the Instruct and SFT 2B arms are shared with the final rerun. Official accuracy (%), with
+the normalized scorer in parentheses, on the full test subsets.
+
+<!-- report:corrected -->
+| Arm | Prompt | VQAv2 | GQA | CLEVR counting | TextVQA (far-OOD) |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Instruct 2B | short | 77.87 (77.91) | 59.45 (59.46) | 97.67 (97.67) | 80.53 (80.55) |
+| Instruct 2B | reasoning | 55.06 (64.68) | 36.13 (51.95) | 87.13 (87.13) | 69.74 (69.75) |
+| SFT 2B | short | 79.87 (79.89) | 62.35 (62.35) | 99.40 (99.40) | 80.08 (80.10) |
+| SFT 2B | reasoning | 67.99 (68.17) | 56.61 (57.00) | 92.10 (92.10) | 68.86 (68.87) |
+| Instruct → GRPO (Sep 13) | short | 78.02 (78.06) | 59.55 (59.55) | 98.27 (98.27) | 80.56 (80.57) |
+| Instruct → GRPO (Sep 13) | reasoning | 61.79 (69.01) | 44.90 (54.09) | 86.10 (86.10) | 74.06 (74.06) |
+| SFT → GRPO (Sep 13) | short | 79.85 (79.87) | 62.44 (62.44) | 99.40 (99.40) | 80.10 (80.12) |
+| SFT → GRPO (Sep 13) | reasoning | 69.18 (70.80) | 53.70 (54.86) | 97.80 (97.80) | 74.58 (74.59) |
+| Instruct → gold-conditioned OPD (Sep 13) | short | 77.79 (77.83) | 59.72 (59.72) | 97.73 (97.73) | 80.59 (80.60) |
+| Instruct → gold-conditioned OPD (Sep 13) | reasoning | 68.61 (69.23) | 51.35 (51.58) | 87.10 (87.10) | 72.87 (72.87) |
+| Instruct 8B | short | 81.18 (81.22) | 61.66 (61.66) | 99.67 (99.67) | 83.49 (83.51) |
+| Instruct 8B | reasoning | 63.67 (68.75) | 46.84 (52.27) | 96.97 (96.97) | 74.00 (74.00) |
+| Instruct 8B → GRPO (Sep 13) | short | 81.12 (81.16) | 61.78 (61.78) | 99.57 (99.57) | 83.67 (83.69) |
+| Instruct 8B → GRPO (Sep 13) | reasoning | 77.37 (78.63) | 59.43 (59.82) | 97.30 (97.30) | 80.46 (80.47) |
+<!-- /report:corrected -->
+
+Paired differences, candidate − reference, with 95% bootstrap intervals over questions.
+
+<!-- report:corrected-deltas -->
+| Comparison | Prompt | Scorer | VQAv2 | GQA | CLEVR counting | TextVQA (far-OOD) |
+| --- | --- | --- | ---: | ---: | ---: | ---: |
+| SFT 2B − Instruct 2B | short | normalized | +1.98 [+1.33, +2.65] | +2.89 [+2.33, +3.46] | +1.73 [+1.27, +2.20] | -0.45 [-1.11, +0.21] |
+| SFT 2B − Instruct 2B | short | official | +2.00 [+1.36, +2.67] | +2.89 [+2.34, +3.47] | +1.73 [+1.27, +2.20] | -0.45 [-1.11, +0.22] |
+| SFT 2B − Instruct 2B | reasoning | normalized | +3.49 [+2.32, +4.65] | +5.06 [+4.26, +5.84] | +4.97 [+3.57, +6.30] | -0.89 [-2.05, +0.29] |
+| SFT 2B − Instruct 2B | reasoning | official | +12.93 [+11.59, +14.28] | +20.47 [+19.56, +21.36] | +4.97 [+3.57, +6.30] | -0.89 [-2.05, +0.29] |
+| Instruct → GRPO (Sep 13) − Instruct 2B | short | normalized | +0.15 [-0.04, +0.35] | +0.09 [-0.06, +0.23] | +0.60 [+0.33, +0.90] | +0.02 [-0.20, +0.26] |
+| Instruct → GRPO (Sep 13) − Instruct 2B | short | official | +0.15 [-0.04, +0.35] | +0.10 [-0.05, +0.24] | +0.60 [+0.33, +0.90] | +0.03 [-0.20, +0.26] |
+| Instruct → GRPO (Sep 13) − Instruct 2B | reasoning | normalized | +4.33 [+3.43, +5.22] | +2.15 [+1.55, +2.74] | -1.03 [-2.30, +0.20] | +4.31 [+3.47, +5.17] |
+| Instruct → GRPO (Sep 13) − Instruct 2B | reasoning | official | +6.73 [+5.77, +7.72] | +8.76 [+8.06, +9.44] | -1.03 [-2.30, +0.20] | +4.31 [+3.48, +5.18] |
+| SFT → GRPO (Sep 13) − Instruct 2B | short | normalized | +1.96 [+1.32, +2.61] | +2.98 [+2.42, +3.55] | +1.73 [+1.27, +2.20] | -0.43 [-1.09, +0.24] |
+| SFT → GRPO (Sep 13) − Instruct 2B | short | official | +1.98 [+1.34, +2.63] | +2.99 [+2.43, +3.55] | +1.73 [+1.27, +2.20] | -0.42 [-1.08, +0.24] |
+| SFT → GRPO (Sep 13) − Instruct 2B | reasoning | normalized | +6.13 [+5.15, +7.13] | +2.91 [+2.23, +3.59] | +10.67 [+9.40, +11.93] | +4.84 [+3.85, +5.82] |
+| SFT → GRPO (Sep 13) − Instruct 2B | reasoning | official | +14.13 [+12.95, +15.33] | +17.57 [+16.73, +18.37] | +10.67 [+9.40, +11.93] | +4.84 [+3.85, +5.82] |
+| SFT → GRPO (Sep 13) − SFT 2B | short | normalized | -0.02 [-0.21, +0.16] | +0.10 [-0.07, +0.25] | +0.00 [+0.00, +0.00] | +0.02 [-0.21, +0.26] |
+| SFT → GRPO (Sep 13) − SFT 2B | short | official | -0.02 [-0.21, +0.16] | +0.10 [-0.07, +0.25] | +0.00 [+0.00, +0.00] | +0.02 [-0.21, +0.26] |
+| SFT → GRPO (Sep 13) − SFT 2B | reasoning | normalized | +2.63 [+1.57, +3.72] | -2.15 [-2.88, -1.42] | +5.70 [+4.73, +6.67] | +5.73 [+4.68, +6.76] |
+| SFT → GRPO (Sep 13) − SFT 2B | reasoning | official | +1.19 [+0.10, +2.30] | -2.90 [-3.63, -2.17] | +5.70 [+4.73, +6.67] | +5.73 [+4.69, +6.76] |
+| Instruct → gold-conditioned OPD (Sep 13) − Instruct 2B | short | normalized | -0.08 [-0.37, +0.21] | +0.25 [+0.06, +0.46] | +0.07 [-0.07, +0.20] | +0.05 [-0.29, +0.39] |
+| Instruct → gold-conditioned OPD (Sep 13) − Instruct 2B | short | official | -0.08 [-0.37, +0.21] | +0.26 [+0.06, +0.46] | +0.07 [-0.07, +0.20] | +0.06 [-0.28, +0.40] |
+| Instruct → gold-conditioned OPD (Sep 13) − Instruct 2B | reasoning | normalized | +4.55 [+3.53, +5.59] | -0.37 [-1.03, +0.30] | -0.03 [-1.20, +1.13] | +3.12 [+2.18, +4.06] |
+| Instruct → gold-conditioned OPD (Sep 13) − Instruct 2B | reasoning | official | +13.55 [+12.31, +14.78] | +15.22 [+14.41, +16.03] | -0.03 [-1.20, +1.13] | +3.13 [+2.19, +4.06] |
+| Instruct 8B → GRPO (Sep 13) − Instruct 8B | short | normalized | -0.06 [-0.22, +0.10] | +0.13 [-0.02, +0.28] | -0.10 [-0.23, +0.00] | +0.18 [-0.01, +0.38] |
+| Instruct 8B → GRPO (Sep 13) − Instruct 8B | short | official | -0.06 [-0.22, +0.10] | +0.13 [-0.02, +0.28] | -0.10 [-0.23, +0.00] | +0.18 [-0.01, +0.38] |
+| Instruct 8B → GRPO (Sep 13) − Instruct 8B | reasoning | normalized | +9.88 [+8.96, +10.79] | +7.55 [+6.84, +8.28] | +0.33 [-0.27, +0.93] | +6.46 [+5.60, +7.36] |
+| Instruct 8B → GRPO (Sep 13) − Instruct 8B | reasoning | official | +13.70 [+12.67, +14.73] | +12.59 [+11.82, +13.36] | +0.33 [-0.27, +0.93] | +6.45 [+5.59, +7.35] |
+<!-- /report:corrected-deltas -->
+
+Mean output tokens · share of responses that close an `<answer>` tag, reasoning prompt.
+
+<!-- report:corrected-behavior -->
+| Arm | VQAv2 | GQA | CLEVR counting | TextVQA (far-OOD) |
+| --- | ---: | ---: | ---: | ---: |
+| Instruct 2B | 148 · 95% | 123 · 97% | 186 · 98% | 107 · 95% |
+| SFT 2B | 21 · 40% | 8 · 20% | 62 · 98% | 34 · 47% |
+| Instruct → GRPO (Sep 13) | 141 · 96% | 119 · 98% | 197 · 97% | 100 · 99% |
+| SFT → GRPO (Sep 13) | 102 · 97% | 79 · 98% | 24 · 100% | 61 · 99% |
+| Instruct → gold-conditioned OPD (Sep 13) | 141 · 93% | 119 · 93% | 206 · 98% | 106 · 96% |
+| Instruct 8B | 118 · 99% | 104 · 99% | 193 · 99% | 111 · 99% |
+| Instruct 8B → GRPO (Sep 13) | 9 · 100% | 9 · 100% | 83 · 99% | 11 · 100% |
+<!-- /report:corrected-behavior -->
+
+What each RL run trained on, and its training signals (defined on the
+[results](results.md#what-each-rl-run-trained-on) page).
+
+<!-- report:corrected-exposure -->
+| Run | Updates | Questions | Responses | Groups with varied rewards (%) | Updates without reward variation | Mean reward |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `grpo2-base` | 300 | 1,200 | 9,600 | 38.67 | 43 | 0.599 |
+| `grpo2-sft` | 300 | 1,200 | 9,600 | 49.00 | 16 | 0.581 |
+| `grpo8-base` | 300 | 1,200 | 9,600 | 23.33 | 110 | 0.646 |
+| `opd2-self` | 300 | 1,200 | 9,600 | 49.25 | 21 | 0.588 |
+<!-- /report:corrected-exposure -->
+
+<!-- report:corrected-diagnostics -->
+| Run | Reward (first → last 10 updates) | Dead groups (mean) | All right (first → last 10) | All wrong (first → last 10) | Entropy | Clip fraction (mean) | Completion tokens | Distinct prompts |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `grpo2-base` | 0.62 → 0.61 | 0.613 | 0.33 → 0.40 | 0.15 → 0.20 | 0.73 → 0.63 | 0.000 | 154 → 139 | 1,200 |
+| `grpo2-sft` | 0.27 → 0.63 | 0.510 | 0.03 → 0.35 | 0.30 → 0.15 | 1.08 → 0.90 | 0.000 | 30 → 110 | 1,200 |
+| `grpo8-base` | 0.62 → 0.67 | 0.767 | 0.42 → 0.57 | 0.23 → 0.28 | 0.40 → 0.12 | 0.000 | 133 → 13 | 1,200 |
+| `opd2-self` | 0.64 → 0.61 | 0.507 | 0.40 → 0.20 | 0.17 → 0.15 | 0.75 → 0.68 | 0.000 | 150 → 132 | 1,200 |
+<!-- /report:corrected-diagnostics -->
+
+<!-- TODO(final rerun): move or rewrite the corrected-campaign narrative from results.md here. -->
 
 ## The July runs
 

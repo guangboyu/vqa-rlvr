@@ -24,20 +24,33 @@ answer.
 | --- | --- | ---: | ---: | ---: | ---: |
 | Instruct 2B | short | 77.87 (77.91) | 59.45 (59.46) | 97.67 (97.67) | 80.53 (80.55) |
 | Instruct 2B | reasoning | 55.06 (64.68) | 36.13 (51.95) | 87.13 (87.13) | 69.74 (69.75) |
-| SFT | short | 79.87 (79.89) | 62.35 (62.35) | 99.40 (99.40) | 80.08 (80.10) |
-| SFT | reasoning | 67.99 (68.17) | 56.61 (57.00) | 92.10 (92.10) | 68.86 (68.87) |
-| Instruct → GRPO | short | 78.02 (78.06) | 59.55 (59.55) | 98.27 (98.27) | 80.56 (80.57) |
-| Instruct → GRPO | reasoning | 61.79 (69.01) | 44.90 (54.09) | 86.10 (86.10) | 74.06 (74.06) |
-| SFT → GRPO | short | 79.85 (79.87) | 62.44 (62.44) | 99.40 (99.40) | 80.10 (80.12) |
-| SFT → GRPO | reasoning | 69.18 (70.80) | 53.70 (54.86) | 97.80 (97.80) | 74.58 (74.59) |
-| Instruct → gold-conditioned OPD | short | 77.79 (77.83) | 59.72 (59.72) | 97.73 (97.73) | 80.59 (80.60) |
-| Instruct → gold-conditioned OPD | reasoning | 68.61 (69.23) | 51.35 (51.58) | 87.10 (87.10) | 72.87 (72.87) |
+| SFT 2B | short | 79.87 (79.89) | 62.35 (62.35) | 99.40 (99.40) | 80.08 (80.10) |
+| SFT 2B | reasoning | 67.99 (68.17) | 56.61 (57.00) | 92.10 (92.10) | 68.86 (68.87) |
+| Instruct → GRPO | short | 77.94 (77.98) | 60.06 (60.06) | 99.47 (99.47) | 81.02 (81.03) |
+| Instruct → GRPO | reasoning | 78.27 (79.01) | 60.23 (60.30) | 99.27 (99.27) | 79.99 (80.00) |
+| SFT → GRPO | short | — | — | — | — |
+| SFT → GRPO | reasoning | — | — | — | — |
+| Instruct → short-prompt GRPO | short | 78.62 (78.66) | 60.34 (60.35) | 99.50 (99.50) | 81.01 (81.02) |
+| Instruct → short-prompt GRPO | reasoning | 61.85 (69.81) | 42.89 (54.01) | 86.50 (86.50) | 72.34 (72.35) |
+| SFT → short-prompt GRPO | short | 79.83 (79.85) | 62.50 (62.50) | 99.50 (99.50) | 80.89 (80.90) |
+| SFT → short-prompt GRPO | reasoning | 68.05 (68.31) | 56.88 (57.26) | 88.97 (88.97) | 70.72 (70.73) |
+| Instruct → gold-conditioned OPD | short | — | — | — | — |
+| Instruct → gold-conditioned OPD | reasoning | — | — | — | — |
 | Instruct 8B | short | 81.18 (81.22) | 61.66 (61.66) | 99.67 (99.67) | 83.49 (83.51) |
 | Instruct 8B | reasoning | 63.67 (68.75) | 46.84 (52.27) | 96.97 (96.97) | 74.00 (74.00) |
-| Instruct 8B → GRPO | short | 81.12 (81.16) | 61.78 (61.78) | 99.57 (99.57) | 83.67 (83.69) |
-| Instruct 8B → GRPO | reasoning | 77.37 (78.63) | 59.43 (59.82) | 97.30 (97.30) | 80.46 (80.47) |
+| SFT 8B | short | 83.44 (83.46) | 63.86 (63.86) | 88.83 (88.83) | 84.73 (84.76) |
+| SFT 8B | reasoning | 68.36 (69.26) | 48.71 (49.18) | 96.70 (96.70) | 75.16 (75.18) |
+| Instruct 8B → GRPO | short | — | — | — | — |
+| Instruct 8B → GRPO | reasoning | — | — | — | — |
+| SFT 8B → GRPO | short | — | — | — | — |
+| SFT 8B → GRPO | reasoning | — | — | — | — |
+| Instruct 8B → short-prompt GRPO | short | — | — | — | — |
+| Instruct 8B → short-prompt GRPO | reasoning | — | — | — | — |
+| SFT 8B → short-prompt GRPO | short | — | — | — | — |
+| SFT 8B → short-prompt GRPO | reasoning | — | — | — | — |
 <!-- /report:matrix -->
 
+<!-- TODO(final rerun): findings 1-3 and the scorer paragraph quote the corrected campaign (now in docs/supplementary/history.md); rewrite them for the final-rerun arms in the table above. The intro's bold summary may need the same. -->
 **1. RL recovers reasoning-prompt accuracy.** Under the reasoning prompt, 300 GRPO updates
 from Instruct raise official accuracy by 6.7 points on VQAv2, 8.8 on GQA, and 4.3 on
 TextVQA at 2B, and by 13.7, 12.6, and 6.5 at 8B. The normalized scorer confirms gains
@@ -128,6 +141,7 @@ covers what to watch while an RL run trains and how to plot it.
 
 ## History and corrections
 
+<!-- TODO(final rerun): this section says the corrected campaign supplies every number above; the final rerun now does. -->
 The first campaign, in July 2026, trained GRPO with a VQAv2 reward that paid nothing on
 single-reference training questions, and its training pools shared 47 images with the
 VQAv2 test subset. The corrected campaign fixes both and supplies every number above. The

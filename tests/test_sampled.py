@@ -78,7 +78,7 @@ def test_the_report_lists_learnability_prechecks(setup):
     protocol = Protocol("gqa", prompt="reasoning", role="rl", temperature=1.0, samples=4)
     run_eval(model, protocol, Alternating(), data_dir=data, records_dir=records)
     rows = learnability_table(load_cells(records)).splitlines()
-    assert rows[2] == "| `base` | GQA | 5 | 4 | 100.0 | 0.0 | 0.0 |"
+    assert rows[2] == "| `base` | GQA | reasoning | 5 | 4 | 100.0 | 0.0 | 0.0 |"
 
 
 def test_a_sampled_record_has_its_own_table_cell(setup):

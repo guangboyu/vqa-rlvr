@@ -1,5 +1,6 @@
 # Method: the corrected campaign and how to rerun it
 
+<!-- TODO(final rerun): this page describes the corrected campaign (300 updates, merged-weight sampler); update the arms, the recipe, and the exposure command for the final rerun (frozen recipe: 1,000 updates, --rollout-lora, short-prompt GRPO arms, SFT 8B). -->
 The campaign asks two questions with one fixed evaluation. What does RL with a verifiable
 reward do to a model's accuracy under a short-answer prompt and under a reasoning prompt?
 And does short-answer SFT before the same RL change the result? Every arm is evaluated on
