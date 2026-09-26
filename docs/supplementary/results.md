@@ -574,6 +574,7 @@ have none.
 | SFT → GRPO (Sep 13) | short | swapped | 74.1 → 32.3 (75%) | 57.0 → 30.5 (72%) | 98.4 → 17.2 (83%) | 83.0 → 2.5 (98%) |
 | SFT → GRPO (Sep 13) | reasoning | black | 57.5 → 26.1 (80%) | 53.9 → 28.1 (65%) | 97.7 → 0.0 (100%) | 78.2 → 2.0 (98%) |
 | SFT → GRPO (Sep 13) | reasoning | swapped | 57.5 → 27.4 (80%) | 53.9 → 21.1 (76%) | 97.7 → 16.4 (84%) | 78.2 → 1.0 (99%) |
+| Instruct 8B | short | black | — | — | — | 83.8 → 6.3 (94%) |
 <!-- /report:interventions -->
 
 ## What each RL run trained on
@@ -657,8 +658,11 @@ with varied rewards over 1,000 updates.
 | `base2` | VQAv2 | reasoning | 2,500 | 8 | 48.9 | 21.3 | 29.8 |
 | `base2` | VQAv2 | short | 2,500 | 8 | 40.4 | 15.1 | 44.5 |
 | `base2` | VQAv2 | reasoning | 5,000 | 8 | 47.1 | 22.6 | 30.3 |
+| `base8` | CLEVR counting | reasoning | 500 | 8 | 15.2 | 0.2 | 84.6 |
+| `base8` | GQA | reasoning | 500 | 8 | 31.2 | 25.4 | 43.4 |
 | `base8` | GQA | short | 2,500 | 8 | 23.6 | 19.2 | 57.2 |
 | `base8` | GQA | reasoning | 5,000 | 8 | 34.7 | 23.9 | 41.4 |
+| `base8` | VQAv2 | reasoning | 500 | 8 | 31.8 | 21.0 | 47.2 |
 | `base8` | VQAv2 | short | 2,500 | 8 | 25.9 | 13.8 | 60.2 |
 | `base8` | VQAv2 | reasoning | 5,000 | 8 | 33.1 | 22.9 | 43.9 |
 | `sft2` | GQA | short | 2,500 | 8 | 54.2 | 10.4 | 35.3 |

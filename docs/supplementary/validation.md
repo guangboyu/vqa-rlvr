@@ -257,3 +257,28 @@ and should not be treated as a random sample.
 
 Human verifier calibration and a new medical task remain later decisions.
 The corrected comparison supplies the next set of measured implementation lessons.
+
+## Part 1 checks (2026-09-25)
+
+These checks preceded the recipe experiments and the final rerun.
+
+- **Resumption.** A 2B GRPO run with a save after every update was killed with `SIGKILL`
+  after its second checkpoint; rerunning the same command resumed from that checkpoint and
+  completed its planned updates. The same path ran with dead-group refilling and with
+  unmerged-adapter rollouts (RTX 4090, 2–10 updates each); refill rounds scored like first
+  rounds and every update trained on four groups.
+- **Sampler against trainer.** `scripts/check_logprob_gap.py` scored 512 sampled responses
+  of one GRPO adapter under vLLM and under the trainer's forward: prompt token IDs matched
+  in every response, and the per-token gap was 0.132 with merged bf16 weights in vLLM,
+  0.011 with the same merged weights on both sides, and 0.008 with the adapter served
+  unmerged ([method](method.md#sampler-and-trained-policy)).
+- **Decoding noise.** Three repeats of Instruct 2B under the reasoning prompt on the full
+  VQAv2 and GQA test subsets span 0.42 and 0.43 official points; 76–80% of responses were
+  identical between any two runs. Records: `results/noise-floor/`.
+- **Merged against unmerged evaluation.** One trained adapter evaluated both ways on the
+  full test matrix differs by at most 0.42 points in every cell.
+- **Screening battery.** `scripts/screen_datasets.py` on the four general datasets, with
+  Instruct 2B and 8B, finds a negative reasoning payoff on all four (−3 to −13 points,
+  intervals excluding zero), rejects CLEVR counting as saturated and TextVQA for having no
+  training pool, as expected ([evaluation](evaluation.md)).
+

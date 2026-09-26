@@ -96,7 +96,8 @@ in the repository, so on the recorded data this command returns them from the ca
 
 SFT on the short-answer pool, then GRPO from either starting point. A two-step run checks
 the whole path in a few minutes; the full recipe is one SFT epoch (no `--max-steps`) and
-300 GRPO updates (`--max-steps 300`), as in the [method](supplementary/method.md).
+1,000 GRPO updates (`--max-steps 1000 --rollout-lora`), as in the
+[method](supplementary/method.md).
 
 ```bash
 uv run --frozen python train_sft.py --preset sft_2b --hardware 24gb \

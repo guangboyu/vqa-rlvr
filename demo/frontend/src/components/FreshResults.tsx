@@ -23,8 +23,8 @@ export default function FreshResults({ report }: { report: Report }) {
     <div>
       <h2 className="font-display text-xl text-ink-50">What changes after post-training?</h2>
       <p className="mt-2 text-sm leading-relaxed text-ink-300">
-        Corrected pipeline, one training seed, fixed held-out questions. Both 2B GRPO starting
-        points use the same training pool and 300 updates. SFT adds an epoch of answer
+        Final rerun, one training seed, fixed held-out questions. Every RL arm uses the same
+        training pool and 1,000 updates under one frozen recipe. SFT adds an epoch of answer
         supervision, so total training exposure and compute differ.
       </p>
     </div>
