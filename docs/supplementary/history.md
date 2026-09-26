@@ -1,12 +1,14 @@
-# History: the July runs, the reward erratum, and the claims ledger
+# History: earlier campaigns, the reward erratum, and the claims ledger
 
-<!-- TODO(final rerun): the intro and the claims ledger still call the corrected campaign the source of every headline number; the final rerun now is. Rewrite. -->
 The project's first campaign ran in July 2026. Two defects in it were found later: an
 inert VQAv2 training reward and training pools that shared images with the evaluation
-sets. The corrected campaign of September 2026 fixed both and supplies every headline
-number. This page keeps the July results as labeled history, documents the reward defect
-in full because the July adapters on the Hub were trained with it, and lists every
-published claim with its current status.
+sets. The corrected campaign of September 13 fixed both, with 300-update RL runs sampled
+from adapter-merged weights. The final rerun of late September froze a recipe from
+one-change experiments (1,000 updates, unmerged-adapter rollouts) and retrained every arm
+under it; it supplies every headline number. This page keeps the corrected campaign and
+the July results as labeled history, documents the reward defect in full because the July
+adapters on the Hub were trained with it, and lists every published claim with its
+current status.
 
 ## Erratum: VQAv2 training-reward defect (found 2026-07-16)
 
@@ -140,7 +142,15 @@ What each RL run trained on, and its training signals (defined on the
 | `opd2-self` | 0.64 → 0.61 | 0.507 | 0.40 → 0.20 | 0.17 → 0.15 | 0.75 → 0.68 | 0.000 | 150 → 132 | 1,200 |
 <!-- /report:corrected-diagnostics -->
 
-<!-- TODO(final rerun): move or rewrite the corrected-campaign narrative from results.md here. -->
+Under this recipe GRPO kept the reasoning at 2B (148 → 141 tokens on VQAv2) and gained
+6.7 points on VQAv2 and 8.8 on GQA under the reasoning prompt, while the 8B run already
+removed it (118 → 9 tokens). With 1,000 updates the final rerun removes it at 2B too, between
+updates 100 and 150 (training responses 129 → 8 tokens); the recipe experiments' baseline,
+sampled from merged weights like the corrected run, tracked that run's reward on the same
+question order for its first updates and removed the reasoning between updates 110 and
+200. Only 23–49% of the
+corrected runs' groups had varied rewards; the final runs' shares are on the
+[results](results.md#what-each-rl-run-trained-on) page.
 
 ## The July runs
 
@@ -190,29 +200,31 @@ saved predictions.
 
 ## Claims ledger
 
-Every claim the project published, with its status after the corrected campaign. "July
-README" is the public README of July 2026; "research branch" claims were written on an
-unpublished branch in July–August. Replicated: holds in the corrected campaign. Qualified:
-holds only under a stated condition. Not replicated: the corrected campaign did not
-reproduce it. Retracted: contradicted by later evidence. Open: not re-tested, or the cause is
+Every claim the project published, with its status after the final rerun. "July README" is
+the public README of July 2026; "research branch" claims were written on an unpublished
+branch in July–August; "corrected README" is the README of the corrected campaign
+(September 13). Replicated: holds in the final rerun. Qualified: holds only under a stated
+condition. Not replicated: the final rerun did not reproduce it. Retracted: contradicted by later evidence. Open: not re-tested, or the cause is
 not yet known. Confirmed: a reported defect that the tests reproduce.
 
 | Claim | Where | Status | Evidence |
 |---|---|---|---|
-| GRPO raises 2B reasoning-prompt accuracy (VQAv2 +4.6, GQA +2.0, TextVQA +2.5, normalized) | July README | Replicated, qualified | Corrected Instruct → GRPO, reasoning prompt: +4.3, +2.1, +4.3 normalized; +6.7, +8.8, +4.3 official (TextVQA on its full validation split). Short-prompt accuracy moves by at most 0.6 points, and every arm scores higher with the short prompt. |
-| Correctness-only GRPO deletes the chain of thought at 2B | July README; research branch | Not replicated at 2B; replicated at 8B; cause open | Corrected 2B run: VQAv2 reasoning-prompt output 148 → 141 tokens, answer tags 95% → 96%. Corrected 8B run: 118 → 9 tokens. Candidate causes of the 2B difference (the multimodal padding fix, the held-out image pool, the vLLM memory fraction, the pinned revision) are untested. |
+| GRPO raises 2B reasoning-prompt accuracy (VQAv2 +4.6, GQA +2.0, TextVQA +2.5, normalized) | July README | Replicated | Final Instruct → GRPO, reasoning prompt: +23.2, +24.1, +10.2 official. The gain comes from deleting the reasoning (148 → 8 tokens), which brings the reasoning prompt level with the short prompt in-domain. |
+| Correctness-only GRPO deletes the chain of thought at 2B | July README; research branch | Replicated (1,000 updates) | Final 2B run: VQAv2 reasoning-prompt output 148 → 8 tokens, tags 100%; removed between updates 100 and 150. The corrected 300-update run (148 → 141) stopped before this point; that it did so because of its shorter learning-rate schedule is a proposed explanation, not a tested one. |
 | The reasoning "cost" is a metric artifact: an LLM judge reverses the ranking (81.8 vs 81.1) | July README | Retracted | A pre-registered follow-up on an independent judged sample found no reversal: VQAv2 gap −0.23 points, 95% CI [−1.84, +1.34]; pooled −0.12, CI [−1.27, +0.92]. Exact match undercounts, but equally for both arms. |
 | Training data are contamination-free | July README | Retracted | July pools shared 47 images (53 questions) with VQAv2 evaluation, and the SFT dev slice shared 317 of its 487 images with SFT training. The corrected split files exclude every dev and test image from every training pool by decoded-pixel hash. |
 | CLEVR-only RL gives the largest out-of-domain gain (TextVQA +5.3) | July README | Open | A single July run; not re-run in the corrected pipeline. |
-| Short-answer SFT removes visible reasoning, and GRPO revives it | July README | Qualified | The July emission count (0/3000) looked for literal `<think>` tags, which the Instruct model never emits. In the corrected campaign SFT → GRPO restores length and tags under the reasoning prompt (VQAv2 21 → 102 tokens, tags 40% → 97%). |
+| Short-answer SFT removes visible reasoning, and GRPO revives it | July README | Qualified | The July emission count (0/3000) looked for literal `<think>` tags, which the Instruct model never emits. GRPO after SFT restores the answer tag (40% → 100% on VQAv2) but, at 1,000 updates, not the reasoning: 21 → 11 tokens. |
 | The harness matches lmms-eval (GQA 59.5 vs 58.7 ± 1.6) | July README | Qualified | A sanity check on 1,000 GQA questions with the historical normalized scorer. The official scorers now match the dataset authors' code on 626,074 saved predictions. |
 | VQAv2 training reward was inert (erratum above) | July README | Confirmed, fixed | Regression tests; the corrected campaign trained with the fixed reward. |
-| The learning signal type decides whether reasoning survives: exact-match GRPO deletes, dense signals keep ~99% | Research branch | Not replicated at 2B; replicated at 8B | See the deletion row. |
+| The learning signal type decides whether reasoning survives: exact-match GRPO deletes, dense signals keep ~99% | Research branch | Replicated, qualified | After 1,000 updates, correctness-only GRPO leaves 8 tokens at both sizes, while gold-conditioned OPD keeps 141 (93% tags). A 0.2 format reward also keeps 8B reasoning (about 130 tokens), so the reward, not only its density, decides. |
 | Signal grounding beats teacher capacity; the gold-conditioned self-teacher has no capability ceiling | Research branch | Retracted | The teacher comparison confounds capacity, grounding, and signal density. |
-| Short-prompt accuracy is flat across signal types and scales | Research branch | Replicated, qualified | After GRPO or OPD, short-prompt official accuracy moves by at most 0.6 points at 2B and 0.18 at 8B. SFT does move it: +2.0 VQAv2, +2.9 GQA. |
+| Short-prompt accuracy is flat across signal types and scales | Research branch | Qualified | GRPO trained on the reasoning prompt moves short-prompt accuracy by at most 0.7 points on VQAv2 and GQA; GRPO trained on the short prompt adds 0.7–0.9; SFT adds 2.0–2.9. |
 | Empty reasoning is equivalent to full reasoning (pilot P2) | Research branch | Retracted | The equivalence test fails: −2.32 points, 90% CI [−5.48, +0.84], n = 487. Swapped reasoning changes answers in 63.6% of the 143 no-leak pairs, so the answers depend on the reasoning text. |
 | A static predictor of RL gains fails (pilot P3) | Research branch | Open | The reanalysis is inconclusive under the corrected retention proxy. |
 | Public RLVR checkpoints show no grounding drift (ten models, 2,300 probes) | Research branch | Qualified | No degradation was detected under that short-prompt protocol; image sensitivity alone does not establish correct grounding. |
+| No arm passes its own short-answer ceiling (28 of 28 arm and dataset pairs) | Corrected README | Qualified | After 1,000 correctness-only updates from Instruct, the reasoning prompt reaches the short prompt in-domain (2B VQAv2 +0.3, 95% CI [−0.3, +1.0]; 8B +0.7, [+0.1, +1.2], within the 0.5-point decoding noise); TextVQA stays about 1 point below. |
+| SFT, not RL, moves the short-answer ceiling | Corrected README | Replicated, qualified | Short-prompt GRPO adds 0.7–0.9 points in-domain, SFT 2.0–2.9 at both sizes; on far-OOD TextVQA short-prompt GRPO beats SFT by 0.9 at 2B. |
 
 The July judge study behind the retracted reversal claim is `scripts/judge_study.py`; its
 output, `results/judge_study.json`, appears in the dashboard's history view.

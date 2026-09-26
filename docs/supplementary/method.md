@@ -1,21 +1,24 @@
-# Method: the corrected campaign and how to rerun it
+# Method: the final recipe and how to rerun it
 
-<!-- TODO(final rerun): this page describes the corrected campaign (300 updates, merged-weight sampler); update the arms, the recipe, and the exposure command for the final rerun (frozen recipe: 1,000 updates, --rollout-lora, short-prompt GRPO arms, SFT 8B). -->
-The campaign asks two questions with one fixed evaluation. What does RL with a verifiable
+The study asks three questions with one fixed evaluation. What does RL with a verifiable
 reward do to a model's accuracy under a short-answer prompt and under a reasoning prompt?
-And does short-answer SFT before the same RL change the result? Every arm is evaluated on
-the same test questions with both prompt templates and both scorer variants, so a change
-in one view can be checked in the other.
+Does short-answer SFT before the same RL change the result? And which standard changes to
+the RL recipe matter here? Every arm is evaluated on the same test questions with both
+prompt templates and both scorer variants, so a change in one view can be checked in the
+other. The recipe below was frozen after one-change experiments against a fixed baseline
+([results](results.md#recipe-experiments)); every headline number comes from arms trained
+under it.
 
 ## Arms
 
 | Arm | Starting model | Supervision | What it tests |
 |---|---|---|---|
 | Instruct 2B, Instruct 8B | released Qwen3-VL Instruct | none (upstream post-training only) | the reference point for every arm |
-| SFT | Instruct 2B | one epoch of short answers: answer and end-of-turn tokens | direct answer supervision |
-| Instruct → GRPO | Instruct 2B / 8B | 300 GRPO updates, correctness reward | RL with a verifiable reward alone |
-| SFT → GRPO | the SFT model | the same 300 GRPO updates | whether SFT first changes what RL adds |
-| Instruct → gold-conditioned OPD | Instruct 2B | 300 on-policy distillation updates; the frozen Instruct model, shown the reference answer in its prompt, scores each student token | a dense, token-level learning signal on the same sampled responses |
+| SFT 2B, SFT 8B | Instruct 2B / 8B | one epoch of short answers: answer and end-of-turn tokens | direct answer supervision |
+| Instruct → GRPO | Instruct 2B / 8B | 1,000 GRPO updates under the reasoning prompt, correctness reward | RL with a verifiable reward alone |
+| SFT → GRPO | the SFT model | the same 1,000 updates | whether SFT first changes what RL adds |
+| Instruct → short-prompt GRPO, SFT → short-prompt GRPO | Instruct / SFT, 2B and 8B | the same 1,000 updates under the short prompt, rewarding the whole trimmed answer | RL at the short-answer ceiling, without reasoning |
+| Instruct → gold-conditioned OPD | Instruct 2B | 1,000 on-policy distillation updates; the frozen Instruct model, shown the reference answer in its prompt, scores each student token | a dense, token-level learning signal on the same sampled responses |
 
 "Instruct" is the released checkpoint before this project's fine-tuning; it has already
 received upstream post-training. The SFT data are short answers, not reasoning
@@ -23,12 +26,14 @@ demonstrations. The gold-conditioned teacher has information the student lacks (
 reference answer), so its comparison with GRPO changes the signal and the conditioning
 together.
 
-All RL arms draw from the same pool with the same seed and the same update budget: 300
-updates, each of four prompt groups of eight responses, for 1,200 prompt draws and 9,600
-sampled responses. The recorded runs drew exactly the same 1,200 questions in the same
-order. SFT → GRPO adds the SFT epoch on top, so its total exposure and compute are larger;
-the comparison measures the value of adding SFT before the same RL, not a match at equal
-compute. Every arm is one training seed.
+All RL arms draw from the same pool with the same seed and the same update budget: 1,000
+updates, each of four prompt groups of eight responses, for 4,000 prompt draws and 32,000
+sampled responses. The recorded runs drew exactly the same questions in the same order
+(`results/training-exposure.json` records one prompt-order hash for all nine). SFT → GRPO
+adds the SFT epoch on top, so its total exposure and compute are larger; the comparison
+measures the value of adding SFT before the same RL, not a match at equal compute. Every
+arm is one training seed. The 2B SFT model is the corrected campaign's: its recipe did not
+change.
 
 ## Data and model identity
 
@@ -45,8 +50,8 @@ SFT and RL share training questions by design. SFT fits a supplied answer; RL sa
 responses to the same question. Both remain training data, and dev and test images stay
 out of both stages. [SimpleRL-Zoo, Section 4](https://arxiv.org/html/2503.18892v3#S4)
 uses the same pattern (SFT and RL data from the same problem sources); here the split
-files and each run's prompt-draw log make the reuse exact. Of the 1,200 questions the RL
-runs drew, 841 are also SFT training questions and 359 come from the RL-only sources.
+files and each run's prompt-draw log make the reuse exact. Of the 4,000 questions the RL
+runs drew, 2,836 are also SFT training questions and 1,164 come from the RL-only sources.
 
 `prepare_data.py` pins the five source revisions, and a fresh materialization from them
 reproduced all ten recorded subsets byte for byte: the same question IDs, text, and image
@@ -67,16 +72,25 @@ BASE_2B=checkpoints/base/Qwen3-VL-2B-Instruct
 
 ## Training recipe
 
-**SFT.** One epoch, learning rate `1e-4`, effective batch 32, LoRA rank 16.
+**SFT.** One epoch, LoRA rank 16, effective batch 32; learning rate `1e-4` at 2B and
+`5e-5` at 8B (bf16 LoRA on an 80 or 96 GB card; `1e-4` damaged the 8B's counting and
+instruction following in the July runs).
 
-**GRPO.** Learning rate `1e-5`, eight responses per prompt at temperature 1, batch size 8
-with accumulation 4, at most 640 completion tokens, no KL penalty. The pinned TRL 1.8
+**GRPO.** Learning rate `1e-5` with linear decay to 0 over the 1,000 updates, eight
+responses per prompt at temperature 1, batch size 8 with accumulation 4 (four questions
+per update), at most 640 completion tokens (64 for short-prompt GRPO), no KL penalty,
+LoRA rank 16 on the language model's attention and MLP projections. The pinned TRL 1.8
 configuration uses DAPO token-level loss reduction, group reward scaling,
 weighted-sum-then-normalize reward aggregation, token-level policy ratios clipped
 symmetrically at 0.2, and vLLM sampling correction with `sequence_mask` and an upper
-ratio of 3. Dynamic resampling of zero-variance groups is off in the campaign's runs (see
-refilling dead groups below), so this is not the complete DAPO recipe. The settings live in [`vqar/config.py`](../../vqar/config.py) and are
-saved with every run.
+ratio of 3. With one gradient pass per generated batch the policy ratio is exactly 1 when
+the loss is computed, so the PPO clip never binds: the logged clip fraction stays at bf16
+noise (below 0.001) in every run, and clip-higher variants would change nothing here.
+Dynamic resampling of zero-variance groups is off (see refilling dead groups below), so
+this is not the complete DAPO recipe. Rollouts are served by vLLM from the unmerged adapter
+(`--rollout-lora`, next section), and on 80/96 GB cards vLLM stays awake between rollouts
+(`--no-vllm-sleep`), which changes speed only. The settings live in
+[`vqar/config.py`](../../vqar/config.py) and are saved with every run.
 
 **Reward.** The correctness reward requires a complete `<answer>...</answer>` tag, then
 scores the tagged answer with the normalized scorer, which falls back to exact match when
@@ -86,7 +100,7 @@ beside the normalized one. The tag requirement is the reasoning template's answe
 (`vqar/answers.py`): `train_grpo.py --rollout-prompt short` trains under the short template
 instead, whose rule scores the whole trimmed response. `--pool <name>` draws prompts from a
 declared pool (`scripts/build_pool.py`, [ADR 0003](../adr/0003-rl-pools-are-declared-files-beside-the-split-files.md))
-rather than the whole rl roles; the campaign's runs used the defaults.
+rather than the whole rl roles; the final runs use the whole rl roles.
 
 **Refilling dead groups (opt-in).** `train_grpo.py --refill-rounds N` turns on DAPO's
 dynamic sampling. A group is dead when all eight of its answers get the same total reward,
@@ -112,90 +126,108 @@ many rollouts each update generates, so compute per update is no longer fixed. C
 refilling run by attempted rollouts and GPU hours, not only by updates. Every preset
 leaves this option off (`0`).
 
-**Unmerged adapter rollouts (opt-in).** TRL's colocate sync merges the LoRA adapter into
-the bf16 base weights before each update and loads them into vLLM. At learning rate `1e-5`
-the adapter's change to most weights is far below one bf16 step, so rounding the merged
-weights removes part of what the trainer learned: vLLM samples from a rounded, lagging copy
-of the policy. `scripts/check_logprob_gap.py` measured this on the `vqa-p1-r3refill`
-adapter after 300 updates. vLLM with the merged weights and the trainer (bf16 base plus
-the unmerged fp32 adapter) differ by a mean |Δ log p| of 0.132 per sampled token. The
-Instruct model, with no adapter, gives 0.028; the same adapter merged in bf16 on both sides
-gives 0.011. The gap sits on near-tied tokens: the space before `</answer>` has a median
-probability of 0.905 under vLLM and 0.378 under the trainer. `train_grpo.py --rollout-lora`
-instead keeps the base weights vLLM loaded at start-up and serves the adapter unmerged, as
-the dev evaluation does ([`vqar/adapter_rollouts.py`](../../vqar/adapter_rollouts.py)). At
-an update's first generation the trainer's adapter is written to a node-local temporary
-directory under a new adapter id and passed with every rollout request; refill rounds of
-the same update reuse it. Between rollouts the engine sleeps at level 1, which moves the
-weights to host memory, instead of level 2, which discards them until the next sync. The
-costs are not yet measured: pinned host memory for the offloaded weights (about 4 GB for
-the 2B model, 17 GB for the 8B), one adapter write per update (70 MB for the 2B at rank
-16), and vLLM's LoRA kernels in every rollout. `check_logprob_gap.py --adapter <dir>
---unmerged-adapter` measures the gap of this mode outside training. Every preset leaves it
-off; the campaign's runs used the merged sync.
+### Sampler and trained policy
+
+TRL's colocate sync merges the LoRA adapter into the bf16 base weights before each update
+and loads them into vLLM. At learning rate `1e-5` the adapter's change to most weights is
+far below one bf16 step, so rounding the merged weights removes part of what the trainer
+learned: vLLM samples from a rounded, lagging copy of the policy. `scripts/check_logprob_gap.py`
+measured this on a GRPO adapter after 300 updates (64 questions, eight samples each). vLLM
+with the merged weights and the trainer (bf16 base plus the unmerged fp32 adapter) differ by
+a mean |Δ log p| of 0.132 per sampled token; the same adapter merged in bf16 on both sides
+gives 0.011, and the Instruct model without an adapter 0.028 on longer reasoning text. The
+gap sits on near-tied tokens: the space before `</answer>` has a median probability of 0.905
+under vLLM and 0.378 under the trainer, so the sampler writes `<answer> x </answer>` more
+often than the trained policy would. Prompt token IDs matched exactly, so this is not a
+tokenization or image-processing difference. In training it shows as
+`sampling/sampling_logp_difference/mean` rising from 0.03 to about 0.2 and the
+importance-sampling ratio dropping to 0.6–0.8 once responses become short.
+
+`train_grpo.py --rollout-lora` keeps the base weights vLLM loaded at start-up and serves the
+adapter unmerged, as the dev evaluation does ([`vqar/adapter_rollouts.py`](../../vqar/adapter_rollouts.py)).
+At an update's first generation the trainer's adapter is written to a node-local temporary
+directory under a new adapter ID and passed with every rollout request; refill rounds of the
+same update reuse it. With it, the same check gives 0.008, and the training logs of every
+final run keep the gap at 0.004–0.03 with an importance-sampling ratio near 1.00. Accuracy
+did not change: the 2B baseline trained both ways differs by at most 0.52 points on any
+test cell. Greedy evaluation is similarly insensitive: the merged and the unmerged form of
+one trained adapter score within 0.42 points on every cell. The fix therefore matters for
+what the update optimizes (on-policy samples) rather than for these accuracies. Cost: when
+vLLM sleeps between rollouts it must sleep at level 1, which keeps the base weights in host
+memory (about 4 GB for the 2B model, 17 GB for the 8B); on the 96 GB profile
+`--no-vllm-sleep` keeps the engine awake instead. With level-1 sleep a 2B update took 16.7 s instead of
+about 5 s; with the engine awake, a final 2B GRPO run took 2.7–3.2 GPU hours on an A100 80
+GB and an 8B run 2.9–3.7 on an RTX PRO 6000, each including the dev evaluation of its ten
+saved adapters.
 
 **OPD.** The same rollout geometry as GRPO. The learning signal is the teacher's token
 log-probability minus the student's rollout-time log-probability. The correctness reward
 is still logged, for diagnosis only; in the saved completion samples TRL's `advantage`
 column is that logged diagnostic, and the teacher statistics are under `opd/*`.
 
-**Hardware.** The recorded SFT run used an RTX PRO 6000 96 GB, both 2B GRPO arms A100 80
-GB cards, and the OPD arm an RTX 6000. The Instruct → GRPO run reserved 36% of the A100 for
-vLLM and the SFT → GRPO run 15%: a path-based size check read `8b` inside the Instruct
-model's snapshot hash. The profiles now size memory from the preset name and reserve about
-12 GB for either 2B arm (15% of an 80 GB card, 12.5% of a 96 GB card); the recorded
-allocations stay in each run's metadata. The `24gb` profile runs the same 2B recipe with a
-smaller rollout allocation.
+**Hardware.** The final rerun trained the 2B GRPO arms and OPD on A100 80 GB cards (`80gb`
+profile), the 2B short-prompt arms on an RTX 4090 (`24gb`), and the 8B SFT and GRPO arms
+on RTX PRO 6000 96 GB cards (`96gb`); the profiles change memory placement, not the recipe.
+Each run records its card, profile, and resolved settings in `run_config.json`.
 
 ## Train the arms
 
 Run from the repository root with a new run directory for each run; an existing
 compatible directory resumes from its last complete checkpoint. For a two-update check of
-the whole path, see the [tutorial](../tutorial.md).
+the whole path, see the [tutorial](../tutorial.md). Every GRPO arm below shares these flags:
+
+```bash
+RECIPE="--max-steps 1000 --save-steps 100 --save-total-limit 0 --rollout-lora --no-vllm-sleep"
+SHORT="--rollout-prompt short --max-completion-length 64"
+```
+
+2B (the SFT model is `sharedpool_20260913_sft_2b`, trained with the unchanged SFT recipe):
 
 ```bash
 uv run --frozen python train_sft.py --preset sft_2b --hardware 96gb \
   --model "$BASE_2B" --save-steps 50 --run-dir runs/sft2 --no-wandb
 uv run --frozen python scripts/merge_adapter.py runs/sft2/checkpoints \
   --base "$BASE_2B" --out checkpoints/merged/sharedpool_20260913_sft_2b
+SFT_2B=checkpoints/merged/sharedpool_20260913_sft_2b
 
-uv run --frozen python train_grpo.py --preset grpo_2b_main --hardware 80gb \
-  --model "$BASE_2B" --max-steps 300 --save-steps 25 --run-dir runs/grpo2-base --no-wandb
-uv run --frozen python scripts/merge_adapter.py runs/grpo2-base/checkpoints \
-  --base "$BASE_2B" --out checkpoints/merged/sharedpool_20260913_grpo_2b_base
-
-uv run --frozen python train_grpo.py --preset grpo_2b_main --hardware 80gb \
-  --model checkpoints/merged/sharedpool_20260913_sft_2b --max-steps 300 --save-steps 25 \
-  --run-dir runs/grpo2-sft --no-wandb
-uv run --frozen python scripts/merge_adapter.py runs/grpo2-sft/checkpoints \
-  --base checkpoints/merged/sharedpool_20260913_sft_2b \
-  --out checkpoints/merged/sharedpool_20260913_grpo_2b_sft
-
-uv run --frozen python train_opd.py --preset opd_self_2b_main --hardware 96gb \
-  --model "$BASE_2B" --max-steps 300 --save-steps 25 --save-total-limit 0 \
-  --run-dir runs/opd2-self --no-wandb
-uv run --frozen python scripts/merge_adapter.py runs/opd2-self/checkpoints \
-  --base "$BASE_2B" --out checkpoints/merged/sharedpool_20260913_opd_2b_self
+uv run --frozen python train_grpo.py --preset grpo_2b_main --hardware 80gb $RECIPE \
+  --model "$BASE_2B" --run-dir runs/grpo2-base --no-wandb
+uv run --frozen python train_grpo.py --preset grpo_2b_main --hardware 80gb $RECIPE \
+  --model "$SFT_2B" --run-dir runs/grpo2-sft --no-wandb
+uv run --frozen python train_grpo.py --preset grpo_2b_main --hardware 80gb $RECIPE $SHORT \
+  --model "$BASE_2B" --run-dir runs/short2-base --no-wandb
+uv run --frozen python train_grpo.py --preset grpo_2b_main --hardware 80gb $RECIPE $SHORT \
+  --model "$SFT_2B" --run-dir runs/short2-sft --no-wandb
+uv run --frozen python train_opd.py --preset opd_self_2b_main --hardware 80gb \
+  --model "$BASE_2B" --max-steps 1000 --save-steps 100 --save-total-limit 0 \
+  --run-dir runs/opd2 --no-wandb
 ```
 
-`grpo_2b_main` trains with the correctness reward alone. The 8B arm uses the bf16
-`grpo_8b_fmt0` preset on an 80 or 96 GB card, with the same learning rate, group size,
-batch geometry, and 300-update budget as the 2B arms:
+8B, on an 80 or 96 GB card (`--no-vllm-sleep` needs the 96 GB card at 8B; drop it on 80 GB):
 
 ```bash
 uv run --frozen hf download Qwen/Qwen3-VL-8B-Instruct \
   --revision 0c351dd01ed87e9c1b53cbc748cba10e6187ff3b \
   --local-dir checkpoints/base/Qwen3-VL-8B-Instruct
 BASE_8B=checkpoints/base/Qwen3-VL-8B-Instruct
-uv run --frozen python train_grpo.py --preset grpo_8b_fmt0 --hardware 96gb \
-  --model "$BASE_8B" --max-steps 300 --save-steps 25 --run-dir runs/grpo8-base --no-wandb
-uv run --frozen python scripts/merge_adapter.py runs/grpo8-base/checkpoints \
-  --base "$BASE_8B" --out checkpoints/merged/sharedpool_20260913_grpo_8b_base
+uv run --frozen python train_sft.py --preset sft_8b --hardware 96gb \
+  --model "$BASE_8B" --save-steps 100 --run-dir runs/sft8 --no-wandb
+uv run --frozen python scripts/merge_adapter.py runs/sft8/checkpoints \
+  --base "$BASE_8B" --out checkpoints/merged/p1_sft8
+SFT_8B=checkpoints/merged/p1_sft8
+for start in "$BASE_8B" "$SFT_8B"; do
+  uv run --frozen python train_grpo.py --preset grpo_8b_fmt0 --hardware 96gb $RECIPE \
+    --model "$start" --run-dir "runs/grpo8-$(basename $start)" --no-wandb
+  uv run --frozen python train_grpo.py --preset grpo_8b_fmt0 --hardware 96gb $RECIPE $SHORT \
+    --model "$start" --run-dir "runs/short8-$(basename $start)" --no-wandb
+done
 ```
 
-The CPU merge of an 8B model needs about 64 GB of host RAM. When a run completes, it
-evaluates every saved adapter on the dev tier with both prompts; those records are the
-run's learning curve.
+Merge each run's final adapter with `scripts/merge_adapter.py <run>/checkpoints --base
+<its starting model> --out checkpoints/merged/<name>`; the CPU merge of an 8B model needs
+about 64 GB of host RAM. `grpo_2b_main` and `grpo_8b_fmt0` train with the correctness
+reward alone and share the batch geometry. When a run completes, it evaluates every saved
+adapter on the dev tier with both prompts; those records are the run's learning curve.
 
 ## Evaluate
 
@@ -233,10 +265,8 @@ contrasts.
 
 ```bash
 uv run --frozen python -m scripts.report
-uv run --frozen python -m scripts.summarize_training \
-  results/baselines/training/grpo2-base results/baselines/training/grpo2-sft \
-  results/baselines/training/grpo8-base results/baselines/training/opd2-self \
-  --output results/baselines/training-exposure.json
+uv run --frozen python -m scripts.summarize_training runs/{grpo2-base,grpo2-sft,short2-base,short2-sft,opd2} \
+  runs/{grpo8,short8}-{Qwen3-VL-8B-Instruct,p1_sft8} --output results/training-exposure.json
 uv run --frozen python -m scripts.make_gallery
 uv run --frozen python -m scripts.paired_deltas   # needs the local predictions
 uv run --frozen python -m scripts.error_analysis  # flips, error kinds, answer forms; same
@@ -248,14 +278,15 @@ image budget, and `python -m scripts.compare_lmms_eval` pairs an lmms-eval run's
 responses with this harness's records.
 
 The report reads the stored records; each names its protocol, so cells evaluated under
-different questions, prompts, scorers, or decoding never share a column. The campaign's
-records were written from its saved outputs by `python -m scripts.migrate_campaign`. With
+different questions, prompts, scorers, or decoding never share a column. The corrected
+campaign's records were written from its saved outputs by `python -m scripts.migrate_campaign`. With
 the saved predictions present, rerunning it verifies the stored records, and
 `pytest tests/test_legacy.py` recomputes every campaign number from them. The training summary checks the actual prompt order, counts reward variation
 per update, splits the groups without variation into all right, all wrong, and all at one
 partial score (per update, and averaged over the first and the last ten updates), and embeds
-each run's diagnostics; regenerating it needs the materialized
-training data, and its output is already committed.
+each run's diagnostics; regenerating it needs the materialized training data and each run's
+`prompt_draws.jsonl`, and its output is already committed (the corrected campaign's is in
+`results/baselines/training-exposure.json`).
 
 ## Checkpoint storage
 

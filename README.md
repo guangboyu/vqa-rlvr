@@ -5,8 +5,9 @@ distillation for Qwen3-VL at 2B and 8B, on VQAv2, GQA, CLEVR counting, and far-O
 TextVQA. Every model is evaluated on the same fixed test questions under two prompt
 templates, a short answer and step-by-step reasoning, and scored twice, with the dataset
 authors' evaluator and with a normalized matcher. Reading the two prompts side by side
-separates what each training method changes: **RL wins back accuracy that the reasoning
-prompt costs, and only SFT raises the short-answer ceiling.**
+separates what each training method changes: **with a correctness reward, GRPO turns the
+reasoning prompt into a direct answer and brings it up to the short-answer ceiling, and
+short-answer SFT is what raises that ceiling on the training distribution.**
 
 The 2B pipeline runs on one 24 GB GPU; separate 80/96 GB profiles run the 8B recipes. The
 recorded demo runs without a GPU.
@@ -28,44 +29,64 @@ answer.
 | SFT 2B | reasoning | 67.99 (68.17) | 56.61 (57.00) | 92.10 (92.10) | 68.86 (68.87) |
 | Instruct → GRPO | short | 77.94 (77.98) | 60.06 (60.06) | 99.47 (99.47) | 81.02 (81.03) |
 | Instruct → GRPO | reasoning | 78.27 (79.01) | 60.23 (60.30) | 99.27 (99.27) | 79.99 (80.00) |
-| SFT → GRPO | short | — | — | — | — |
-| SFT → GRPO | reasoning | — | — | — | — |
+| SFT → GRPO | short | 79.76 (79.78) | 62.82 (62.82) | 99.70 (99.70) | 80.19 (80.20) |
+| SFT → GRPO | reasoning | 78.76 (78.88) | 61.52 (61.54) | 86.90 (86.90) | 79.02 (79.02) |
 | Instruct → short-prompt GRPO | short | 78.62 (78.66) | 60.34 (60.35) | 99.50 (99.50) | 81.01 (81.02) |
 | Instruct → short-prompt GRPO | reasoning | 61.85 (69.81) | 42.89 (54.01) | 86.50 (86.50) | 72.34 (72.35) |
 | SFT → short-prompt GRPO | short | 79.83 (79.85) | 62.50 (62.50) | 99.50 (99.50) | 80.89 (80.90) |
 | SFT → short-prompt GRPO | reasoning | 68.05 (68.31) | 56.88 (57.26) | 88.97 (88.97) | 70.72 (70.73) |
-| Instruct → gold-conditioned OPD | short | — | — | — | — |
-| Instruct → gold-conditioned OPD | reasoning | — | — | — | — |
+| Instruct → gold-conditioned OPD | short | 77.96 (78.00) | 59.80 (59.80) | 97.93 (97.93) | 80.52 (80.53) |
+| Instruct → gold-conditioned OPD | reasoning | 70.41 (70.79) | 52.53 (52.73) | 86.50 (86.50) | 72.75 (72.76) |
 | Instruct 8B | short | 81.18 (81.22) | 61.66 (61.66) | 99.67 (99.67) | 83.49 (83.51) |
 | Instruct 8B | reasoning | 63.67 (68.75) | 46.84 (52.27) | 96.97 (96.97) | 74.00 (74.00) |
 | SFT 8B | short | 83.44 (83.46) | 63.86 (63.86) | 88.83 (88.83) | 84.73 (84.76) |
 | SFT 8B | reasoning | 68.36 (69.26) | 48.71 (49.18) | 96.70 (96.70) | 75.16 (75.18) |
-| Instruct 8B → GRPO | short | — | — | — | — |
-| Instruct 8B → GRPO | reasoning | — | — | — | — |
-| SFT 8B → GRPO | short | — | — | — | — |
-| SFT 8B → GRPO | reasoning | — | — | — | — |
-| Instruct 8B → short-prompt GRPO | short | — | — | — | — |
-| Instruct 8B → short-prompt GRPO | reasoning | — | — | — | — |
-| SFT 8B → short-prompt GRPO | short | — | — | — | — |
-| SFT 8B → short-prompt GRPO | reasoning | — | — | — | — |
+| Instruct 8B → GRPO | short | 81.24 (81.26) | 62.32 (62.32) | 99.63 (99.63) | 84.35 (84.37) |
+| Instruct 8B → GRPO | reasoning | 81.89 (82.19) | 62.66 (62.72) | 98.20 (98.20) | 83.28 (83.30) |
+| SFT 8B → GRPO | short | 83.23 (83.25) | 63.90 (63.90) | 97.00 (97.00) | 84.67 (84.70) |
+| SFT 8B → GRPO | reasoning | 82.03 (82.29) | 63.21 (63.32) | 98.33 (98.33) | 83.83 (83.85) |
+| Instruct 8B → short-prompt GRPO | short | 81.89 (81.93) | 62.41 (62.41) | 98.80 (98.80) | 84.29 (84.31) |
+| Instruct 8B → short-prompt GRPO | reasoning | 66.97 (70.31) | 50.05 (53.59) | 96.80 (96.80) | 74.29 (74.30) |
+| SFT 8B → short-prompt GRPO | short | 83.30 (83.32) | 63.82 (63.82) | 82.13 (82.13) | 84.73 (84.75) |
+| SFT 8B → short-prompt GRPO | reasoning | 70.23 (70.87) | 51.94 (52.36) | 96.43 (96.43) | 75.37 (75.38) |
 <!-- /report:matrix -->
 
-<!-- TODO(final rerun): findings 1-3 and the scorer paragraph quote the corrected campaign (now in docs/supplementary/history.md); rewrite them for the final-rerun arms in the table above. The intro's bold summary may need the same. -->
-**1. RL recovers reasoning-prompt accuracy.** Under the reasoning prompt, 300 GRPO updates
-from Instruct raise official accuracy by 6.7 points on VQAv2, 8.8 on GQA, and 4.3 on
-TextVQA at 2B, and by 13.7, 12.6, and 6.5 at 8B. The normalized scorer confirms gains
-beyond answer formatting (2B: +4.3, +2.1, +4.3; 8B: +9.9, +7.6, +6.5). At 8B the
-reasoning prompt ends within 3.8 points of the short prompt on VQAv2, down from 17.5.
+**1. RL removes reasoning that does not pay, and the reasoning prompt reaches the
+short-answer ceiling.** Under the reasoning prompt, 1,000 GRPO updates from Instruct raise
+official accuracy by 23.2 points on VQAv2, 24.1 on GQA, and 10.2 on far-OOD TextVQA at 2B,
+and by 18.2, 15.8, and 9.3 at 8B. The policy gets there by deleting the reasoning: mean
+responses fall from 148 tokens to 8 at 2B (118 to 8 at 8B) while the answer tag stays in
+100% of them. In-domain, the reasoning prompt now matches the short prompt of the same model
+(2B VQAv2 +0.3 points, 95% interval [−0.3, +1.0]; GQA +0.2). The corrected campaign's
+300-update runs stopped before this point (2B +6.7 on VQAv2). Paying for reasoning keeps it:
+a 0.2 format reward holds 8B responses near 130 tokens, at 9.7 points below
+correctness-only GRPO of the same length on VQAv2 and 9.6 on GQA ([results](docs/supplementary/results.md#recipe-experiments)).
 
-**2. No arm passes its own short-answer ceiling.** In all 28 arm and dataset pairs, the
-short prompt scores higher than the reasoning prompt, under both scorers. GRPO and OPD
-leave short-prompt accuracy where it was: within 0.26 points on VQAv2 and GQA, and 0.6 on
-any dataset (official).
+**2. RL lifts the short-answer ceiling a little; SFT lifts it more in-domain.** GRPO trained on the short prompt from Instruct adds 0.8 points
+on VQAv2 and 0.9 on GQA at 2B (0.7 and 0.8 at 8B); one epoch of short-answer SFT adds 2.0
+and 2.9 at 2B (2.3 and 2.2 at 8B). On far-OOD TextVQA at 2B the order reverses: short-prompt GRPO beats
+SFT by 0.9 points (interval [+0.2, +1.6]), while SFT itself moves TextVQA by −0.5; at 8B
+both add about 1 point there.
 
-**3. SFT is what moves the ceiling.** One epoch of short-answer SFT raises short-prompt
-official accuracy by 2.0 points on VQAv2 and 2.9 on GQA, and GRPO after SFT keeps that
-gain (within 0.1 points) while adding reasoning-prompt accuracy on CLEVR counting (+5.7)
-and TextVQA (+5.7), under both scorers.
+**3. RL after SFT keeps the SFT ceiling.** GRPO from the SFT model keeps short-prompt
+accuracy within 0.5 points of SFT on VQAv2 and GQA at both sizes, and adds up to 0.8 on
+TextVQA. Where SFT hurt, the rollout prompt decides: at 8B, SFT costs 10.8 points of CLEVR
+counting under the short prompt (the casual counts in VQAv2 and GQA answers); GRPO with the
+reasoning prompt wins back 8.2 of them, while GRPO with the short prompt loses 6.7 more.
+
+**4. The standard RL recipe knobs do not move these results.** Against a fixed 2B baseline,
+a pool filtered to questions with a learning signal, refilling groups whose answers all
+scored the same, 16 instead of 4 questions per update at the same number of questions, and
+a 3× learning rate leave short-prompt accuracy on VQAv2, GQA, and TextVQA within 0.35
+points; a 10× learning rate costs 0.7–2.2 points there and 11 on CLEVR counting. One engineering change matters for correctness
+rather than accuracy: rollouts sampled from LoRA-merged bf16 weights come from a lagging copy
+of the trained policy (a mean log-probability gap of up to 0.2 nats per token, 1.4 on the
+near-tied token before `</answer>`); serving the adapter unmerged brings the gap under 0.01
+and is part of the final recipe ([method](docs/supplementary/method.md#sampler-and-trained-policy)).
+
+Differences below about 0.5 points under the reasoning prompt are within the run-to-run
+noise of greedy vLLM decoding (three repeats of Instruct 2B span 0.4 points) and are not
+claimed.
 
 The scorer matters under the reasoning prompt. The authors' evaluators compare some
 answers case-sensitively (VQAv2 when all annotators agree, GQA always), and for Instruct
@@ -81,15 +102,19 @@ diagnostics, and a learnability pre-check of the RL pool.
 | Arm | Supervision |
 |---|---|
 | SFT | one epoch on 39,458 VQAv2 and GQA short answers |
-| Instruct → GRPO, SFT → GRPO | 300 GRPO updates with the correctness reward: the tagged answer, scored by the normalized matcher |
-| Instruct → gold-conditioned OPD | 300 updates of token-level feedback from the frozen Instruct model, shown the reference answer |
+| Instruct → GRPO, SFT → GRPO | 1,000 GRPO updates under the reasoning prompt, correctness reward: the tagged answer, scored by the normalized matcher |
+| Instruct → short-prompt GRPO, SFT → short-prompt GRPO | the same 1,000 updates under the short prompt, rewarding the whole answer (64-token budget) |
+| Instruct → gold-conditioned OPD (2B) | 1,000 updates of token-level feedback from the frozen Instruct model, shown the reference answer |
 
-All RL arms drew exactly the same 1,200 questions in the same order from a 55,438-question
-pool, eight sampled responses per question. SFT → GRPO adds the SFT epoch on top, so it
-measures the value of SFT before the same RL. No dev or test image appears in any training
-pool; the split files in `data/splits/` list every row and `check_data` verifies it. The
-[method](docs/supplementary/method.md) has the full recipe and the commands that
-reproduce each arm.
+Every RL arm draws its questions in the same seeded order from a 55,438-question pool,
+four questions and eight sampled responses per update, learning rate 1e-5, no KL penalty.
+Rollouts come from vLLM serving the current LoRA adapter unmerged, so the sampled policy is
+the trained one. SFT → GRPO adds the SFT epoch on top, so it measures the value of SFT
+before the same RL. The recipe was frozen after one-change experiments against a fixed
+baseline ([results](docs/supplementary/results.md#recipe-experiments)). No dev or test image
+appears in any training pool; the split files in `data/splits/` list every row and
+`check_data` verifies it. The [method](docs/supplementary/method.md) has the full recipe and
+the commands that reproduce each arm.
 
 ## Evaluation
 
@@ -141,13 +166,13 @@ covers what to watch while an RL run trains and how to plot it.
 
 ## History and corrections
 
-<!-- TODO(final rerun): this section says the corrected campaign supplies every number above; the final rerun now does. -->
 The first campaign, in July 2026, trained GRPO with a VQAv2 reward that paid nothing on
 single-reference training questions, and its training pools shared 47 images with the
-VQAv2 test subset. The corrected campaign fixes both and supplies every number above. The
-[history](docs/supplementary/history.md) keeps the July results as labeled history, the
-full erratum for the reward defect, and a ledger of every published claim with its status
-after the corrected campaign: replicated, qualified, not replicated, retracted, or open.
+VQAv2 test subset. The corrected campaign of September 13 fixed both, with 300-update RL
+runs sampled from merged weights; the final rerun above replaced it under the frozen recipe.
+The [history](docs/supplementary/history.md) keeps both earlier campaigns as labeled
+history, the full erratum for the reward defect, and a ledger of every published claim with
+its status: replicated, qualified, not replicated, retracted, or open.
 
 The adapters published in July come from those runs. All four were trained on the July
 pools, and the two GRPO adapters also carry the reward defect:
