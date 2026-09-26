@@ -1,5 +1,7 @@
 """The experiment matrix: arms × protocols declared in experiments.toml, and its cells.
 
+Every arm is declared once and evaluated under every protocol. Named matrices select the
+arms one set of report tables shows, in their order, and the comparisons it pairs.
 A cell is present when a record under the arm's label carries exactly the protocol
 identity the matrix declares today. Records are also checked against the arm's declared
 model, so a mislabeled record cannot fill another arm's row.
@@ -20,6 +22,7 @@ class Arm:
     name: str
     model: str
     revision: str | None = None
+    run: str | None = None  # the training run whose checkpoint dev records are its curve
     gpu_memory_utilization: float = 0.8
 
     def available(self, root: Path) -> bool:
@@ -31,8 +34,9 @@ class Arm:
         return ModelRef(path, self.revision, self.label)
 
 
-def load_matrix(path: Path) -> tuple[list[Arm], list[Protocol]]:
-    """The declared arms and the protocols every arm is evaluated under."""
+def load_matrix(path: Path, name: str | None = None) -> tuple[list[Arm], list[Protocol]]:
+    """The declared arms, or those the named matrix shows in its order, and the protocols
+    every arm is evaluated under."""
     matrix = tomllib.loads(Path(path).read_text())
     protocols = [
         Protocol(dataset, prompt=prompt, role=entry.get("role", "test"),
@@ -42,14 +46,20 @@ def load_matrix(path: Path) -> tuple[list[Arm], list[Protocol]]:
         for prompt in entry["prompts"]
         for image_mode in entry.get("image_modes", ["original"])
     ]
-    return [Arm(**arm) for arm in matrix["arms"]], protocols
+    arms = {arm["label"]: Arm(**arm) for arm in matrix["arms"]}
+    if name is None:
+        return list(arms.values()), protocols
+    return [arms[label] for label in matrix["matrices"][name]["arms"]], protocols
 
 
-def load_comparisons(path: Path) -> list[tuple[str, str]]:
-    """(reference, candidate) arm labels whose paired differences the report shows."""
-    matrix = tomllib.loads(Path(path).read_text())
-    return [(entry["reference"], candidate) for entry in matrix.get("comparisons", [])
-            for candidate in entry["candidates"]]
+def load_comparisons(path: Path, name: str | None = None) -> list[tuple[str, str]]:
+    """(reference, candidate) arm labels whose paired differences the named matrix shows,
+    or every matrix's, each pair once."""
+    matrices = tomllib.loads(Path(path).read_text()).get("matrices", {})
+    selected = matrices.values() if name is None else [matrices[name]]
+    pairs = [(entry["reference"], candidate) for matrix in selected
+             for entry in matrix.get("comparisons", []) for candidate in entry["candidates"]]
+    return list(dict.fromkeys(pairs))
 
 
 def declared_records(arms: list[Arm], protocols: list[Protocol], records_dir: Path,

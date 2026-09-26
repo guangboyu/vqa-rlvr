@@ -101,7 +101,10 @@ model = "models/tuned"
 datasets = ["gqa"]
 prompts = ["short"]
 
-[[comparisons]]
+[matrices.main]
+arms = ["base", "tuned"]
+
+[[matrices.main.comparisons]]
 reference = "base"
 candidates = ["tuned"]
 """

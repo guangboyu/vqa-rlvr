@@ -89,9 +89,43 @@ def test_an_arm_whose_merge_was_removed_keeps_its_records_unverified(matrix):
     assert [(arm.label, p.dataset) for arm, p in missing] == [("gone", "clevr")]
 
 
-def test_comparisons_pair_each_candidate_with_its_reference(tmp_path):
+def test_a_named_matrix_shows_its_arms_in_its_order_and_pairs_its_comparisons(tmp_path):
     from vqar.eval.matrix import load_comparisons
 
-    (tmp_path / "experiments.toml").write_text(
-        '[[comparisons]]\nreference = "a"\ncandidates = ["b", "c"]\n')
-    assert load_comparisons(tmp_path / "experiments.toml") == [("a", "b"), ("a", "c")]
+    (tmp_path / "experiments.toml").write_text('''
+[[arms]]
+label = "a"
+name = "Arm A"
+model = "a"
+
+[[arms]]
+label = "b"
+name = "Arm B"
+model = "b"
+run = "b-run"
+
+[[arms]]
+label = "c"
+name = "Arm C"
+model = "c"
+
+[matrices.first]
+arms = ["c", "a"]
+
+[[matrices.first.comparisons]]
+reference = "a"
+candidates = ["c"]
+
+[matrices.second]
+arms = ["a", "b"]
+
+[[matrices.second.comparisons]]
+reference = "a"
+candidates = ["b", "c"]
+''')
+    path = tmp_path / "experiments.toml"
+    assert [arm.label for arm in load_matrix(path)[0]] == ["a", "b", "c"]
+    assert [arm.label for arm in load_matrix(path, "first")[0]] == ["c", "a"]
+    assert load_matrix(path, "second")[0][1].run == "b-run"
+    assert load_comparisons(path, "first") == [("a", "c")]
+    assert load_comparisons(path) == [("a", "c"), ("a", "b")]

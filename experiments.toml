@@ -1,8 +1,12 @@
-# The experiment matrix: the arms the report shows, and the protocols each arm is evaluated
-# under. Records match arms by label. `python -m scripts.report` regenerates the tables.
-# The matrix declares accuracy cells; the corrected campaign's image-intervention records
-# (first 128 questions) predate the tiers and are reported without being declared here.
+# The experiment matrix: every arm the report shows, declared once, and the protocols each
+# arm is evaluated under. Records match arms by label. `python -m scripts.report` regenerates
+# the tables; `--check` lists every declared cell without a record.
+# Named matrices below choose which arms a set of tables shows and which pairs they compare.
+# The corrected campaign's image-intervention records (first 128 questions) predate the
+# tiers and are reported without being declared here.
 
+# The final rerun under the frozen recipe (headline). The 2B SFT recipe did not change, so
+# its arm is shared with the corrected campaign.
 [[arms]]
 label = "base2"
 name = "Instruct 2B"
@@ -11,23 +15,38 @@ revision = "89644892e4d85e24eaac8bacfd4f463576704203"
 
 [[arms]]
 label = "sft2"
-name = "SFT"
+name = "SFT 2B"
 model = "checkpoints/merged/sharedpool_20260913_sft_2b"
 
 [[arms]]
-label = "grpo2-base"
+label = "p1-f-grpo2-base"
 name = "Instruct → GRPO"
-model = "checkpoints/merged/sharedpool_20260913_grpo_2b_base"
+model = "checkpoints/merged/p1_f_grpo2_base"
+run = "p1f-grpo2-base"
 
 [[arms]]
-label = "grpo2-sft"
+label = "p1-f-grpo2-sft"
 name = "SFT → GRPO"
-model = "checkpoints/merged/sharedpool_20260913_grpo_2b_sft"
+model = "checkpoints/merged/p1_f_grpo2_sft"
+run = "p1f-grpo2-sft"
 
 [[arms]]
-label = "opd2-self"
+label = "p1-f-short2-base"
+name = "Instruct → short-prompt GRPO"
+model = "checkpoints/merged/p1_f_short2_base"
+run = "p1f-short2-base"
+
+[[arms]]
+label = "p1-f-short2-sft"
+name = "SFT → short-prompt GRPO"
+model = "checkpoints/merged/p1_f_short2_sft"
+run = "p1f-short2-sft"
+
+[[arms]]
+label = "p1-f-opd2"
 name = "Instruct → gold-conditioned OPD"
-model = "checkpoints/merged/sharedpool_20260913_opd_2b_self"
+model = "checkpoints/merged/p1_f_opd2"
+run = "p1f-opd2"
 
 [[arms]]
 label = "base8"
@@ -37,8 +56,113 @@ revision = "0c351dd01ed87e9c1b53cbc748cba10e6187ff3b"
 gpu_memory_utilization = 0.88
 
 [[arms]]
-label = "grpo8-base"
+label = "p1-sft8"
+name = "SFT 8B"
+model = "checkpoints/merged/p1_sft8"
+gpu_memory_utilization = 0.88
+
+[[arms]]
+label = "p1-f-grpo8-base"
 name = "Instruct 8B → GRPO"
+model = "checkpoints/merged/p1_f_grpo8_base"
+run = "p1f-grpo8-base"
+gpu_memory_utilization = 0.88
+
+[[arms]]
+label = "p1-f-grpo8-sft"
+name = "SFT 8B → GRPO"
+model = "checkpoints/merged/p1_f_grpo8_sft"
+run = "p1f-grpo8-sft"
+gpu_memory_utilization = 0.88
+
+[[arms]]
+label = "p1-f-short8-base"
+name = "Instruct 8B → short-prompt GRPO"
+model = "checkpoints/merged/p1_f_short8_base"
+run = "p1f-short8-base"
+gpu_memory_utilization = 0.88
+
+[[arms]]
+label = "p1-f-short8-sft"
+name = "SFT 8B → short-prompt GRPO"
+model = "checkpoints/merged/p1_f_short8_sft"
+run = "p1f-short8-sft"
+gpu_memory_utilization = 0.88
+
+# Recipe experiments: 2B from Instruct, one change each against the baseline, which is
+# the frozen recipe with the merged-weight sampler. The 8B format-reward run changes the
+# corrected campaign's 8B recipe instead.
+[[arms]]
+label = "p1-krandom"
+name = "Recipe baseline"
+model = "checkpoints/merged/p1_krandom"
+
+[[arms]]
+label = "p1-kfiltered"
+name = "Filtered pool"
+model = "checkpoints/merged/p1_kfiltered"
+
+[[arms]]
+label = "p1-ashort"
+name = "Short rollout prompt"
+model = "checkpoints/merged/p1_ashort"
+
+[[arms]]
+label = "p1-ashortsft"
+name = "Short rollout prompt, from SFT"
+model = "checkpoints/merged/p1_ashortsft"
+
+[[arms]]
+label = "p1-r3refill"
+name = "Refill dead groups"
+model = "checkpoints/merged/p1_r3refill"
+
+[[arms]]
+label = "p1-r4batch16"
+name = "16 questions per update"
+model = "checkpoints/merged/p1_r4batch16"
+
+[[arms]]
+label = "p1-r5lr3e5"
+name = "Learning rate 3e-5"
+model = "checkpoints/merged/p1_r5lr3e5"
+
+[[arms]]
+label = "p1-r5lr1e4"
+name = "Learning rate 1e-4"
+model = "checkpoints/merged/p1_r5lr1e4"
+
+[[arms]]
+label = "p1-r8rolllora"
+name = "Unmerged-adapter rollouts"
+model = "checkpoints/merged/p1_r8rolllora"
+
+[[arms]]
+label = "p1-r7fmt8"
+name = "8B, correctness + 0.2 format"
+model = "checkpoints/merged/p1_r7fmt8"
+gpu_memory_utilization = 0.88
+
+# The corrected campaign of 2026-09-13 (300 updates, merged-weight sampler), kept as
+# history beside the shared Instruct and SFT 2B arms.
+[[arms]]
+label = "grpo2-base"
+name = "Instruct → GRPO (Sep 13)"
+model = "checkpoints/merged/sharedpool_20260913_grpo_2b_base"
+
+[[arms]]
+label = "grpo2-sft"
+name = "SFT → GRPO (Sep 13)"
+model = "checkpoints/merged/sharedpool_20260913_grpo_2b_sft"
+
+[[arms]]
+label = "opd2-self"
+name = "Instruct → gold-conditioned OPD (Sep 13)"
+model = "checkpoints/merged/sharedpool_20260913_opd_2b_self"
+
+[[arms]]
+label = "grpo8-base"
+name = "Instruct 8B → GRPO (Sep 13)"
 model = "checkpoints/merged/sharedpool_20260913_grpo_8b_base"  # rebuild: see docs
 gpu_memory_utilization = 0.88
 
@@ -50,14 +174,80 @@ tier = "full"
 
 # Paired differences, each candidate minus its reference, on the questions both answered.
 # python -m scripts.paired_deltas computes them from the local predictions.
-[[comparisons]]
+
+# README and the results page.
+[matrices.headline]
+arms = ["base2", "sft2", "p1-f-grpo2-base", "p1-f-grpo2-sft", "p1-f-short2-base",
+        "p1-f-short2-sft", "p1-f-opd2", "base8", "p1-sft8", "p1-f-grpo8-base",
+        "p1-f-grpo8-sft", "p1-f-short8-base", "p1-f-short8-sft"]
+
+[[matrices.headline.comparisons]]
+reference = "base2"
+candidates = ["sft2", "p1-f-grpo2-base", "p1-f-grpo2-sft", "p1-f-short2-base",
+              "p1-f-short2-sft", "p1-f-opd2"]
+
+[[matrices.headline.comparisons]]
+reference = "sft2"
+candidates = ["p1-f-grpo2-sft", "p1-f-short2-base", "p1-f-short2-sft"]
+
+[[matrices.headline.comparisons]]
+reference = "base8"
+candidates = ["p1-sft8", "p1-f-grpo8-base", "p1-f-grpo8-sft", "p1-f-short8-base",
+              "p1-f-short8-sft"]
+
+[[matrices.headline.comparisons]]
+reference = "p1-sft8"
+candidates = ["p1-f-grpo8-sft", "p1-f-short8-base", "p1-f-short8-sft"]
+
+# Short against reasoning rollouts from the same start.
+[[matrices.headline.comparisons]]
+reference = "p1-f-grpo2-base"
+candidates = ["p1-f-short2-base"]
+
+[[matrices.headline.comparisons]]
+reference = "p1-f-grpo2-sft"
+candidates = ["p1-f-short2-sft"]
+
+[[matrices.headline.comparisons]]
+reference = "p1-f-grpo8-base"
+candidates = ["p1-f-short8-base"]
+
+[[matrices.headline.comparisons]]
+reference = "p1-f-grpo8-sft"
+candidates = ["p1-f-short8-sft"]
+
+# The recipe experiments on the results page.
+[matrices.recipe]
+arms = ["p1-krandom", "sft2", "p1-kfiltered", "p1-ashort", "p1-ashortsft", "p1-r3refill",
+        "p1-r4batch16", "p1-r5lr3e5", "p1-r5lr1e4", "p1-r8rolllora", "grpo8-base",
+        "p1-r7fmt8"]
+
+[[matrices.recipe.comparisons]]
+reference = "p1-krandom"
+candidates = ["p1-kfiltered", "p1-ashort", "p1-ashortsft", "p1-r3refill", "p1-r4batch16",
+              "p1-r5lr3e5", "p1-r5lr1e4", "p1-r8rolllora"]
+
+# The short rollout prompt from SFT, against its own start.
+[[matrices.recipe.comparisons]]
+reference = "sft2"
+candidates = ["p1-ashortsft"]
+
+[[matrices.recipe.comparisons]]
+reference = "grpo8-base"
+candidates = ["p1-r7fmt8"]
+
+# The corrected campaign, on the history page.
+[matrices.corrected]
+arms = ["base2", "sft2", "grpo2-base", "grpo2-sft", "opd2-self", "base8", "grpo8-base"]
+
+[[matrices.corrected.comparisons]]
 reference = "base2"
 candidates = ["sft2", "grpo2-base", "grpo2-sft", "opd2-self"]
 
-[[comparisons]]
+[[matrices.corrected.comparisons]]
 reference = "sft2"
 candidates = ["grpo2-sft"]
 
-[[comparisons]]
+[[matrices.corrected.comparisons]]
 reference = "base8"
 candidates = ["grpo8-base"]

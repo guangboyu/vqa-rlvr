@@ -153,7 +153,8 @@ uv run --frozen python -m scripts.report            # regenerate tables and the 
 uv run --frozen python -m scripts.report --check    # list declared cells without a record
 ```
 
-Add an arm to `experiments.toml` to give it a row; `--run` evaluates its missing cells.
+Add an arm to `experiments.toml` and list it under a matrix there to give it a row; `--run`
+evaluates its missing cells.
 `python -m scripts.paired_deltas` adds 95% bootstrap intervals to the comparisons declared
 there (it reads the local predictions), and `python -m scripts.report` then shows them.
 The dashboard reads the same export; see the [demo](../demo/README.md) to run it without a
