@@ -1,0 +1,100 @@
+{
+  "schema": "run-record/1",
+  "legacy": false,
+  "model_id": "78346a8529ec5d246a5250c3a2b1c0bd774f0d69c86aed97a78d3e020828ec03",
+  "protocol_id": "db56d529442cb775d71db1eac319a40140b6a3f5d57fdad5902191cf819d9bf1",
+  "model": {
+    "source": "Qwen/Qwen3-VL-2B-Instruct",
+    "label": "p1f-short2-base",
+    "run": "p1f-short2-base",
+    "step": 700,
+    "weights": {
+      "base": {
+        "hub": "Qwen/Qwen3-VL-2B-Instruct",
+        "revision": "89644892e4d85e24eaac8bacfd4f463576704203"
+      },
+      "adapter_sha256": "1a9c7dda174e8b6bc0a6a8df15d350aa5fd2cebb7434939293de2e91c81d8d68"
+    },
+    "adapter": "runs/part1-general-20260925/local/f-short2-base/checkpoints/adapters/step-700"
+  },
+  "protocol": {
+    "dataset": "gqa",
+    "ladder": "in-domain",
+    "role": "dev",
+    "tier": "dev",
+    "question_limit": 500,
+    "prompt": "short",
+    "prompt_text": "{question}\nAnswer the question using a single word or phrase.",
+    "max_tokens": 64,
+    "temperature": 0.0,
+    "samples": 1,
+    "image_mode": "original",
+    "max_pixels": 786432,
+    "scorers": {
+      "official": "exact_string_match/v1",
+      "normalized": "exact_match/v1"
+    },
+    "extraction": "last_answer_tag_or_full_text",
+    "answer_tag_rule": "raw text contains </answer>",
+    "data": {
+      "subsets": {
+        "gqa_sft": "290bdf6a14fb0f7f"
+      },
+      "selection_sha256": "abfdc32d1c51c8e3c3fd1d2a9c2a046edd096466f75e101dcb02878bbb566557"
+    }
+  },
+  "metrics": {
+    "n": 59,
+    "official": {
+      "overall": 0.6949152542372882,
+      "by_answer_type": {
+        "choose": 0.8571428571428571,
+        "compare": 1.0,
+        "logical": 0.6666666666666666,
+        "query": 0.5945945945945946,
+        "verify": 0.875
+      }
+    },
+    "normalized": {
+      "overall": 0.6949152542372882,
+      "by_answer_type": {
+        "choose": 0.8571428571428571,
+        "compare": 1.0,
+        "logical": 0.6666666666666666,
+        "query": 0.5945945945945946,
+        "verify": 0.875
+      }
+    },
+    "mean_output_tokens": 2.2542372881355934,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.6949152542372882,
+    "answers_scored_differently": 0
+  },
+  "provenance": {
+    "code_version": "d5ee053e8dfcb033193c7783b32d2f06207cbdc0",
+    "uncommitted_changes": false,
+    "source_sha256": {
+      "vqar/eval/__init__.py": "2aa88c809409a57502d0d9b2893e14c3b5bf99d971bceefcc1ed4716ef295f81",
+      "vqar/eval/examples.py": "939b4c7e83a253c715b762e7a9402c46f3c07ea3285a2d1fc5d0f7c70dc44bf4",
+      "vqar/eval/protocol.py": "2f3146e6521188206f5885138c9493f237d3c51603eab8f9bf54e35ee7d17727",
+      "vqar/eval/record.py": "6be2298f531240b01df2feecedd50af2d32a1c17f6029951ddf3f7723834b023",
+      "vqar/eval/runner.py": "eafd559feafc50d6819cd15492182a2f67b2ca0b1d791abe6d06f1929ee69de5",
+      "vqar/inference.py": "df8aefe07befb3a4c76d3d8ea523209fa060f0d4dbb4d3196896a347b8c1938f",
+      "vqar/config.py": "ec5ef416808c7ee4f68169d4d5c3322015f113e8a5bcffd2e9d3bf6b2ac88b1b",
+      "vqar/data.py": "7c8d0a76f1292ec063f14ec231a60ae36c54ca8213913345c3ab9536afd2bae8",
+      "vqar/metrics.py": "3a18e4b64783f1b09025a0f79faed934f3ab6671a5c63d85216d55c2bddcf5cb",
+      "vqar/registry.py": "401d4dd128c69b8f5cfb933fc91800acf4abb38c41c257ea16c171f49d6a7e3a",
+      "vqar/splits.py": "d33608bf54ca3bd57543f65feb06dcc111d467712ca57de8455dceb1e235150c",
+      "uv.lock": "8c79fab440350a15e75e9507c3b5338ecc63beb92fc12c6ef18fbe01122ac323"
+    },
+    "versions": {
+      "torch": "2.11.0+cu129",
+      "transformers": "5.13.0",
+      "vllm": "0.23.0+cu129",
+      "datasets": "5.0.0"
+    },
+    "timestamp": "2026-09-26T03:28:00+00:00"
+  }
+}
