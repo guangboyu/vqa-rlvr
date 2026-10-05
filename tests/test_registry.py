@@ -19,7 +19,8 @@ def test_every_dataset_declares_roles_scorers_and_a_ladder_position(name):
     spec = DATASETS[name]
     assert spec.subsets and set(spec.subsets) <= set(ROLES)
     assert spec.ladder in LADDER
-    assert callable(spec.official) and callable(spec.normalized)
+    assert (callable(spec.official) or (spec.official is None and callable(spec.project)))
+    assert callable(spec.normalized)
     assert set(spec.sources) <= set(SOURCE_REVISIONS)
 
 
@@ -41,7 +42,8 @@ def test_unknown_role_is_rejected():
 
 
 def test_role_listing_follows_registry_order():
-    assert datasets_with_role("test") == ["vqav2", "gqa", "clevr", "textvqa"]
+    assert datasets_with_role("test") == ["vqav2", "gqa", "clevr", "textvqa", "vizwiz",
+                                          "realworldqa"]
     assert datasets_with_role("sft") == ["vqav2", "gqa"]
     assert datasets_with_role("dev") == ["vqav2", "gqa", "clevr"]
 
@@ -118,4 +120,3 @@ class TestPrompts:
     def test_reasoning_template_has_tags(self):
         rendered = PROMPTS["reasoning"].text.format(question="Q?")
         assert rendered.startswith("Q?\n") and "<think>" in rendered and "<answer>" in rendered
-

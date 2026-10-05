@@ -111,7 +111,9 @@ def slug(identity: dict) -> str:
     return "-".join(parts)
 
 
-def scorer_version(scorer) -> str:
+def scorer_version(scorer) -> str | None:
+    if scorer is None:
+        return None
     return f"{scorer.__name__}/v{metrics.SCORING_VERSION}"
 
 
@@ -137,6 +139,10 @@ def protocol_identity(protocol: Protocol, data: dict) -> dict:
         "answer_tag_rule": ANSWER_TAG_RULE,
         "data": data,
     }
+    if spec.project is not None:
+        identity["scorers"]["project"] = scorer_version(spec.project)
+    if spec.metric_metadata is not None:
+        identity["metric_metadata"] = dict(spec.metric_metadata)
     if protocol.sampled:
         identity["seed"] = protocol.seed
     if protocol.image_mode == "canvas":

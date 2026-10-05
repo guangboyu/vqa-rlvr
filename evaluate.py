@@ -26,7 +26,8 @@ from vqar.registry import DATASETS, PROMPTS
 
 
 def protocols(args) -> list[Protocol]:
-    datasets = args.datasets or [name for name in DATASETS if has_role(name, args.role)]
+    datasets = args.datasets or [name for name, spec in DATASETS.items()
+                                if spec.require_split and has_role(name, args.role)]
     return [
         Protocol(dataset, prompt=prompt, role=args.role, tier=args.tier,
                  image_mode=args.image_mode, max_tokens=args.max_tokens,
@@ -50,6 +51,8 @@ def describe(record) -> str:
     scores = [f"normalized {normalized['overall']:.4f}"]
     if official is not None:
         scores.insert(0, f"official {official['overall']:.4f}")
+    if project := record.metrics.get("project"):
+        scores.insert(0, f"project case/whitespace EM {project['overall']:.4f}")
     return f"{', '.join(scores)}, n={record.metrics['n']}"
 
 
@@ -72,7 +75,8 @@ def main() -> None:
                         help="LoRA adapter served unmerged on top of --model (the trained policy "
                         "exactly; a bf16 merge rounds part of a small adapter away)")
     parser.add_argument("--datasets", nargs="+", choices=sorted(DATASETS), default=None,
-                        help="default: every dataset with the chosen role")
+                        help="default: required tutorial datasets with the chosen role; "
+                        "optional OOD datasets must be named")
     parser.add_argument("--prompts", nargs="+", choices=sorted(PROMPTS), default=["short"])
     parser.add_argument("--role", choices=("test", "dev"), default="test")
     parser.add_argument("--tier", choices=tuple(Protocol.TIERS), default="full")

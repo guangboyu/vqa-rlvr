@@ -25,7 +25,7 @@ RECORDS_DIR = ROOT / "results" / "records"
 SOURCES = ("vqar/eval/__init__.py", "vqar/eval/examples.py", "vqar/eval/protocol.py",
            "vqar/eval/record.py", "vqar/eval/runner.py", "vqar/inference.py",
            "vqar/config.py", "vqar/data.py", "vqar/metrics.py", "vqar/registry.py",
-           "vqar/splits.py", "uv.lock")
+           "vqar/splits.py", "vqar/ood_metrics.py", "vqar/ood.py", "uv.lock")
 
 
 def run_eval(model: ModelRef, protocol: Protocol, generator, *, data_dir: Path = DATA_DIR,
@@ -156,7 +156,7 @@ def prediction_line(example, image_qid: str, sample: int, output: dict, role: st
     # references, e.g. one VQAv2 reference where the evaluator needs ten.
     scores = {variant: None if variant == "official" and role not in spec.official_roles
               else spec.scorer(variant)(prediction, example.answers)
-              for variant in SCORER_VARIANTS}
+              for variant in spec.scorer_variants}
     return {"qid": example.qid, "sample": sample, "question": example.question,
             "raw": output["text"], "prediction": prediction, "scores": scores,
             "answers": example.answers, "answer_type": example.answer_type,
@@ -173,7 +173,7 @@ def summarize(lines: list[dict], dataset: str, prompt: str) -> dict:
     if not lines:
         raise ValueError("Evaluation subset is empty.")
     metrics = {"n": len({line["qid"] for line in lines})}
-    for variant in SCORER_VARIANTS:
+    for variant in DATASETS[dataset].scorer_variants:
         scores = [line["scores"][variant] for line in lines]
         if any(score is None for score in scores):
             metrics[variant] = None
@@ -221,7 +221,7 @@ def sampled_metrics(lines: list[dict], dataset: str, prompt: str) -> dict:
         by_question[line["qid"]].append(line)
     k = len(next(iter(by_question.values())))
     result = {"samples_per_question": k, "pass_at_k": {}}
-    for variant in SCORER_VARIANTS:
+    for variant in DATASETS[dataset].scorer_variants:
         if lines[0]["scores"][variant] is None:
             result["pass_at_k"][variant] = None
             continue

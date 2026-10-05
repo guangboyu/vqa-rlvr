@@ -71,7 +71,8 @@ def pinned_sources(monkeypatch, tmp_path):
     return requests
 
 
-@pytest.mark.parametrize("name", sorted(DATASETS))
+@pytest.mark.parametrize("name", sorted(name for name, spec in DATASETS.items()
+                                        if spec.require_split))
 def test_entry_materializes_declared_subsets_in_the_unified_schema(name, pinned_sources):
     spec = DATASETS[name]
     small = {key: 0 if "seed" in key else 2 for key in spec.sizes}

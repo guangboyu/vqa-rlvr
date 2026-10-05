@@ -45,7 +45,8 @@ def main() -> None:
     parser.add_argument("--out-dir", type=Path, default=DATA_DIR)
     args = parser.parse_args()
     output_dir = args.out_dir
-    selected = [name for name in DATASETS if args.only in (None, name)]
+    selected = [name for name, spec in DATASETS.items()
+                if args.only == name or (args.only is None and spec.require_split)]
     existing = [
         p.name
         for p in output_dir.glob("*")

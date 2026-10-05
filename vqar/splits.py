@@ -12,7 +12,7 @@ import json
 import random
 from pathlib import Path
 
-from datasets import Image, concatenate_datasets, load_from_disk
+from datasets import Image, Value, concatenate_datasets, load_from_disk
 from PIL import Image as PILImage
 
 from vqar.registry import DATASETS, TRAINING_ROLES
@@ -24,14 +24,22 @@ SEED = 42
 VERIFIED = ".verified-subsets.json"  # content checks already passed, kept beside the data
 
 
-def image_keys(dataset) -> list[str]:
+def image_keys(dataset, image_root: Path | None = None) -> list[str]:
     """Hash decoded RGB pixels so metadata or file encoding cannot hide duplicates."""
+    external = isinstance(dataset.features.get("image"), Value)
     cache, keys = {}, []
     for row in dataset.select_columns(["image"]).cast_column("image", Image(decode=False)):
         payload = row["image"]
         raw = payload["bytes"]
         if raw is None:
-            raw = Path(payload["path"]).read_bytes()
+            path = Path(payload["path"])
+            if external and (path.is_absolute() or ".." in path.parts):
+                raise ValueError("External OOD image paths must stay relative to the data root")
+            if external and image_root is None:
+                raise ValueError("External OOD image hashing requires the data root")
+            if image_root is not None and not path.is_absolute():
+                path = Path(image_root) / path
+            raw = path.read_bytes()
         encoded_key = hashlib.sha256(raw).hexdigest()
         if encoded_key not in cache:
             with PILImage.open(io.BytesIO(raw)) as image:
@@ -61,18 +69,20 @@ def verify_subset(data_dir: Path, name: str, entry: dict, rows) -> None:
     same rows under a new fingerprint. Then question IDs, text, and decoded images are
     compared with the split file once, and the match is remembered beside the data.
     """
-    if (rows._fingerprint, qid_hash(rows)) == (entry["fingerprint"], entry["qids_sha256"]):
+    external = isinstance(rows.features.get("image"), Value)
+    if not external and (rows._fingerprint, qid_hash(rows)) == (
+            entry["fingerprint"], entry["qids_sha256"]):
         return
     record = Path(data_dir) / VERIFIED
     verified = json.loads(record.read_text()) if record.exists() else {}
     check = {"fingerprint": rows._fingerprint,
              "entry_sha256": hashlib.sha256(json.dumps(entry, sort_keys=True).encode()).hexdigest()}
-    if verified.get(name) == check:
+    if not external and verified.get(name) == check:
         return
     text = rows_sha256(rows)  # older split files may not record it
     same = (qid_hash(rows) == entry["qids_sha256"]
             and entry.get("rows_sha256", text) == text
-            and image_keys(rows) == entry["image_keys"])
+            and image_keys(rows, image_root=data_dir) == entry["image_keys"])
     if not same:
         raise ValueError(
             f"{name} differs from the rows its split file records. If you materialized the data "
@@ -128,7 +138,27 @@ def validate_split(split: dict) -> None:
 
 def check_all(data_dir: Path) -> dict:
     """Every registered dataset's split file, checked together for held-out leaks."""
-    return overlap_report([read_split(data_dir, dataset) for dataset in DATASETS])
+    return overlap_report([read_split(data_dir, name) for name, spec in DATASETS.items()
+                           if spec.require_split or split_path(data_dir, name).exists()])
+
+
+def resolve_external_images(rows, data_dir: Path):
+    """Small path-only OOD storage resolves against the supplied data root, never the cwd."""
+    feature = rows.features.get("image")
+    if not isinstance(feature, Value) or feature.dtype != "string":
+        return rows
+
+    def resolve_paths(payloads):
+        paths = [Path(payload["path"]) for payload in payloads]
+        if any(path.is_absolute() or ".." in path.parts for path in paths):
+            raise ValueError("External OOD image paths must stay relative to the data root")
+        return {"image": [{"bytes": None, "path": str(Path(data_dir).resolve() / path)}
+                          for path in paths]}
+
+    rows = rows.cast_column("image", Image(decode=False))
+    rows = rows.map(resolve_paths, input_columns=["image"], batched=True, keep_in_memory=True,
+                    load_from_cache_file=False)
+    return rows.cast_column("image", Image())
 
 
 def load_role(data_dir: Path, datasets, role: str, seed: int | None = SEED):
@@ -151,6 +181,7 @@ def load_role(data_dir: Path, datasets, role: str, seed: int | None = SEED):
             subset = load_from_disk(str(Path(data_dir) / name))
             entry = split["subsets"][name]
             verify_subset(data_dir, name, entry, subset)
+            subset = resolve_external_images(subset, data_dir)
             subset = subset.add_column("image_key", entry["image_keys"])
             # Where each row came from, so shuffled rows can still be identified.
             subset = subset.add_column("source_subset", [name] * len(subset))
@@ -196,7 +227,7 @@ def build_split(dataset: str, data_dir: Path, other_splits: list[dict],
     subsets, keys = {}, {}
     for name in dict.fromkeys(spec.subsets.values()):
         rows = load_from_disk(str(Path(data_dir) / name))
-        keys[name] = image_keys(rows)
+        keys[name] = image_keys(rows, image_root=data_dir)
         subsets[name] = {"n": len(rows), "fingerprint": rows._fingerprint,
                          "qids_sha256": qid_hash(rows), "rows_sha256": rows_sha256(rows),
                          "image_keys": keys[name]}

@@ -9,6 +9,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
 from vqar import metrics
+from vqar.ood_metrics import official_vizwiz_accuracy, project_case_whitespace_em
 
 ROLES = ("sft", "rl", "dev", "test")
 TRAINING_ROLES = frozenset({"sft", "rl"})
@@ -83,13 +84,16 @@ class DatasetSpec:
     official_splits: frozenset[str]  # roles drawn from the dataset's own official split
     ladder: str  # position on the OOD ladder, frozen before training
     answer_schema: str
-    official: Scorer  # the dataset authors' evaluator: the primary column
+    official: Scorer | None  # None when no author evaluator has been verified
     normalized: Scorer  # unconditional normalization: the companion column and RL reward
     # Roles whose references the official scorer can score. VQAv2 and TextVQA training
     # examples keep one answer, but their official evaluators need all ten annotators.
     official_roles: frozenset[str]
     sizes: Mapping[str, int]  # materialization sizes and seeds, recorded in data/manifest.json
     materialize: Callable[[Mapping[str, int]], dict]  # sizes -> {subset name: Dataset}
+    project: Scorer | None = None
+    metric_metadata: Mapping | None = None
+    require_split: bool = True  # optional OOD data is not required to run the tutorial
 
     def __post_init__(self):
         if unknown := set(self.subsets) - set(ROLES):
@@ -100,11 +104,23 @@ class DatasetSpec:
             raise ValueError(f"{self.name}: an OOD dataset cannot have a training role")
         if not self.official_splits <= set(self.subsets):
             raise ValueError(f"{self.name}: official splits must name declared roles")
+        if self.official is None and self.official_roles:
+            raise ValueError(f"{self.name}: unavailable official scorer cannot declare roles")
+        if self.project is not None and not self.metric_metadata:
+            raise ValueError(f"{self.name}: a project scorer needs declared metric metadata")
+
+    @property
+    def scorer_variants(self) -> tuple[str, ...]:
+        return SCORER_VARIANTS + (("project",) if self.project is not None else ())
 
     def scorer(self, variant: str) -> Scorer:
-        if variant not in SCORER_VARIANTS:
+        if variant not in self.scorer_variants:
             raise ValueError(f"Unknown scorer variant: {variant}")
-        return self.official if variant == "official" else self.normalized
+        scorer = {"official": self.official, "normalized": self.normalized,
+                  "project": self.project}[variant]
+        if scorer is None:
+            raise ValueError(f"{self.name}: no verified {variant} scorer")
+        return scorer
 
 
 def _vqav2(sizes):
@@ -133,6 +149,10 @@ def _textvqa(sizes):
     from vqar import data
 
     return {"textvqa_eval": data.load_textvqa_eval(sizes["eval"], sizes["eval_seed"])}
+
+
+def _prepared_ood(sizes):
+    raise ValueError("Use python -m scripts.prepare_ood with pinned local source files")
 
 
 DATASETS: dict[str, DatasetSpec] = {
@@ -201,6 +221,41 @@ DATASETS: dict[str, DatasetSpec] = {
             sizes={"eval": 5_000, "eval_seed": 0},
             materialize=_textvqa,
         ),
+        DatasetSpec(
+            name="vizwiz", display_name="VizWiz",
+            sources={"https://vizwiz.cs.colorado.edu/VizWiz_all_answers/VQA_test.json":
+                     "fa113f0e90230ab4690bb41c4d74e40f7087cc7c192dd8363fa4d6bad339b7aa",
+                     "https://vizwiz.cs.colorado.edu/VizWiz_final/images/test.zip":
+                     "4d03f8c21823a3e4d1f501b1234e7380eb7cf2429ff0eb0281741ff1cc44f22a",
+                     "https://vizwiz.cs.colorado.edu/VizWiz_final/vqa_data/API.zip":
+                     "76de4354ca2fbc57dd2369b579dc9bb5684e41d6a135b36b324a5ba25b7b9ca2"},
+            subsets={"test": "vizwiz_eval"}, official_splits=frozenset({"test"}),
+            ladder="far-ood", answer_schema="open-ended phrase; ten raw annotator answers",
+            official=official_vizwiz_accuracy, normalized=metrics.vqa_accuracy,
+            official_roles=frozenset({"test"}), sizes={"eval": 8000},
+            materialize=_prepared_ood, require_split=False,
+            metric_metadata={"primary": "official", "official": {
+                "name": "native VizWiz ten-annotator accuracy",
+                "native_source_sha256":
+                    "d26ef7ac2db06351444c3531f8d95fd9c454423fbcb9fd5dd984f12281146694",
+                "rule": "normalize prediction with native contractions, compare raw references"}},
+        ),
+        DatasetSpec(
+            name="realworldqa", display_name="RealWorldQA",
+            sources={"xai-org/RealworldQA": "17e7f75e092e47169732462ea3cdfebe911105dd"},
+            subsets={"test": "realworldqa_eval"}, official_splits=frozenset({"test"}),
+            ladder="far-ood", answer_schema="original question/options; one raw answer",
+            official=None, normalized=project_case_whitespace_em,
+            official_roles=frozenset(), sizes={"eval": 765},
+            materialize=_prepared_ood, project=project_case_whitespace_em,
+            metric_metadata={
+                "primary": "project", "project": {"name": "case/whitespace exact match",
+                    "source": "project-defined; no native evaluator claimed",
+                    "rule": "casefold and collapse whitespace; blank predictions fail; "
+                            "no punctuation/article/number normalization or option guessing"},
+                "normalized": {"same_as": "project", "name": "case/whitespace exact match"}},
+            require_split=False,
+        ),
     ]
 }
 
@@ -216,4 +271,3 @@ def score(dataset: str, prediction: str, answers: list[str], variant: str) -> fl
 
 def datasets_with_role(role: str) -> list[str]:
     return [name for name, spec in DATASETS.items() if role in spec.subsets]
-

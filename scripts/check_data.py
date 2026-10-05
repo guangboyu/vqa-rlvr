@@ -44,6 +44,8 @@ def migrate(manifest: dict, manifest_sha256: str) -> dict[str, dict]:
     entries = manifest["subsets"]
     splits = {}
     for dataset, spec in DATASETS.items():
+        if not spec.require_split and any(name not in entries for name in spec.subsets.values()):
+            continue
         subsets = {
             name: {key: entries[name][key]
                    for key in ("n", "fingerprint", "qids_sha256", "image_keys")}
@@ -111,7 +113,7 @@ def main():
             splits[dataset] = read_split(args.data_dir, dataset)
             check_subsets(args.data_dir, splits[dataset])
     for dataset in DATASETS:
-        if dataset not in splits:
+        if dataset not in splits and DATASETS[dataset].require_split:
             splits[dataset] = build_split(dataset, args.data_dir, list(splits.values()))
             write_split(split_path(args.data_dir, dataset), splits[dataset])
             print(f"{dataset}: new split file", flush=True)

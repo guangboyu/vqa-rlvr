@@ -11,7 +11,7 @@ from PIL import Image as PILImage
 
 from vqar.data import to_uniform_canvas
 from vqar.eval.protocol import Protocol
-from vqar.registry import TRAINING_ROLES
+from vqar.registry import DATASETS, TRAINING_ROLES
 from vqar.splits import SEED, load_role, read_split
 
 
@@ -61,6 +61,9 @@ def select_rows(protocol: Protocol, data_dir: Path, limit: int | None = None):
     data = {"subsets": {part["subset"]: split["subsets"][part["subset"]]["fingerprint"]
                         for part in parts},
             "selection_sha256": sha256_json(selection)}
+    if not DATASETS[protocol.dataset].require_split:
+        data["image_groups_sha256"] = sha256_json(
+            [list(pair) for pair in zip(rows["qid"], rows["image_key"], strict=True)])
     if protocol.image_mode == "swapped":
         data["donors_sha256"] = sha256_json(image_donors(rows, "swapped"))
     return rows, data
