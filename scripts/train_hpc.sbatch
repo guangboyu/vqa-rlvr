@@ -29,6 +29,22 @@ export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK:-8}
 export MKL_NUM_THREADS=$OMP_NUM_THREADS
 export OPENBLAS_NUM_THREADS=$OMP_NUM_THREADS
 
+cancel_unused_successors() {
+    code=$?
+    if [ "$code" -eq 0 ]; then
+        # Requeue can leave more than the successor this invocation created.
+        STALE=$( { printf '%s\n' "${NEXT:-}";
+            squeue -h -u "$(id -un)" -t PD -o '%i %E' \
+                | awk -v dep="afternotok:$SLURM_JOB_ID(" 'index($2, dep) {print $1}';
+            } | sort -u | xargs) || exit $?
+        if [ -n "$STALE" ]; then
+            scancel $STALE || exit $?
+            printf '[job] cancelled unused successor(s) %s\n' "$STALE"
+        fi
+    fi
+}
+trap cancel_unused_successors EXIT
+
 completed() {
     .venv/bin/python - "$RUN/checkpoints/run_summary.json" <<'PY'
 import json
@@ -38,24 +54,39 @@ path = Path(sys.argv[1])
 sys.exit(0 if path.exists() and json.loads(path.read_text())["completed"] else 1)
 PY
 }
-if completed; then
-    # Training is done; finish its dev evaluation (cached cells are skipped).
-    exec .venv/bin/python scripts/evaluate_checkpoints.py "$RUN/checkpoints"
-fi
-
 if [ "$CHAIN_LEFT" -gt 0 ]; then
-    NEXT=$(sbatch --parsable --job-name="$SLURM_JOB_NAME" \
+    WAITING=$(squeue -h -u "$(id -un)" -t PD -o '%i %E' \
+        | awk -v dep="afternotok:$SLURM_JOB_ID(" 'index($2, dep) {print $1}')
+    read -r -a SUCCESSORS <<<"$(printf '%s\n' "$WAITING" | xargs)"
+    if [ "${#SUCCESSORS[@]}" -gt 0 ]; then
+        NEXT=${SUCCESSORS[0]}
+        if [ "${#SUCCESSORS[@]}" -gt 1 ]; then
+            scancel "${SUCCESSORS[@]:1}"
+        fi
+    else
+        NEXT=$(sbatch --parsable --job-name="$SLURM_JOB_NAME" \
         --cpus-per-task="$SLURM_CPUS_PER_TASK" --mem="${SLURM_MEM_PER_NODE}M" \
         --output="$RUN/slurm-%j.log" --export=ALL,CHAIN_LEFT=$((CHAIN_LEFT - 1)) ${AVOID_NODES:+--exclude=$AVOID_NODES} \
         --dependency=afternotok:"$SLURM_JOB_ID" \
-        "$SELF" "$REPO" "$RUN" "$ENTRY" "$@")
+            "$SELF" "$REPO" "$RUN" "$ENTRY" "$@")
+    fi
     printf '%s\n' "$NEXT" > "$RUN/successor-job.txt"
 fi
 # Fail promptly on an allocated GPU that the driver cannot access; the successor is queued.
 # A node that keeps failing goes into AVOID_NODES, which every successor excludes.
 nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
 
-.venv/bin/python "$ENTRY" --run-dir "$RUN" --no-wandb "$@" &
+if completed; then
+    # Evaluation can itself fail or be preempted, so it needs the same successor.
+    for option in "$@"; do
+        if [ "$option" = --no-dev-eval ]; then
+            exit 0
+        fi
+    done
+    .venv/bin/python scripts/evaluate_checkpoints.py "$RUN/checkpoints" &
+else
+    .venv/bin/python "$ENTRY" --run-dir "$RUN" --no-wandb "$@" &
+fi
 PID=$!
 trap 'kill -USR1 "$PID" 2>/dev/null || true' USR1 TERM
 set +e
