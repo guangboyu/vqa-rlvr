@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from vqar.splits import load_role
+from vqar.splits import provenance as split_provenance
 
 VERSION = "rl-pool-v1"
 REFILL_VERSION = "refill-stream-v1"
@@ -43,6 +44,11 @@ def load_pool(data_dir: Path, datasets, seed: int, pool: str | None = None):
     if sorted(declared["datasets"]) != sorted(datasets):
         raise ValueError(f"{pool} was selected from {declared['datasets']}, not {list(datasets)}")
     members = {(m["dataset"], m["qid"]) for m in declared["members"]}
+    if not members or len(members) != len(declared["members"]):
+        raise ValueError(f"{pool}: pool members must be nonempty and distinct")
+    if ("source_data" in declared
+            and declared["source_data"] != split_provenance(data_dir, datasets)):
+        raise ValueError(f"{pool}: split files differ from its source training run")
     keys = list(zip(rows["dataset"], rows["qid"], strict=True))
     if len(set(keys)) != len(keys):
         raise ValueError("The rl roles repeat a question ID; pool members would be ambiguous.")

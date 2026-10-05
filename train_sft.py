@@ -13,6 +13,8 @@ import argparse
 
 from vqar import config
 from vqar.data import cap_pixels
+from vqar.pools import load_pool
+from vqar.pools import provenance as pool_provenance
 from vqar.registry import PROMPTS
 from vqar.splits import load_role, provenance
 from vqar.training import (
@@ -50,9 +52,10 @@ def to_sft_columns(batch: dict) -> dict:
     }
 
 
-def load_datasets(preset: config.SFTPreset):
-    """The sft role for training and the dev role for eval-loss monitoring."""
-    train = load_role(ROOT / "data", preset.datasets, "sft", preset.seed)
+def load_datasets(preset: config.SFTPreset, pool: str | None = None):
+    """SFT rows, or declared RL-pool questions supervised with their original labels."""
+    train = (load_pool(ROOT / "data", preset.datasets, preset.seed, pool)
+             if pool else load_role(ROOT / "data", preset.datasets, "sft", preset.seed))
     dev = load_role(ROOT / "data", preset.datasets, "dev", preset.seed)
     columns = ["image", "question", "answers"]
     return (train.select_columns(columns).with_transform(to_sft_columns),
@@ -75,15 +78,20 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     add_common_arguments(parser, config.SFT_PRESETS, save_steps=250)
     parser.add_argument("--max-steps", type=int, default=-1, help="cap steps (sanity runs)")
+    parser.add_argument("--pool", default=None,
+                        help="supervise the exact questions in a declared RL pool")
     args = parse_arguments(parser)
 
     preset = resolve_preset(config.SFT_PRESETS, args)
-    train_ds, dev_ds = load_datasets(preset)
+    train_ds, dev_ds = load_datasets(preset, args.pool)
     if args.dry_run:
         print(f"hardware={args.hardware}; train={len(train_ds)}, dev={len(dev_ds)}")
+        if args.pool:
+            print(f"pool: {pool_provenance(ROOT / 'data', args.pool)}")
         print(f"completion: {train_ds[0]['completion']}")
         return
 
+    from transformers import set_seed
     from trl import SFTConfig, SFTTrainer
 
     run_name = args.run_name or preset.name
@@ -125,7 +133,10 @@ def main() -> None:
         "overrides": {"hardware": args.hardware, "max_steps": args.max_steps},
         "data": provenance(ROOT / "data", preset.datasets),
         "samples": {"train": len(train_ds), "dev": len(dev_ds)},
+        **({"pool": pool_provenance(ROOT / "data", args.pool)} if args.pool else {}),
     }, sft_config)
+    # TRL constructs PEFT before Trainer sets its seed, so seed the adapter initialization too.
+    set_seed(preset.seed)
     model, processor = build_model(preset)
     trainer = SFTTrainer(
         model=model,
