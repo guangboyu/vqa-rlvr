@@ -486,6 +486,26 @@ def passk_deltas_table(arms: list[Arm], passk: dict | None) -> str:
     return table(["Comparison", "Prompt", "Dataset", *header], rows, 3)
 
 
+def knobs_table(knobs: dict | None) -> str:
+    """One row per training knob: its change against the baseline on the dev role."""
+    if knobs is None:
+        return "No knob has been run yet.\n"
+
+    def change(row, prompt):
+        return interval(row[prompt]) if prompt in row else "—"
+
+    rows = []
+    for row in knobs["knobs"]:
+        reasoning = row.get("reasoning")
+        tokens = ("—" if reasoning is None
+                  else f"{reasoning['baseline_tokens']:.0f} → {reasoning['tokens']:.0f}")
+        hours = "—" if row["train_hours"] is None else f"{row['train_hours']:.1f}"
+        rows.append([row["name"], row["change"], row["expect"], change(row, "reasoning"),
+                     change(row, "short"), tokens, hours, row.get("verdict", "—")])
+    return table(["Knob", "Change", "Expected", "Reasoning Δ", "Short Δ", "Reasoning tokens",
+                  "Train GPU-h", "Verdict"], rows, 3)
+
+
 def judge_table(arms: list[Arm], judge: dict | None) -> str:
     """Official, judge-adjusted and audited accuracy, and the share of misses the judge accepts."""
     if judge is None:
@@ -607,6 +627,7 @@ def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
     pilot_arms, _, _ = load_pilot(toml, "chartqa")
     passk = load_result(root / "results", "passk-heldout.json")
     chartqa_passk = load_result(root / "results", "passk-chartqa.json")
+    knobs = load_result(root / "results", "knobs-chartqa.json")
     judge = load_result(root / "results", "judge-final.json")
     ood = load_result(root / "results", "ood.json")
     blocks = {
@@ -616,6 +637,7 @@ def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
         "chartqa-pilot": pilot_table(pilot_arms, cells, "chartqa"),
         "chartqa-pilot-deltas": pilot_deltas_table(pilot_arms, deltas, "chartqa"),
         "chartqa-passk": passk_table(every_arm, chartqa_passk),
+        "knobs-chartqa": knobs_table(knobs),
         "chartqa-passk-deltas": passk_deltas_table(every_arm, chartqa_passk),
         "passk": passk_table(every_arm, passk),
         "passk-deltas": passk_deltas_table(every_arm, passk),

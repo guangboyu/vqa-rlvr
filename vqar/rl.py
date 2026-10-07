@@ -213,7 +213,7 @@ def grpo_config(preset, output_dir: Path, run_name: str, model_init_kwargs: dict
     from trl import GRPOConfig
 
     return GRPOConfig(
-        **config.RL_RECIPE,
+        **config.rl_recipe(preset),
         output_dir=str(output_dir),
         run_name=run_name,
         model_init_kwargs=model_init_kwargs,

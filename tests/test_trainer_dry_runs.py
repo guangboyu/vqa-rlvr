@@ -81,3 +81,22 @@ def test_vllm_sleep_is_opt_out_and_left_out_of_the_record_when_on():
     assert default.vllm_sleep and not awake.vllm_sleep
     assert "vllm_sleep" not in config.dump(default)
     assert config.dump(awake)["vllm_sleep"] is False
+
+
+def test_recipe_knobs_reach_the_grpo_settings_and_stay_out_of_default_records():
+    from argparse import Namespace
+
+    from vqar import config
+    from vqar.training import resolve_preset
+
+    def resolve(**flags):
+        return resolve_preset(config.GRPO_PRESETS,
+                              Namespace(preset="grpo_2b_main", hardware="24gb", **flags))
+
+    default = resolve()
+    knob = resolve(loss_type="grpo", scale_rewards="none", num_iterations=2, epsilon_high=0.28)
+    assert config.rl_recipe(default) == config.RL_RECIPE
+    assert {k: config.rl_recipe(knob)[k] for k in config.RECIPE_KNOBS} == {
+        "loss_type": "grpo", "scale_rewards": "none", "num_iterations": 2, "epsilon_high": 0.28}
+    assert not set(config.RECIPE_KNOBS) & set(config.dump(default))
+    assert config.dump(knob)["loss_type"] == "grpo"

@@ -121,6 +121,12 @@ class GRPOPreset:
     # Put vLLM to sleep while the trainer runs, freeing its memory. A large card can keep it
     # awake, which saves the offload and restore copies of every update.
     vllm_sleep: bool = True
+    # Knobs over RL_RECIPE (defaults equal it): how token losses are averaged, how group
+    # advantages are scaled, gradient passes per generation batch, and the upper clip.
+    loss_type: str = "dapo"
+    scale_rewards: str = "group"
+    num_iterations: int = 1
+    epsilon_high: float = 0.2
     lora_r: int = 16
     lora_alpha: int = 32
     lora_targets: tuple[str, ...] = (
@@ -289,7 +295,16 @@ OPD_PRESETS: dict[str, OPDPreset] = {
 
 # Opt-in fields added after runs were launched, with their off value. Left off, they are
 # not written, so earlier run configs and the auto-resume check against them stay the same.
-OPT_IN_FIELDS = {"refill_rounds": 0, "rollout_lora": False, "vllm_sleep": True}
+OPT_IN_FIELDS = {"refill_rounds": 0, "rollout_lora": False, "vllm_sleep": True,
+                 "loss_type": "dapo", "scale_rewards": "group", "num_iterations": 1,
+                 "epsilon_high": 0.2}
+RECIPE_KNOBS = ("loss_type", "scale_rewards", "num_iterations", "epsilon_high")
+
+
+def rl_recipe(preset) -> dict:
+    """RL_RECIPE with the preset's knob settings; presets without knobs keep the defaults."""
+    return {**RL_RECIPE, **{name: getattr(preset, name) for name in RECIPE_KNOBS
+                            if hasattr(preset, name)}}
 
 
 def dump(preset) -> dict:

@@ -14,6 +14,7 @@ Usage:
     uv run python train_grpo.py --preset grpo_2b_main --rollout-prompt short --dry-run
     uv run python train_grpo.py --preset grpo_2b_main --refill-rounds 3 --dry-run
     uv run python train_grpo.py --preset grpo_2b_main --rollout-lora --dry-run
+    uv run python train_grpo.py --preset grpo_2b_main --loss-type grpo --dry-run
 """
 
 import argparse
@@ -65,6 +66,20 @@ def main() -> None:
     parser.add_argument("--datasets", nargs="+", default=None,
                         help="train on these datasets' rl roles (transfer-matrix arms)")
     parser.add_argument("--kl-beta", type=float, default=None)
+    parser.add_argument("--num-generations", type=int, default=None,
+                        help="samples per question (group size); raise --grad-accum with it to "
+                        "keep 4 questions per update")
+    parser.add_argument("--loss-type", choices=("dapo", "grpo", "dr_grpo", "bnpo"), default=None,
+                        help="how token losses are averaged: dapo over all tokens in the batch "
+                        "(default), grpo per response first, dr_grpo by a fixed constant")
+    parser.add_argument("--scale-rewards", choices=("group", "batch", "none"), default=None,
+                        help="divide advantages by the group's (default) or batch's reward "
+                        "spread, or not at all (Dr. GRPO)")
+    parser.add_argument("--num-iterations", type=int, default=None,
+                        help="gradient passes per generation batch (default 1: the clip "
+                        "never binds)")
+    parser.add_argument("--epsilon-high", type=float, default=None,
+                        help="upper clip of the policy ratio (DAPO clip-higher uses 0.28)")
     parser.add_argument("--rollout-prompt", choices=sorted(PROMPTS), default=None,
                         help="template the rollouts answer; its answer rule scores them")
     parser.add_argument("--pool", default=None,
@@ -83,7 +98,7 @@ def main() -> None:
     preset = resolve_preset(config.GRPO_PRESETS, args)
 
     if args.dry_run:
-        print(f"hardware={args.hardware}; recipe={config.RL_RECIPE}")
+        print(f"hardware={args.hardware}; recipe={config.rl_recipe(preset)}")
         dry_run(preset)
         return
 

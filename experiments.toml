@@ -392,3 +392,57 @@ candidates = ["grpo2-sft"]
 [[matrices.corrected.comparisons]]
 reference = "base8"
 candidates = ["grpo8-base"]
+
+# Training knobs (2026-10-08): one change at a time against a fixed 2B baseline at the pilot
+# budget, on ChartQA, where responses keep their reasoning and differ in length, so loss and
+# length knobs can show. Each knob's final adapter is scored greedily on ChartQA's full dev
+# role (960 questions) under both prompts; `expect` was written before the run. The table
+# reads + or − only when the interval excludes zero and the change exceeds the repeat's.
+# `python -m scripts.knobs commands chartqa` prints the runs; `summarize` writes
+# results/knobs-chartqa.json. Run directories and dev records stay local.
+[knobs.chartqa]
+dataset = "chartqa"
+model = "Qwen/Qwen3-VL-2B-Instruct"
+revision = "89644892e4d85e24eaac8bacfd4f463576704203"
+train = ["--preset", "grpo_2b_main", "--datasets", "chartqa", "--max-steps", "300",
+         "--rollout-lora", "--hardware", "24gb", "--save-steps", "100", "--no-dev-eval",
+         "--no-wandb"]
+runs = "runs/knobs-chartqa"
+records = "runs/knobs-chartqa/records"
+baseline = { adapter = "runs/chartqa-pilot-20261007/grpo2-base/checkpoints", change = "pilot Instruct → GRPO: lr 1e-5, 4 questions × 8 samples, token-level loss, 640-token cap, no KL" }
+
+[[knobs.chartqa.knob]]
+name = "repeat"
+change = "the baseline again, same seed"
+flags = []
+expect = "the noise floor: GPU kernels make same-seed runs differ"
+
+[[knobs.chartqa.knob]]
+name = "loss-grpo"
+change = "average each response's token losses first (loss_type grpo)"
+flags = ["--loss-type", "grpo"]
+expect = "0 or −, longer responses: a long wrong answer is penalized less per token"
+
+[[knobs.chartqa.knob]]
+name = "length-1024"
+change = "1,024-token response cap (4 completions per micro-batch, same 32 per update)"
+flags = ["--max-completion-length", "1024", "--batch-size", "4", "--grad-accum", "8"]
+expect = "small +, longer responses: 4.7% of pilot responses hit the 640 cap and score 0"
+
+[[knobs.chartqa.knob]]
+name = "scale-none"
+change = "advantages not divided by the group's reward spread (Dr. GRPO)"
+flags = ["--scale-rewards", "none"]
+expect = "about 0"
+
+[[knobs.chartqa.knob]]
+name = "kl-0.04"
+change = "KL penalty 0.04 to the starting model (original GRPO)"
+flags = ["--kl-beta", "0.04"]
+expect = "slight − at 300 updates: the penalty slows learning"
+
+[[knobs.chartqa.knob]]
+name = "loss-dr-grpo"
+change = "token losses divided by a fixed constant (loss_type dr_grpo)"
+flags = ["--loss-type", "dr_grpo"]
+expect = "− at 300 updates: dividing by the 640-token cap instead of ~200 written tokens shrinks each step about 3×"

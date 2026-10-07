@@ -558,6 +558,25 @@ reverse, −1.7 at pass@1 and +3.7 at pass@32. Most of the reasoning advantage a
 concentration on answers Instruct could already sample (it narrows from 8.4 to 1.5 points by
 k = 32); the remainder is a coverage gain that short-prompt RL does not produce.
 
+## Training knobs (ChartQA)
+
+Each knob changes one training setting against a fixed baseline: the pilot's Instruct 2B →
+GRPO run (300 updates, the frozen recipe). Knobs run on ChartQA rather than on VQAv2 and
+GQA because there the responses keep their reasoning and vary in length, so loss and length
+settings have something to act on; on the general data a reasoning-prompt run collapses to
+8-token answers within 200 updates either way. Each knob trains for the same 300 updates and
+its final adapter answers ChartQA's full dev role (958 questions) greedily under both
+prompts; the test cells are kept for knobs that get promoted to a full run. The expected
+direction was written before each run. A knob reads + or − only when its paired 95%
+interval excludes zero and the change is larger than the repeat's, a rerun of the baseline
+with the same seed whose difference is run-to-run noise. A 300-update budget favors knobs
+that speed early learning, so a + is a candidate for a full-length run, not a recipe change.
+Official relaxed accuracy, points; `python -m scripts.knobs summarize chartqa`.
+
+<!-- report:knobs-chartqa -->
+No knob has been run yet.
+<!-- /report:knobs-chartqa -->
+
 ## Image resolution
 
 The headline cells resize images to at most 0.79 megapixels, which no VQAv2, GQA, or CLEVR
