@@ -94,6 +94,7 @@ class DatasetSpec:
     project: Scorer | None = None
     metric_metadata: Mapping | None = None
     require_split: bool = True  # optional OOD data is not required to run the tutorial
+    max_images: int = 1  # images shown with one question; the engine must accept that many
 
     def __post_init__(self):
         if unknown := set(self.subsets) - set(ROLES):
@@ -163,6 +164,13 @@ def _clevrcomp(sizes):
     splits = data.load_clevr_compositional(sizes["train_shard"], sizes["test_shard"],
                                            sizes["per_image"], sizes["seed"])
     return {f"clevrcomp_{name}": subset for name, subset in splits.items()}
+
+
+def _medthink(sizes):
+    from vqar import data
+
+    return {f"medthink_{name}": subset
+            for name, subset in data.load_medthink(sizes["max_images"]).items()}
 
 
 def _prepared_ood(sizes):
@@ -264,6 +272,20 @@ DATASETS: dict[str, DatasetSpec] = {
             sizes={"train_shard": 0, "test_shard": 1, "per_image": 5, "seed": 0},
             materialize=_clevrcomp, require_split=False,
         ),
+        # Medical candidate: multi-image radiology cases with five candidate diagnoses.
+        # Evaluation shows up to eight images per case; training is not supported yet.
+        DatasetSpec(
+            name="medthink", display_name="MedThinkVQA",
+            sources={"bio-nlp-umass/MedThinkVQA": "5555b80e167c4796efab92fe709fb05914077dc0"},
+            subsets={"sft": "medthink_train", "rl": "medthink_train", "dev": "medthink_train",
+                     "test": "medthink_test"},
+            official_splits=frozenset({"sft", "rl", "test"}),  # dev carved from official train
+            ladder="in-domain", answer_schema="option letter A-E; references hold the letter "
+            "and the option text",
+            official=metrics.choice_letter_accuracy, normalized=metrics.choice_accuracy,
+            official_roles=frozenset(ROLES), sizes={"max_images": 8},
+            materialize=_medthink, require_split=False, max_images=8,
+        ),
         DatasetSpec(
             name="vizwiz", display_name="VizWiz",
             sources={"https://vizwiz.cs.colorado.edu/VizWiz_all_answers/VQA_test.json":
@@ -310,6 +332,12 @@ SOURCE_REVISIONS = {
 def score(dataset: str, prediction: str, answers: list[str], variant: str) -> float:
     """Score one prediction with the named scorer variant of its dataset."""
     return DATASETS[dataset].scorer(variant)(prediction, answers)
+
+
+def check_trainable(datasets) -> None:
+    """Training reads one image per question; refuse multi-image datasets until it reads more."""
+    if multi := [name for name in datasets if DATASETS[name].max_images > 1]:
+        raise ValueError(f"{multi}: training does not support multi-image questions yet")
 
 
 def datasets_with_role(role: str, optional: bool = True) -> list[str]:

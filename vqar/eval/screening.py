@@ -73,6 +73,9 @@ DECLARED = {
     "chartqa": Declaration("image", True, "GPL-3.0 (ChartQA release); charts from Statista, "
                            "Pew, OWID and OECD", True),
     "clevrcomp": Declaration("image", True, "CC BY 4.0", True),
+    # No patient IDs are released; cases are the unit, and no image file is shared between
+    # the official train and test cases (byte hashes, up to eight images per case).
+    "medthink": Declaration("case", True, "CC BY-NC-SA 4.0 (research use)", True),
 }
 
 
@@ -87,6 +90,8 @@ class Battery:
     swapped: Protocol
     direct: Protocol
     stepwise: Protocol
+    first: Protocol | None = None  # multi-image datasets: the first image only
+    none: Protocol | None = None  # multi-image datasets: no image at all
 
     @property
     def role(self) -> str:
@@ -99,9 +104,12 @@ class Battery:
 
     def protocols(self) -> dict[str, Protocol]:
         """In run order: the image interventions pair with the short cell's predictions."""
-        return {"short": self.short, "black": self.black, "swapped": self.swapped,
-                "reasoning": self.reasoning, "direct": self.direct, "stepwise": self.stepwise,
-                "sampled": self.sampled}
+        cells = {"short": self.short, "black": self.black, "swapped": self.swapped,
+                 "reasoning": self.reasoning, "direct": self.direct, "stepwise": self.stepwise,
+                 "sampled": self.sampled}
+        cells.update({name: protocol for name, protocol in (("first", self.first),
+                                                            ("none", self.none)) if protocol})
+        return cells
 
 
 def pool_role(dataset: str) -> str | None:
@@ -120,6 +128,7 @@ def battery(dataset: str, tier: str = TIER, validate_on_test: bool = False) -> B
         return None
     greedy = {"dataset": dataset, "role": role, "tier": tier,
               "screening": role in TRAINING_ROLES}
+    multi = DATASETS[dataset].max_images > 1
     return Battery(
         short=Protocol(prompt="short", **greedy),
         reasoning=Protocol(prompt="reasoning", **greedy),
@@ -127,6 +136,8 @@ def battery(dataset: str, tier: str = TIER, validate_on_test: bool = False) -> B
         swapped=Protocol(prompt="short", image_mode="swapped", **greedy),
         direct=Protocol(prompt="direct", **greedy),
         stepwise=Protocol(prompt="stepwise", **greedy),
+        first=Protocol(prompt="short", image_mode="first", **greedy) if multi else None,
+        none=Protocol(prompt="short", image_mode="none", **greedy) if multi else None,
         sampled=Protocol(dataset, prompt="reasoning", role=role, tier=tier,
                          max_tokens=SAMPLED_MAX_TOKENS, temperature=TEMPERATURE,
                          samples=SAMPLES),
@@ -210,7 +221,9 @@ def measure(records: dict[str, RunRecord]) -> dict:
     pairs = {"reasoning_payoff": ("short", "reasoning"),
              "matched_payoff": ("direct", "stepwise"),
              "image_dependence": ("black", "short"),
-             "wrong_image_dependence": ("swapped", "short")}
+             "wrong_image_dependence": ("swapped", "short"),
+             "multi_image_gain": ("first", "short"),
+             "text_only_drop": ("none", "short")}
     for measure_name, (reference, candidate) in pairs.items():
         if {reference, candidate} <= by_question.keys():
             result[measure_name] = paired_bootstrap(by_question[reference],

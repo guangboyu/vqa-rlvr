@@ -362,3 +362,71 @@ def load_clevr_compositional(train_shard: int, test_shard: int, per_image: int,
             for question in _clevr_questions(
                 row, test_shard, i, [rng.randrange(len(row["texts"]))])]
     return {"train": _from_records(train), "test": _from_records(test)}
+
+
+MEDTHINK = "bio-nlp-umass/MedThinkVQA"
+# Multi-image rows keep their first image in `image` (split keys, swapped donors) and every
+# shown image, the first included, in `images`.
+MULTI_IMAGE_FEATURES = Features({**FEATURES, "images": Sequence(Image())})
+
+
+def _medthink_question(row: dict) -> str:
+    """The clinical history and the five candidate diagnoses; the imaging findings, the
+    discussion and the image captions are expert information and stay out."""
+    options = "\n".join(f"{letter}. {text}" for letter, text in row["options"].items())
+    return (f"{(row['CLINICAL_HISTORY'] or '').strip()}\n"
+            f"Which is the most likely diagnosis?\n{options}\n"
+            "Answer with the letter of the correct option.")
+
+
+def _medthink_images(row: dict, archive, max_images: int) -> list[bytes]:
+    """The case's images in order, at most `max_images`; parquet embeds only some of them."""
+    images = []
+    for index in range(1, min(row["image_count"], max_images) + 1):
+        embedded = row.get(f"image_{index:02d}")
+        payload = (embedded["bytes"] if embedded and embedded.get("bytes")
+                   else archive.read(row[f"image_{index:02d}_path"]))
+        images.append(_rgb_png(payload))
+    return images
+
+
+def load_medthink(max_images: int) -> dict[str, Dataset]:
+    """MedThinkVQA's official train and test cases: history, images and five options."""
+    import zipfile
+
+    import pyarrow.parquet as pq
+    from huggingface_hub import hf_hub_download
+
+    def fetch(filename: str) -> str:
+        return hf_hub_download(MEDTHINK, filename, repo_type="dataset",
+                               revision=SOURCE_REVISIONS[MEDTHINK])
+
+    archive = zipfile.ZipFile(fetch("images.zip"))
+    subsets = {}
+    for split in ("train", "test"):
+        table = pq.read_table(fetch(f"{split}.parquet"))
+        columns = ["title", "CLINICAL_HISTORY", "options", "correct_answer",
+                   "correct_answer_text", "image_count", "image_01_modality"]
+        columns += [name for name in table.column_names
+                    if name.startswith("image_") and name.split("_")[1].isdigit()
+                    and int(name.split("_")[1]) <= max_images
+                    and (name.count("_") == 1 or name.endswith("_path"))]
+        records = []
+        for row in table.select(columns).to_pylist():
+            images = _medthink_images(row, archive, max_images)
+            records.append({
+                "dataset": "medthink",
+                "qid": row["image_01_path"].split("/")[1],
+                "image": {"bytes": images[0], "path": None},
+                "images": [{"bytes": image, "path": None} for image in images],
+                "question": _medthink_question(row),
+                "answers": [row["correct_answer"], row["correct_answer_text"]],
+                "answer_type": row["image_01_modality"] or "",
+            })
+        subsets[split] = Dataset.from_generator(_yield, features=MULTI_IMAGE_FEATURES,
+                                                gen_kwargs={"records": records})
+    return subsets
+
+
+def _yield(records):
+    yield from records

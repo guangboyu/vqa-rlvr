@@ -6,7 +6,7 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from datasets import Image
+from datasets import Image, Sequence
 from PIL import Image as PILImage
 
 from vqar.data import to_uniform_canvas
@@ -30,9 +30,10 @@ class Example:
 
 
 def to_example(row: dict) -> Example:
-    payload = row["image"]
-    image = payload["bytes"] if payload["bytes"] is not None else Path(payload["path"]).read_bytes()
-    return Example(row["dataset"], row["qid"], [image], row["question"], list(row["answers"]),
+    payloads = row.get("images") or [row["image"]]  # multi-image rows list every shown image
+    images = [p["bytes"] if p["bytes"] is not None else Path(p["path"]).read_bytes()
+              for p in payloads]
+    return Example(row["dataset"], row["qid"], images, row["question"], list(row["answers"]),
                    row["answer_type"], row.get("choices"))
 
 
@@ -56,6 +57,8 @@ def select_rows(protocol: Protocol, data_dir: Path, limit: int | None = None):
     if limit is not None:
         rows = rows.select(range(min(limit, len(rows))))
     rows = rows.cast_column("image", Image(decode=False))
+    if "images" in rows.column_names:
+        rows = rows.cast_column("images", Sequence(Image(decode=False)))
     selection = [list(entry) for entry in zip(rows["source_subset"], rows["source_row"],
                                               rows["qid"], strict=True)]
     data = {"subsets": {part["subset"]: split["subsets"][part["subset"]]["fingerprint"]
@@ -115,6 +118,10 @@ def canvas_like(image: bytes) -> bytes:
 
 
 def shown_images(example: Example, donor: Example, image_mode: str) -> list[bytes]:
+    if image_mode == "first":
+        return example.images[:1]
+    if image_mode == "none":
+        return []
     if image_mode == "black":
         return [black_like(image) for image in example.images]
     if image_mode == "canvas":

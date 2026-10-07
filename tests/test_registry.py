@@ -43,8 +43,8 @@ def test_unknown_role_is_rejected():
 
 def test_role_listing_follows_registry_order():
     assert datasets_with_role("test") == ["vqav2", "gqa", "clevr", "textvqa", "chartqa",
-                                          "clevrcomp", "vizwiz", "realworldqa"]
-    assert datasets_with_role("sft") == ["vqav2", "gqa", "chartqa", "clevrcomp"]
+                                          "clevrcomp", "medthink", "vizwiz", "realworldqa"]
+    assert datasets_with_role("sft") == ["vqav2", "gqa", "chartqa", "clevrcomp", "medthink"]
     assert datasets_with_role("sft", optional=False) == ["vqav2", "gqa"]
     assert datasets_with_role("dev", optional=False) == ["vqav2", "gqa", "clevr"]
 
@@ -121,3 +121,11 @@ class TestPrompts:
     def test_reasoning_template_has_tags(self):
         rendered = PROMPTS["reasoning"].text.format(question="Q?")
         assert rendered.startswith("Q?\n") and "<think>" in rendered and "<answer>" in rendered
+
+
+def test_training_refuses_multi_image_datasets():
+    from vqar.registry import check_trainable
+
+    check_trainable(["vqav2", "chartqa"])
+    with pytest.raises(ValueError, match="multi-image"):
+        check_trainable(["medthink"])

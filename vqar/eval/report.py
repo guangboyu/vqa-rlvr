@@ -15,7 +15,7 @@ from typing import NamedTuple
 from vqar.config import MAX_PIXELS
 from vqar.eval.errors import ANSWER_FORM_CHECKS, ERROR_KINDS
 from vqar.eval.legacy import july_records
-from vqar.eval.matrix import Arm, load_comparisons, load_matrix
+from vqar.eval.matrix import Arm, load_comparisons, load_matrix, load_pilot
 from vqar.eval.record import RunRecord, record_files
 from vqar.registry import DATASETS, SCORER_VARIANTS, TRAINING_ROLES
 from vqar.splits import read_split
@@ -56,7 +56,8 @@ def load_cells(records_dir: Path, data_dir: Path | None = None) -> dict[Cell, Ru
     cells = {}
     for path in record_files(records_dir):
         record = RunRecord.load(path)
-        if not DATASETS[record.protocol["dataset"]].require_split:
+        spec = DATASETS[record.protocol["dataset"]]
+        if not spec.require_split and spec.ladder != "in-domain":
             continue  # optional OOD cohorts are reported from results/ood.json
         if data_dir is not None and not is_current(record, data_dir):
             continue
@@ -85,6 +86,14 @@ def ordered_datasets() -> list[str]:
     ladder = {"in-domain": 0, "near-ood": 1, "far-ood": 2}
     headline = [name for name, spec in DATASETS.items() if spec.require_split]
     return sorted(headline, key=lambda name: ladder[DATASETS[name].ladder])
+
+
+def dataset_order(name: str) -> tuple[int, int]:
+    """Sort key: headline datasets in report order, then optional ones in registry order."""
+    headline = ordered_datasets()
+    if name in headline:
+        return headline.index(name), 0
+    return len(headline), list(DATASETS).index(name)
 
 
 def column(dataset: str) -> str:
@@ -327,8 +336,8 @@ def declared(rows: list[dict], comparisons: list[tuple[str, str]],
              variants: tuple[str, ...] = SCORER_VARIANTS) -> list[dict]:
     """The arm-comparison rows of one matrix's declared pairs, under the given scorers."""
     pairs = set(comparisons)
-    return [row for row in rows if "contrast" not in row and row["variant"] in variants
-            and (row["reference"], row["candidate"]) in pairs]
+    return [row for row in rows if "contrast" not in row and "pilot" not in row
+            and row["variant"] in variants and (row["reference"], row["candidate"]) in pairs]
 
 
 def image_change(row: dict) -> str:
@@ -453,7 +462,7 @@ def passk_table(arms: list[Arm], passk: dict | None) -> str:
     rows = [[names[r["model"]], r["prompt"], DATASETS[r["dataset"]].display_name,
              f"{r['mean_score']:.2f}", *(f"{r['pass_at_k'][k]:.2f}" for k in ks)]
             for r in sorted(passk["records"], key=lambda r: (
-                PROMPT_ORDER.index(r["prompt"]), ordered_datasets().index(r["dataset"]),
+                PROMPT_ORDER.index(r["prompt"]), dataset_order(r["dataset"]),
                 list(names).index(r["model"])))]
     return table(["Arm", "Prompt", "Dataset", "Mean score", *(f"pass@{k}" for k in ks)],
                  rows, 3)
@@ -546,6 +555,39 @@ def ood_deltas_table(arms: list[Arm], ood: dict | None) -> str:
     return table(["Comparison", *(DATASETS[d].display_name for d in datasets)], rows, 1)
 
 
+def pilot_table(arms: list[Arm], cells: dict, dataset: str) -> str:
+    """A pilot's arms on its full test role: official (normalized) accuracy, each answer
+    type's official accuracy, and mean output tokens, per prompt."""
+    types = sorted({t for arm in arms for prompt in PROMPT_ORDER
+                    if (r := full_cell(cells, arm, dataset, prompt))
+                    for t in r.metrics["official"]["by_answer_type"]})
+    rows = []
+    for arm in arms:
+        for prompt in PROMPT_ORDER:
+            record = full_cell(cells, arm, dataset, prompt)
+            if record is None:
+                rows.append([arm.name, prompt, *["—"] * (len(types) + 2)])
+                continue
+            official, normalized = record.metrics["official"], record.metrics["normalized"]
+            rows.append([arm.name, prompt,
+                         f"{percent(official['overall'])} ({percent(normalized['overall'])})",
+                         *(percent(official["by_answer_type"].get(t)) for t in types),
+                         f"{record.metrics['mean_output_tokens']:.0f}"])
+    return table(["Arm", "Prompt", "Accuracy", *(f"{t} answers" for t in types),
+                  "Output tokens"], rows, 2)
+
+
+def pilot_deltas_table(arms: list[Arm], rows: list[dict], pilot: str) -> str:
+    """A pilot's paired differences, official scorer, with 95% intervals over questions."""
+    names = {arm.label: arm.name for arm in arms}
+    lines = [[f"{names[r['candidate']]} − {names[r['reference']]}", r["prompt"],
+              f"{r['delta']:+.2f} [{r['low']:+.2f}, {r['high']:+.2f}]"]
+             for r in rows if r.get("pilot") == pilot and r["variant"] == "official"]
+    if not lines:
+        return "No paired comparison has been computed yet.\n"
+    return table(["Comparison", "Prompt", "Official"], lines, 2)
+
+
 def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
     """Every markdown block, and the JSON export for the demo."""
     toml = root / "experiments.toml"
@@ -562,13 +604,19 @@ def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
     errors = error_analysis(root / "results")
     comparisons = load_comparisons(toml, "headline")
     matched, _ = load_matrix(toml, "matched")
+    pilot_arms, _, _ = load_pilot(toml, "chartqa")
     passk = load_result(root / "results", "passk-heldout.json")
+    chartqa_passk = load_result(root / "results", "passk-chartqa.json")
     judge = load_result(root / "results", "judge-final.json")
     ood = load_result(root / "results", "ood.json")
     blocks = {
         "matched": matrix_table(matched, cells),
         "matched-deltas": deltas_table(matched, declared(
             deltas, load_comparisons(toml, "matched"), ("official",))),
+        "chartqa-pilot": pilot_table(pilot_arms, cells, "chartqa"),
+        "chartqa-pilot-deltas": pilot_deltas_table(pilot_arms, deltas, "chartqa"),
+        "chartqa-passk": passk_table(every_arm, chartqa_passk),
+        "chartqa-passk-deltas": passk_deltas_table(every_arm, chartqa_passk),
         "passk": passk_table(every_arm, passk),
         "passk-deltas": passk_deltas_table(every_arm, passk),
         "judge": judge_table(arms, judge),

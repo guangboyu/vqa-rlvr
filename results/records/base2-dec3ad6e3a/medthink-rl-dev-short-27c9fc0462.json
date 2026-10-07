@@ -1,0 +1,107 @@
+{
+  "schema": "run-record/1",
+  "legacy": false,
+  "model_id": "dec3ad6e3a1c306cd9a470b55b5f1859b34d784e64366f39c36ddea3ae7b9187",
+  "protocol_id": "27c9fc046214f89091ec5805f96c007a335a092382a3bf991b8ebea5ad6e2182",
+  "model": {
+    "source": "Qwen/Qwen3-VL-2B-Instruct",
+    "label": "base2",
+    "run": null,
+    "step": null,
+    "weights": {
+      "hub": "Qwen/Qwen3-VL-2B-Instruct",
+      "revision": "89644892e4d85e24eaac8bacfd4f463576704203"
+    }
+  },
+  "protocol": {
+    "dataset": "medthink",
+    "ladder": "in-domain",
+    "role": "rl",
+    "tier": "dev",
+    "question_limit": 500,
+    "prompt": "short",
+    "prompt_text": "{question}\nAnswer the question using a single word or phrase.",
+    "max_tokens": 64,
+    "temperature": 0.0,
+    "samples": 1,
+    "image_mode": "original",
+    "max_pixels": 786432,
+    "scorers": {
+      "official": "choice_letter_accuracy/v1",
+      "normalized": "choice_accuracy/v1"
+    },
+    "extraction": "last_answer_tag_or_full_text",
+    "answer_tag_rule": "raw text contains </answer>",
+    "data": {
+      "subsets": {
+        "medthink_train": "52950321cfb06f90"
+      },
+      "selection_sha256": "99725f60068e7f97bf902d39df3e96688098e8feae2160e8d4c5f2c36af09d68",
+      "image_groups_sha256": "8b24e344f6cd468ca0728ac8a398db8aab1e957013b5981b7ed1df02316e9097"
+    }
+  },
+  "metrics": {
+    "n": 500,
+    "official": {
+      "overall": 0.368,
+      "by_answer_type": {
+        "CT": 0.3850574712643678,
+        "Clinical photography": 0.6,
+        "Endoscopy": 0.6666666666666666,
+        "MRI": 0.3333333333333333,
+        "Non-modality / Workflow / Post-processing": 0.5,
+        "Nuclear medicine & Molecular imaging": 0.5,
+        "Pathology": 1.0,
+        "Ultrasound": 0.375,
+        "X-ray": 0.3203125
+      }
+    },
+    "normalized": {
+      "overall": 0.372,
+      "by_answer_type": {
+        "CT": 0.39080459770114945,
+        "Clinical photography": 0.7,
+        "Endoscopy": 0.6666666666666666,
+        "MRI": 0.3333333333333333,
+        "Non-modality / Workflow / Post-processing": 0.5,
+        "Nuclear medicine & Molecular imaging": 0.5,
+        "Pathology": 1.0,
+        "Ultrasound": 0.375,
+        "X-ray": 0.3203125
+      }
+    },
+    "mean_output_tokens": 2.072,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.368,
+    "answers_scored_differently": 2
+  },
+  "provenance": {
+    "code_version": "98f0a831f87c1373aa3ffcb0bf5714f7bdaa817c",
+    "uncommitted_changes": true,
+    "source_sha256": {
+      "vqar/eval/__init__.py": "2aa88c809409a57502d0d9b2893e14c3b5bf99d971bceefcc1ed4716ef295f81",
+      "vqar/eval/examples.py": "bfc72cc97e560db5dd6c62aa6af7ff7928b1865f7e55591873fb71745807ce97",
+      "vqar/eval/protocol.py": "d8c63fc0fab4f652cea522839054385389880708811e0b4ce8d3e94025a1dc33",
+      "vqar/eval/record.py": "6be2298f531240b01df2feecedd50af2d32a1c17f6029951ddf3f7723834b023",
+      "vqar/eval/runner.py": "f0a55a3f8fcaddc6c4154cef031a22911f5cc0cafe7a7cd436c811b2b75e8fca",
+      "vqar/inference.py": "f77143773554fbf3710e045220e2efb36d5698035a760094a9aace008bf593bf",
+      "vqar/config.py": "ec5ef416808c7ee4f68169d4d5c3322015f113e8a5bcffd2e9d3bf6b2ac88b1b",
+      "vqar/data.py": "6595961633120ea8bc10902d89d4ba933b4e84da22b0ab288f8609a9536327ef",
+      "vqar/metrics.py": "93d31a0d9f647a97a902cfe26165edfde5aeaf7a8dbf196cdde869c66786ddcb",
+      "vqar/registry.py": "608acd9bcdd608965df5d993d4c5100823aaeb064e296ca6312458bcbeef5f1d",
+      "vqar/splits.py": "206963ba5aaa52b03482f52b268832dc1bd611613adfd2ea0fb1aac11c2eb693",
+      "vqar/ood_metrics.py": "9449e0a85c4b7ff3efcbc88264ee1e03d53689c39c2fe030a13887465fa1b226",
+      "vqar/ood.py": "d59220be09094fa5a5ffbb6e791b38ee5b3c8dca0ca381ef64a28bf0f94ccb8f",
+      "uv.lock": "8c79fab440350a15e75e9507c3b5338ecc63beb92fc12c6ef18fbe01122ac323"
+    },
+    "versions": {
+      "torch": "2.11.0+cu129",
+      "transformers": "5.13.0",
+      "vllm": "0.23.0+cu129",
+      "datasets": "5.0.0"
+    },
+    "timestamp": "2026-10-07T17:17:57+00:00"
+  }
+}

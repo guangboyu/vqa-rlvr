@@ -432,3 +432,23 @@ def test_every_stored_record_keeps_its_protocol_identity():
                             max_pixels=stored["max_pixels"], screening=greedy_training_role)
         assert protocol_identity(protocol, stored["data"]) == stored, path.name
         assert path.name.startswith(protocol.slug() + "-"), path.name
+
+
+def test_first_and_none_image_modes_keep_one_or_no_image():
+    from vqar.eval.examples import Example, shown_images
+
+    example = Example("medthink", "case1", [b"a", b"b", b"c"], "q", ["C", "text"], "MRI")
+    assert shown_images(example, example, "first") == [b"a"]
+    assert shown_images(example, example, "none") == []
+    assert shown_images(example, example, "original") == [b"a", b"b", b"c"]
+
+
+def test_multi_image_rows_become_examples_with_every_image():
+    from vqar.eval.examples import to_example
+
+    row = {"dataset": "medthink", "qid": "case1", "question": "q", "answers": ["C", "t"],
+           "answer_type": "CT", "image": {"bytes": b"a", "path": None},
+           "images": [{"bytes": b"a", "path": None}, {"bytes": b"b", "path": None}]}
+    assert to_example(row).images == [b"a", b"b"]
+    del row["images"]
+    assert to_example(row).images == [b"a"]

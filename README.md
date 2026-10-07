@@ -106,6 +106,14 @@ GRPO turns a pass@1 gain of 10 to 25 points into −1 to −6 at k = 32. One epo
 reverse: pass@1 about level, pass@32 up 1.7–4.6 points
 ([results](docs/supplementary/results.md#held-out-passk-before-and-after-rl)).
 
+**Next: where reasoning pays (pilot).** ChartQA's human-written questions are the first dataset
+where reasoning helped in screening (numeric answers, +5.6 points). There, 300 GRPO updates at 2B
+keep the reasoning (about 200 tokens) and raise reasoning-prompt accuracy from 69.7 to 76.4, seven
+points above the best short-answer arm. Unlike finding 6, the reasoning-trained model stays ahead
+of Instruct at every k up to 32 (pass@32 +1.5 [+0.6, +2.6]), while short-prompt GRPO on the same
+data again trails at pass@32 (−3.5). One seed, one dataset, a pilot budget
+([results](docs/supplementary/results.md#chartqa-pilot-rl-where-reasoning-pays)).
+
 Differences below about 0.5 points under the reasoning prompt are within the run-to-run
 noise of greedy vLLM decoding (three repeats of Instruct 2B span 0.4 points) and are not
 claimed.

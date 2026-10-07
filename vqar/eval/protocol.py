@@ -9,10 +9,11 @@ from vqar import metrics
 from vqar.config import MAX_PIXELS, RL_IMAGE_SIZE
 from vqar.registry import DATASETS, PROMPTS, TRAINING_ROLES
 
-# canvas shows the image as RL training does (vqar.data.to_uniform_canvas).
-IMAGE_MODES = ("original", "black", "swapped", "canvas")
+# canvas shows the image as RL training does (vqar.data.to_uniform_canvas); first keeps only
+# the first image of a multi-image question, none shows no image at all.
+IMAGE_MODES = ("original", "black", "swapped", "canvas", "first", "none")
 # Interventions change what the image shows; they pair with the original-image cell.
-INTERVENTIONS = ("black", "swapped")
+INTERVENTIONS = ("black", "swapped", "first", "none")
 # Training roles are read only by the learnability pre-check and the screening battery.
 EVAL_ROLES = ("dev", "test", "rl", "sft")
 EXTRACTION_RULE = "last_answer_tag_or_full_text"

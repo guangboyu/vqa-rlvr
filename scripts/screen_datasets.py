@@ -60,8 +60,10 @@ def collect(label: str, model, planned: dict, data_dir: Path, records_dir: Path)
 def run(model, arm, planned: dict, args) -> None:
     from vqar.inference import VLLMGenerator
 
+    images = max((DATASETS[cells.short.dataset].max_images for cells in planned.values()
+                  if cells), default=1)
     generator = VLLMGenerator(model.path, model.revision, args.max_model_len,
-                              arm.gpu_memory_utilization)
+                              arm.gpu_memory_utilization, max_images=images)
     for cells in planned.values():
         for protocol in (cells.protocols().values() if cells else []):
             record = run_eval(model, protocol, generator, data_dir=args.data_dir,

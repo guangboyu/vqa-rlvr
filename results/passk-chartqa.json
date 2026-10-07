@@ -1,0 +1,503 @@
+{
+ "variant": "official",
+ "estimator": "1 - C(n-c, k) / C(n, k) per question, averaged over questions",
+ "success": "full credit under the scorer variant",
+ "records": [
+  {
+   "dataset": "chartqa",
+   "prompt": "reasoning",
+   "record": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/chartqa-test-full-reasoning-t1k32-51a26d9cd6.json",
+   "model": "base2",
+   "variant": "official",
+   "questions": 1250,
+   "samples": 32,
+   "mean_score": 66.435,
+   "pass_at_k": {
+    "1": 66.435,
+    "2": 75.68225806451612,
+    "4": 82.09872969966628,
+    "8": 86.458135683523,
+    "16": 89.24160223866228,
+    "32": 91.04
+   }
+  },
+  {
+   "dataset": "chartqa",
+   "prompt": "reasoning",
+   "record": "/home/guangbo/codes/VQA/results/records/cqa-grpo2-base-def42f8015/chartqa-test-full-reasoning-t1k32-51a26d9cd6.json",
+   "model": "cqa-grpo2-base",
+   "variant": "official",
+   "questions": 1250,
+   "samples": 32,
+   "mean_score": 74.865,
+   "pass_at_k": {
+    "1": 74.865,
+    "2": 81.65983870967742,
+    "4": 86.07785761957732,
+    "8": 89.07840544574694,
+    "16": 91.13706529990107,
+    "32": 92.56
+   }
+  },
+  {
+   "dataset": "chartqa",
+   "prompt": "reasoning",
+   "record": "/home/guangbo/codes/VQA/results/records/cqa-sft2-7c1b892d23/chartqa-test-full-reasoning-t1k32-51a26d9cd6.json",
+   "model": "cqa-sft2",
+   "variant": "official",
+   "questions": 1250,
+   "samples": 32,
+   "mean_score": 57.9975,
+   "pass_at_k": {
+    "1": 57.9975,
+    "2": 72.31596774193548,
+    "4": 81.99358843159065,
+    "8": 88.15301451375223,
+    "16": 92.07039742274739,
+    "32": 94.56
+   }
+  },
+  {
+   "dataset": "chartqa",
+   "prompt": "reasoning",
+   "record": "/home/guangbo/codes/VQA/results/records/cqa-grpo2-sft-7774904e5f/chartqa-test-full-reasoning-t1k32-51a26d9cd6.json",
+   "model": "cqa-grpo2-sft",
+   "variant": "official",
+   "questions": 1250,
+   "samples": 32,
+   "mean_score": 73.14,
+   "pass_at_k": {
+    "1": 73.14,
+    "2": 82.40919354838711,
+    "4": 87.894936596218,
+    "8": 91.3196136333818,
+    "16": 93.49596780197737,
+    "32": 95.12
+   }
+  },
+  {
+   "dataset": "chartqa",
+   "prompt": "short",
+   "record": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/chartqa-test-full-short-t1k32-c5f4cca84d.json",
+   "model": "base2",
+   "variant": "official",
+   "questions": 1250,
+   "samples": 32,
+   "mean_score": 62.6775,
+   "pass_at_k": {
+    "1": 62.6775,
+    "2": 68.78806451612903,
+    "4": 73.83278976640712,
+    "8": 78.30147725012597,
+    "16": 82.37890782788638,
+    "32": 86.08
+   }
+  },
+  {
+   "dataset": "chartqa",
+   "prompt": "short",
+   "record": "/home/guangbo/codes/VQA/results/records/cqa-short2-base-9e6546daa5/chartqa-test-full-short-t1k32-c5f4cca84d.json",
+   "model": "cqa-short2-base",
+   "variant": "official",
+   "questions": 1250,
+   "samples": 32,
+   "mean_score": 64.9275,
+   "pass_at_k": {
+    "1": 64.9275,
+    "2": 69.61258064516129,
+    "4": 73.45886095661847,
+    "8": 76.85823608758069,
+    "16": 79.91214142960145,
+    "32": 82.56
+   }
+  },
+  {
+   "dataset": "chartqa",
+   "prompt": "short",
+   "record": "/home/guangbo/codes/VQA/results/records/cqa-sft2-7c1b892d23/chartqa-test-full-short-t1k32-c5f4cca84d.json",
+   "model": "cqa-sft2",
+   "variant": "official",
+   "questions": 1250,
+   "samples": 32,
+   "mean_score": 60.9725,
+   "pass_at_k": {
+    "1": 60.9725,
+    "2": 71.04806451612903,
+    "4": 78.09260511679643,
+    "8": 83.22497600562829,
+    "16": 87.00612164279723,
+    "32": 89.76
+   }
+  }
+ ],
+ "comparisons": [
+  {
+   "reference": "base2",
+   "candidate": "cqa-grpo2-base",
+   "dataset": "chartqa",
+   "prompt": "reasoning",
+   "deltas": [
+    {
+     "metric": "mean_score",
+     "n": 1250,
+     "delta": 8.43,
+     "low": 7.385,
+     "high": 9.4875,
+     "resamples": 10000,
+     "seed": 0,
+     "image_groups": 1250,
+     "bootstrap_unit": "image group",
+     "point_estimate_unit": "question"
+    },
+    {
+     "metric": "pass@1",
+     "n": 1250,
+     "delta": 8.43,
+     "low": 7.385,
+     "high": 9.4875,
+     "resamples": 10000,
+     "seed": 0,
+     "image_groups": 1250,
+     "bootstrap_unit": "image group",
+     "point_estimate_unit": "question"
+    },
+    {
+     "metric": "pass@2",
+     "n": 1250,
+     "delta": 5.97758064516129,
+     "low": 5.035475806451614,
+     "high": 6.944366935483871,
+     "resamples": 10000,
+     "seed": 0,
+     "image_groups": 1250,
+     "bootstrap_unit": "image group",
+     "point_estimate_unit": "question"
+    },
+    {
+     "metric": "pass@4",
+     "n": 1250,
+     "delta": 3.9791279199110123,
+     "low": 3.162885261401558,
+     "high": 4.830850723025584,
+     "resamples": 10000,
+     "seed": 0,
+     "image_groups": 1250,
+     "bootstrap_unit": "image group",
+     "point_estimate_unit": "question"
+    },
+    {
+     "metric": "pass@8",
+     "n": 1250,
+     "delta": 2.620269762223934,
+     "low": 1.8665087209910343,
+     "high": 3.3974364001787363,
+     "resamples": 10000,
+     "seed": 0,
+     "image_groups": 1250,
+     "bootstrap_unit": "image group",
+     "point_estimate_unit": "question"
+    },
+    {
+     "metric": "pass@16",
+     "n": 1250,
+     "delta": 1.8954630612387804,
+     "low": 1.0929981629046326,
+     "high": 2.710603413646551,
+     "resamples": 10000,
+     "seed": 0,
+     "image_groups": 1250,
+     "bootstrap_unit": "image group",
+     "point_estimate_unit": "question"
+    },
+    {
+     "metric": "pass@32",
+     "n": 1250,
+     "delta": 1.52,
+     "low": 0.5599999999999999,
+     "high": 2.56,
+     "resamples": 10000,
+     "seed": 0,
+     "image_groups": 1250,
+     "bootstrap_unit": "image group",
+     "point_estimate_unit": "question"
+    }
+   ]
+  },
+  {
+   "reference": "cqa-sft2",
+   "candidate": "cqa-grpo2-sft",
+   "dataset": "chartqa",
+   "prompt": "reasoning",
+   "deltas": [
+    {
+     "metric": "mean_score",
+     "n": 1250,
+     "delta": 15.1425,
+     "low": 13.96,
+     "high": 16.3325,
+     "resamples": 10000,
+     "seed": 0,
+     "image_groups": 1250,
+     "bootstrap_unit": "image group",
+     "point_estimate_unit": "question"
+    },
+    {
+     "metric": "pass@1",
+     "n": 1250,
+     "delta": 15.1425,
+     "low": 13.96,
+     "high": 16.3325,
+     "resamples": 10000,
+     "seed": 0,
+     "image_groups": 1250,
+     "bootstrap_unit": "image group",
+     "point_estimate_unit": "question"
+    },
+    {
+     "metric": "pass@2",
+     "n": 1250,
+     "delta": 10.093225806451613,
+     "low": 8.946754032258065,
+     "high": 11.23985887096774,
+     "resamples": 10000,
+     "seed": 0,
+     "image_groups": 1250,
+     "bootstrap_unit": "image group",
+     "point_estimate_unit": "question"
+    },
+    {
+     "metric": "pass@4",
+     "n": 1250,
+     "delta": 5.901348164627364,
+     "low": 4.850231979977753,
+     "high": 6.978835706340379,
+     "resamples": 10000,
+     "seed": 0,
+     "image_groups": 1250,
+     "bootstrap_unit": "image group",
+     "point_estimate_unit": "question"
+    },
+    {
+     "metric": "pass@8",
+     "n": 1250,
+     "delta": 3.1665991196295975,
+     "low": 2.2241872911021745,
+     "high": 4.156265320821806,
+     "resamples": 10000,
+     "seed": 0,
+     "image_groups": 1250,
+     "bootstrap_unit": "image group",
+     "point_estimate_unit": "question"
+    },
+    {
+     "metric": "pass@16",
+     "n": 1250,
+     "delta": 1.425570379229973,
+     "low": 0.4623757078583115,
+     "high": 2.407695665852615,
+     "resamples": 10000,
+     "seed": 0,
+     "image_groups": 1250,
+     "bootstrap_unit": "image group",
+     "point_estimate_unit": "question"
+    },
+    {
+     "metric": "pass@32",
+     "n": 1250,
+     "delta": 0.5599999999999999,
+     "low": -0.5599999999999999,
+     "high": 1.68,
+     "resamples": 10000,
+     "seed": 0,
+     "image_groups": 1250,
+     "bootstrap_unit": "image group",
+     "point_estimate_unit": "question"
+    }
+   ]
+  },
+  {
+   "reference": "base2",
+   "candidate": "cqa-short2-base",
+   "dataset": "chartqa",
+   "prompt": "short",
+   "deltas": [
+    {
+     "metric": "mean_score",
+     "n": 1250,
+     "delta": 2.25,
+     "low": 1.79,
+     "high": 2.7225,
+     "resamples": 10000,
+     "seed": 0,
+     "image_groups": 1250,
+     "bootstrap_unit": "image group",
+     "point_estimate_unit": "question"
+    },
+    {
+     "metric": "pass@1",
+     "n": 1250,
+     "delta": 2.25,
+     "low": 1.79,
+     "high": 2.7225,
+     "resamples": 10000,
+     "seed": 0,
+     "image_groups": 1250,
+     "bootstrap_unit": "image group",
+     "point_estimate_unit": "question"
+    },
+    {
+     "metric": "pass@2",
+     "n": 1250,
+     "delta": 0.8245161290322582,
+     "low": 0.35772580645161284,
+     "high": 1.2982419354838712,
+     "resamples": 10000,
+     "seed": 0,
+     "image_groups": 1250,
+     "bootstrap_unit": "image group",
+     "point_estimate_unit": "question"
+    },
+    {
+     "metric": "pass@4",
+     "n": 1250,
+     "delta": -0.3739288097886539,
+     "low": -0.8976729699666293,
+     "high": 0.14580244716351512,
+     "resamples": 10000,
+     "seed": 0,
+     "image_groups": 1250,
+     "bootstrap_unit": "image group",
+     "point_estimate_unit": "question"
+    },
+    {
+     "metric": "pass@8",
+     "n": 1250,
+     "delta": -1.4432411625452783,
+     "low": -2.071303014555584,
+     "high": -0.8496479214321707,
+     "resamples": 10000,
+     "seed": 0,
+     "image_groups": 1250,
+     "bootstrap_unit": "image group",
+     "point_estimate_unit": "question"
+    },
+    {
+     "metric": "pass@16",
+     "n": 1250,
+     "delta": -2.4667663982849284,
+     "low": -3.2878362939905594,
+     "high": -1.6735175513777782,
+     "resamples": 10000,
+     "seed": 0,
+     "image_groups": 1250,
+     "bootstrap_unit": "image group",
+     "point_estimate_unit": "question"
+    },
+    {
+     "metric": "pass@32",
+     "n": 1250,
+     "delta": -3.52,
+     "low": -4.72,
+     "high": -2.32,
+     "resamples": 10000,
+     "seed": 0,
+     "image_groups": 1250,
+     "bootstrap_unit": "image group",
+     "point_estimate_unit": "question"
+    }
+   ]
+  },
+  {
+   "reference": "base2",
+   "candidate": "cqa-sft2",
+   "dataset": "chartqa",
+   "prompt": "short",
+   "deltas": [
+    {
+     "metric": "mean_score",
+     "n": 1250,
+     "delta": -1.7049999999999998,
+     "low": -2.7650625,
+     "high": -0.645,
+     "resamples": 10000,
+     "seed": 0,
+     "image_groups": 1250,
+     "bootstrap_unit": "image group",
+     "point_estimate_unit": "question"
+    },
+    {
+     "metric": "pass@1",
+     "n": 1250,
+     "delta": -1.7049999999999998,
+     "low": -2.7650625,
+     "high": -0.645,
+     "resamples": 10000,
+     "seed": 0,
+     "image_groups": 1250,
+     "bootstrap_unit": "image group",
+     "point_estimate_unit": "question"
+    },
+    {
+     "metric": "pass@2",
+     "n": 1250,
+     "delta": 2.2599999999999993,
+     "low": 1.2046169354838705,
+     "high": 3.3303306451612906,
+     "resamples": 10000,
+     "seed": 0,
+     "image_groups": 1250,
+     "bootstrap_unit": "image group",
+     "point_estimate_unit": "question"
+    },
+    {
+     "metric": "pass@4",
+     "n": 1250,
+     "delta": 4.259815350389321,
+     "low": 3.210696218020022,
+     "high": 5.360517964404893,
+     "resamples": 10000,
+     "seed": 0,
+     "image_groups": 1250,
+     "bootstrap_unit": "image group",
+     "point_estimate_unit": "question"
+    },
+    {
+     "metric": "pass@8",
+     "n": 1250,
+     "delta": 4.923498755502315,
+     "low": 3.8595489792076663,
+     "high": 6.072496376790927,
+     "resamples": 10000,
+     "seed": 0,
+     "image_groups": 1250,
+     "bootstrap_unit": "image group",
+     "point_estimate_unit": "question"
+    },
+    {
+     "metric": "pass@16",
+     "n": 1250,
+     "delta": 4.627213814910848,
+     "low": 3.476633996723799,
+     "high": 5.81247790736943,
+     "resamples": 10000,
+     "seed": 0,
+     "image_groups": 1250,
+     "bootstrap_unit": "image group",
+     "point_estimate_unit": "question"
+    },
+    {
+     "metric": "pass@32",
+     "n": 1250,
+     "delta": 3.6799999999999997,
+     "low": 2.32,
+     "high": 5.04,
+     "resamples": 10000,
+     "seed": 0,
+     "image_groups": 1250,
+     "bootstrap_unit": "image group",
+     "point_estimate_unit": "question"
+    }
+   ]
+  }
+ ]
+}

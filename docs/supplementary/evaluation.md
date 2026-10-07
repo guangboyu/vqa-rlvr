@@ -114,7 +114,11 @@ points on numeric questions and −5.5 on text ones under the reasoning prompt; 
 questions give GRPO a gradient and pass@8 reaches 88.6% against 71.0% pass@1. Under the
 direct and stepwise prompts the model often leaves out the answer tag (98% and 36% of
 responses), and an untagged stepwise response is scored as a whole, so the matched payoff
-understates reasoning.
+understates reasoning. MedThinkVQA (radiology cases with five candidate diagnoses; up to eight
+images per case are shown, and multi-image datasets add first-image-only and no-image cells) is
+rejected as well: Instruct 2B answers from the clinical history and options alone. A black, a
+swapped, a single or no image each leave its 37.2% short-prompt accuracy within 2 points, and
+90% of its reasoning responses run past the 512-token budget.
 
 ## Held-out hygiene
 

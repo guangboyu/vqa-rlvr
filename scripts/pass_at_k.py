@@ -1,6 +1,6 @@
 """pass@k curves and paired before/after differences from saved sampled records.
 
-    python -m scripts.pass_at_k --declared    # pairs in experiments.toml [passk]
+    python -m scripts.pass_at_k --declared heldout chartqa   # [passk.<name>] in experiments.toml
     python -m scripts.pass_at_k --compare BEFORE.json AFTER.json --output report.json
 
 No inference runs: records come from `evaluate.py --temperature 1 --samples N`. Intervals
@@ -19,13 +19,15 @@ from vqar.eval.protocol import Protocol
 from vqar.eval.report import ROOT
 from vqar.eval.runner import DATA_DIR, RECORDS_DIR
 
-DECLARED_OUTPUT = ROOT / "results" / "passk-heldout.json"
+
+def declared_output(name: str) -> Path:
+    return ROOT / "results" / f"passk-{name}.json"
 
 
-def declared_pairs() -> list[tuple[Path, Path]]:
-    """(reference, candidate) record paths for every comparison in experiments.toml [passk]."""
+def declared_pairs(name: str) -> list[tuple[Path, Path]]:
+    """(reference, candidate) record paths for every comparison in [passk.<name>]."""
     matrix = ROOT / "experiments.toml"
-    config = tomllib.loads(matrix.read_text())["passk"]
+    config = tomllib.loads(matrix.read_text())["passk"][name]
     protocols = {(dataset, entry["prompt"]): Protocol(
                      dataset, prompt=entry["prompt"], tier=config["tier"],
                      temperature=config["temperature"], samples=config["samples"],
@@ -54,21 +56,27 @@ def main():
     parser.add_argument("records", nargs="*", type=Path)
     parser.add_argument("--compare", nargs=2, action="append", type=Path, default=[],
                         metavar=("REFERENCE", "CANDIDATE"))
-    parser.add_argument("--declared", action="store_true",
-                        help="compare the pairs declared in experiments.toml [passk]")
+    parser.add_argument("--declared", nargs="+", metavar="NAME", default=[],
+                        help="compare the pairs of [passk.NAME] in experiments.toml, each into "
+                        "results/passk-NAME.json")
     parser.add_argument("--variant", choices=VARIANTS, default="official")
     parser.add_argument("--k", nargs="+", type=int, help="default: 1, 2, 4, ... up to n")
     parser.add_argument("--resamples", type=int, default=10_000)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
-    pairs = [*args.compare, *(declared_pairs() if args.declared else [])]
-    if not args.records and not pairs:
-        parser.error("give records, --compare REFERENCE CANDIDATE, or --declared")
-    output = args.output or (DECLARED_OUTPUT if args.declared else None)
-    if output is None:
-        parser.error("--output is required without --declared")
+    if not args.records and not args.compare and not args.declared:
+        parser.error("give records, --compare REFERENCE CANDIDATE, or --declared NAME")
+    if (args.records or args.compare) and args.output is None:
+        parser.error("--output is required for explicit records")
+    jobs = [(declared_output(name), [], declared_pairs(name)) for name in args.declared]
+    if args.records or args.compare:
+        jobs.append((args.output, args.records, args.compare))
+    for output, records, pairs in jobs:
+        write_report(output, records, pairs, args, parser)
 
-    paths = dict.fromkeys([*args.records, *(path for pair in pairs for path in pair)])
+
+def write_report(output: Path, records: list[Path], pairs: list, args, parser) -> None:
+    paths = dict.fromkeys([*records, *(path for pair in pairs for path in pair)])
     cells = {path: load_sampled(path, args.variant) for path in paths}
     samples = min(cell.samples for cell in cells.values())
     ks = args.k or default_ks(samples)

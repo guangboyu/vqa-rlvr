@@ -39,11 +39,12 @@ class VLLMGenerator:
 
     def __init__(self, model: str, revision: str | None = None, max_model_len: int = 4096,
                  gpu_memory_utilization: float = 0.8, max_lora_rank: int | None = None,
-                 max_pixels: int = MAX_PIXELS):
+                 max_pixels: int = MAX_PIXELS, max_images: int = 1):
         self.max_pixels = max_pixels  # every protocol run on this engine must declare it
         self.settings = dict(model=model, revision=revision, max_model_len=max_model_len,
                              gpu_memory_utilization=gpu_memory_utilization,
-                             max_lora_rank=max_lora_rank, max_pixels=max_pixels)
+                             max_lora_rank=max_lora_rank, max_pixels=max_pixels,
+                             max_images=max_images)
         self._llm = None
         self._adapters = {}
 
@@ -91,7 +92,7 @@ class AdapterGenerator:
 
 def load_vllm(model: str, max_model_len: int, gpu_memory_utilization: float,
               revision: str | None = None, max_lora_rank: int | None = None,
-              max_pixels: int = MAX_PIXELS):
+              max_pixels: int = MAX_PIXELS, max_images: int = 1):
     from vllm import LLM
 
     lora = {} if max_lora_rank is None else dict(enable_lora=True, max_lora_rank=max_lora_rank,
@@ -101,7 +102,7 @@ def load_vllm(model: str, max_model_len: int, gpu_memory_utilization: float,
         revision=revision,
         max_model_len=max_model_len,
         gpu_memory_utilization=gpu_memory_utilization,
-        limit_mm_per_prompt={"image": 1},
+        limit_mm_per_prompt={"image": max_images},
         # By default the training pixel budget; it also keeps large images (TextVQA is >1MP)
         # from exceeding max_model_len in vision tokens.
         mm_processor_kwargs={"max_pixels": max_pixels},

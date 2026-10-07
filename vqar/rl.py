@@ -14,7 +14,7 @@ from pathlib import Path
 from vqar import config
 from vqar.data import to_uniform_canvas
 from vqar.pools import RefillStream, load_pool
-from vqar.registry import PROMPTS
+from vqar.registry import PROMPTS, check_trainable
 from vqar.training import ROOT
 
 ROLLOUT_TEMPERATURE = 1.0
@@ -40,6 +40,7 @@ def to_grpo_columns(batch: dict, template: str) -> dict:
 def load_rl_dataset(preset, data_dir: Path | None = None):
     """The preset's RL pool (its datasets' rl roles, or a declared subset of them) as GRPO
     rows in the preset's rollout template."""
+    check_trainable(preset.datasets)
     rows = load_pool(data_dir or ROOT / "data", preset.datasets, preset.seed, preset.pool)
     columns = rows.select_columns(["image", "question", "answers", "dataset", "qid"])
     return columns.with_transform(partial(to_grpo_columns, template=preset.rollout_prompt))

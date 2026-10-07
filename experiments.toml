@@ -99,6 +99,34 @@ name = "SFT on the 4,000 RL questions"
 model = "checkpoints/merged/sft4k2_final125"
 run = "closeout-sft4k2"
 
+# The ChartQA pilot (Part 2, 2026-10-07): ChartQA's human questions passed the screening gate,
+# so the 2B arms train on its 7,378-question pool: one SFT epoch, then 300 GRPO updates each
+# under the frozen recipe (correctness reward = ChartQA relaxed accuracy), on the local RTX 4090.
+# Commands: runs/chartqa-pilot-20261007/run_pilot.sh (local); merged models stay local.
+[[arms]]
+label = "cqa-sft2"
+name = "SFT 2B (ChartQA)"
+model = "checkpoints/merged/cqa_sft2"
+run = "cqa-sft2"
+
+[[arms]]
+label = "cqa-grpo2-base"
+name = "Instruct → GRPO (ChartQA)"
+model = "checkpoints/merged/cqa_grpo2_base"
+run = "cqa-grpo2-base"
+
+[[arms]]
+label = "cqa-short2-base"
+name = "Instruct → short-prompt GRPO (ChartQA)"
+model = "checkpoints/merged/cqa_short2_base"
+run = "cqa-short2-base"
+
+[[arms]]
+label = "cqa-grpo2-sft"
+name = "SFT → GRPO (ChartQA)"
+model = "checkpoints/merged/cqa_grpo2_sft"
+run = "cqa-grpo2-sft"
+
 # Recipe experiments: 2B from Instruct, one change each against the baseline, which is
 # the frozen recipe with the merged-weight sampler. The 8B format-reward run changes the
 # corrected campaign's 8B recipe instead.
@@ -264,33 +292,56 @@ candidates = ["sft4k2"]
 
 # Held-out pass@k (2026-10-06): sampled cells on the first 1,000 test questions of each
 # dataset, 32 samples at temperature 1. Each comparison is candidate minus reference under one
-# prompt. `python -m scripts.pass_at_k --declared` writes results/passk-heldout.json.
-[passk]
+# prompt. `python -m scripts.pass_at_k --declared heldout` writes results/passk-heldout.json.
+[passk.heldout]
 datasets = ["vqav2", "gqa", "textvqa"]
 tier = "first-1000"
 samples = 32
 temperature = 1.0
 seed = 42
 
-[[passk.comparisons]]
+[[passk.heldout.comparisons]]
 prompt = "short"
 reference = "base2"
 candidates = ["p1-f-short2-base", "sft2", "sft4k2"]
 
-[[passk.comparisons]]
+[[passk.heldout.comparisons]]
 prompt = "short"
 reference = "p1-f-short2-base"
 candidates = ["sft4k2"]
 
-[[passk.comparisons]]
+[[passk.heldout.comparisons]]
 prompt = "short"
 reference = "sft2"
 candidates = ["p1-f-short2-sft"]
 
-[[passk.comparisons]]
+[[passk.heldout.comparisons]]
 prompt = "reasoning"
 reference = "base2"
 candidates = ["p1-f-grpo2-base"]
+
+# pass@k on the ChartQA pilot's full test role (2026-10-07).
+[passk.chartqa]
+datasets = ["chartqa"]
+tier = "full"
+samples = 32
+temperature = 1.0
+seed = 42
+
+[[passk.chartqa.comparisons]]
+prompt = "reasoning"
+reference = "base2"
+candidates = ["cqa-grpo2-base"]
+
+[[passk.chartqa.comparisons]]
+prompt = "reasoning"
+reference = "cqa-sft2"
+candidates = ["cqa-grpo2-sft"]
+
+[[passk.chartqa.comparisons]]
+prompt = "short"
+reference = "base2"
+candidates = ["cqa-short2-base", "cqa-sft2"]
 
 # Extra OOD sets (2026-10-06): short prompt, greedy, seed 42, as frozen before any prediction.
 # VizWiz is scored with the authors' evaluator, RealWorldQA with project-defined exact match.
@@ -311,6 +362,20 @@ candidates = ["p1-f-short2-base", "p1-f-short2-sft"]
 [[ood.comparisons]]
 reference = "p1-f-short2-base"
 candidates = ["sft4k2"]
+
+# Pilots on a single candidate dataset: the arms, evaluated on its full test role under both
+# prompts, and the paired differences the results page shows.
+[pilots.chartqa]
+dataset = "chartqa"
+arms = ["base2", "cqa-sft2", "cqa-grpo2-base", "cqa-short2-base", "cqa-grpo2-sft"]
+
+[[pilots.chartqa.comparisons]]
+reference = "base2"
+candidates = ["cqa-sft2", "cqa-grpo2-base", "cqa-short2-base"]
+
+[[pilots.chartqa.comparisons]]
+reference = "cqa-sft2"
+candidates = ["cqa-grpo2-sft", "cqa-short2-base"]
 
 # The corrected campaign, on the history page.
 [matrices.corrected]

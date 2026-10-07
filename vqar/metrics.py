@@ -197,3 +197,23 @@ def chartqa_normalized_accuracy(prediction: str, gt_answers: list[str]) -> float
         return normalize_answer(prediction) == normalize_answer(target)
 
     return float(any(correct(answer) for answer in gt_answers))
+
+
+_CHOICE = re.compile(r"^\s*(?:option\s+|answer\s*:?\s*)?\(?([A-Ea-e])\)?(?:[.):,\s]|$)",
+                     re.IGNORECASE)
+
+
+def choice_letter_accuracy(prediction: str, gt_answers: list[str]) -> float:
+    """Multiple choice, strict: the prediction is the reference letter alone ('C' or 'C.')."""
+    return float(prediction.strip().rstrip(".").upper() == gt_answers[0].upper())
+
+
+def choice_accuracy(prediction: str, gt_answers: list[str]) -> float:
+    """Multiple choice, lenient: a leading option letter ('C', '(C)', 'C. Bossing', 'Option C')
+    must be the reference letter; without one, the text must match the reference option's
+    text (answers hold the letter, then the option text) after VQA normalization."""
+    match = _CHOICE.match(prediction)
+    if match:
+        return float(match.group(1).upper() == gt_answers[0].upper())
+    return float(any(normalize_answer(prediction) == normalize_answer(text)
+                     for text in gt_answers[1:]))

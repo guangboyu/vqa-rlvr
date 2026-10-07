@@ -235,7 +235,7 @@ rewards: higher pass@1, the base model level or ahead at large k. Here each arm 
 first 1,000 test questions of VQAv2, GQA and TextVQA 32 times at temperature 1 (seed 42, the
 template's token budget; `evaluate.py --tier first-1000 --temperature 1 --samples 32`). With c of
 n = 32 samples fully correct under the official scorer, pass@k is estimated without bias as
-1 − C(n−c, k) / C(n, k) and averaged over questions (`python -m scripts.pass_at_k --declared`).
+1 − C(n−c, k) / C(n, k) and averaged over questions (`python -m scripts.pass_at_k --declared heldout`).
 pass@k is an oracle quantity: it needs a grader to pick the right sample, so it is not a
 deployable best-of-k, and pass@1 at temperature 1 sits below greedy accuracy. A VQA answer that
 matches only some annotators counts in the mean score but never as a pass. Official scorer, %:
@@ -302,7 +302,7 @@ stays within 0.5 points of Instruct on VQAv2 and GQA (−4.3 on TextVQA) while p
 questions short-prompt GRPO drew trails it by 4.3–5.1 points at pass@1 and leads it by 3.4–12.8
 at pass@32, although under greedy decoding the two are within a point of each other.
 The normalized scorer gives the same crossover
-(`python -m scripts.pass_at_k --declared --variant normalized`), so casing does not explain it.
+(`python -m scripts.pass_at_k --declared heldout --variant normalized`), so casing does not explain it.
 This matches what Yue et al. report for text: RL with a verifiable reward makes the model choose
 answers it could already produce more often rather than adding new ones, and here it costs some
 coverage. One training seed per arm; the intervals cover which questions and images were asked,
@@ -468,6 +468,95 @@ reference and the models almost never say so: Instruct 2B does in 69 of 8,000 an
 15.8 on those questions against 58.3 on the rest. SFT on the same 4,000 questions short-prompt
 GRPO drew is level with Instruct on VizWiz and 1.18 points behind GRPO (interval [−1.68,
 −0.70]), so GRPO's VizWiz lead is not a matter of data volume.
+
+## ChartQA pilot: RL where reasoning pays
+
+On every dataset above, reasoning lowered accuracy and correctness-only GRPO deleted it. ChartQA's
+human-written questions are the first candidate where it does not: in screening on training
+questions, reasoning helped numeric answers by 5.6 points and cost text answers 5.5
+([screening](evaluation.md#dataset-screening)). The 2B pilot trains on its 7,378-question pool:
+one SFT epoch, then 300 GRPO updates per arm under the frozen recipe, with ChartQA's relaxed
+accuracy (5% tolerance on numbers) as the correctness reward, on one RTX 4090 (3.3 GPU-hours for
+training, merges and evaluation). 300 updates is a pilot budget: the reasoning-prompt dev
+curve of GRPO from Instruct was still rising at update 300 (71.0, 72.4 and 74.0 at updates 100,
+200 and 300). Official (normalized) accuracy on all 1,250 human test questions, the official
+score by answer type, and mean output tokens:
+
+<!-- report:chartqa-pilot -->
+| Arm | Prompt | Accuracy | number answers | text answers | Output tokens |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Instruct 2B | short | 65.84 (66.24) | 62.87 | 71.81 | 4 |
+| Instruct 2B | reasoning | 69.68 (70.40) | 68.02 | 73.01 | 205 |
+| SFT 2B (ChartQA) | short | 68.80 (68.96) | 66.71 | 73.01 | 4 |
+| SFT 2B (ChartQA) | reasoning | 66.24 (66.56) | 63.11 | 72.53 | 76 |
+| Instruct → GRPO (ChartQA) | short | 66.16 (66.56) | 63.35 | 71.81 | 4 |
+| Instruct → GRPO (ChartQA) | reasoning | 76.40 (77.52) | 76.41 | 76.39 | 201 |
+| Instruct → short-prompt GRPO (ChartQA) | short | 66.96 (67.20) | 63.95 | 73.01 | 4 |
+| Instruct → short-prompt GRPO (ChartQA) | reasoning | 72.08 (72.96) | 71.86 | 72.53 | 198 |
+| SFT → GRPO (ChartQA) | short | 69.44 (69.60) | 66.95 | 74.46 | 4 |
+| SFT → GRPO (ChartQA) | reasoning | 76.48 (77.28) | 76.89 | 75.66 | 168 |
+<!-- /report:chartqa-pilot -->
+
+Candidate minus reference, official scorer, with 95% intervals over questions:
+
+<!-- report:chartqa-pilot-deltas -->
+| Comparison | Prompt | Official |
+| --- | --- | ---: |
+| SFT 2B (ChartQA) − Instruct 2B | short | +2.96 [+1.12, +4.80] |
+| SFT 2B (ChartQA) − Instruct 2B | reasoning | -3.44 [-6.24, -0.64] |
+| Instruct → GRPO (ChartQA) − Instruct 2B | short | +0.32 [-0.32, +0.96] |
+| Instruct → GRPO (ChartQA) − Instruct 2B | reasoning | +6.72 [+4.56, +8.80] |
+| Instruct → short-prompt GRPO (ChartQA) − Instruct 2B | short | +1.12 [+0.32, +1.92] |
+| Instruct → short-prompt GRPO (ChartQA) − Instruct 2B | reasoning | +2.40 [+0.56, +4.16] |
+| SFT → GRPO (ChartQA) − SFT 2B (ChartQA) | short | +0.64 [-0.16, +1.44] |
+| SFT → GRPO (ChartQA) − SFT 2B (ChartQA) | reasoning | +10.24 [+7.68, +12.72] |
+| Instruct → short-prompt GRPO (ChartQA) − SFT 2B (ChartQA) | short | -1.84 [-3.60, -0.08] |
+| Instruct → short-prompt GRPO (ChartQA) − SFT 2B (ChartQA) | reasoning | +5.84 [+3.12, +8.56] |
+<!-- /report:chartqa-pilot-deltas -->
+
+Here GRPO keeps the reasoning and improves it. Under the reasoning prompt, GRPO from Instruct
+writes as much as before (about 200 tokens, 97% closing the answer tag) and gains 6.7 points,
+8.4 on numeric questions; GRPO after SFT, whose SFT start had shortened its reasoning to 76
+tokens, grows it back to 168 and gains 10.2 points over SFT. In training, GRPO from Instruct kept
+its completions at 207 → 202 tokens and its entropy at 0.24 → 0.23, against 152 → 8 tokens and
+0.73 → 0.06 on VQAv2 and GQA. Both reasoning-trained models now beat every short-answer arm: the
+reasoning prompt scores 76.4–76.5 against 69.4 for the best short answer (SFT → GRPO), so on
+this dataset RL with reasoning lifts accuracy above the short-answer ceiling. The short-answer
+ceiling itself moves as on the general data: short-prompt GRPO adds 1.1 points, SFT 3.0. One
+training seed, one dataset, 300 updates; the judge rescoring has not been run on these models.
+
+pass@k on all 1,250 test questions, 32 samples at temperature 1 (official scorer, %;
+`python -m scripts.pass_at_k --declared chartqa`):
+
+<!-- report:chartqa-passk -->
+| Arm | Prompt | Dataset | Mean score | pass@1 | pass@2 | pass@4 | pass@8 | pass@16 | pass@32 |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Instruct 2B | short | ChartQA (human) | 62.68 | 62.68 | 68.79 | 73.83 | 78.30 | 82.38 | 86.08 |
+| SFT 2B (ChartQA) | short | ChartQA (human) | 60.97 | 60.97 | 71.05 | 78.09 | 83.22 | 87.01 | 89.76 |
+| Instruct → short-prompt GRPO (ChartQA) | short | ChartQA (human) | 64.93 | 64.93 | 69.61 | 73.46 | 76.86 | 79.91 | 82.56 |
+| Instruct 2B | reasoning | ChartQA (human) | 66.44 | 66.44 | 75.68 | 82.10 | 86.46 | 89.24 | 91.04 |
+| SFT 2B (ChartQA) | reasoning | ChartQA (human) | 58.00 | 58.00 | 72.32 | 81.99 | 88.15 | 92.07 | 94.56 |
+| Instruct → GRPO (ChartQA) | reasoning | ChartQA (human) | 74.86 | 74.86 | 81.66 | 86.08 | 89.08 | 91.14 | 92.56 |
+| SFT → GRPO (ChartQA) | reasoning | ChartQA (human) | 73.14 | 73.14 | 82.41 | 87.89 | 91.32 | 93.50 | 95.12 |
+<!-- /report:chartqa-passk -->
+
+<!-- report:chartqa-passk-deltas -->
+| Comparison | Prompt | Dataset | Mean score | pass@1 | pass@4 | pass@32 |
+| --- | --- | --- | ---: | ---: | ---: | ---: |
+| Instruct → GRPO (ChartQA) − Instruct 2B | reasoning | ChartQA (human) | +8.43 [+7.38, +9.49] | +8.43 [+7.38, +9.49] | +3.98 [+3.16, +4.83] | +1.52 [+0.56, +2.56] |
+| SFT → GRPO (ChartQA) − SFT 2B (ChartQA) | reasoning | ChartQA (human) | +15.14 [+13.96, +16.33] | +15.14 [+13.96, +16.33] | +5.90 [+4.85, +6.98] | +0.56 [-0.56, +1.68] |
+| Instruct → short-prompt GRPO (ChartQA) − Instruct 2B | short | ChartQA (human) | +2.25 [+1.79, +2.72] | +2.25 [+1.79, +2.72] | -0.37 [-0.90, +0.15] | -3.52 [-4.72, -2.32] |
+| SFT 2B (ChartQA) − Instruct 2B | short | ChartQA (human) | -1.70 [-2.77, -0.65] | -1.70 [-2.77, -0.65] | +4.26 [+3.21, +5.36] | +3.68 [+2.32, +5.04] |
+<!-- /report:chartqa-passk-deltas -->
+
+Held-out pass@k separates the two ways GRPO trained on ChartQA. Trained with reasoning, GRPO
+from Instruct is ahead at every k: +8.4 [+7.4, +9.5] at pass@1 and still +1.5 [+0.6, +2.6] at
+pass@32 (91.0 → 92.6); GRPO after SFT gains 15.1 at pass@1 and stays level at pass@32 (+0.6
+[−0.6, +1.7]). Short-prompt GRPO on the same questions reproduces the general-data pattern: +2.2
+at pass@1, below Instruct from k = 8, and −3.5 [−4.7, −2.3] at pass@32. SFT again does the
+reverse, −1.7 at pass@1 and +3.7 at pass@32. Most of the reasoning advantage at k = 1 is
+concentration on answers Instruct could already sample (it narrows from 8.4 to 1.5 points by
+k = 32); the remainder is a coverage gain that short-prompt RL does not produce.
 
 ## Image resolution
 
@@ -936,11 +1025,14 @@ with varied rewards over 1,000 updates.
 <!-- report:learnability -->
 | Model | Dataset | Prompt | Prompts | Samples each | Learnable (%) | Never correct (%) | Always correct (%) |
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
+| `base2` | ChartQA (human) | reasoning | 500 | 8 | 41.2 | 11.4 | 47.4 |
 | `base2` | CLEVR counting | reasoning | 500 | 8 | 48.4 | 0.0 | 51.6 |
+| `base2` | CLEVR compositional | reasoning | 500 | 8 | 62.0 | 5.2 | 32.8 |
 | `base2` | GQA | reasoning | 500 | 8 | 42.0 | 26.6 | 31.4 |
 | `base2` | GQA | reasoning | 2,500 | 8 | 44.5 | 26.0 | 29.5 |
 | `base2` | GQA | short | 2,500 | 8 | 35.5 | 19.1 | 45.4 |
 | `base2` | GQA | reasoning | 5,000 | 8 | 45.0 | 24.3 | 30.7 |
+| `base2` | MedThinkVQA | reasoning | 500 | 8 | 47.4 | 52.0 | 0.6 |
 | `base2` | VQAv2 | reasoning | 500 | 8 | 47.8 | 19.8 | 32.4 |
 | `base2` | VQAv2 | reasoning | 2,500 | 8 | 48.9 | 21.3 | 29.8 |
 | `base2` | VQAv2 | short | 2,500 | 8 | 40.4 | 15.1 | 44.5 |

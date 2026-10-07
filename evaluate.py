@@ -113,7 +113,8 @@ def main() -> None:
                      args.adapter).pinned()
     generator = VLLMGenerator(model.path, model.revision, args.max_model_len,
                               args.gpu_memory_utilization,
-                              max_lora_rank=adapter_rank(args.adapter), max_pixels=args.max_pixels)
+                              max_lora_rank=adapter_rank(args.adapter), max_pixels=args.max_pixels,
+                              max_images=max(DATASETS[p.dataset].max_images for p in cells))
     if args.adapter:
         generator = generator.with_adapter(args.adapter)
     for protocol in cells:

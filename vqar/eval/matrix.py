@@ -62,6 +62,19 @@ def load_comparisons(path: Path, name: str | None = None) -> list[tuple[str, str
     return list(dict.fromkeys(pairs))
 
 
+def load_pilot(path: Path, name: str) -> tuple[list[Arm], list[Protocol],
+                                             list[tuple[str, str]]]:
+    """A single-dataset pilot: its arms in order, its full-test protocols under both prompts,
+    and the (reference, candidate) pairs it compares."""
+    matrix = tomllib.loads(Path(path).read_text())
+    pilot = matrix["pilots"][name]
+    arms = {arm["label"]: Arm(**arm) for arm in matrix["arms"]}
+    protocols = [Protocol(pilot["dataset"], prompt=prompt) for prompt in ("short", "reasoning")]
+    pairs = [(entry["reference"], candidate) for entry in pilot["comparisons"]
+             for candidate in entry["candidates"]]
+    return [arms[label] for label in pilot["arms"]], protocols, pairs
+
+
 def declared_records(arms: list[Arm], protocols: list[Protocol], records_dir: Path,
                      data_dir: Path, root: Path) -> dict[tuple[str, Protocol], RunRecord]:
     """The record filling each declared (arm, protocol) cell, where one exists.

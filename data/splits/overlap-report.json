@@ -1,7 +1,7 @@
 {
   "version": "split-files-v1",
-  "held_out_images": 27006,
-  "training_images": 43058,
+  "held_out_images": 28225,
+  "training_images": 49900,
   "training_images_shared_across_subsets": {
     "gqa_rl & gqa_sft": 1,
     "gqa_rl & vqav2_rl": 4,

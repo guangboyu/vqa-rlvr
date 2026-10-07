@@ -10,9 +10,10 @@ predictions beside the records, which stay local.
 """
 
 import json
+import tomllib
 
 from vqar.config import MAX_PIXELS
-from vqar.eval.matrix import declared_records, load_comparisons, load_matrix
+from vqar.eval.matrix import declared_records, load_comparisons, load_matrix, load_pilot
 from vqar.eval.paired import paired_bootstrap, question_scores
 from vqar.eval.report import ROOT, load_cells
 from vqar.eval.runner import DATA_DIR, RECORDS_DIR
@@ -75,8 +76,29 @@ def resolution_contrasts() -> list[dict]:
     return rows
 
 
+def pilot_comparisons() -> list[dict]:
+    """The declared pairs of every single-dataset pilot, on its full test role."""
+    matrix_path = ROOT / "experiments.toml"
+    rows = []
+    for name in tomllib.loads(matrix_path.read_text()).get("pilots", {}):
+        arms, protocols, pairs = load_pilot(matrix_path, name)
+        records = declared_records(arms, protocols, RECORDS_DIR, DATA_DIR, ROOT)
+        for reference, candidate in pairs:
+            for protocol in protocols:
+                pair = records.get((reference, protocol)), records.get((candidate, protocol))
+                if None in pair:
+                    continue
+                for variant in SCORER_VARIANTS:
+                    scores = [question_scores(r.predictions_path(), variant) for r in pair]
+                    rows.append({"pilot": name, "reference": reference, "candidate": candidate,
+                                 "dataset": protocol.dataset, "prompt": protocol.prompt,
+                                 "variant": variant, **paired_bootstrap(*scores)})
+    return rows
+
+
 def main():
-    OUTPUT.write_text(json.dumps(comparisons() + resolution_contrasts(), indent=1) + "\n")
+    rows = comparisons() + resolution_contrasts() + pilot_comparisons()
+    OUTPUT.write_text(json.dumps(rows, indent=1) + "\n")
     print(f"wrote {OUTPUT.relative_to(ROOT)}")
 
 

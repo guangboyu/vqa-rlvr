@@ -154,3 +154,19 @@ def test_chartqa_relaxed_accuracy(prediction, answers, expected):
 ])
 def test_chartqa_normalized_accuracy(prediction, answers, expected):
     assert metrics.chartqa_normalized_accuracy(prediction, answers) == expected
+
+
+@pytest.mark.parametrize("prediction,expected", [
+    ("C", 1.0), ("C.", 1.0), (" c ", 1.0), ("D", 0.0), ("C. Carpo-metacarpal bossing", 0.0),
+])
+def test_choice_letter_accuracy_is_strict(prediction, expected):
+    assert metrics.choice_letter_accuracy(prediction, ["C", "Carpo-metacarpal bossing"]) == expected
+
+
+@pytest.mark.parametrize("prediction,expected", [
+    ("C", 1.0), ("(C)", 1.0), ("C. Carpo-metacarpal bossing", 1.0), ("Option C", 1.0),
+    ("Answer: C", 1.0), ("carpo-metacarpal bossing", 1.0), ("D) Osteochondroma", 0.0),
+    ("Osteochondroma", 0.0), ("Cyst", 0.0),
+])
+def test_choice_accuracy_reads_a_leading_letter_or_the_option_text(prediction, expected):
+    assert metrics.choice_accuracy(prediction, ["C", "Carpo-metacarpal bossing"]) == expected

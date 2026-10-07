@@ -15,7 +15,7 @@ from vqar import config
 from vqar.data import cap_pixels
 from vqar.pools import load_pool
 from vqar.pools import provenance as pool_provenance
-from vqar.registry import PROMPTS
+from vqar.registry import PROMPTS, check_trainable
 from vqar.splits import load_role, provenance
 from vqar.training import (
     ROOT,
@@ -54,6 +54,7 @@ def to_sft_columns(batch: dict) -> dict:
 
 def load_datasets(preset: config.SFTPreset, pool: str | None = None):
     """SFT rows, or declared RL-pool questions supervised with their original labels."""
+    check_trainable(preset.datasets)
     train = (load_pool(ROOT / "data", preset.datasets, preset.seed, pool)
              if pool else load_role(ROOT / "data", preset.datasets, "sft", preset.seed))
     dev = load_role(ROOT / "data", preset.datasets, "dev", preset.seed)
@@ -80,6 +81,8 @@ def main() -> None:
     parser.add_argument("--max-steps", type=int, default=-1, help="cap steps (sanity runs)")
     parser.add_argument("--pool", default=None,
                         help="supervise the exact questions in a declared RL pool")
+    parser.add_argument("--datasets", nargs="+", default=None,
+                        help="train on these datasets' sft roles (default: the preset's)")
     args = parse_arguments(parser)
 
     preset = resolve_preset(config.SFT_PRESETS, args)
