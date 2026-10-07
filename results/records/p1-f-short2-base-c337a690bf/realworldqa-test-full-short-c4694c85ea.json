@@ -1,0 +1,103 @@
+{
+  "schema": "run-record/1",
+  "legacy": false,
+  "model_id": "c337a690bfefa2cbf2338c5b81ff29733106a57b3d9b31270a7131a2981857bf",
+  "protocol_id": "c4694c85eacc822e8fea9ba2f660fc0bf88a3cf23881d96751a3dd0a67a302c5",
+  "model": {
+    "source": "checkpoints/merged/p1_f_short2_base",
+    "label": "p1-f-short2-base",
+    "run": null,
+    "step": null,
+    "weights": {
+      "sha256": "b32f5025978ac08aeef080032f2e81a98531a071f33c138e66072ce0db0b2f4d",
+      "config_sha256": "e475ba87af77a77c5b0872f6b32be09a175c534ef17c688c0274fcf9b6dbd9f5"
+    }
+  },
+  "protocol": {
+    "dataset": "realworldqa",
+    "ladder": "far-ood",
+    "role": "test",
+    "tier": "full",
+    "question_limit": null,
+    "prompt": "short",
+    "prompt_text": "{question}\nAnswer the question using a single word or phrase.",
+    "max_tokens": 64,
+    "temperature": 0.0,
+    "samples": 1,
+    "image_mode": "original",
+    "max_pixels": 786432,
+    "scorers": {
+      "official": null,
+      "normalized": "project_case_whitespace_em/v1",
+      "project": "project_case_whitespace_em/v1"
+    },
+    "extraction": "last_answer_tag_or_full_text",
+    "answer_tag_rule": "raw text contains </answer>",
+    "data": {
+      "subsets": {
+        "realworldqa_eval": "bcd08a51eacbb622"
+      },
+      "selection_sha256": "164f958dbc07de4682d85c4289c1f605f46e44657fb46e3ce7abae21bb405e64",
+      "image_groups_sha256": "d902f3f3909faa6ffbbb69eb801d7cd3a5ab881485709ec4b0517919529683fc"
+    },
+    "metric_metadata": {
+      "primary": "project",
+      "project": {
+        "name": "case/whitespace exact match",
+        "source": "project-defined; no native evaluator claimed",
+        "rule": "casefold and collapse whitespace; blank predictions fail; no punctuation/article/number normalization or option guessing"
+      },
+      "normalized": {
+        "same_as": "project",
+        "name": "case/whitespace exact match"
+      }
+    }
+  },
+  "metrics": {
+    "n": 765,
+    "official": null,
+    "normalized": {
+      "overall": 0.6287581699346405,
+      "by_answer_type": {
+        "all": 0.6287581699346405
+      }
+    },
+    "project": {
+      "overall": 0.6287581699346405,
+      "by_answer_type": {
+        "all": 0.6287581699346405
+      }
+    },
+    "mean_output_tokens": 2.061437908496732,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0
+  },
+  "provenance": {
+    "code_version": "da1a8a777795cbf46dde936e01eee1877bb2981c",
+    "uncommitted_changes": true,
+    "source_sha256": {
+      "vqar/eval/__init__.py": "2aa88c809409a57502d0d9b2893e14c3b5bf99d971bceefcc1ed4716ef295f81",
+      "vqar/eval/examples.py": "d5788bd63c7f12154a53379e12ea690a2d15fd8bcc06b1f34b577129e418222c",
+      "vqar/eval/protocol.py": "5ed43dd32bdc06ee182944674562b6c928ac9f64c68cfba882b7a350726668e5",
+      "vqar/eval/record.py": "6be2298f531240b01df2feecedd50af2d32a1c17f6029951ddf3f7723834b023",
+      "vqar/eval/runner.py": "f0a55a3f8fcaddc6c4154cef031a22911f5cc0cafe7a7cd436c811b2b75e8fca",
+      "vqar/inference.py": "df8aefe07befb3a4c76d3d8ea523209fa060f0d4dbb4d3196896a347b8c1938f",
+      "vqar/config.py": "ec5ef416808c7ee4f68169d4d5c3322015f113e8a5bcffd2e9d3bf6b2ac88b1b",
+      "vqar/data.py": "7c8d0a76f1292ec063f14ec231a60ae36c54ca8213913345c3ab9536afd2bae8",
+      "vqar/metrics.py": "3a18e4b64783f1b09025a0f79faed934f3ab6671a5c63d85216d55c2bddcf5cb",
+      "vqar/registry.py": "7de59935a4d714b2a73a937cb9c7e08a044c02924bd9987d53bedb87756649b0",
+      "vqar/splits.py": "c723a193937a48d613463e9de403c8a48565481257392652c960845fb2827c56",
+      "vqar/ood_metrics.py": "9449e0a85c4b7ff3efcbc88264ee1e03d53689c39c2fe030a13887465fa1b226",
+      "vqar/ood.py": "d59220be09094fa5a5ffbb6e791b38ee5b3c8dca0ca381ef64a28bf0f94ccb8f",
+      "uv.lock": "8c79fab440350a15e75e9507c3b5338ecc63beb92fc12c6ef18fbe01122ac323"
+    },
+    "versions": {
+      "torch": "2.11.0+cu129",
+      "transformers": "5.13.0",
+      "vllm": "0.23.0+cu129",
+      "datasets": "5.0.0"
+    },
+    "timestamp": "2026-10-07T05:24:03+00:00"
+  }
+}

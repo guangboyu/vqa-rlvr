@@ -49,7 +49,9 @@ predictions with no per-question mismatch.
   bootstrap interval over questions (10,000 resamples). With one training seed per arm, the
   interval covers question sampling only, not training-seed variation.
 - **Sampled protocols.** For k samples at a temperature, records report avg@k (mean over
-  samples) and pass@k (at least one fully correct sample).
+  samples) and pass@k (at least one fully correct sample). `scripts/pass_at_k.py` turns the
+  saved samples into the unbiased estimate 1 − C(n−c, k) / C(n, k) for every k up to n, with
+  paired intervals that resample images ([held-out curves](results.md#held-out-passk-before-and-after-rl)).
 - **Learnability.** The share of prompts whose k samples are neither all right nor all wrong
   under the training reward: the prompts that give GRPO a gradient.
 
@@ -127,5 +129,5 @@ GQA; on TextVQA the 1.15-point gap comes entirely from lmms-eval capitalizing ea
 | Images are capped at about 0.79 megapixels | memory and speed on a 24 GB card | no effect on VQAv2, GQA, or CLEVR images; 826 of 5,000 TextVQA images (16.5%) are downscaled, and Instruct 2B at the model's own 16.8 MP budget scores −0.1 (short) and −0.7 (reasoning) points, intervals including zero |
 | RL trains on images padded onto a 608×608 canvas (361 vision tokens); evaluation resizes to at most 768 tokens | the historical RL geometry, kept for comparable runs | not yet measured; `--image-mode canvas` evaluates an arm at the training geometry, and the report pairs it with the original-image cell |
 | One training seed per arm | compute; seeds are deferred | intervals measure question sampling only |
-| No model-based judge in the headline | exact scorers are reproducible and cheap | open-ended paraphrases count as wrong under both scorers |
+| No model-based judge in the headline | exact scorers are reproducible and cheap | open-ended paraphrases count as wrong under both scorers; an LLM judge, audited by an image-aware model, rescores the misses on the [results](results.md#exact-match-misses-rescored-by-an-llm-judge) page |
 | Reasoning-prompt generations are not bitwise repeatable | batched vLLM kernels vary with batch composition | differences smaller than the run-to-run spread are not evidence ([validation](validation.md)) |

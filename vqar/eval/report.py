@@ -56,6 +56,8 @@ def load_cells(records_dir: Path, data_dir: Path | None = None) -> dict[Cell, Ru
     cells = {}
     for path in record_files(records_dir):
         record = RunRecord.load(path)
+        if not DATASETS[record.protocol["dataset"]].require_split:
+            continue  # optional OOD cohorts are reported from results/ood.json
         if data_dir is not None and not is_current(record, data_dir):
             continue
         p = record.protocol
@@ -433,6 +435,117 @@ def answer_form_table(arms: list[Arm], rows: list[dict], prompt: str = "reasonin
     return table(["Arm", *map(column, datasets)], lines, 1)
 
 
+def load_result(results: Path, name: str) -> dict | None:
+    path = results / name
+    return json.loads(path.read_text()) if path.exists() else None
+
+
+def interval(row: dict) -> str:
+    return f"{row['delta']:+.2f} [{row['low']:+.2f}, {row['high']:+.2f}]"
+
+
+def passk_table(arms: list[Arm], passk: dict | None) -> str:
+    """Each arm's sampled pass@k curve on the held-out questions (official scorer, %)."""
+    if passk is None:
+        return "Held-out pass@k has not been computed yet.\n"
+    names = {arm.label: arm.name for arm in arms}
+    ks = list(passk["records"][0]["pass_at_k"])
+    rows = [[names[r["model"]], r["prompt"], DATASETS[r["dataset"]].display_name,
+             f"{r['mean_score']:.2f}", *(f"{r['pass_at_k'][k]:.2f}" for k in ks)]
+            for r in sorted(passk["records"], key=lambda r: (
+                PROMPT_ORDER.index(r["prompt"]), ordered_datasets().index(r["dataset"]),
+                list(names).index(r["model"])))]
+    return table(["Arm", "Prompt", "Dataset", "Mean score", *(f"pass@{k}" for k in ks)],
+                 rows, 3)
+
+
+def passk_deltas_table(arms: list[Arm], passk: dict | None) -> str:
+    """Candidate − reference for the mean score and pass@k, with image-group intervals."""
+    if passk is None:
+        return "Held-out pass@k has not been computed yet.\n"
+    names = {arm.label: arm.name for arm in arms}
+    metrics = [row["metric"] for row in passk["comparisons"][0]["deltas"]]
+    shown = list(dict.fromkeys(m for m in ("mean_score", "pass@1", "pass@4", metrics[-1])
+                               if m in metrics))
+    rows = []
+    for comparison in passk["comparisons"]:
+        found = {row["metric"]: row for row in comparison["deltas"]}
+        rows.append([f"{names[comparison['candidate']]} − {names[comparison['reference']]}",
+                     comparison["prompt"], DATASETS[comparison["dataset"]].display_name,
+                     *(interval(found[m]) for m in shown)])
+    header = [m.replace("mean_score", "Mean score") for m in shown]
+    return table(["Comparison", "Prompt", "Dataset", *header], rows, 3)
+
+
+def judge_table(arms: list[Arm], judge: dict | None) -> str:
+    """Official, judge-adjusted and audited accuracy, and the share of misses the judge accepts."""
+    if judge is None:
+        return "The judge has not rescored the final records yet.\n"
+    datasets = ordered_datasets()
+    found = {(c["arm"], c["prompt"], c["dataset"]): c for c in judge["cells"]}
+
+    def text(c):
+        if c is None:
+            return "—"
+        audited = f" / {c['audited']:.2f}" if "audited" in c else ""
+        share = "" if c["rescue_rate"] is None else f" ({100 * c['rescue_rate']:.0f}%)"
+        return f"{c['official']:.2f} / {c['adjusted']:.2f}{audited}{share}"
+
+    rows = [[arm.name, prompt, *(text(found.get((arm.label, prompt, d))) for d in datasets)]
+            for arm in arms for prompt in PROMPT_ORDER]
+    return table(["Arm", "Prompt", *map(column, datasets)], rows, 2)
+
+
+def judge_deltas_table(arms: list[Arm], judge: dict | None) -> str:
+    """Each declared paired difference: official / judge-adjusted / audited, in points."""
+    if judge is None:
+        return "The judge has not rescored the final records yet.\n"
+    names = {arm.label: arm.name for arm in arms}
+    datasets = ordered_datasets()
+    grouped = {}
+    for row in judge["paired_deltas"]:
+        key = (row["candidate"], row["reference"], row["prompt"])
+        grouped.setdefault(key, {}).setdefault(row["dataset"], {})[row["scorer"]] = row
+    rows = [[f"{names[c]} − {names[r]}", prompt, *(
+                " / ".join(f"{by[d][s]['delta']:+.2f}" for s in ("official", "adjusted", "audited")
+                           if s in by[d]) if d in by else "—" for d in datasets)]
+            for (c, r, prompt), by in grouped.items()]
+    return table(["Comparison", "Prompt", *map(column, datasets)], rows, 2)
+
+
+def ood_table(arms: list[Arm], ood: dict | None) -> str:
+    """Primary score on the extra OOD sets, normalized companion in parentheses."""
+    if ood is None:
+        return "The extra OOD sets have not been evaluated yet.\n"
+    found = {(c["arm"], c["dataset"]): c for c in ood["cells"]}
+    datasets = list(dict.fromkeys(c["dataset"] for c in ood["cells"]))
+    rows = [[arm.name, *("—" if (c := found.get((arm.label, d))) is None else
+                         f"{c['score']:.2f} ({c['normalized']:.2f})" for d in datasets)]
+            for arm in arms if any((arm.label, d) in found for d in datasets)]
+    header = [f"{DATASETS[d].display_name} ({found_primary(ood, d)})" for d in datasets]
+    return table(["Arm", *header], rows, 1)
+
+
+def found_primary(ood: dict, dataset: str) -> str:
+    primary = next(c["primary"] for c in ood["cells"] if c["dataset"] == dataset)
+    return {"official": "authors' evaluator", "project": "project exact match"}[primary]
+
+
+def ood_deltas_table(arms: list[Arm], ood: dict | None) -> str:
+    """Paired OOD differences with image-group intervals."""
+    if ood is None or not ood["comparisons"]:
+        return "No OOD comparison has been computed yet.\n"
+    names = {arm.label: arm.name for arm in arms}
+    datasets = list(dict.fromkeys(row["dataset"] for row in ood["comparisons"]))
+    grouped = {}
+    for row in ood["comparisons"]:
+        grouped.setdefault((row["candidate"], row["reference"]), {})[row["dataset"]] = row
+    rows = [[f"{names[c]} − {names[r]}", *(interval(by[d]) if d in by else "—"
+                                          for d in datasets)]
+            for (c, r), by in grouped.items()]
+    return table(["Comparison", *(DATASETS[d].display_name for d in datasets)], rows, 1)
+
+
 def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
     """Every markdown block, and the JSON export for the demo."""
     toml = root / "experiments.toml"
@@ -448,7 +561,20 @@ def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
     deltas = paired_deltas(root / "results")
     errors = error_analysis(root / "results")
     comparisons = load_comparisons(toml, "headline")
+    matched, _ = load_matrix(toml, "matched")
+    passk = load_result(root / "results", "passk-heldout.json")
+    judge = load_result(root / "results", "judge-final.json")
+    ood = load_result(root / "results", "ood.json")
     blocks = {
+        "matched": matrix_table(matched, cells),
+        "matched-deltas": deltas_table(matched, declared(
+            deltas, load_comparisons(toml, "matched"), ("official",))),
+        "passk": passk_table(every_arm, passk),
+        "passk-deltas": passk_deltas_table(every_arm, passk),
+        "judge": judge_table(arms, judge),
+        "judge-deltas": judge_deltas_table(arms, judge),
+        "ood": ood_table(every_arm, ood),
+        "ood-deltas": ood_deltas_table(every_arm, ood),
         "matrix": matrix_table(arms, cells),
         "behavior": behavior_table(arms, cells),
         "failures": failures_table(arms, cells),

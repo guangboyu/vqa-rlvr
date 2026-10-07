@@ -1,0 +1,190 @@
+{
+ "cells": [
+  {
+   "arm": "base2",
+   "dataset": "vizwiz",
+   "primary": "official",
+   "score": 42.503750000000004,
+   "normalized": 42.53125,
+   "n": 8000
+  },
+  {
+   "arm": "base2",
+   "dataset": "realworldqa",
+   "primary": "project",
+   "score": 60.130718954248366,
+   "normalized": 60.130718954248366,
+   "n": 765
+  },
+  {
+   "arm": "sft2",
+   "dataset": "vizwiz",
+   "primary": "official",
+   "score": 42.53125,
+   "normalized": 42.55125,
+   "n": 8000
+  },
+  {
+   "arm": "sft2",
+   "dataset": "realworldqa",
+   "primary": "project",
+   "score": 62.35294117647059,
+   "normalized": 62.35294117647059,
+   "n": 765
+  },
+  {
+   "arm": "p1-f-short2-base",
+   "dataset": "vizwiz",
+   "primary": "official",
+   "score": 43.57625,
+   "normalized": 43.603750000000005,
+   "n": 8000
+  },
+  {
+   "arm": "p1-f-short2-base",
+   "dataset": "realworldqa",
+   "primary": "project",
+   "score": 62.87581699346405,
+   "normalized": 62.87581699346405,
+   "n": 765
+  },
+  {
+   "arm": "p1-f-short2-sft",
+   "dataset": "vizwiz",
+   "primary": "official",
+   "score": 43.010000000000005,
+   "normalized": 43.0375,
+   "n": 8000
+  },
+  {
+   "arm": "p1-f-short2-sft",
+   "dataset": "realworldqa",
+   "primary": "project",
+   "score": 63.39869281045751,
+   "normalized": 63.39869281045751,
+   "n": 765
+  }
+ ],
+ "comparisons": [
+  {
+   "reference": "base2",
+   "candidate": "sft2",
+   "dataset": "vizwiz",
+   "primary": "official",
+   "n": 8000,
+   "delta": 0.0275,
+   "low": -0.5559050597087835,
+   "high": 0.6150216271080571,
+   "resamples": 10000,
+   "seed": 0,
+   "image_groups": 7928,
+   "bootstrap_unit": "image group",
+   "point_estimate_unit": "question"
+  },
+  {
+   "reference": "base2",
+   "candidate": "p1-f-short2-base",
+   "dataset": "vizwiz",
+   "primary": "official",
+   "n": 8000,
+   "delta": 1.0725,
+   "low": 0.6468461503479012,
+   "high": 1.5076398728158378,
+   "resamples": 10000,
+   "seed": 0,
+   "image_groups": 7928,
+   "bootstrap_unit": "image group",
+   "point_estimate_unit": "question"
+  },
+  {
+   "reference": "sft2",
+   "candidate": "p1-f-short2-base",
+   "dataset": "vizwiz",
+   "primary": "official",
+   "n": 8000,
+   "delta": 1.045,
+   "low": 0.5057209167503744,
+   "high": 1.5835825445942877,
+   "resamples": 10000,
+   "seed": 0,
+   "image_groups": 7928,
+   "bootstrap_unit": "image group",
+   "point_estimate_unit": "question"
+  },
+  {
+   "reference": "sft2",
+   "candidate": "p1-f-short2-sft",
+   "dataset": "vizwiz",
+   "primary": "official",
+   "n": 8000,
+   "delta": 0.4787499999999999,
+   "low": 0.10357825058003084,
+   "high": 0.8583332966833273,
+   "resamples": 10000,
+   "seed": 0,
+   "image_groups": 7928,
+   "bootstrap_unit": "image group",
+   "point_estimate_unit": "question"
+  },
+  {
+   "reference": "base2",
+   "candidate": "sft2",
+   "dataset": "realworldqa",
+   "primary": "project",
+   "n": 765,
+   "delta": 2.2222222222222223,
+   "low": 0.13089005235602094,
+   "high": 4.313725490196078,
+   "resamples": 10000,
+   "seed": 0,
+   "image_groups": 762,
+   "bootstrap_unit": "image group",
+   "point_estimate_unit": "question"
+  },
+  {
+   "reference": "base2",
+   "candidate": "p1-f-short2-base",
+   "dataset": "realworldqa",
+   "primary": "project",
+   "n": 765,
+   "delta": 2.7450980392156863,
+   "low": 1.1734028683181226,
+   "high": 4.450261780104712,
+   "resamples": 10000,
+   "seed": 0,
+   "image_groups": 762,
+   "bootstrap_unit": "image group",
+   "point_estimate_unit": "question"
+  },
+  {
+   "reference": "sft2",
+   "candidate": "p1-f-short2-base",
+   "dataset": "realworldqa",
+   "primary": "project",
+   "n": 765,
+   "delta": 0.522875816993464,
+   "low": -1.5686274509803921,
+   "high": 2.741514360313316,
+   "resamples": 10000,
+   "seed": 0,
+   "image_groups": 762,
+   "bootstrap_unit": "image group",
+   "point_estimate_unit": "question"
+  },
+  {
+   "reference": "sft2",
+   "candidate": "p1-f-short2-sft",
+   "dataset": "realworldqa",
+   "primary": "project",
+   "n": 765,
+   "delta": 1.045751633986928,
+   "low": -0.39215686274509803,
+   "high": 2.486910994764398,
+   "resamples": 10000,
+   "seed": 0,
+   "image_groups": 762,
+   "bootstrap_unit": "image group",
+   "point_estimate_unit": "question"
+  }
+ ]
+}

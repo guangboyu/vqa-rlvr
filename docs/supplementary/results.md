@@ -182,6 +182,277 @@ questions were asked; with one training seed per arm it does not measure seed va
 | SFT 8B → short-prompt GRPO − SFT 8B → GRPO | reasoning | official | -11.79 [-12.75, -10.83] | -11.27 [-12.02, -10.53] | -1.90 [-2.63, -1.17] | -8.46 [-9.37, -7.53] |
 <!-- /report:deltas -->
 
+## SFT on exactly the RL questions
+
+SFT in the headline trains on 39,458 questions; short-prompt GRPO from Instruct drew 4,000. To
+separate the amount of supervised data from the training method, one more 2B SFT run trains
+one epoch on exactly the 4,000 questions that GRPO run drew (2,022 VQAv2 and 1,978 GQA, 3,535
+images, none in a dev or test role), with the unchanged SFT recipe: 125 updates. The pool is
+`data/pools/part1-short2-actual4000.json`, built from the run's prompt-draw log by
+`scripts/build_draw_pool.py`; the final step was chosen in advance, not by dev score.
+
+<!-- report:matched -->
+| Arm | Prompt | VQAv2 | GQA | CLEVR counting | TextVQA (far-OOD) |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Instruct 2B | short | 77.87 (77.91) | 59.45 (59.46) | 97.67 (97.67) | 80.53 (80.55) |
+| Instruct 2B | reasoning | 55.06 (64.68) | 36.13 (51.95) | 87.13 (87.13) | 69.74 (69.75) |
+| SFT on the 4,000 RL questions | short | 78.83 (78.87) | 60.84 (60.84) | 99.73 (99.73) | 80.12 (80.13) |
+| SFT on the 4,000 RL questions | reasoning | 56.26 (59.84) | 41.44 (45.36) | 88.07 (88.07) | 73.24 (73.25) |
+| Instruct → short-prompt GRPO | short | 78.62 (78.66) | 60.34 (60.35) | 99.50 (99.50) | 81.01 (81.02) |
+| Instruct → short-prompt GRPO | reasoning | 61.85 (69.81) | 42.89 (54.01) | 86.50 (86.50) | 72.34 (72.35) |
+| SFT 2B | short | 79.87 (79.89) | 62.35 (62.35) | 99.40 (99.40) | 80.08 (80.10) |
+| SFT 2B | reasoning | 67.99 (68.17) | 56.61 (57.00) | 92.10 (92.10) | 68.86 (68.87) |
+<!-- /report:matched -->
+
+Official scorer, candidate minus reference, with 95% intervals over questions:
+
+<!-- report:matched-deltas -->
+| Comparison | Prompt | Scorer | VQAv2 | GQA | CLEVR counting | TextVQA (far-OOD) |
+| --- | --- | --- | ---: | ---: | ---: | ---: |
+| SFT on the 4,000 RL questions − Instruct 2B | short | official | +0.96 [+0.42, +1.51] | +1.38 [+0.91, +1.87] | +2.07 [+1.53, +2.63] | -0.41 [-0.99, +0.17] |
+| SFT on the 4,000 RL questions − Instruct 2B | reasoning | official | +1.20 [-0.13, +2.52] | +5.30 [+4.41, +6.17] | +0.93 [-0.43, +2.33] | +3.49 [+2.55, +4.43] |
+| SFT on the 4,000 RL questions − Instruct → short-prompt GRPO | short | official | +0.21 [-0.32, +0.73] | +0.49 [+0.07, +0.92] | +0.23 [+0.07, +0.43] | -0.89 [-1.42, -0.35] |
+| SFT on the 4,000 RL questions − Instruct → short-prompt GRPO | reasoning | official | -5.60 [-6.84, -4.34] | -1.45 [-2.33, -0.60] | +1.57 [+0.13, +3.00] | +0.89 [-0.02, +1.82] |
+| SFT on the 4,000 RL questions − SFT 2B | short | official | -1.04 [-1.59, -0.51] | -1.51 [-2.01, -1.03] | +0.33 [+0.07, +0.63] | +0.04 [-0.56, +0.64] |
+| SFT on the 4,000 RL questions − SFT 2B | reasoning | official | -11.73 [-13.04, -10.42] | -15.17 [-16.04, -14.34] | -4.03 [-5.33, -2.73] | +4.38 [+3.30, +5.47] |
+<!-- /report:matched-deltas -->
+
+Matching the questions closes most of the in-domain gap between SFT and RL. Full SFT led
+short-prompt GRPO by 1.25 points on VQAv2 and 2.00 on GQA; trained on the same 4,000 questions,
+SFT leads by 0.21 (an interval that includes zero) and 0.49. Far-OOD TextVQA keeps the order of
+the headline: short-prompt GRPO stays 0.89 points ahead. Only the question identities are
+matched. SFT fits one supplied answer per question in 125 updates on images resized to the
+pixel budget; GRPO samples eight answers per question over 1,000 updates on the 608×608 RL
+canvas. So this is not a comparison at equal compute, and the full-SFT model predates the fix
+that seeds the adapter initialization, so the two SFT runs do not share an initialization.
+
+## Held-out pass@k before and after RL
+
+pass@k asks whether training lets a model answer questions it could not answer before, or
+concentrates probability on answers it could already sample. For text reasoning,
+[Yue et al. (2025)](https://arxiv.org/abs/2504.13837) report the second for RL with verifiable
+rewards: higher pass@1, the base model level or ahead at large k. Here each arm answers the
+first 1,000 test questions of VQAv2, GQA and TextVQA 32 times at temperature 1 (seed 42, the
+template's token budget; `evaluate.py --tier first-1000 --temperature 1 --samples 32`). With c of
+n = 32 samples fully correct under the official scorer, pass@k is estimated without bias as
+1 − C(n−c, k) / C(n, k) and averaged over questions (`python -m scripts.pass_at_k --declared`).
+pass@k is an oracle quantity: it needs a grader to pick the right sample, so it is not a
+deployable best-of-k, and pass@1 at temperature 1 sits below greedy accuracy. A VQA answer that
+matches only some annotators counts in the mean score but never as a pass. Official scorer, %:
+
+<!-- report:passk -->
+| Arm | Prompt | Dataset | Mean score | pass@1 | pass@2 | pass@4 | pass@8 | pass@16 | pass@32 |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Instruct 2B | short | VQAv2 | 71.95 | 62.94 | 68.19 | 72.38 | 75.75 | 78.22 | 79.80 |
+| SFT 2B | short | VQAv2 | 71.87 | 62.75 | 70.04 | 75.06 | 78.59 | 80.98 | 82.40 |
+| Instruct → short-prompt GRPO | short | VQAv2 | 75.49 | 65.94 | 69.10 | 71.77 | 74.00 | 75.64 | 76.60 |
+| SFT → short-prompt GRPO | short | VQAv2 | 76.59 | 66.88 | 70.14 | 72.74 | 74.99 | 76.84 | 78.00 |
+| Instruct 2B | short | GQA | 55.55 | 55.55 | 63.17 | 69.63 | 75.05 | 79.43 | 82.70 |
+| SFT 2B | short | GQA | 56.04 | 56.04 | 66.22 | 74.30 | 80.26 | 84.56 | 87.30 |
+| Instruct → short-prompt GRPO | short | GQA | 58.12 | 58.12 | 62.70 | 66.59 | 69.84 | 72.62 | 75.10 |
+| SFT → short-prompt GRPO | short | GQA | 60.73 | 60.73 | 65.35 | 69.09 | 72.22 | 74.80 | 77.00 |
+| Instruct 2B | short | TextVQA | 75.64 | 67.77 | 72.70 | 76.08 | 78.71 | 80.62 | 82.00 |
+| SFT 2B | short | TextVQA | 70.70 | 63.48 | 70.92 | 75.78 | 79.19 | 81.73 | 83.70 |
+| Instruct → short-prompt GRPO | short | TextVQA | 78.16 | 70.18 | 73.28 | 75.58 | 77.44 | 78.89 | 80.10 |
+| SFT → short-prompt GRPO | short | TextVQA | 76.19 | 68.28 | 72.51 | 75.42 | 77.76 | 79.78 | 81.60 |
+| Instruct 2B | reasoning | VQAv2 | 52.00 | 45.65 | 55.04 | 62.13 | 67.69 | 72.36 | 76.20 |
+| Instruct → GRPO | reasoning | VQAv2 | 75.31 | 65.54 | 68.08 | 70.01 | 71.56 | 72.92 | 74.30 |
+| Instruct 2B | reasoning | GQA | 34.02 | 34.02 | 44.91 | 54.87 | 63.85 | 71.67 | 78.40 |
+| Instruct → GRPO | reasoning | GQA | 59.04 | 59.04 | 62.82 | 65.84 | 68.31 | 70.47 | 72.60 |
+| Instruct 2B | reasoning | TextVQA | 67.07 | 59.67 | 67.43 | 72.34 | 75.86 | 78.61 | 80.80 |
+| Instruct → GRPO | reasoning | TextVQA | 77.38 | 69.48 | 72.44 | 74.66 | 76.55 | 78.20 | 79.50 |
+<!-- /report:passk -->
+
+Candidate minus reference, points, with 95% intervals that resample images:
+
+<!-- report:passk-deltas -->
+| Comparison | Prompt | Dataset | Mean score | pass@1 | pass@4 | pass@32 |
+| --- | --- | --- | ---: | ---: | ---: | ---: |
+| Instruct → short-prompt GRPO − Instruct 2B | short | VQAv2 | +3.54 [+2.88, +4.20] | +3.01 [+2.30, +3.75] | -0.61 [-1.39, +0.18] | -3.20 [-4.50, -1.90] |
+| Instruct → short-prompt GRPO − Instruct 2B | short | GQA | +2.57 [+1.72, +3.44] | +2.57 [+1.72, +3.44] | -3.04 [-4.08, -2.04] | -7.60 [-9.30, -6.00] |
+| Instruct → short-prompt GRPO − Instruct 2B | short | TextVQA | +2.52 [+1.87, +3.21] | +2.41 [+1.62, +3.20] | -0.50 [-1.25, +0.24] | -1.90 [-3.00, -0.90] |
+| SFT 2B − Instruct 2B | short | VQAv2 | -0.08 [-0.93, +0.78] | -0.18 [-1.10, +0.74] | +2.68 [+1.79, +3.60] | +2.60 [+1.50, +3.70] |
+| SFT 2B − Instruct 2B | short | GQA | +0.49 [-0.55, +1.54] | +0.49 [-0.55, +1.54] | +4.67 [+3.43, +5.91] | +4.60 [+3.00, +6.30] |
+| SFT 2B − Instruct 2B | short | TextVQA | -4.94 [-5.89, -3.97] | -4.29 [-5.35, -3.19] | -0.30 [-1.39, +0.80] | +1.70 [+0.60, +2.90] |
+| SFT → short-prompt GRPO − SFT 2B | short | VQAv2 | +4.72 [+4.05, +5.42] | +4.12 [+3.37, +4.91] | -2.32 [-3.21, -1.47] | -4.40 [-5.70, -3.10] |
+| SFT → short-prompt GRPO − SFT 2B | short | GQA | +4.69 [+3.67, +5.73] | +4.69 [+3.67, +5.73] | -5.21 [-6.40, -4.03] | -10.30 [-12.20, -8.40] |
+| SFT → short-prompt GRPO − SFT 2B | short | TextVQA | +5.49 [+4.82, +6.16] | +4.79 [+4.12, +5.46] | -0.36 [-0.95, +0.20] | -2.10 [-3.20, -1.10] |
+| Instruct → GRPO − Instruct 2B | reasoning | VQAv2 | +23.31 [+21.43, +25.26] | +19.90 [+17.87, +21.93] | +7.88 [+5.94, +9.85] | -1.90 [-3.90, +0.10] |
+| Instruct → GRPO − Instruct 2B | reasoning | GQA | +25.03 [+22.80, +27.28] | +25.03 [+22.80, +27.28] | +10.97 [+8.85, +13.12] | -5.80 [-8.20, -3.30] |
+| Instruct → GRPO − Instruct 2B | reasoning | TextVQA | +10.31 [+8.84, +11.80] | +9.81 [+8.21, +11.43] | +2.32 [+0.83, +3.81] | -1.30 [-3.10, +0.50] |
+<!-- /report:passk-deltas -->
+
+RL sharpens; SFT broadens. Short-prompt GRPO raises pass@1 over Instruct by 2.4–3.0 points on
+the three datasets, is level or behind by k = 4, and trails by 1.9–7.6 points at k = 32: sampled
+32 times, the base model answers more of these questions than the RL model does. GRPO after SFT
+repeats the pattern (pass@1 +4.1 to +4.8, pass@32 −2.1 to −10.3 against SFT). Under the
+reasoning prompt, GRPO's large pass@1 gain (+9.8 to +25.0) turns into −1.3 to −5.8 at k = 32,
+with the VQAv2 and TextVQA intervals including zero. One epoch of SFT does the opposite: pass@1
+stays within 0.5 points of Instruct on VQAv2 and GQA (−4.3 on TextVQA) while pass@32 rises by
+1.7–4.6 points. The normalized scorer gives the same crossover
+(`python -m scripts.pass_at_k --declared --variant normalized`), so casing does not explain it.
+This matches what Yue et al. report for text: RL with a verifiable reward makes the model choose
+answers it could already produce more often rather than adding new ones, and here it costs some
+coverage. One training seed per arm; the intervals cover which questions and images were asked,
+not a fresh draw of samples.
+
+## Exact-match misses rescored by an LLM judge
+
+Exact-match scorers miss answers that mean the same as a reference ("grey" for "gray",
+"2 dogs" for "2"). Every headline cell of the final rerun was rescored: each non-empty answer the
+official scorer gives 0 went to Anthropic's Haiku 4.5 (pinned in `vqar/judge.py`, temperature 0),
+which saw the question, the references and the extracted answer, never the reasoning text or the
+image, and answered whether the answer means the same as a reference (`vqar/judge.py`,
+`python -m scripts.judge_records`). A rescued miss gets full credit, so the adjusted accuracy is
+exact for GQA and CLEVR counting and an upper bound for VQAv2 and TextVQA; answers with partial
+annotator credit are not judged. As a control, 100 exact hits per cell went to the judge as well.
+Each cell shows official / judge-adjusted / audited accuracy, and in parentheses the share of
+misses the judge accepted; the audit is explained below the tables.
+
+<!-- report:judge -->
+| Arm | Prompt | VQAv2 | GQA | CLEVR counting | TextVQA (far-OOD) |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Instruct 2B | short | 77.87 / 81.83 / 81.54 (27%) | 59.45 / 66.83 / 66.54 (18%) | 97.67 / 97.67 (0%) | 80.53 / 84.21 / 83.52 (25%) |
+| Instruct 2B | reasoning | 55.06 / 79.48 / 77.66 (61%) | 36.13 / 63.15 / 61.79 (42%) | 87.13 / 87.63 (4%) | 69.74 / 82.38 / 80.09 (50%) |
+| SFT 2B | short | 79.87 / 82.91 / 82.69 (24%) | 62.35 / 68.30 / 68.06 (16%) | 99.40 / 99.40 (0%) | 80.08 / 83.42 / 82.76 (23%) |
+| SFT 2B | reasoning | 67.99 / 80.49 / 79.60 (49%) | 56.61 / 65.48 / 64.98 (21%) | 92.10 / 92.50 (5%) | 68.86 / 81.38 / 79.18 (48%) |
+| Instruct → GRPO | short | 77.94 / 81.70 / 81.42 (26%) | 60.06 / 67.35 / 67.06 (18%) | 99.47 / 99.47 (0%) | 81.02 / 84.34 / 83.67 (24%) |
+| Instruct → GRPO | reasoning | 78.27 / 82.37 / 82.08 (28%) | 60.23 / 66.84 / 66.57 (17%) | 99.27 / 99.27 (0%) | 79.99 / 83.95 / 83.15 (26%) |
+| SFT → GRPO | short | 79.76 / 82.78 / 82.56 (24%) | 62.82 / 68.79 / 68.55 (16%) | 99.70 / 99.70 (0%) | 80.19 / 83.51 / 82.84 (22%) |
+| SFT → GRPO | reasoning | 78.76 / 82.62 / 82.35 (27%) | 61.52 / 67.73 / 67.48 (16%) | 86.90 / 86.90 (0%) | 79.02 / 83.60 / 82.75 (29%) |
+| Instruct → short-prompt GRPO | short | 78.62 / 82.02 / 81.77 (24%) | 60.34 / 67.16 / 66.89 (17%) | 99.50 / 99.50 (0%) | 81.01 / 84.27 / 83.60 (23%) |
+| Instruct → short-prompt GRPO | reasoning | 61.85 / 80.83 / 79.43 (58%) | 42.89 / 63.15 / 62.21 (35%) | 86.50 / 86.60 (1%) | 72.34 / 82.28 / 80.39 (44%) |
+| SFT → short-prompt GRPO | short | 79.83 / 82.71 / 82.50 (23%) | 62.50 / 68.57 / 68.33 (16%) | 99.50 / 99.50 (0%) | 80.89 / 84.05 / 83.40 (22%) |
+| SFT → short-prompt GRPO | reasoning | 68.05 / 81.91 / 80.91 (53%) | 56.88 / 66.27 / 65.68 (22%) | 88.97 / 89.20 (2%) | 70.72 / 82.32 / 80.29 (48%) |
+| Instruct → gold-conditioned OPD | short | 77.96 / 82.00 / 81.70 (28%) | 59.80 / 67.21 / 66.92 (18%) | 97.93 / 97.93 (0%) | 80.52 / 84.02 / 83.32 (24%) |
+| Instruct → gold-conditioned OPD | reasoning | 70.41 / 78.93 / 78.31 (36%) | 52.53 / 63.32 / 62.52 (23%) | 86.50 / 86.60 (1%) | 72.75 / 82.01 / 80.12 (41%) |
+| Instruct 8B | short | 81.18 / 85.02 / 84.74 (33%) | 61.66 / 69.14 / 68.84 (20%) | 99.67 / 99.67 (0%) | 83.49 / 86.69 / 86.14 (28%) |
+| Instruct 8B | reasoning | 63.67 / 82.41 / 81.07 (60%) | 46.84 / 63.10 / 62.25 (31%) | 96.97 / 97.33 (12%) | 74.00 / 84.28 / 82.50 (50%) |
+| SFT 8B | short | 83.44 / 85.98 / 85.79 (27%) | 63.86 / 70.73 / 70.45 (19%) | 88.83 / 88.83 (0%) | 84.73 / 87.25 / 86.75 (24%) |
+| SFT 8B | reasoning | 68.36 / 82.88 / 81.84 (56%) | 48.71 / 65.04 / 63.54 (32%) | 96.70 / 97.17 (14%) | 75.16 / 85.02 / 83.23 (51%) |
+| Instruct 8B → GRPO | short | 81.24 / 84.88 / 84.61 (32%) | 62.32 / 69.54 / 69.25 (19%) | 99.63 / 99.63 (0%) | 84.35 / 87.03 / 86.55 (25%) |
+| Instruct 8B → GRPO | reasoning | 81.89 / 85.53 / 85.28 (32%) | 62.66 / 69.65 / 69.37 (19%) | 98.20 / 98.20 (0%) | 83.28 / 86.98 / 86.29 (31%) |
+| SFT 8B → GRPO | short | 83.23 / 85.81 / 85.63 (27%) | 63.90 / 70.54 / 70.27 (18%) | 97.00 / 97.00 (0%) | 84.67 / 87.27 / 86.76 (25%) |
+| SFT 8B → GRPO | reasoning | 82.03 / 85.45 / 85.20 (31%) | 63.21 / 70.22 / 69.94 (19%) | 98.33 / 98.33 (0%) | 83.83 / 86.85 / 86.28 (27%) |
+| Instruct 8B → short-prompt GRPO | short | 81.89 / 85.29 / 85.04 (31%) | 62.41 / 69.55 / 69.26 (19%) | 98.80 / 98.80 (0%) | 84.29 / 86.85 / 86.39 (24%) |
+| Instruct 8B → short-prompt GRPO | reasoning | 66.97 / 83.07 / 81.93 (58%) | 50.05 / 63.71 / 63.00 (27%) | 96.80 / 97.40 (19%) | 74.29 / 84.25 / 82.55 (48%) |
+| SFT 8B → short-prompt GRPO | short | 83.30 / 85.88 / 85.69 (27%) | 63.82 / 70.58 / 70.31 (19%) | 82.13 / 82.13 (0%) | 84.73 / 87.21 / 86.72 (24%) |
+| SFT 8B → short-prompt GRPO | reasoning | 70.23 / 83.23 / 82.31 (54%) | 51.94 / 65.79 / 64.58 (29%) | 96.43 / 96.83 (11%) | 75.37 / 85.05 / 83.29 (50%) |
+<!-- /report:judge -->
+
+Each declared paired difference in points, official / judge-adjusted / audited:
+
+<!-- report:judge-deltas -->
+| Comparison | Prompt | VQAv2 | GQA | CLEVR counting | TextVQA (far-OOD) |
+| --- | --- | ---: | ---: | ---: | ---: |
+| SFT 2B − Instruct 2B | short | +2.00 / +1.08 / +1.15 | +2.89 / +1.47 / +1.53 | +1.73 / +1.73 | -0.45 / -0.79 / -0.76 |
+| SFT 2B − Instruct 2B | reasoning | +12.93 / +1.01 / +1.94 | +20.47 / +2.33 / +3.19 | +4.97 / +4.87 | -0.89 / -1.01 / -0.91 |
+| Instruct → GRPO − Instruct 2B | short | +0.07 / -0.13 / -0.12 | +0.60 / +0.52 / +0.52 | +1.80 / +1.80 | +0.49 / +0.13 / +0.15 |
+| Instruct → GRPO − Instruct 2B | reasoning | +23.22 / +2.90 / +4.42 | +24.10 / +3.69 / +4.78 | +12.13 / +11.63 | +10.24 / +1.56 / +3.06 |
+| SFT → GRPO − Instruct 2B | short | +1.89 / +0.95 / +1.02 | +3.36 / +1.96 / +2.01 | +2.03 / +2.03 | -0.33 / -0.69 / -0.68 |
+| SFT → GRPO − Instruct 2B | reasoning | +23.71 / +3.15 / +4.69 | +25.39 / +4.58 / +5.68 | -0.23 / -0.73 | +9.28 / +1.22 / +2.67 |
+| Instruct → short-prompt GRPO − Instruct 2B | short | +0.75 / +0.19 / +0.23 | +0.89 / +0.33 / +0.36 | +1.83 / +1.83 | +0.48 / +0.06 / +0.08 |
+| Instruct → short-prompt GRPO − Instruct 2B | reasoning | +6.80 / +1.36 / +1.77 | +6.76 / +0.00 / +0.41 | -0.63 / -1.03 | +2.60 / -0.10 / +0.30 |
+| SFT → short-prompt GRPO − Instruct 2B | short | +1.96 / +0.88 / +0.95 | +3.04 / +1.74 / +1.79 | +1.83 / +1.83 | +0.36 / -0.16 / -0.11 |
+| SFT → short-prompt GRPO − Instruct 2B | reasoning | +13.00 / +2.44 / +3.25 | +20.74 / +3.12 / +3.89 | +1.83 / +1.57 | +0.98 / -0.06 / +0.20 |
+| Instruct → gold-conditioned OPD − Instruct 2B | short | +0.09 / +0.17 / +0.16 | +0.35 / +0.38 / +0.38 | +0.27 / +0.27 | -0.01 / -0.19 / -0.20 |
+| Instruct → gold-conditioned OPD − Instruct 2B | reasoning | +15.36 / -0.54 / +0.65 | +16.39 / +0.17 / +0.73 | -0.63 / -1.03 | +3.01 / -0.37 / +0.04 |
+| SFT → GRPO − SFT 2B | short | -0.11 / -0.13 / -0.13 | +0.47 / +0.48 / +0.48 | +0.30 / +0.30 | +0.11 / +0.09 / +0.08 |
+| SFT → GRPO − SFT 2B | reasoning | +10.77 / +2.13 / +2.74 | +4.91 / +2.25 / +2.49 | -5.20 / -5.60 | +10.16 / +2.22 / +3.57 |
+| Instruct → short-prompt GRPO − SFT 2B | short | -1.25 / -0.89 / -0.92 | -2.00 / -1.14 / -1.17 | +0.10 / +0.10 | +0.93 / +0.85 / +0.84 |
+| Instruct → short-prompt GRPO − SFT 2B | reasoning | -6.14 / +0.34 / -0.17 | -13.71 / -2.33 / -2.78 | -5.60 / -5.90 | +3.49 / +0.91 / +1.21 |
+| SFT → short-prompt GRPO − SFT 2B | short | -0.04 / -0.20 / -0.20 | +0.15 / +0.27 / +0.27 | +0.10 / +0.10 | +0.81 / +0.63 / +0.64 |
+| SFT → short-prompt GRPO − SFT 2B | reasoning | +0.06 / +1.42 / +1.31 | +0.27 / +0.79 / +0.70 | -3.13 / -3.30 | +1.86 / +0.94 / +1.11 |
+| SFT 8B − Instruct 8B | short | +2.26 / +0.96 / +1.05 | +2.20 / +1.59 / +1.61 | -10.83 / -10.83 | +1.25 / +0.57 / +0.62 |
+| SFT 8B − Instruct 8B | reasoning | +4.69 / +0.47 / +0.77 | +1.87 / +1.94 / +1.29 | -0.27 / -0.17 | +1.16 / +0.74 / +0.73 |
+| Instruct 8B → GRPO − Instruct 8B | short | +0.06 / -0.14 / -0.13 | +0.66 / +0.41 / +0.42 | -0.03 / -0.03 | +0.86 / +0.34 / +0.41 |
+| Instruct 8B → GRPO − Instruct 8B | reasoning | +18.22 / +3.12 / +4.21 | +15.82 / +6.55 / +7.12 | +1.23 / +0.87 | +9.28 / +2.70 / +3.79 |
+| SFT 8B → GRPO − Instruct 8B | short | +2.06 / +0.80 / +0.88 | +2.24 / +1.40 / +1.43 | -2.67 / -2.67 | +1.19 / +0.59 / +0.62 |
+| SFT 8B → GRPO − Instruct 8B | reasoning | +18.36 / +3.04 / +4.14 | +16.37 / +7.12 / +7.69 | +1.37 / +1.00 | +9.83 / +2.57 / +3.77 |
+| Instruct 8B → short-prompt GRPO − Instruct 8B | short | +0.71 / +0.27 / +0.30 | +0.76 / +0.41 / +0.43 | -0.87 / -0.87 | +0.81 / +0.17 / +0.25 |
+| Instruct 8B → short-prompt GRPO − Instruct 8B | reasoning | +3.30 / +0.66 / +0.86 | +3.20 / +0.61 / +0.75 | -0.17 / +0.07 | +0.29 / -0.03 / +0.05 |
+| SFT 8B → short-prompt GRPO − Instruct 8B | short | +2.12 / +0.86 / +0.94 | +2.16 / +1.45 / +1.48 | -17.53 / -17.53 | +1.24 / +0.52 / +0.58 |
+| SFT 8B → short-prompt GRPO − Instruct 8B | reasoning | +6.56 / +0.82 / +1.24 | +5.10 / +2.69 / +2.33 | -0.53 / -0.50 | +1.37 / +0.77 / +0.79 |
+| SFT 8B → GRPO − SFT 8B | short | -0.21 / -0.17 / -0.17 | +0.04 / -0.19 / -0.18 | +8.17 / +8.17 | -0.06 / +0.02 / +0.00 |
+| SFT 8B → GRPO − SFT 8B | reasoning | +13.66 / +2.56 / +3.36 | +14.50 / +5.18 / +6.39 | +1.63 / +1.17 | +8.67 / +1.83 / +3.05 |
+| Instruct 8B → short-prompt GRPO − SFT 8B | short | -1.55 / -0.69 / -0.75 | -1.45 / -1.18 / -1.19 | +9.97 / +9.97 | -0.44 / -0.40 / -0.37 |
+| Instruct 8B → short-prompt GRPO − SFT 8B | reasoning | -1.39 / +0.19 / +0.09 | +1.34 / -1.33 / -0.55 | +0.10 / +0.23 | -0.87 / -0.77 / -0.68 |
+| SFT 8B → short-prompt GRPO − SFT 8B | short | -0.14 / -0.10 / -0.11 | -0.04 / -0.14 / -0.14 | -6.70 / -6.70 | -0.01 / -0.05 / -0.03 |
+| SFT 8B → short-prompt GRPO − SFT 8B | reasoning | +1.87 / +0.35 / +0.47 | +3.23 / +0.75 / +1.03 | -0.27 / -0.33 | +0.21 / +0.03 / +0.06 |
+| Instruct → short-prompt GRPO − Instruct → GRPO | short | +0.68 / +0.32 / +0.35 | +0.29 / -0.18 / -0.16 | +0.03 / +0.03 | -0.01 / -0.07 / -0.07 |
+| Instruct → short-prompt GRPO − Instruct → GRPO | reasoning | -16.42 / -1.54 / -2.64 | -17.34 / -3.69 / -4.37 | -12.77 / -12.67 | -7.64 / -1.66 / -2.76 |
+| SFT → short-prompt GRPO − SFT → GRPO | short | +0.07 / -0.07 / -0.06 | -0.32 / -0.21 / -0.22 | -0.20 / -0.20 | +0.70 / +0.54 / +0.56 |
+| SFT → short-prompt GRPO − SFT → GRPO | reasoning | -10.71 / -0.71 / -1.44 | -4.64 / -1.46 / -1.79 | +2.07 / +2.30 | -8.30 / -1.28 / -2.46 |
+| Instruct 8B → short-prompt GRPO − Instruct 8B → GRPO | short | +0.65 / +0.41 / +0.43 | +0.10 / +0.01 / +0.01 | -0.83 / -0.83 | -0.05 / -0.17 / -0.16 |
+| Instruct 8B → short-prompt GRPO − Instruct 8B → GRPO | reasoning | -14.91 / -2.45 / -3.34 | -12.62 / -5.94 / -6.38 | -1.40 / -0.80 | -8.99 / -2.73 / -3.74 |
+| SFT 8B → short-prompt GRPO − SFT 8B → GRPO | short | +0.06 / +0.06 / +0.06 | -0.08 / +0.05 / +0.04 | -14.87 / -14.87 | +0.05 / -0.07 / -0.03 |
+| SFT 8B → short-prompt GRPO − SFT 8B → GRPO | reasoning | -11.79 / -2.21 / -2.90 | -11.27 / -4.43 / -5.36 | -1.90 / -1.50 | -8.46 / -1.80 / -2.98 |
+<!-- /report:judge-deltas -->
+
+The judge accepts 16–33% of short-prompt misses on VQAv2, GQA and
+TextVQA, and 31–61% of the Instruct models' reasoning-prompt misses, whose answers are longer
+and freely phrased ("Yes" for "yes", "a large kite flying" for "kite"). On exact hits it agrees
+in 98–100% of every cell's controls. An image-aware audit then checked a seeded sample of its
+verdicts: Opus 5.5 at low effort, shown the image, judged 50 verdicts per stratum
+(`python -m scripts.audit_judge`, $1.31). It confirms 92–94% of the judge's acceptances on
+VQAv2, 86–96% on GQA and 72–88% on TextVQA, where partial OCR strings ("angeles" for "los
+angeles") get through; untagged step-by-step text that mentions the answer is the other common
+false acceptance. The audited accuracy discounts each acceptance by its stratum's
+confirmation rate. The audit also accepts 12–24% of the misses the judge rejected, often where
+GQA's single reference is one of several right answers, so even the audited accuracy
+undercounts. The judge cost $4.21 for 51,169 distinct answers through the Batch API.
+
+Three readings change under the audited scorer. Most of what exact match credited to GRPO
+under the reasoning prompt is answer form: Instruct → GRPO gains 4.4 points on VQAv2 at 2B
+(interval [+3.5, +5.4]) instead of 23.2, 4.8 on GQA instead of 24.1, and 3.1 on TextVQA
+instead of 10.2; at 8B, 4.2, 7.1 and 3.8. A real gain remains while the reasoning disappears.
+The reasoning prompt's cost for Instruct 2B shrinks from 22.8 to 3.8 points on VQAv2 and from
+23.3 to 4.7 on GQA, but stays negative, as the July follow-up found. And short-prompt GRPO's
+in-domain gains over Instruct fall inside their intervals at 2B (VQAv2 +0.23 [−0.23, +0.68],
+GQA +0.36 [−0.03, +0.74]), while SFT's halve and hold (+1.15 and +1.53). Short-prompt GRPO
+keeps its TextVQA lead over SFT (+0.84 [+0.22, +1.46]) and SFT keeps its in-domain lead. The
+intervals resample questions with the audit rates held fixed; they leave out the audit's own
+sampling error.
+
+## Extra OOD sets
+
+Two more far-OOD test sets were frozen on 2026-10-05, before any prediction, and evaluated with
+the short prompt and greedy decoding. VizWiz (8,000 questions on 7,928 photos taken by blind
+people, unanswerable questions included) is scored with the authors' evaluator, reproduced
+on 24,006 pre-declared cases. RealWorldQA (765 questions on 762 images, many multiple choice)
+has no verified official evaluator, so it is scored by project-defined exact match that ignores
+case and whitespace. No image of either set appears in a training pool (decoded-pixel hash).
+Primary score, normalized companion in parentheses (`python -m scripts.compare_ood`):
+
+<!-- report:ood -->
+| Arm | VizWiz (authors' evaluator) | RealWorldQA (project exact match) |
+| --- | ---: | ---: |
+| Instruct 2B | 42.50 (42.53) | 60.13 (60.13) |
+| SFT 2B | 42.53 (42.55) | 62.35 (62.35) |
+| Instruct → short-prompt GRPO | 43.58 (43.60) | 62.88 (62.88) |
+| SFT → short-prompt GRPO | 43.01 (43.04) | 63.40 (63.40) |
+<!-- /report:ood -->
+
+Candidate minus reference, points, with 95% intervals that resample images:
+
+<!-- report:ood-deltas -->
+| Comparison | VizWiz | RealWorldQA |
+| --- | ---: | ---: |
+| SFT 2B − Instruct 2B | +0.03 [-0.56, +0.62] | +2.22 [+0.13, +4.31] |
+| Instruct → short-prompt GRPO − Instruct 2B | +1.07 [+0.65, +1.51] | +2.75 [+1.17, +4.45] |
+| Instruct → short-prompt GRPO − SFT 2B | +1.04 [+0.51, +1.58] | +0.52 [-1.57, +2.74] |
+| SFT → short-prompt GRPO − SFT 2B | +0.48 [+0.10, +0.86] | +1.05 [-0.39, +2.49] |
+<!-- /report:ood-deltas -->
+
+Short-prompt GRPO's far-OOD edge over SFT, seen on TextVQA, replicates on VizWiz: +1.04 points
+over SFT and +1.07 over Instruct, while SFT leaves VizWiz unchanged (+0.03). On RealWorldQA both
+methods help by 2–3 points over Instruct and do not differ from each other (+0.52, interval
+[−1.57, +2.74]); with 765 questions it resolves only differences of about 2 points. VizWiz scores
+are low for every arm because 37% of its questions have "unanswerable" as the majority
+reference and the models almost never say so: Instruct 2B does in 69 of 8,000 answers, scoring
+15.8 on those questions against 58.3 on the rest. The SFT-4k arm is missing here because its
+merged model stays on the cluster.
+
 ## Image resolution
 
 The headline cells resize images to at most 0.79 megapixels, which no VQAv2, GQA, or CLEVR

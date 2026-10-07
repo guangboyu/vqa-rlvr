@@ -66,7 +66,10 @@ correctness-only GRPO of the same length on VQAv2 and 9.6 on GQA ([results](docs
 on VQAv2 and 0.9 on GQA at 2B (0.7 and 0.8 at 8B); one epoch of short-answer SFT adds 2.0
 and 2.9 at 2B (2.3 and 2.2 at 8B). On far-OOD TextVQA at 2B the order reverses: short-prompt GRPO beats
 SFT by 0.9 points (interval [+0.2, +1.6]), while SFT itself moves TextVQA by −0.5; at 8B
-both add about 1 point there.
+both add about 1 point there. Most of SFT's in-domain lead is the amount of data: trained on
+exactly the 4,000 questions short-prompt GRPO drew, SFT leads it by 0.2 points on VQAv2
+(interval [−0.3, +0.7]) and 0.5 on GQA, and GRPO stays 0.9 ahead on TextVQA
+([results](docs/supplementary/results.md#sft-on-exactly-the-rl-questions)).
 
 **3. RL after SFT keeps the SFT ceiling.** GRPO from the SFT model keeps short-prompt
 accuracy within 0.5 points of SFT on VQAv2 and GQA at both sizes, and adds up to 0.8 on
@@ -83,6 +86,24 @@ rather than accuracy: rollouts sampled from LoRA-merged bf16 weights come from a
 of the trained policy (a mean log-probability gap of up to 0.2 nats per token, 1.4 on the
 near-tied token before `</answer>`); serving the adapter unmerged brings the gap under 0.01
 and is part of the final recipe ([method](docs/supplementary/method.md#sampler-and-trained-policy)).
+
+**5. Much of what exact match credits to training is answer form.** An LLM judge (Anthropic's
+Haiku 4.5) rescored every exact-match miss of the headline cells, and an image-aware audit by a
+stronger model measured how often its acceptances hold. Under that audited scorer, GRPO from
+Instruct gains 4.4 points on VQAv2 under the reasoning prompt at 2B instead of 23.2 (4.8
+instead of 24.1 on GQA), and the reasoning prompt still costs Instruct 3.8 points instead of
+22.8. Short-prompt GRPO's in-domain gains over Instruct (+0.2 and +0.4 points) fall inside
+their intervals, SFT's halve to +1.2 and +1.5, and short-prompt GRPO's TextVQA lead over SFT
+holds (+0.8, interval [+0.2, +1.5]) ([results](docs/supplementary/results.md#exact-match-misses-rescored-by-an-llm-judge)).
+The same lead appears on a second far-OOD set, VizWiz: short-prompt GRPO beats SFT by 1.0 point
+(interval [+0.5, +1.6]) ([results](docs/supplementary/results.md#extra-ood-sets)).
+
+**6. RL sharpens what the model already samples; it does not add answers.** On the first 1,000
+test questions of each dataset, sampled 32 times at temperature 1, short-prompt GRPO raises
+pass@1 over Instruct by 2.4–3.0 points but trails it by 1.9–7.6 at pass@32, and reasoning-prompt
+GRPO turns a pass@1 gain of 10 to 25 points into −1 to −6 at k = 32. One epoch of SFT does the
+reverse: pass@1 about level, pass@32 up 1.7–4.6 points
+([results](docs/supplementary/results.md#held-out-passk-before-and-after-rl)).
 
 Differences below about 0.5 points under the reasoning prompt are within the run-to-run
 noise of greedy vLLM decoding (three repeats of Instruct 2B span 0.4 points) and are not

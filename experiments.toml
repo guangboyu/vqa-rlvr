@@ -89,6 +89,16 @@ model = "checkpoints/merged/p1_f_short8_sft"
 run = "p1f-short8-sft"
 gpu_memory_utilization = 0.88
 
+# The matched-question control (2026-10-05): one SFT epoch on exactly the 4,000 questions the
+# short-prompt GRPO run from Instruct drew (data/pools/part1-short2-actual4000.json, built by
+# scripts/build_draw_pool.py), 125 updates. Trained and evaluated on HPC3; its merged model is
+# not kept locally, so its records are checked by their stored weight hash only.
+[[arms]]
+label = "sft4k2"
+name = "SFT on the 4,000 RL questions"
+model = "checkpoints/merged/sft4k2_final125"
+run = "closeout-sft4k2"
+
 # Recipe experiments: 2B from Instruct, one change each against the baseline, which is
 # the frozen recipe with the merged-weight sampler. The 8B format-reward run changes the
 # corrected campaign's 8B recipe instead.
@@ -235,6 +245,67 @@ candidates = ["p1-ashortsft"]
 [[matrices.recipe.comparisons]]
 reference = "grpo8-base"
 candidates = ["p1-r7fmt8"]
+
+# SFT on exactly the questions short-prompt GRPO trained on, on the results page.
+[matrices.matched]
+arms = ["base2", "sft4k2", "p1-f-short2-base", "sft2"]
+
+[[matrices.matched.comparisons]]
+reference = "p1-f-short2-base"
+candidates = ["sft4k2"]
+
+[[matrices.matched.comparisons]]
+reference = "base2"
+candidates = ["sft4k2"]
+
+[[matrices.matched.comparisons]]
+reference = "sft2"
+candidates = ["sft4k2"]
+
+# Held-out pass@k (2026-10-06): sampled cells on the first 1,000 test questions of each
+# dataset, 32 samples at temperature 1. Each comparison is candidate minus reference under one
+# prompt. `python -m scripts.pass_at_k --declared` writes results/passk-heldout.json.
+[passk]
+datasets = ["vqav2", "gqa", "textvqa"]
+tier = "first-1000"
+samples = 32
+temperature = 1.0
+seed = 42
+
+[[passk.comparisons]]
+prompt = "short"
+reference = "base2"
+candidates = ["p1-f-short2-base", "sft2"]
+
+[[passk.comparisons]]
+prompt = "short"
+reference = "sft2"
+candidates = ["p1-f-short2-sft"]
+
+[[passk.comparisons]]
+prompt = "reasoning"
+reference = "base2"
+candidates = ["p1-f-grpo2-base"]
+
+# Extra OOD sets (2026-10-06): short prompt, greedy, seed 42, as frozen before any prediction.
+# VizWiz is scored with the authors' evaluator, RealWorldQA with project-defined exact match.
+# `python -m scripts.compare_ood` writes results/ood.json.
+[ood]
+datasets = ["vizwiz", "realworldqa"]
+arms = ["base2", "sft2", "p1-f-short2-base", "p1-f-short2-sft", "sft4k2"]
+seed = 42
+
+[[ood.comparisons]]
+reference = "base2"
+candidates = ["sft2", "p1-f-short2-base", "sft4k2"]
+
+[[ood.comparisons]]
+reference = "sft2"
+candidates = ["p1-f-short2-base", "p1-f-short2-sft"]
+
+[[ood.comparisons]]
+reference = "p1-f-short2-base"
+candidates = ["sft4k2"]
 
 # The corrected campaign, on the history page.
 [matrices.corrected]
