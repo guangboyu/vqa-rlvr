@@ -2,7 +2,7 @@
 
 VizWiz ports the authors' prediction-only normalizer and raw-reference agreement.
 Source: https://vizwiz.cs.colorado.edu/VizWiz_final/vqa_data/API.zip
-Native vqaEval.py SHA256: d26ef7ac2db06351444c3531f8d95fd9c454423fbcb9fd5dd984f12281146694.
+The native vqaEval.py checksum is pinned in the registry's metric metadata.
 RealWorldQA uses declared project exact match; no native evaluator is claimed.
 """
 

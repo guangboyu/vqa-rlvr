@@ -92,17 +92,6 @@ def test_corrupt_source_is_never_adopted(prepared_inputs):
     assert not (data / "realworldqa_eval").exists()
 
 
-def test_registry_cannot_disagree_with_pinned_source(prepared_inputs, monkeypatch):
-    data, source, audits = prepared_inputs
-    revision = ood.SOURCE_IDENTITIES["realworldqa"]["xai-org/RealworldQA"]
-    assert len(revision) == 40
-    monkeypatch.setitem(DATASETS, "realworldqa",
-                        replace(DATASETS["realworldqa"],
-                                sources={"xai-org/RealworldQA": revision + "2"}))
-    with pytest.raises(ValueError, match="source identities differ"):
-        ood.prepare_ood("realworldqa", data, source, audits)
-
-
 def test_optional_absence_is_allowed_but_malformed_presence_fails(prepared_inputs):
     data, _, _ = prepared_inputs
     check_all(data)
@@ -162,14 +151,14 @@ def test_project_primary_roundtrip_display_and_paired_ci(prepared_inputs, tmp_pa
     assert run_eval(model, Protocol("realworldqa"), cached, data_dir=data,
                     records_dir=tmp_path / "records") == record
     assert not cached.questions
-    wrong_groups = json.loads(json.dumps(audit))
-    wrong_groups["image_groups"][0]["image_key"] = "different image"
+    groups = [[row["qid"], row["image_key"]] for row in audit["image_groups"]]
+    wrong_groups = [[groups[0][0], "different image"], *groups[1:]]
     with pytest.raises(ValueError, match="image groups differ"):
         compare(record, record, wrong_groups, resamples=100)
     sampled = replace(record, protocol={**record.protocol, "temperature": 0.7})
     with pytest.raises(ValueError, match="greedy"):
-        compare(sampled, sampled, audit, resamples=100)
-    result = compare(record, record, audit, resamples=100)
+        compare(sampled, sampled, groups, resamples=100)
+    result = compare(record, record, groups, resamples=100)
     assert result["primary"] == "project" and result["image_groups"] == 2
     assert (result["delta"], result["low"], result["high"]) == (0, 0, 0)
 

@@ -24,12 +24,13 @@ from vqar.splits import (
     validate_split,
 )
 
+VIZWIZ = DATASETS["vizwiz"]
+# Local source files and their checksums. The registry pins VizWiz downloads by URL (stored
+# under their file names here) and RealWorldQA by Hub revision, whose two parquet files these are.
 SOURCE_HASHES = {
     "vizwiz": {
-        "VQA_test.json": "fa113f0e90230ab4690bb41c4d74e40f7087cc7c192dd8363fa4d6bad339b7aa",
-        "test.zip": "4d03f8c21823a3e4d1f501b1234e7380eb7cf2429ff0eb0281741ff1cc44f22a",
-        "native-vqaEval.py": "d26ef7ac2db06351444c3531f8d95fd9c454423fbcb9fd5dd984f12281146694",
-        "API.zip": "76de4354ca2fbc57dd2369b579dc9bb5684e41d6a135b36b324a5ba25b7b9ca2",
+        **{url.rsplit("/", 1)[-1]: sha256 for url, sha256 in VIZWIZ.sources.items()},
+        "native-vqaEval.py": VIZWIZ.metric_metadata["official"]["native_source_sha256"],
     },
     "realworldqa": {
         "test-00000-of-00002.parquet":
@@ -37,18 +38,6 @@ SOURCE_HASHES = {
         "test-00001-of-00002.parquet":
             "dac5b9f7cfb947a4865ea3424abfbdb3449d09e0a0b911a787cdc930cefefdc0",
     },
-}
-
-SOURCE_IDENTITIES = {
-    "vizwiz": {
-        "https://vizwiz.cs.colorado.edu/VizWiz_all_answers/VQA_test.json":
-            SOURCE_HASHES["vizwiz"]["VQA_test.json"],
-        "https://vizwiz.cs.colorado.edu/VizWiz_final/images/test.zip":
-            SOURCE_HASHES["vizwiz"]["test.zip"],
-        "https://vizwiz.cs.colorado.edu/VizWiz_final/vqa_data/API.zip":
-            SOURCE_HASHES["vizwiz"]["API.zip"],
-    },
-    "realworldqa": {"xai-org/RealworldQA": "17e7f75e092e47169732462ea3cdfebe911105dd"},
 }
 
 LICENSES = {"vizwiz": "CC-BY-4.0", "realworldqa": "CC-BY-ND-4.0"}
@@ -150,8 +139,6 @@ def prepare_ood(dataset: str, data_dir: Path, source_dir: Path, audit_dir: Path)
     data_dir, source_dir = Path(data_dir).absolute(), Path(source_dir).absolute()
     source_dir.relative_to(data_dir)  # stored paths must relocate with the data directory
     spec = DATASETS[dataset]
-    if dict(spec.sources) != SOURCE_IDENTITIES[dataset]:
-        raise ValueError(f"{dataset}: registry and pinned loader source identities differ")
     subset_name = spec.subsets["test"]
     target = data_dir / subset_name
     split_file = split_path(data_dir, dataset)

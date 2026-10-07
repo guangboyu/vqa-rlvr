@@ -77,7 +77,11 @@ def verify_subset(data_dir: Path, name: str, entry: dict, rows) -> None:
     verified = json.loads(record.read_text()) if record.exists() else {}
     check = {"fingerprint": rows._fingerprint,
              "entry_sha256": hashlib.sha256(json.dumps(entry, sort_keys=True).encode()).hexdigest()}
-    if not external and verified.get(name) == check:
+    if external:
+        # The fingerprint does not cover image files stored by path, so the remembered match
+        # also covers each file's size and modification time.
+        check["files_sha256"] = external_files_signature(rows, data_dir)
+    if verified.get(name) == check:
         return
     text = rows_sha256(rows)  # older split files may not record it
     same = (qid_hash(rows) == entry["qids_sha256"]
@@ -93,6 +97,15 @@ def verify_subset(data_dir: Path, name: str, entry: dict, rows) -> None:
     temporary = record.with_suffix(".tmp")
     temporary.write_text(json.dumps(verified, indent=1) + "\n")
     temporary.replace(record)
+
+
+def external_files_signature(rows, data_dir: Path) -> str:
+    """Path, size and modification time of every image file a path-stored subset reads."""
+    digest = hashlib.sha256()
+    for relative in rows["image"]:
+        stat = (Path(data_dir) / relative).stat()
+        digest.update(f"{relative}\t{stat.st_size}\t{stat.st_mtime_ns}\n".encode())
+    return digest.hexdigest()
 
 
 def split_path(data_dir: Path, dataset: str) -> Path:
