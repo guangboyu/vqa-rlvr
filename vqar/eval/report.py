@@ -76,9 +76,13 @@ def is_current(record: RunRecord, data_dir: Path) -> bool:
 
 
 def ordered_datasets() -> list[str]:
-    """In-domain datasets first, then OOD ones, so OOD columns sit together at the right."""
+    """Headline datasets, in-domain first, then OOD, so OOD columns sit together at the right.
+
+    Optional OOD cohorts (require_split=False) have their own comparison script.
+    """
     ladder = {"in-domain": 0, "near-ood": 1, "far-ood": 2}
-    return sorted(DATASETS, key=lambda name: ladder[DATASETS[name].ladder])
+    headline = [name for name, spec in DATASETS.items() if spec.require_split]
+    return sorted(headline, key=lambda name: ladder[DATASETS[name].ladder])
 
 
 def column(dataset: str) -> str:

@@ -55,8 +55,9 @@ sys.exit(0 if path.exists() and json.loads(path.read_text())["completed"] else 1
 PY
 }
 if [ "$CHAIN_LEFT" -gt 0 ]; then
+    # A failed query reads as "no successor waiting", so a fresh one is submitted.
     WAITING=$(squeue -h -u "$(id -un)" -t PD -o '%i %E' \
-        | awk -v dep="afternotok:$SLURM_JOB_ID(" 'index($2, dep) {print $1}')
+        | awk -v dep="afternotok:$SLURM_JOB_ID(" 'index($2, dep) {print $1}') || WAITING=""
     read -r -a SUCCESSORS <<<"$(printf '%s\n' "$WAITING" | xargs)"
     if [ "${#SUCCESSORS[@]}" -gt 0 ]; then
         NEXT=${SUCCESSORS[0]}
