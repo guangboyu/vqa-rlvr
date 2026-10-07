@@ -103,3 +103,52 @@ def test_judge_many_uses_cache_and_batch(tmp_path):
     verdicts = judge.judge_many([("Q1", ["a"], "p1"), ("Q2", ["a"], "p2")])
     assert verdicts == [True, False]  # first from cache, second from batch
     assert len(batch_client.messages.batches.created) == 1  # only the uncached item sent
+
+
+class FlakyBatches:
+    """Fails every request of the first batch, then answers "yes"."""
+
+    def __init__(self):
+        self.batches = []
+
+    def create(self, requests):
+        self.batches.append(requests)
+        return SimpleNamespace(id=f"batch_{len(self.batches)}", processing_status="ended")
+
+    def retrieve(self, batch_id):
+        return SimpleNamespace(id=batch_id, processing_status="ended")
+
+    def results(self, batch_id):
+        number = int(batch_id.removeprefix("batch_"))
+        for req in self.batches[number - 1]:
+            result = (SimpleNamespace(type="errored") if number == 1 else
+                      SimpleNamespace(type="succeeded", message=fake_message("yes")))
+            yield SimpleNamespace(custom_id=req["custom_id"], result=result)
+
+
+def test_judge_many_retries_failed_items_once(tmp_path):
+    judge = make_judge(tmp_path, None)
+    batches = FlakyBatches()
+    judge._client = SimpleNamespace(messages=SimpleNamespace(batches=batches))
+    assert judge.judge_many([("Q", ["a"], "b")]) == [True]
+    assert len(batches.batches) == 2
+
+
+def test_judge_many_returns_none_when_items_keep_failing(tmp_path):
+    judge = make_judge(tmp_path, None)
+
+    class AlwaysFailing(FlakyBatches):
+        def results(self, batch_id):
+            for req in self.batches[-1]:
+                yield SimpleNamespace(custom_id=req["custom_id"],
+                                      result=SimpleNamespace(type="expired"))
+
+    judge._client = SimpleNamespace(messages=SimpleNamespace(batches=AlwaysFailing()))
+    assert judge.judge_many([("Q", ["a"], "b")]) == [None]  # unjudged, not a silent "no"
+
+
+def test_judge_many_refuses_a_batch_that_would_pass_the_cap(tmp_path):
+    judge = make_judge(tmp_path, None, budget=1e-9)
+    judge._client = SimpleNamespace(messages=SimpleNamespace(batches=FlakyBatches()))
+    with pytest.raises(JudgeBudgetExceeded):
+        judge.judge_many([("Q", ["a"], "b")])

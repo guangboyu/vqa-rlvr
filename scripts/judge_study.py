@@ -36,8 +36,9 @@ def study(run_id: str, sample: int, judge: Judge, rng: random.Random) -> dict:
     sampled = miss_sample + control_sample
     items = [(question_of[r["qid"]], r["answers"], r["prediction"]) for r in sampled]
     verdicts = judge.judge_many(items)
-    miss_verdicts = verdicts[: len(miss_sample)]
-    control_verdicts = verdicts[len(miss_sample) :]
+    # Items the API failed to judge (None) are left out of both rates.
+    miss_verdicts = [v for v in verdicts[: len(miss_sample)] if v is not None]
+    control_verdicts = [v for v in verdicts[len(miss_sample) :] if v is not None]
 
     rescue_rate = sum(miss_verdicts) / len(miss_verdicts) if miss_verdicts else 0.0
     control_agreement = sum(control_verdicts) / len(control_verdicts) if control_verdicts else 1.0
