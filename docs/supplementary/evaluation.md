@@ -65,9 +65,10 @@ pool's seeded order), never on dev or test rows:
 | Measure | Protocols | Definition |
 |---|---|---|
 | Reasoning payoff | short and reasoning prompts, greedy | accuracy(reasoning) − accuracy(short), paired 95% interval |
+| Matched payoff | direct and stepwise prompts, greedy | accuracy(stepwise) − accuracy(direct): both ask for the same tagged final answer, so answer format cannot explain the difference |
 | RL headroom | reasoning prompt, 8 samples at T = 1, 640-token budget | pass@8 − pass@1, paired 95% interval |
 | Learnable share | the same samples | questions with 1–7 of 8 samples correct |
-| Image dependence | short prompt, original and black images | accuracy(image) − accuracy(black), paired 95% interval |
+| Image dependence | short prompt, original vs black and vs swapped images | accuracy(image) − accuracy(black), accuracy(image) − accuracy(swapped) |
 
 Accuracies use the normalized scorer, the only one every role can score. The sampled cell is
 exactly the learnability pre-check of `scripts.learnability --preset grpo_2b_main`, so
@@ -76,7 +77,9 @@ reward: pass@1 is the mean share of correct samples per question, pass@8 the sha
 questions with at least one. The greedy cells read a training role through the protocol's
 `screening` flag, which is not part of the protocol identity.
 
-Hard gates, fixed in `vqar/eval/screening.py` before any candidate is measured:
+Hard gates, fixed in `vqar/eval/screening.py` before any candidate is measured. The last
+three were added on 2026-10-06, before the reasoning candidates were measured, because the
+general datasets had passed the first five although reasoning hurt them:
 
 | Gate | Rule |
 |---|---|
@@ -85,8 +88,11 @@ Hard gates, fixed in `vqar/eval/screening.py` before any candidate is measured:
 | license | declared usable per dataset |
 | parse rate | at least 95% of the sampled reasoning responses give the reward's answer rule a non-empty answer (a last `<answer>` tag) |
 | not saturated | short-prompt accuracy below 90% |
+| reasoning not worse | the matched payoff's upper 95% bound is at least 0 |
+| image needed | a black and a swapped image each cost at least 10 points (lower 95% bound) |
+| learnable | at least 25% of questions have 1–7 of 8 samples right |
 
-Survivors are ranked by reasoning payoff, then RL headroom. Every candidate gets a row,
+Survivors are ranked by matched payoff, then RL headroom. Every candidate gets a row,
 rejects included with the gates they failed, in `results/screening/screening.{json,md}`.
 A dataset without a training pool (TextVQA) is rejected; `--validate-on-test` screens it on
 its test role instead, labelled validation only, to check the module against known results.
@@ -97,9 +103,18 @@ python -m scripts.screen_datasets --arms base2 --validate-on-test            # m
 python -m scripts.screen_datasets --arms base2 base8 --validate-on-test --from-records
 ```
 
-Built from the 2B learnability records alone (before the greedy cells ran), the table
-already shows the sampling measures: pass@1 → pass@8 of 60.9 → 80.2% on VQAv2, 56.3 →
-73.4% on GQA, and 84.9 → 100.0% on CLEVR, with learnable shares of 47.8, 42.0, and 48.4%.
+With Instruct 2B (2026-10-06, [table](../../results/screening/screening.md)), every general
+dataset fails the reasoning gate: stepwise answers are 3–9 points below direct ones. The two
+reasoning candidates split. CLEVR compositional is nearly saturated (88.4% short-prompt
+accuracy), reasoning costs it 5.6 points under matched format, and 5.8% of its sampled
+reasoning responses lack a readable answer, so it is rejected. ChartQA's human-written
+questions pass every gate: reasoning neither helps nor hurts overall (reasoning − short
++2.0 [−2.0, +6.2], stepwise − direct 0.0 [−3.2, +3.2]), but it splits by answer type, +5.6
+points on numeric questions and −5.5 on text ones under the reasoning prompt; 41% of its
+questions give GRPO a gradient and pass@8 reaches 88.6% against 71.0% pass@1. Under the
+direct and stepwise prompts the model often leaves out the answer tag (98% and 36% of
+responses), and an untagged stepwise response is scored as a whole, so the matched payoff
+understates reasoning.
 
 ## Held-out hygiene
 

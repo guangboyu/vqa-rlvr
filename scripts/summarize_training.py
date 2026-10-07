@@ -126,7 +126,7 @@ def main():
     headline = [name for name, spec in DATASETS.items() if spec.require_split]
     splits = {name: read_split(args.data_dir, name) for name in headline}
     split_sha = {name: split_sha256(args.data_dir, name) for name in headline}
-    train = load_role(args.data_dir, datasets_with_role("sft"), "sft", seed=None)
+    train = load_role(args.data_dir, datasets_with_role("sft", optional=False), "sft", seed=None)
     sft_questions = set(zip(train["dataset"], train["qid"], strict=True))
     runs = {str(path): summarize_run(path, sft_questions, splits, split_sha)
             for path in args.runs}

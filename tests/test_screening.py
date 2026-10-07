@@ -115,7 +115,8 @@ def test_the_battery_reads_the_training_pool_with_the_learnability_protocol():
 
     cells = battery("gqa")
     assert [p.slug() for p in cells.protocols().values()] == [
-        "gqa-rl-dev-short", "gqa-rl-dev-short-black", "gqa-rl-dev-reasoning",
+        "gqa-rl-dev-short", "gqa-rl-dev-short-black", "gqa-rl-dev-short-swapped",
+        "gqa-rl-dev-reasoning", "gqa-rl-dev-direct", "gqa-rl-dev-stepwise",
         "gqa-rl-dev-reasoning-t1k8"]
     assert not cells.validation_only
     assert cells.sampled.temperature == ROLLOUT_TEMPERATURE
@@ -159,9 +160,22 @@ def test_gates_and_their_boundaries():
     assert failed_gates(5_000, closed, {}) == ["split separable", "license"]
 
 
+def test_reasoning_image_and_learnability_gates():
+    failed_gates, good = screening.failed_gates, screening.DECLARED["gqa"]
+    passing = {"matched_payoff": {"high": 0.0}, "image_dependence": {"low": 10.0},
+               "wrong_image_dependence": {"low": 25.0}, "learnable_share": 0.25}
+    assert failed_gates(5_000, good, passing) == []
+    assert failed_gates(5_000, good, {**passing, "matched_payoff": {"high": -0.1}}) == [
+        "reasoning not worse"]
+    assert failed_gates(5_000, good, {**passing,
+                                      "wrong_image_dependence": {"low": 9.9}}) == [
+        "image needed"]
+    assert failed_gates(5_000, good, {**passing, "learnable_share": 0.249}) == ["learnable"]
+
+
 def row(model, dataset, status, payoff=0.0, headroom=0.0):
     return {"model": model, "dataset": dataset, "status": status,
-            "reasoning_payoff": {"delta": payoff}, "rl_headroom": {"delta": headroom}}
+            "matched_payoff": {"delta": payoff}, "rl_headroom": {"delta": headroom}}
 
 
 def test_ranking_orders_survivors_by_payoff_then_headroom_per_model():
@@ -193,7 +207,11 @@ def test_the_battery_end_to_end_from_records(setup, monkeypatch):
     assert gqa["rl_headroom"]["delta"] == 50.0
     assert gqa["parse_rate"] == 1.0
     assert gqa["short_accuracy"] == 1.0
-    assert gqa["failed_gates"] == ["not saturated"] and gqa["status"] == "rejected"
+    # A swapped image is another question's picture, which the screener still answers.
+    assert gqa["wrong_image_dependence"]["delta"] == 0.0
+    assert gqa["matched_payoff"]["delta"] == 0.0
+    assert gqa["failed_gates"] == ["not saturated", "image needed"]
+    assert gqa["status"] == "rejected"
 
     textvqa = rows["textvqa"]
     assert textvqa["validation_only"] and textvqa["pool_questions"] == 0
@@ -202,13 +220,15 @@ def test_the_battery_end_to_end_from_records(setup, monkeypatch):
 
     clevr = rows["clevr"]
     assert clevr["status"] == "incomplete"
-    assert clevr["missing"] == ["short", "black", "reasoning", "sampled"]
+    assert clevr["missing"] == ["short", "black", "swapped", "reasoning", "direct", "stepwise",
+                                "sampled"]
     assert "reasoning_payoff" not in clevr
 
     table = screening.markdown(screening.rank(list(rows.values())))
     assert "test (validation only)" in table
-    assert "rejected (failed: not saturated)" in table
-    assert "incomplete: missing short, black, reasoning, sampled" in table
+    assert "rejected (failed: not saturated, image needed)" in table
+    assert "incomplete: missing short, black, swapped, reasoning, direct, stepwise, sampled" \
+        in table
 
 
 def test_older_learnability_records_are_recounted_from_their_predictions(setup):
@@ -238,10 +258,11 @@ def test_dry_run_lists_the_battery_and_from_records_writes_the_table(setup, tmp_
     screen_datasets.main()
     printed = capsys.readouterr().out.splitlines()
     assert printed[0].startswith("base gqa short: gqa-rl-dev-short: missing, ")
-    assert [line.split(": ")[1] for line in printed[:4]] == [
-        "gqa-rl-dev-short", "gqa-rl-dev-short-black", "gqa-rl-dev-reasoning",
+    assert [line.split(": ")[1] for line in printed[:7]] == [
+        "gqa-rl-dev-short", "gqa-rl-dev-short-black", "gqa-rl-dev-short-swapped",
+        "gqa-rl-dev-reasoning", "gqa-rl-dev-direct", "gqa-rl-dev-stepwise",
         "gqa-rl-dev-reasoning-t1k8"]
-    assert printed[4].startswith("base textvqa: no training pool")
+    assert printed[7].startswith("base textvqa: no training pool")
 
     run_battery(battery("gqa"), model, data, records)
     out = tmp_path / "screening"

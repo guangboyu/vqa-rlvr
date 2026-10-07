@@ -272,8 +272,11 @@ def build_split(dataset: str, data_dir: Path, other_splits: list[dict],
     if "sft" in spec.subsets:
         roles["sft"] = [part("sft", held | others_held)]
     if "rl" in spec.subsets:
-        # RL may reuse SFT training examples; it never sees dev or test images.
-        roles["rl"] = [part("rl", held | others_held)] + [dict(p) for p in roles.get("sft", [])]
+        # RL may reuse SFT training examples; it never sees dev or test images. A dataset
+        # whose RL role reads its SFT subset reuses exactly the SFT rows.
+        shares_sft = spec.subsets["rl"] == spec.subsets.get("sft")
+        own = [] if shares_sft else [part("rl", held | others_held)]
+        roles["rl"] = own + [dict(p) for p in roles.get("sft", [])]
     others = others_held | others_train
     shared = {role: sum(key in others for key in keys[spec.subsets[role]]) for role in roles}
     split = {"version": VERSION, "dataset": dataset, "ladder": spec.ladder,

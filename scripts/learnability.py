@@ -31,7 +31,7 @@ def main():
     parser.add_argument("--revision", default=None)
     parser.add_argument("--label", default=None, help="records folder name")
     parser.add_argument("--datasets", nargs="+", choices=datasets_with_role("rl"),
-                        default=datasets_with_role("rl"))
+                        default=datasets_with_role("rl", optional=False))
     parser.add_argument("--tier", default="smoke",
                         help="pool prompts to sample: smoke (32), dev (500), full, or first-N")
     parser.add_argument("--rollout-prompt", default=None,

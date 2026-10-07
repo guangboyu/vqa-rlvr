@@ -238,3 +238,13 @@ def test_migration_keeps_every_role_row(tmp_path):
     rl = load_role(tmp_path, ["vqav2", "gqa"], "rl", seed=None)
     assert list(rl["qid"]) == ["vqav2_rl-0", "vqav2_rl-1", "vqav2_sft-2", "vqav2_sft-3",
                                "gqa_rl-0", "gqa_sft-1", "gqa_sft-3"]
+
+
+def test_an_rl_role_on_the_sft_subset_reuses_the_sft_rows_once(planted):
+    # clevrcomp's sft, rl and dev roles all read one training subset.
+    save_subset(planted, "clevrcomp_train", "clevrcomp", [40, 40, 41, 42, 43, 44])
+    save_subset(planted, "clevrcomp_test", "clevrcomp", [45, 46])
+    (split,) = build_all(planted, ["clevrcomp"])
+    assert split["roles"]["rl"] == split["roles"]["sft"]
+    assert not keys_of(split, "dev") & keys_of(split, "rl")
+    assert len(split["roles"]["rl"]) == 1

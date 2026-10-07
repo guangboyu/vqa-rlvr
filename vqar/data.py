@@ -249,3 +249,116 @@ def load_textvqa_eval(n: int, seed: int) -> Dataset:
     rows = _load_source("lmms-lab/textvqa", split="validation").shuffle(seed=seed).select(range(n))
     rows = rows.cast_column("image", Image(decode=False))
     return _build(_textvqa_generate, rows=rows)
+
+
+def _rgb_png(payload: bytes) -> bytes:
+    """The image as RGB PNG bytes; RGB sources pass through unchanged."""
+    import io
+
+    with PILImage.open(io.BytesIO(payload)) as image:
+        if image.mode == "RGB":
+            return payload
+        buffer = io.BytesIO()
+        image.convert("RGB").save(buffer, "PNG")
+        return buffer.getvalue()
+
+
+def _from_records(records: list[dict]) -> Dataset:
+    """Plain dicts (image bytes included) to the unified schema, off the slow iterator path."""
+    def generate(records):
+        for record in records:
+            yield {**record, "image": {"bytes": record["image"], "path": None}}
+
+    return _build(generate, records=records)
+
+
+def _parquet_rows(repo_id: str, filename: str, columns: list[str]) -> list[dict]:
+    import pyarrow.parquet as pq
+    from huggingface_hub import hf_hub_download
+
+    path = hf_hub_download(repo_id, filename, repo_type="dataset",
+                           revision=SOURCE_REVISIONS[repo_id])
+    return pq.read_table(path, columns=columns).to_pylist()
+
+
+CHARTQA = "HuggingFaceM4/ChartQA"
+CHARTQA_HUMAN = 0  # human_or_machine: 0 marks the human-written questions
+
+
+def _chartqa_answer_type(answer: str) -> str:
+    from vqar.metrics import _number
+
+    return "number" if _number(answer) is not None else "text"
+
+
+def load_chartqa() -> dict[str, Dataset]:
+    """ChartQA's human-written questions of each official split, in source order.
+
+    The machine-generated half (mostly value lookup) is left out. Question IDs keep the
+    official split and the row's position in it.
+    """
+    from huggingface_hub import HfApi
+
+    files = sorted(f for f in HfApi().list_repo_files(CHARTQA, repo_type="dataset",
+                                                       revision=SOURCE_REVISIONS[CHARTQA])
+                   if f.endswith(".parquet"))
+    subsets = {}
+    for split, name in (("train", "train"), ("val", "val"), ("test", "test")):
+        rows = [row for f in files if f.startswith(f"data/{split}-")
+                for row in _parquet_rows(CHARTQA, f, ["image", "query", "label",
+                                                      "human_or_machine"])]
+        records = [{"dataset": "chartqa", "qid": f"{split}-{i}",
+                    "image": _rgb_png(row["image"]["bytes"]),
+                    "question": row["query"], "answers": row["label"],
+                    "answer_type": _chartqa_answer_type(row["label"][0])}
+                   for i, row in enumerate(rows) if row["human_or_machine"] == CHARTQA_HUMAN]
+        subsets[name] = _from_records(records)
+    return subsets
+
+
+CAULDRON = "HuggingFaceM4/the_cauldron"
+
+
+def _clevr_answer_type(answer: str) -> str:
+    if answer in ("yes", "no"):
+        return "yes/no"
+    return "number" if answer.isdigit() else "attribute"
+
+
+def _cauldron_clevr_shard(index: int) -> list[dict]:
+    from huggingface_hub import HfApi
+
+    shards = sorted(f for f in HfApi().list_repo_files(CAULDRON, repo_type="dataset",
+                                                        revision=SOURCE_REVISIONS[CAULDRON])
+                    if f.startswith("clevr/") and f.endswith(".parquet"))
+    return _parquet_rows(CAULDRON, shards[index], ["images", "texts"])
+
+
+def _clevr_questions(row: dict, shard: int, image: int, turns: list[int]) -> list[dict]:
+    """Questions of one CLEVR image; the cauldron appends a style instruction after a newline."""
+    payload = _rgb_png(row["images"][0]["bytes"])
+    questions = []
+    for turn in turns:
+        text = row["texts"][turn]
+        answer = _clean_cauldron_answer(text["assistant"])
+        questions.append({"dataset": "clevrcomp", "qid": f"{shard}-{image}-{turn}",
+                          "image": payload, "question": text["user"].split("\n")[0].strip(),
+                          "answers": [answer], "answer_type": _clevr_answer_type(answer)})
+    return questions
+
+
+def load_clevr_compositional(train_shard: int, test_shard: int, per_image: int,
+                             seed: int) -> dict[str, Dataset]:
+    """CLEVR v1.0 questions (filter, count, compare, query; ten per image in the source)
+    from two cauldron shards: `per_image` seeded questions of every training-shard image,
+    and one seeded question per image of the test shard."""
+    import random
+
+    rng = random.Random(seed)
+    train = [question for i, row in enumerate(_cauldron_clevr_shard(train_shard))
+             for question in _clevr_questions(
+                 row, train_shard, i, sorted(rng.sample(range(len(row["texts"])), per_image)))]
+    test = [question for i, row in enumerate(_cauldron_clevr_shard(test_shard))
+            for question in _clevr_questions(
+                row, test_shard, i, [rng.randrange(len(row["texts"]))])]
+    return {"train": _from_records(train), "test": _from_records(test)}

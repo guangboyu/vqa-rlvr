@@ -151,6 +151,20 @@ def _textvqa(sizes):
     return {"textvqa_eval": data.load_textvqa_eval(sizes["eval"], sizes["eval_seed"])}
 
 
+def _chartqa(sizes):
+    from vqar import data
+
+    return {f"chartqa_{name}": subset for name, subset in data.load_chartqa().items()}
+
+
+def _clevrcomp(sizes):
+    from vqar import data
+
+    splits = data.load_clevr_compositional(sizes["train_shard"], sizes["test_shard"],
+                                           sizes["per_image"], sizes["seed"])
+    return {f"clevrcomp_{name}": subset for name, subset in splits.items()}
+
+
 def _prepared_ood(sizes):
     raise ValueError("Use python -m scripts.prepare_ood with pinned local source files")
 
@@ -221,6 +235,35 @@ DATASETS: dict[str, DatasetSpec] = {
             sizes={"eval": 5_000, "eval_seed": 0},
             materialize=_textvqa,
         ),
+        # Reasoning candidates (Part 2), screened before any training. Optional like the OOD
+        # cohorts: the tutorial does not need them and the headline tables leave them out.
+        DatasetSpec(
+            name="chartqa", display_name="ChartQA (human)",
+            sources={"HuggingFaceM4/ChartQA": "b605b6e08b57faf4359aeb2fe6a3ca595f99b6c5"},
+            subsets={"sft": "chartqa_train", "rl": "chartqa_train", "dev": "chartqa_val",
+                     "test": "chartqa_test"},
+            official_splits=frozenset({"sft", "rl", "dev", "test"}),
+            ladder="in-domain", answer_schema="number or short text read or computed from "
+            "a chart; one human-written reference",
+            official=metrics.chartqa_relaxed_accuracy,
+            normalized=metrics.chartqa_normalized_accuracy,
+            official_roles=frozenset(ROLES), sizes={}, materialize=_chartqa,
+            require_split=False,
+        ),
+        DatasetSpec(
+            name="clevrcomp", display_name="CLEVR compositional",
+            sources={"HuggingFaceM4/the_cauldron": "847a98a779b1652d65111daf20c972dfcd333605"},
+            subsets={"sft": "clevrcomp_train", "rl": "clevrcomp_train",
+                     "dev": "clevrcomp_train", "test": "clevrcomp_test"},
+            official_splits=frozenset(),  # re-split by image from CLEVR's training questions
+            ladder="in-domain", answer_schema="yes/no, a count, or an attribute word",
+            # CLEVR answers are single lowercase words; the raw string must match, as for
+            # CLEVR counting. The normalized scorer forgives case and number words.
+            official=metrics.exact_string_match, normalized=metrics.exact_match,
+            official_roles=frozenset(ROLES),
+            sizes={"train_shard": 0, "test_shard": 1, "per_image": 5, "seed": 0},
+            materialize=_clevrcomp, require_split=False,
+        ),
         DatasetSpec(
             name="vizwiz", display_name="VizWiz",
             sources={"https://vizwiz.cs.colorado.edu/VizWiz_all_answers/VQA_test.json":
@@ -269,5 +312,8 @@ def score(dataset: str, prediction: str, answers: list[str], variant: str) -> fl
     return DATASETS[dataset].scorer(variant)(prediction, answers)
 
 
-def datasets_with_role(role: str) -> list[str]:
-    return [name for name, spec in DATASETS.items() if role in spec.subsets]
+def datasets_with_role(role: str, optional: bool = True) -> list[str]:
+    """Datasets declaring the role, in registry order. `optional=False` keeps only the
+    headline datasets every checkout prepares, leaving out OOD cohorts and candidates."""
+    return [name for name, spec in DATASETS.items()
+            if role in spec.subsets and (optional or spec.require_split)]

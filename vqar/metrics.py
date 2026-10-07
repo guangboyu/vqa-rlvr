@@ -158,3 +158,42 @@ def textvqa_accuracy(prediction: str, gt_answers: list[str]) -> float:
 def exact_string_match(prediction: str, gt_answers: list[str]) -> float:
     """GQA's author accuracy: the raw prediction string must equal a reference."""
     return float(prediction in gt_answers)
+
+
+def _relaxed_float(text: str) -> float | None:
+    try:
+        return float(text.rstrip("%")) / 100.0 if text.endswith("%") else float(text)
+    except ValueError:
+        return None
+
+
+def chartqa_relaxed_accuracy(prediction: str, gt_answers: list[str]) -> float:
+    """ChartQA's relaxed accuracy (Masry et al. 2022, sec. 5.1), as lmms-eval and Qwen-VL
+    implement it: a number within 5% of a numeric reference, else a case-insensitive match."""
+    def correct(target: str) -> bool:
+        predicted, expected = _relaxed_float(prediction), _relaxed_float(target)
+        if predicted is not None and expected:
+            return abs(predicted - expected) / abs(expected) <= 0.05
+        return prediction.lower() == target.lower()
+
+    return float(any(correct(answer) for answer in gt_answers))
+
+
+def _number(text: str) -> float | None:
+    """A number written with thousands separators, a currency sign or a percent sign."""
+    cleaned = text.strip().replace(",", "").removeprefix("$").removesuffix(".").strip()
+    return _relaxed_float(cleaned)
+
+
+def chartqa_normalized_accuracy(prediction: str, gt_answers: list[str]) -> float:
+    """The relaxed rule after VQA normalization: '1,234' and '$1234' read as 1234, and text
+    answers compare normalized (case, punctuation, articles, number words)."""
+    def correct(target: str) -> bool:
+        predicted, expected = _number(prediction), _number(target)
+        if predicted is not None and expected is not None:
+            if expected == 0:
+                return predicted == 0
+            return abs(predicted - expected) / abs(expected) <= 0.05
+        return normalize_answer(prediction) == normalize_answer(target)
+
+    return float(any(correct(answer) for answer in gt_answers))

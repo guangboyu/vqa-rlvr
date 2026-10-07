@@ -8,56 +8,92 @@
   "min_pool_questions": 2000,
   "min_parse_rate": 0.95,
   "max_short_accuracy": 0.9,
+  "min_matched_payoff_high": 0.0,
+  "min_image_drop_low": 0.1,
+  "min_learnable_share": 0.25,
   "declared": [
    "split separable",
    "license"
   ]
  },
- "ranking": "passed candidates by reasoning payoff, then RL headroom, both descending",
+ "ranking": "passed candidates by matched payoff, then RL headroom, both descending",
  "rows": [
   {
    "model": "base2",
-   "dataset": "gqa",
-   "display_name": "GQA",
+   "dataset": "chartqa",
+   "display_name": "ChartQA (human)",
    "role": "rl",
    "validation_only": false,
    "tier": "dev",
-   "pool_questions": 27885,
+   "pool_questions": 7378,
    "declared": {
     "split_unit": "image",
     "split_separable": true,
-    "license": "CC BY 4.0 (Visual Genome images)",
+    "license": "GPL-3.0 (ChartQA release); charts from Statista, Pew, OWID and OECD",
     "license_usable": true
    },
    "samples": 8,
-   "pass_at_1": 0.563,
-   "pass_at_k": 0.734,
+   "pass_at_1": 0.70975,
+   "pass_at_k": 0.886,
    "rl_headroom": {
     "n": 500,
-    "delta": 17.1,
-    "low": 14.799999999999999,
-    "high": 19.47562499999999,
+    "delta": 17.625,
+    "low": 15.35,
+    "high": 19.975,
     "resamples": 10000,
     "seed": 0
    },
-   "learnable_share": 0.42,
-   "parse_rate": 0.97375,
+   "learnable_share": 0.412,
+   "parse_rate": 0.9795,
    "questions": 500,
-   "short_accuracy": 0.696,
-   "reasoning_accuracy": 0.578,
+   "short_accuracy": 0.69,
+   "reasoning_accuracy": 0.71,
+   "direct_accuracy": 0.674,
+   "stepwise_accuracy": 0.674,
+   "reasoning_behavior": {
+    "mean_output_tokens": 195.796,
+    "truncated_fraction": 0.034,
+    "answer_tag_fraction": 0.966
+   },
+   "direct_behavior": {
+    "mean_output_tokens": 4.41,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.018
+   },
+   "stepwise_behavior": {
+    "mean_output_tokens": 41.53,
+    "truncated_fraction": 0.01,
+    "answer_tag_fraction": 0.636
+   },
    "reasoning_payoff": {
     "n": 500,
-    "delta": -11.799999999999999,
-    "low": -15.4,
-    "high": -8.200000000000001,
+    "delta": 2.0,
+    "low": -2.0,
+    "high": 6.2,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "matched_payoff": {
+    "n": 500,
+    "delta": 0.0,
+    "low": -3.2,
+    "high": 3.2,
     "resamples": 10000,
     "seed": 0
    },
    "image_dependence": {
     "n": 500,
-    "delta": 35.6,
-    "low": 30.599999999999998,
-    "high": 40.6,
+    "delta": 53.2,
+    "low": 48.6,
+    "high": 57.99999999999999,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "wrong_image_dependence": {
+    "n": 500,
+    "delta": 54.0,
+    "low": 49.4,
+    "high": 58.599999999999994,
     "resamples": 10000,
     "seed": 0
    },
@@ -65,69 +101,15 @@
    "status": "passed",
    "missing": [],
    "records": {
-    "short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/gqa-rl-dev-short-b8c0659c9a.json",
-    "black": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/gqa-rl-dev-short-black-e483c14f88.json",
-    "reasoning": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/gqa-rl-dev-reasoning-ed0e25c5c9.json",
-    "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/gqa-rl-dev-reasoning-t1k8-fdb19e6372.json"
+    "short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/chartqa-rl-dev-short-c331fc68b0.json",
+    "black": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/chartqa-rl-dev-short-black-a684dbd39f.json",
+    "swapped": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/chartqa-rl-dev-short-swapped-ecb5d4835f.json",
+    "reasoning": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/chartqa-rl-dev-reasoning-9359e2b85f.json",
+    "direct": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/chartqa-rl-dev-direct-abb23e0a0c.json",
+    "stepwise": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/chartqa-rl-dev-stepwise-c221526c79.json",
+    "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/chartqa-rl-dev-reasoning-t1k8-bd2999d358.json"
    },
    "rank": 1
-  },
-  {
-   "model": "base2",
-   "dataset": "vqav2",
-   "display_name": "VQAv2",
-   "role": "rl",
-   "validation_only": false,
-   "tier": "dev",
-   "pool_questions": 27553,
-   "declared": {
-    "split_unit": "image",
-    "split_separable": true,
-    "license": "annotations CC BY 4.0; COCO images, Flickr terms",
-    "license_usable": true
-   },
-   "samples": 8,
-   "pass_at_1": 0.609,
-   "pass_at_k": 0.802,
-   "rl_headroom": {
-    "n": 500,
-    "delta": 19.3,
-    "low": 16.900000000000002,
-    "high": 21.75,
-    "resamples": 10000,
-    "seed": 0
-   },
-   "learnable_share": 0.478,
-   "parse_rate": 0.97725,
-   "questions": 500,
-   "short_accuracy": 0.732,
-   "reasoning_accuracy": 0.604,
-   "reasoning_payoff": {
-    "n": 500,
-    "delta": -12.8,
-    "low": -16.6,
-    "high": -9.2,
-    "resamples": 10000,
-    "seed": 0
-   },
-   "image_dependence": {
-    "n": 500,
-    "delta": 44.800000000000004,
-    "low": 39.6,
-    "high": 49.8,
-    "resamples": 10000,
-    "seed": 0
-   },
-   "failed_gates": [],
-   "status": "passed",
-   "missing": [],
-   "records": {
-    "short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/vqav2-rl-dev-short-7ae050aa04.json",
-    "black": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/vqav2-rl-dev-short-black-94a65009e4.json",
-    "reasoning": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/vqav2-rl-dev-reasoning-4f259e8994.json",
-    "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/vqav2-rl-dev-reasoning-t1k8-12d32186c8.json"
-   },
-   "rank": 2
   },
   {
    "model": "base2",
@@ -159,11 +141,36 @@
    "questions": 500,
    "short_accuracy": 0.98,
    "reasoning_accuracy": 0.882,
+   "direct_accuracy": 0.91,
+   "stepwise_accuracy": 0.878,
+   "reasoning_behavior": {
+    "mean_output_tokens": 185.864,
+    "truncated_fraction": 0.02,
+    "answer_tag_fraction": 0.98
+   },
+   "direct_behavior": {
+    "mean_output_tokens": 2.14,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0
+   },
+   "stepwise_behavior": {
+    "mean_output_tokens": 183.918,
+    "truncated_fraction": 0.01,
+    "answer_tag_fraction": 0.99
+   },
    "reasoning_payoff": {
     "n": 500,
     "delta": -9.8,
     "low": -13.0,
     "high": -7.000000000000001,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "matched_payoff": {
+    "n": 500,
+    "delta": -3.2,
+    "low": -6.800000000000001,
+    "high": 0.2,
     "resamples": 10000,
     "seed": 0
    },
@@ -175,6 +182,14 @@
     "resamples": 10000,
     "seed": 0
    },
+   "wrong_image_dependence": {
+    "n": 500,
+    "delta": 86.2,
+    "low": 83.0,
+    "high": 89.4,
+    "resamples": 10000,
+    "seed": 0
+   },
    "failed_gates": [
     "not saturated"
    ],
@@ -183,8 +198,202 @@
    "records": {
     "short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/clevr-rl-dev-short-90b54dac02.json",
     "black": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/clevr-rl-dev-short-black-aab01494a1.json",
+    "swapped": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/clevr-rl-dev-short-swapped-8424f1126c.json",
     "reasoning": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/clevr-rl-dev-reasoning-fee9e63ea7.json",
+    "direct": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/clevr-rl-dev-direct-5c6a369ad9.json",
+    "stepwise": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/clevr-rl-dev-stepwise-c69048777b.json",
     "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/clevr-rl-dev-reasoning-t1k8-ccd38fdc13.json"
+   },
+   "rank": null
+  },
+  {
+   "model": "base2",
+   "dataset": "clevrcomp",
+   "display_name": "CLEVR compositional",
+   "role": "rl",
+   "validation_only": false,
+   "tier": "dev",
+   "pool_questions": 14085,
+   "declared": {
+    "split_unit": "image",
+    "split_separable": true,
+    "license": "CC BY 4.0",
+    "license_usable": true
+   },
+   "samples": 8,
+   "pass_at_1": 0.709,
+   "pass_at_k": 0.948,
+   "rl_headroom": {
+    "n": 500,
+    "delta": 23.9,
+    "low": 21.525,
+    "high": 26.325,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "learnable_share": 0.62,
+   "parse_rate": 0.9425,
+   "questions": 500,
+   "short_accuracy": 0.884,
+   "reasoning_accuracy": 0.734,
+   "direct_accuracy": 0.868,
+   "stepwise_accuracy": 0.812,
+   "reasoning_behavior": {
+    "mean_output_tokens": 183.846,
+    "truncated_fraction": 0.034,
+    "answer_tag_fraction": 0.966
+   },
+   "direct_behavior": {
+    "mean_output_tokens": 3.254,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.022
+   },
+   "stepwise_behavior": {
+    "mean_output_tokens": 98.234,
+    "truncated_fraction": 0.022,
+    "answer_tag_fraction": 0.93
+   },
+   "reasoning_payoff": {
+    "n": 500,
+    "delta": -15.0,
+    "low": -19.2,
+    "high": -10.8,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "matched_payoff": {
+    "n": 500,
+    "delta": -5.6000000000000005,
+    "low": -9.2,
+    "high": -2.0,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "image_dependence": {
+    "n": 500,
+    "delta": 55.60000000000001,
+    "low": 50.4,
+    "high": 60.6,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "wrong_image_dependence": {
+    "n": 500,
+    "delta": 47.199999999999996,
+    "low": 42.0,
+    "high": 52.2,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "failed_gates": [
+    "parse rate",
+    "reasoning not worse"
+   ],
+   "status": "rejected",
+   "missing": [],
+   "records": {
+    "short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/clevrcomp-rl-dev-short-a2a3c2c3c7.json",
+    "black": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/clevrcomp-rl-dev-short-black-94656bdcf9.json",
+    "swapped": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/clevrcomp-rl-dev-short-swapped-6bd41f5edb.json",
+    "reasoning": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/clevrcomp-rl-dev-reasoning-7a68592f68.json",
+    "direct": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/clevrcomp-rl-dev-direct-99c2ac2199.json",
+    "stepwise": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/clevrcomp-rl-dev-stepwise-fa4f82d274.json",
+    "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/clevrcomp-rl-dev-reasoning-t1k8-71f0141773.json"
+   },
+   "rank": null
+  },
+  {
+   "model": "base2",
+   "dataset": "gqa",
+   "display_name": "GQA",
+   "role": "rl",
+   "validation_only": false,
+   "tier": "dev",
+   "pool_questions": 27885,
+   "declared": {
+    "split_unit": "image",
+    "split_separable": true,
+    "license": "CC BY 4.0 (Visual Genome images)",
+    "license_usable": true
+   },
+   "samples": 8,
+   "pass_at_1": 0.563,
+   "pass_at_k": 0.734,
+   "rl_headroom": {
+    "n": 500,
+    "delta": 17.1,
+    "low": 14.799999999999999,
+    "high": 19.47562499999999,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "learnable_share": 0.42,
+   "parse_rate": 0.97375,
+   "questions": 500,
+   "short_accuracy": 0.696,
+   "reasoning_accuracy": 0.578,
+   "direct_accuracy": 0.688,
+   "stepwise_accuracy": 0.596,
+   "reasoning_behavior": {
+    "mean_output_tokens": 114.818,
+    "truncated_fraction": 0.006,
+    "answer_tag_fraction": 0.966
+   },
+   "direct_behavior": {
+    "mean_output_tokens": 2.702,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.062
+   },
+   "stepwise_behavior": {
+    "mean_output_tokens": 106.552,
+    "truncated_fraction": 0.03,
+    "answer_tag_fraction": 0.842
+   },
+   "reasoning_payoff": {
+    "n": 500,
+    "delta": -11.799999999999999,
+    "low": -15.4,
+    "high": -8.200000000000001,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "matched_payoff": {
+    "n": 500,
+    "delta": -9.2,
+    "low": -12.4,
+    "high": -6.0,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "image_dependence": {
+    "n": 500,
+    "delta": 35.6,
+    "low": 30.599999999999998,
+    "high": 40.6,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "wrong_image_dependence": {
+    "n": 500,
+    "delta": 37.6,
+    "low": 32.6,
+    "high": 42.4,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "failed_gates": [
+    "reasoning not worse"
+   ],
+   "status": "rejected",
+   "missing": [],
+   "records": {
+    "short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/gqa-rl-dev-short-b8c0659c9a.json",
+    "black": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/gqa-rl-dev-short-black-e483c14f88.json",
+    "swapped": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/gqa-rl-dev-short-swapped-a46a09099d.json",
+    "reasoning": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/gqa-rl-dev-reasoning-ed0e25c5c9.json",
+    "direct": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/gqa-rl-dev-direct-9b239876ad.json",
+    "stepwise": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/gqa-rl-dev-stepwise-fa1b27e5ad.json",
+    "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/gqa-rl-dev-reasoning-t1k8-fdb19e6372.json"
    },
    "rank": null
   },
@@ -218,11 +427,36 @@
    "questions": 500,
    "short_accuracy": 0.7976,
    "reasoning_accuracy": 0.6914,
+   "direct_accuracy": 0.7796000000000001,
+   "stepwise_accuracy": 0.7466,
+   "reasoning_behavior": {
+    "mean_output_tokens": 110.552,
+    "truncated_fraction": 0.018,
+    "answer_tag_fraction": 0.942
+   },
+   "direct_behavior": {
+    "mean_output_tokens": 5.144,
+    "truncated_fraction": 0.002,
+    "answer_tag_fraction": 0.014
+   },
+   "stepwise_behavior": {
+    "mean_output_tokens": 48.19,
+    "truncated_fraction": 0.012,
+    "answer_tag_fraction": 0.776
+   },
    "reasoning_payoff": {
     "n": 500,
     "delta": -10.62,
     "low": -14.14,
     "high": -7.12,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "matched_payoff": {
+    "n": 500,
+    "delta": -3.3000000000000003,
+    "low": -6.08,
+    "high": -0.47999999999999987,
     "resamples": 10000,
     "seed": 0
    },
@@ -234,78 +468,33 @@
     "resamples": 10000,
     "seed": 0
    },
+   "wrong_image_dependence": {
+    "n": 500,
+    "delta": 77.12,
+    "low": 73.58,
+    "high": 80.5605,
+    "resamples": 10000,
+    "seed": 0
+   },
    "failed_gates": [
-    "training questions"
+    "training questions",
+    "reasoning not worse"
    ],
    "status": "rejected",
    "missing": [],
    "records": {
     "short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/textvqa-test-dev-short-a479974108.json",
     "black": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/textvqa-test-dev-short-black-8bee4adc7f.json",
+    "swapped": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/textvqa-test-dev-short-swapped-d275b8e589.json",
     "reasoning": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/textvqa-test-dev-reasoning-de48b16448.json",
+    "direct": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/textvqa-test-dev-direct-2d82d8c8ed.json",
+    "stepwise": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/textvqa-test-dev-stepwise-afaf07296f.json",
     "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/textvqa-test-dev-reasoning-t1k8-319c52cf48.json"
    },
    "rank": null
   },
   {
-   "model": "base8",
-   "dataset": "gqa",
-   "display_name": "GQA",
-   "role": "rl",
-   "validation_only": false,
-   "tier": "dev",
-   "pool_questions": 27885,
-   "declared": {
-    "split_unit": "image",
-    "split_separable": true,
-    "license": "CC BY 4.0 (Visual Genome images)",
-    "license_usable": true
-   },
-   "samples": 8,
-   "pass_at_1": 0.60475,
-   "pass_at_k": 0.746,
-   "rl_headroom": {
-    "n": 500,
-    "delta": 14.124999999999998,
-    "low": 11.875,
-    "high": 16.475,
-    "resamples": 10000,
-    "seed": 0
-   },
-   "learnable_share": 0.312,
-   "parse_rate": 0.98775,
-   "questions": 500,
-   "short_accuracy": 0.706,
-   "reasoning_accuracy": 0.602,
-   "reasoning_payoff": {
-    "n": 500,
-    "delta": -10.4,
-    "low": -14.000000000000002,
-    "high": -7.199999999999999,
-    "resamples": 10000,
-    "seed": 0
-   },
-   "image_dependence": {
-    "n": 500,
-    "delta": 36.199999999999996,
-    "low": 31.4,
-    "high": 41.0,
-    "resamples": 10000,
-    "seed": 0
-   },
-   "failed_gates": [],
-   "status": "passed",
-   "missing": [],
-   "records": {
-    "short": "/home/guangbo/codes/VQA/results/records/base8-3b8e9ad666/gqa-rl-dev-short-b8c0659c9a.json",
-    "black": "/home/guangbo/codes/VQA/results/records/base8-3b8e9ad666/gqa-rl-dev-short-black-e483c14f88.json",
-    "reasoning": "/home/guangbo/codes/VQA/results/records/base8-3b8e9ad666/gqa-rl-dev-reasoning-ed0e25c5c9.json",
-    "sampled": "/home/guangbo/codes/VQA/results/records/base8-3b8e9ad666/gqa-rl-dev-reasoning-t1k8-fdb19e6372.json"
-   },
-   "rank": 1
-  },
-  {
-   "model": "base8",
+   "model": "base2",
    "dataset": "vqav2",
    "display_name": "VQAv2",
    "role": "rl",
@@ -319,163 +508,83 @@
     "license_usable": true
    },
    "samples": 8,
-   "pass_at_1": 0.64475,
-   "pass_at_k": 0.79,
+   "pass_at_1": 0.609,
+   "pass_at_k": 0.802,
    "rl_headroom": {
     "n": 500,
-    "delta": 14.524999999999999,
-    "low": 12.25,
-    "high": 16.875,
+    "delta": 19.3,
+    "low": 16.900000000000002,
+    "high": 21.75,
     "resamples": 10000,
     "seed": 0
    },
-   "learnable_share": 0.318,
-   "parse_rate": 0.98625,
+   "learnable_share": 0.478,
+   "parse_rate": 0.97725,
    "questions": 500,
-   "short_accuracy": 0.772,
-   "reasoning_accuracy": 0.652,
+   "short_accuracy": 0.732,
+   "reasoning_accuracy": 0.604,
+   "direct_accuracy": 0.736,
+   "stepwise_accuracy": 0.66,
+   "reasoning_behavior": {
+    "mean_output_tokens": 145.012,
+    "truncated_fraction": 0.018,
+    "answer_tag_fraction": 0.958
+   },
+   "direct_behavior": {
+    "mean_output_tokens": 2.568,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.018
+   },
+   "stepwise_behavior": {
+    "mean_output_tokens": 62.208,
+    "truncated_fraction": 0.036,
+    "answer_tag_fraction": 0.384
+   },
    "reasoning_payoff": {
     "n": 500,
-    "delta": -12.0,
-    "low": -15.4,
-    "high": -8.6,
+    "delta": -12.8,
+    "low": -16.6,
+    "high": -9.2,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "matched_payoff": {
+    "n": 500,
+    "delta": -7.6,
+    "low": -10.6,
+    "high": -4.6,
     "resamples": 10000,
     "seed": 0
    },
    "image_dependence": {
     "n": 500,
-    "delta": 45.6,
-    "low": 40.8,
-    "high": 50.4,
+    "delta": 44.800000000000004,
+    "low": 39.6,
+    "high": 49.8,
     "resamples": 10000,
     "seed": 0
    },
-   "failed_gates": [],
-   "status": "passed",
-   "missing": [],
-   "records": {
-    "short": "/home/guangbo/codes/VQA/results/records/base8-3b8e9ad666/vqav2-rl-dev-short-7ae050aa04.json",
-    "black": "/home/guangbo/codes/VQA/results/records/base8-3b8e9ad666/vqav2-rl-dev-short-black-94a65009e4.json",
-    "reasoning": "/home/guangbo/codes/VQA/results/records/base8-3b8e9ad666/vqav2-rl-dev-reasoning-4f259e8994.json",
-    "sampled": "/home/guangbo/codes/VQA/results/records/base8-3b8e9ad666/vqav2-rl-dev-reasoning-t1k8-12d32186c8.json"
-   },
-   "rank": 2
-  },
-  {
-   "model": "base8",
-   "dataset": "clevr",
-   "display_name": "CLEVR counting",
-   "role": "rl",
-   "validation_only": false,
-   "tier": "dev",
-   "pool_questions": 8000,
-   "declared": {
-    "split_unit": "image",
-    "split_separable": true,
-    "license": "CC BY 4.0",
-    "license_usable": true
-   },
-   "samples": 8,
-   "pass_at_1": 0.96675,
-   "pass_at_k": 0.998,
-   "rl_headroom": {
+   "wrong_image_dependence": {
     "n": 500,
-    "delta": 3.125,
-    "low": 2.4,
-    "high": 3.9,
-    "resamples": 10000,
-    "seed": 0
-   },
-   "learnable_share": 0.152,
-   "parse_rate": 0.99075,
-   "questions": 500,
-   "short_accuracy": 0.998,
-   "reasoning_accuracy": 0.966,
-   "reasoning_payoff": {
-    "n": 500,
-    "delta": -3.2,
-    "low": -4.8,
-    "high": -1.7999999999999998,
-    "resamples": 10000,
-    "seed": 0
-   },
-   "image_dependence": {
-    "n": 500,
-    "delta": 99.8,
-    "low": 99.4,
-    "high": 100.0,
+    "delta": 44.6,
+    "low": 39.800000000000004,
+    "high": 49.4,
     "resamples": 10000,
     "seed": 0
    },
    "failed_gates": [
-    "not saturated"
+    "reasoning not worse"
    ],
    "status": "rejected",
    "missing": [],
    "records": {
-    "short": "/home/guangbo/codes/VQA/results/records/base8-3b8e9ad666/clevr-rl-dev-short-90b54dac02.json",
-    "black": "/home/guangbo/codes/VQA/results/records/base8-3b8e9ad666/clevr-rl-dev-short-black-aab01494a1.json",
-    "reasoning": "/home/guangbo/codes/VQA/results/records/base8-3b8e9ad666/clevr-rl-dev-reasoning-fee9e63ea7.json",
-    "sampled": "/home/guangbo/codes/VQA/results/records/base8-3b8e9ad666/clevr-rl-dev-reasoning-t1k8-ccd38fdc13.json"
-   },
-   "rank": null
-  },
-  {
-   "model": "base8",
-   "dataset": "textvqa",
-   "display_name": "TextVQA",
-   "role": "test",
-   "validation_only": true,
-   "tier": "dev",
-   "pool_questions": 0,
-   "declared": {
-    "split_unit": "image",
-    "split_separable": true,
-    "license": "annotations CC BY 4.0; Open Images CC BY 2.0",
-    "license_usable": true
-   },
-   "samples": 8,
-   "pass_at_1": 0.661,
-   "pass_at_k": 0.766,
-   "rl_headroom": {
-    "n": 500,
-    "delta": 10.5,
-    "low": 8.575000000000001,
-    "high": 12.5,
-    "resamples": 10000,
-    "seed": 0
-   },
-   "learnable_share": 0.264,
-   "parse_rate": 0.9905,
-   "questions": 500,
-   "short_accuracy": 0.8386,
-   "reasoning_accuracy": 0.757,
-   "reasoning_payoff": {
-    "n": 500,
-    "delta": -8.159999999999998,
-    "low": -11.26,
-    "high": -5.18,
-    "resamples": 10000,
-    "seed": 0
-   },
-   "image_dependence": {
-    "n": 500,
-    "delta": 77.52,
-    "low": 73.8,
-    "high": 81.04,
-    "resamples": 10000,
-    "seed": 0
-   },
-   "failed_gates": [
-    "training questions"
-   ],
-   "status": "rejected",
-   "missing": [],
-   "records": {
-    "short": "/home/guangbo/codes/VQA/results/records/base8-3b8e9ad666/textvqa-test-dev-short-a479974108.json",
-    "black": "/home/guangbo/codes/VQA/results/records/base8-3b8e9ad666/textvqa-test-dev-short-black-8bee4adc7f.json",
-    "reasoning": "/home/guangbo/codes/VQA/results/records/base8-3b8e9ad666/textvqa-test-dev-reasoning-de48b16448.json",
-    "sampled": "/home/guangbo/codes/VQA/results/records/base8-3b8e9ad666/textvqa-test-dev-reasoning-t1k8-319c52cf48.json"
+    "short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/vqav2-rl-dev-short-7ae050aa04.json",
+    "black": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/vqav2-rl-dev-short-black-94a65009e4.json",
+    "swapped": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/vqav2-rl-dev-short-swapped-6562358a77.json",
+    "reasoning": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/vqav2-rl-dev-reasoning-4f259e8994.json",
+    "direct": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/vqav2-rl-dev-direct-b1eaf58610.json",
+    "stepwise": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/vqav2-rl-dev-stepwise-17c618fdaa.json",
+    "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/vqav2-rl-dev-reasoning-t1k8-12d32186c8.json"
    },
    "rank": null
   }

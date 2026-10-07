@@ -1,3 +1,6 @@
+import pytest
+
+from vqar import metrics
 from vqar.metrics import (
     exact_match,
     normalize_answer,
@@ -125,3 +128,29 @@ def test_official_vqa_normalizes_when_annotators_disagree():
 
 def test_textvqa_uses_evalai_possessive_tokenization():
     assert textvqa_accuracy("dog's", ["dog 's"] * 10) == 1.0
+
+
+@pytest.mark.parametrize("prediction,answers,expected", [
+    ("12", ["12.5"], 1.0),          # within 5%
+    ("11", ["12.5"], 0.0),          # 12% off
+    ("50%", ["0.5"], 1.0),          # percent reads as a fraction
+    ("Blue", ["blue"], 1.0),        # text: case-insensitive
+    ("the blue", ["blue"], 0.0),    # no further normalization
+    ("1,234", ["1234"], 0.0),       # the official rule does not strip separators
+    ("0", ["0"], 1.0),              # a zero reference falls back to string match
+])
+def test_chartqa_relaxed_accuracy(prediction, answers, expected):
+    assert metrics.chartqa_relaxed_accuracy(prediction, answers) == expected
+
+
+@pytest.mark.parametrize("prediction,answers,expected", [
+    ("1,234", ["1234"], 1.0),
+    ("$12", ["12.4"], 1.0),
+    ("0.0", ["0"], 1.0),
+    ("0.1", ["0"], 0.0),
+    ("The Blue line.", ["blue line"], 1.0),
+    ("two", ["2"], 1.0),
+    ("Yes", ["No"], 0.0),
+])
+def test_chartqa_normalized_accuracy(prediction, answers, expected):
+    assert metrics.chartqa_normalized_accuracy(prediction, answers) == expected

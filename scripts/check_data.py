@@ -112,8 +112,9 @@ def main():
         if split_path(args.data_dir, dataset).exists():
             splits[dataset] = read_split(args.data_dir, dataset)
             check_subsets(args.data_dir, splits[dataset])
-    for dataset in DATASETS:
-        if dataset not in splits and DATASETS[dataset].require_split:
+    for dataset, spec in DATASETS.items():
+        prepared = all((args.data_dir / name).exists() for name in spec.subsets.values())
+        if dataset not in splits and (spec.require_split or prepared):
             splits[dataset] = build_split(dataset, args.data_dir, list(splits.values()))
             write_split(split_path(args.data_dir, dataset), splits[dataset])
             print(f"{dataset}: new split file", flush=True)

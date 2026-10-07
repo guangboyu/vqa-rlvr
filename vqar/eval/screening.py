@@ -1,18 +1,22 @@
 """Dataset screening: choose training datasets by measurement, not by reputation.
 
-Each candidate gets one fixed battery of four protocols on the same questions, drawn from
-its training pool (the rl role, else the sft role; never dev or test rows):
+Each candidate gets one fixed battery of protocols on the same questions, drawn from its
+training pool (the rl role, else the sft role; never dev or test rows):
 
 - short and reasoning prompts, greedy: the reasoning payoff, accuracy(reasoning) −
   accuracy(short);
-- short prompt with black images: the image dependence, accuracy(image) − accuracy(black);
+- direct and stepwise prompts, greedy: the matched payoff, accuracy(stepwise) −
+  accuracy(direct). Both ask for the same tagged final answer and differ only in whether
+  the model reasons first, so answer format cannot explain the difference;
+- short prompt with black and with swapped images: the image dependence,
+  accuracy(image) − accuracy(black) and accuracy(image) − accuracy(swapped);
 - reasoning prompt, 8 samples at T = 1 with the GRPO completion budget (the protocol of
   scripts.learnability): pass@1, pass@8, the RL headroom pass@8 − pass@1, and the
   learnable share (1–7 of 8 correct), all under the GRPO correctness reward.
 
 Accuracies use the normalized scorer, the one every role can score. Differences carry
 paired 95% bootstrap intervals over questions. The gates are fixed here, before any
-candidate is measured; survivors are ranked by reasoning payoff, then RL headroom.
+candidate is measured; survivors are ranked by matched payoff, then RL headroom.
 """
 
 import json
@@ -37,7 +41,13 @@ VARIANT = "normalized"
 MIN_POOL_QUESTIONS = 2_000  # rows in the training pool role
 MIN_PARSE_RATE = 0.95  # sampled reasoning responses the reward's answer rule can read
 MAX_SHORT_ACCURACY = 0.90  # at or above it, the dataset is saturated
-RANKING = "passed candidates by reasoning payoff, then RL headroom, both descending"
+# Added 2026-10-06, before any reasoning candidate was measured (Part 2 plan): the general
+# datasets passed the gates above although reasoning hurt them, so reasoning value, image
+# use and reward variation are now gates too.
+MIN_MATCHED_PAYOFF_HIGH = 0.0  # stepwise must not be worse than direct: upper bound >= 0
+MIN_IMAGE_DROP_LOW = 0.10  # black and swapped images each cost at least 10 points (lower bound)
+MIN_LEARNABLE_SHARE = 0.25  # questions with 1-7 of 8 samples right
+RANKING = "passed candidates by matched payoff, then RL headroom, both descending"
 
 
 @dataclass(frozen=True)
@@ -58,6 +68,11 @@ DECLARED = {
     "clevr": Declaration("image", True, "CC BY 4.0", True),
     "textvqa": Declaration("image", True, "annotations CC BY 4.0; Open Images CC BY 2.0",
                            True),
+    # Reasoning candidates, declared 2026-10-06 (licenses for research use; owner to confirm
+    # before any release).
+    "chartqa": Declaration("image", True, "GPL-3.0 (ChartQA release); charts from Statista, "
+                           "Pew, OWID and OECD", True),
+    "clevrcomp": Declaration("image", True, "CC BY 4.0", True),
 }
 
 
@@ -69,6 +84,9 @@ class Battery:
     reasoning: Protocol
     black: Protocol
     sampled: Protocol
+    swapped: Protocol
+    direct: Protocol
+    stepwise: Protocol
 
     @property
     def role(self) -> str:
@@ -80,8 +98,9 @@ class Battery:
         return self.role not in TRAINING_ROLES
 
     def protocols(self) -> dict[str, Protocol]:
-        """In run order: the black-image cell pairs with the short cell's predictions."""
-        return {"short": self.short, "black": self.black, "reasoning": self.reasoning,
+        """In run order: the image interventions pair with the short cell's predictions."""
+        return {"short": self.short, "black": self.black, "swapped": self.swapped,
+                "reasoning": self.reasoning, "direct": self.direct, "stepwise": self.stepwise,
                 "sampled": self.sampled}
 
 
@@ -105,6 +124,9 @@ def battery(dataset: str, tier: str = TIER, validate_on_test: bool = False) -> B
         short=Protocol(prompt="short", **greedy),
         reasoning=Protocol(prompt="reasoning", **greedy),
         black=Protocol(prompt="short", image_mode="black", **greedy),
+        swapped=Protocol(prompt="short", image_mode="swapped", **greedy),
+        direct=Protocol(prompt="direct", **greedy),
+        stepwise=Protocol(prompt="stepwise", **greedy),
         sampled=Protocol(dataset, prompt="reasoning", role=role, tier=tier,
                          max_tokens=SAMPLED_MAX_TOKENS, temperature=TEMPERATURE,
                          samples=SAMPLES),
@@ -177,15 +199,22 @@ def measure(records: dict[str, RunRecord]) -> dict:
         raise ValueError("The battery's records scored different questions.")
     if by_question:
         result["questions"] = len(next(iter(by_question.values())))
-    for name in ("short", "reasoning"):
+    for name in ("short", "reasoning", "direct", "stepwise"):
         if name in by_question:
             result[f"{name}_accuracy"] = mean(by_question[name])
-    if {"short", "reasoning"} <= by_question.keys():
-        result["reasoning_payoff"] = paired_bootstrap(by_question["short"],
-                                                      by_question["reasoning"])
-    if {"short", "black"} <= by_question.keys():
-        result["image_dependence"] = paired_bootstrap(by_question["black"],
-                                                      by_question["short"])
+    for name in ("reasoning", "direct", "stepwise"):
+        if name in records:
+            metrics = records[name].metrics
+            result[f"{name}_behavior"] = {key: metrics[key] for key in (
+                "mean_output_tokens", "truncated_fraction", "answer_tag_fraction")}
+    pairs = {"reasoning_payoff": ("short", "reasoning"),
+             "matched_payoff": ("direct", "stepwise"),
+             "image_dependence": ("black", "short"),
+             "wrong_image_dependence": ("swapped", "short")}
+    for measure_name, (reference, candidate) in pairs.items():
+        if {reference, candidate} <= by_question.keys():
+            result[measure_name] = paired_bootstrap(by_question[reference],
+                                                    by_question[candidate])
     return result
 
 
@@ -197,12 +226,19 @@ def failed_gates(pool_size: int, declaration: Declaration | None, measures: dict
     """The gates a candidate fails. A measure not yet taken fails nothing."""
     parse = measures.get("parse_rate")
     short = measures.get("short_accuracy")
+    matched = measures.get("matched_payoff")
+    drops = [measures.get(name) for name in ("image_dependence", "wrong_image_dependence")]
+    learnable = measures.get("learnable_share")
     checks = {
         "training questions": pool_size >= MIN_POOL_QUESTIONS,
         "split separable": declaration is not None and declaration.split_separable,
         "license": declaration is not None and declaration.license_usable,
         "parse rate": parse is None or parse >= MIN_PARSE_RATE,
         "not saturated": short is None or short < MAX_SHORT_ACCURACY,
+        "reasoning not worse": matched is None or matched["high"] >= 100 * MIN_MATCHED_PAYOFF_HIGH,
+        "image needed": all(drop is None or drop["low"] >= 100 * MIN_IMAGE_DROP_LOW
+                            for drop in drops),
+        "learnable": learnable is None or learnable >= MIN_LEARNABLE_SHARE,
     }
     return [name for name, passed in checks.items() if not passed]
 
@@ -233,7 +269,7 @@ def rank(rows: list[dict]) -> list[dict]:
     """Per model: passed rows numbered in ranking order, then incomplete, then rejected."""
     def order(row):
         if row["status"] == "passed":
-            return (row["model"], 0, -row["reasoning_payoff"]["delta"],
+            return (row["model"], 0, -row["matched_payoff"]["delta"],
                     -row["rl_headroom"]["delta"], row["dataset"])
         return (row["model"], 1 if row["status"] == "incomplete" else 2, 0, 0, row["dataset"])
 
@@ -253,6 +289,9 @@ def summary() -> dict:
             "gates": {"min_pool_questions": MIN_POOL_QUESTIONS,
                       "min_parse_rate": MIN_PARSE_RATE,
                       "max_short_accuracy": MAX_SHORT_ACCURACY,
+                      "min_matched_payoff_high": MIN_MATCHED_PAYOFF_HIGH,
+                      "min_image_drop_low": MIN_IMAGE_DROP_LOW,
+                      "min_learnable_share": MIN_LEARNABLE_SHARE,
                       "declared": ["split separable", "license"]},
             "ranking": RANKING}
 
@@ -275,13 +314,15 @@ def markdown(rows: list[dict]) -> str:
         "",
         f"Gates: at least {MIN_POOL_QUESTIONS:,} training questions; split separable and "
         f"license usable (declared); parse rate ≥ {100 * MIN_PARSE_RATE:.0f}% of sampled "
-        f"reasoning responses; short-prompt accuracy < {100 * MAX_SHORT_ACCURACY:.0f}%. "
-        f"Ranking: {RANKING}.",
+        f"reasoning responses; short-prompt accuracy < {100 * MAX_SHORT_ACCURACY:.0f}%; "
+        "stepwise not worse than direct (upper bound ≥ 0); black and swapped images each "
+        f"cost ≥ {100 * MIN_IMAGE_DROP_LOW:.0f} points (lower bound); learnable share ≥ "
+        f"{100 * MIN_LEARNABLE_SHARE:.0f}%. Ranking: {RANKING}.",
         "",
-        "| Model | Rank | Dataset | Pool | Questions | Reasoning payoff | Short (%) | "
-        "pass@1 → pass@k (%) | RL headroom | Learnable (%) | Image dependence | "
-        "Parse (%) | Status |",
-        "|---|---:|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---|",
+        "| Model | Rank | Dataset | Pool | Questions | Short (%) | Reasoning payoff | "
+        "Matched payoff | pass@1 → pass@k (%) | RL headroom | Learnable (%) | "
+        "Image: black | Image: swapped | Parse (%) | Status |",
+        "|---|---:|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|",
     ]
     for row in rows:
         pool = row["role"] or "none"
@@ -296,8 +337,9 @@ def markdown(rows: list[dict]) -> str:
             status += ": missing " + ", ".join(row["missing"])
         lines.append("| " + " | ".join([
             row["model"], str(row["rank"] or "—"), row["display_name"], pool,
-            str(row.get("questions", "—")), interval(row.get("reasoning_payoff")),
-            percent(row.get("short_accuracy")), passes, interval(row.get("rl_headroom")),
-            percent(row.get("learnable_share")), interval(row.get("image_dependence")),
+            str(row.get("questions", "—")), percent(row.get("short_accuracy")),
+            interval(row.get("reasoning_payoff")), interval(row.get("matched_payoff")),
+            passes, interval(row.get("rl_headroom")), percent(row.get("learnable_share")),
+            interval(row.get("image_dependence")), interval(row.get("wrong_image_dependence")),
             percent(row.get("parse_rate")), status]) + " |")
     return "\n".join(lines) + "\n"

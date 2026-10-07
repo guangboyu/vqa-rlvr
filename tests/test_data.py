@@ -47,3 +47,38 @@ class TestAssignments:
         with pytest.raises(ValueError, match="exhausted"):
             _vqav2_assignments(rows, n_sft=3, n_rl=3)
 
+
+
+def test_cauldron_clevr_questions_drop_the_style_instruction_and_keep_rgb_images():
+    import io
+
+    from PIL import Image as PILImage
+
+    from vqar.data import _clevr_questions
+
+    buffer = io.BytesIO()
+    PILImage.new("RGBA", (4, 4), (10, 20, 30, 255)).save(buffer, format="PNG")
+    row = {"images": [{"bytes": buffer.getvalue(), "path": None}],
+           "texts": [{"user": "Are there more cubes than spheres?\nAnswer briefly.",
+                      "assistant": "Yes.", "source": "clevr"},
+                     {"user": "How many cylinders are there?\nBe short.", "assistant": "3.",
+                      "source": "clevr"},
+                     {"user": "What material is the cube?\nOne word.", "assistant": "Rubber.",
+                      "source": "clevr"}]}
+    questions = _clevr_questions(row, 0, 7, [0, 1, 2])
+    assert [q["question"] for q in questions] == [
+        "Are there more cubes than spheres?", "How many cylinders are there?",
+        "What material is the cube?"]
+    assert [q["answers"] for q in questions] == [["yes"], ["3"], ["rubber"]]
+    assert [q["answer_type"] for q in questions] == ["yes/no", "number", "attribute"]
+    assert questions[1]["qid"] == "0-7-1"
+    with PILImage.open(io.BytesIO(questions[0]["image"])) as image:
+        assert image.mode == "RGB"
+
+
+def test_chartqa_answer_types():
+    from vqar.data import _chartqa_answer_type
+
+    assert _chartqa_answer_type("12.5") == "number"
+    assert _chartqa_answer_type("1,234") == "number"
+    assert _chartqa_answer_type("Blue") == "text"

@@ -252,6 +252,40 @@
    "dataset": "clevr",
    "role": "rl",
    "tier": "dev",
+   "prompt": "direct",
+   "image_mode": "original",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 500,
+    "official": {
+     "overall": 0.91,
+     "by_answer_type": {
+      "number": 0.91
+     }
+    },
+    "normalized": {
+     "overall": 0.91,
+     "by_answer_type": {
+      "number": 0.91
+     }
+    },
+    "mean_output_tokens": 2.14,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.91,
+    "answers_scored_differently": 0
+   }
+  },
+  {
+   "arm": "base2",
+   "dataset": "clevr",
+   "role": "rl",
+   "tier": "dev",
    "prompt": "reasoning",
    "image_mode": "original",
    "step": null,
@@ -408,6 +442,82 @@
     "answer_tag_fraction": 0.0,
     "empty_answer_fraction": 0.0,
     "official_on_lowercased_answers": 0.98,
+    "answers_scored_differently": 0
+   }
+  },
+  {
+   "arm": "base2",
+   "dataset": "clevr",
+   "role": "rl",
+   "tier": "dev",
+   "prompt": "short",
+   "image_mode": "swapped",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 500,
+    "official": {
+     "overall": 0.118,
+     "by_answer_type": {
+      "number": 0.118
+     }
+    },
+    "normalized": {
+     "overall": 0.118,
+     "by_answer_type": {
+      "number": 0.118
+     }
+    },
+    "mean_output_tokens": 2.132,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.118,
+    "answers_scored_differently": 0,
+    "paired_with_original": {
+     "n": 500,
+     "original": {
+      "official": 0.98,
+      "normalized": 0.98
+     },
+     "normalized_answer_changed_fraction": 0.886
+    }
+   }
+  },
+  {
+   "arm": "base2",
+   "dataset": "clevr",
+   "role": "rl",
+   "tier": "dev",
+   "prompt": "stepwise",
+   "image_mode": "original",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 500,
+    "official": {
+     "overall": 0.878,
+     "by_answer_type": {
+      "number": 0.878
+     }
+    },
+    "normalized": {
+     "overall": 0.878,
+     "by_answer_type": {
+      "number": 0.878
+     }
+    },
+    "mean_output_tokens": 183.918,
+    "truncated_fraction": 0.01,
+    "answer_tag_fraction": 0.99,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.878,
     "answers_scored_differently": 0
    }
   },
@@ -930,6 +1040,48 @@
    "dataset": "gqa",
    "role": "rl",
    "tier": "dev",
+   "prompt": "direct",
+   "image_mode": "original",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 500,
+    "official": {
+     "overall": 0.682,
+     "by_answer_type": {
+      "choose": 0.9016393442622951,
+      "compare": 0.8181818181818182,
+      "logical": 0.8939393939393939,
+      "query": 0.4901185770750988,
+      "verify": 0.8623853211009175
+     }
+    },
+    "normalized": {
+     "overall": 0.688,
+     "by_answer_type": {
+      "choose": 0.9016393442622951,
+      "compare": 0.8181818181818182,
+      "logical": 0.9090909090909091,
+      "query": 0.49407114624505927,
+      "verify": 0.8715596330275229
+     }
+    },
+    "mean_output_tokens": 2.702,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.062,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.686,
+    "answers_scored_differently": 3
+   }
+  },
+  {
+   "arm": "base2",
+   "dataset": "gqa",
+   "role": "rl",
+   "tier": "dev",
    "prompt": "reasoning",
    "image_mode": "original",
    "step": null,
@@ -1119,6 +1271,98 @@
     "empty_answer_fraction": 0.0,
     "official_on_lowercased_answers": 0.696,
     "answers_scored_differently": 0
+   }
+  },
+  {
+   "arm": "base2",
+   "dataset": "gqa",
+   "role": "rl",
+   "tier": "dev",
+   "prompt": "short",
+   "image_mode": "swapped",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 500,
+    "official": {
+     "overall": 0.32,
+     "by_answer_type": {
+      "choose": 0.47540983606557374,
+      "compare": 0.7272727272727273,
+      "logical": 0.5606060606060606,
+      "query": 0.13438735177865613,
+      "verify": 0.47706422018348627
+     }
+    },
+    "normalized": {
+     "overall": 0.32,
+     "by_answer_type": {
+      "choose": 0.47540983606557374,
+      "compare": 0.7272727272727273,
+      "logical": 0.5606060606060606,
+      "query": 0.13438735177865613,
+      "verify": 0.47706422018348627
+     }
+    },
+    "mean_output_tokens": 2.2,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.32,
+    "answers_scored_differently": 0,
+    "paired_with_original": {
+     "n": 500,
+     "original": {
+      "official": 0.696,
+      "normalized": 0.696
+     },
+     "normalized_answer_changed_fraction": 0.656
+    }
+   }
+  },
+  {
+   "arm": "base2",
+   "dataset": "gqa",
+   "role": "rl",
+   "tier": "dev",
+   "prompt": "stepwise",
+   "image_mode": "original",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 500,
+    "official": {
+     "overall": 0.53,
+     "by_answer_type": {
+      "choose": 0.8524590163934426,
+      "compare": 0.45454545454545453,
+      "logical": 0.803030303030303,
+      "query": 0.35968379446640314,
+      "verify": 0.5871559633027523
+     }
+    },
+    "normalized": {
+     "overall": 0.596,
+     "by_answer_type": {
+      "choose": 0.8524590163934426,
+      "compare": 0.45454545454545453,
+      "logical": 0.8636363636363636,
+      "query": 0.3952569169960474,
+      "verify": 0.7706422018348624
+     }
+    },
+    "mean_output_tokens": 106.552,
+    "truncated_fraction": 0.03,
+    "answer_tag_fraction": 0.842,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.596,
+    "answers_scored_differently": 33
    }
   },
   {
@@ -13862,6 +14106,40 @@
    "dataset": "textvqa",
    "role": "test",
    "tier": "dev",
+   "prompt": "direct",
+   "image_mode": "original",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 500,
+    "official": {
+     "overall": 0.7794,
+     "by_answer_type": {
+      "all": 0.7794
+     }
+    },
+    "normalized": {
+     "overall": 0.7796000000000001,
+     "by_answer_type": {
+      "all": 0.7796000000000001
+     }
+    },
+    "mean_output_tokens": 5.144,
+    "truncated_fraction": 0.002,
+    "answer_tag_fraction": 0.014,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.7794,
+    "answers_scored_differently": 1
+   }
+  },
+  {
+   "arm": "base2",
+   "dataset": "textvqa",
+   "role": "test",
+   "tier": "dev",
    "prompt": "reasoning",
    "image_mode": "original",
    "step": null,
@@ -14521,6 +14799,82 @@
     "empty_answer_fraction": 0.0,
     "official_on_lowercased_answers": 0.7974,
     "answers_scored_differently": 1
+   }
+  },
+  {
+   "arm": "base2",
+   "dataset": "textvqa",
+   "role": "test",
+   "tier": "dev",
+   "prompt": "short",
+   "image_mode": "swapped",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 500,
+    "official": {
+     "overall": 0.0264,
+     "by_answer_type": {
+      "all": 0.0264
+     }
+    },
+    "normalized": {
+     "overall": 0.0264,
+     "by_answer_type": {
+      "all": 0.0264
+     }
+    },
+    "mean_output_tokens": 3.776,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.0264,
+    "answers_scored_differently": 0,
+    "paired_with_original": {
+     "n": 500,
+     "original": {
+      "official": 0.7974,
+      "normalized": 0.7976
+     },
+     "normalized_answer_changed_fraction": 0.978
+    }
+   }
+  },
+  {
+   "arm": "base2",
+   "dataset": "textvqa",
+   "role": "test",
+   "tier": "dev",
+   "prompt": "stepwise",
+   "image_mode": "original",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 500,
+    "official": {
+     "overall": 0.7466,
+     "by_answer_type": {
+      "all": 0.7466
+     }
+    },
+    "normalized": {
+     "overall": 0.7466,
+     "by_answer_type": {
+      "all": 0.7466
+     }
+    },
+    "mean_output_tokens": 48.19,
+    "truncated_fraction": 0.012,
+    "answer_tag_fraction": 0.776,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.7466,
+    "answers_scored_differently": 0
    }
   },
   {
@@ -17263,6 +17617,33 @@
    "dataset": "vqav2",
    "role": "rl",
    "tier": "dev",
+   "prompt": "direct",
+   "image_mode": "original",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 500,
+    "official": null,
+    "normalized": {
+     "overall": 0.736,
+     "by_answer_type": {
+      "all": 0.736
+     }
+    },
+    "mean_output_tokens": 2.568,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.018,
+    "empty_answer_fraction": 0.0
+   }
+  },
+  {
+   "arm": "base2",
+   "dataset": "vqav2",
+   "role": "rl",
+   "tier": "dev",
    "prompt": "reasoning",
    "image_mode": "original",
    "step": null,
@@ -17390,6 +17771,67 @@
     "mean_output_tokens": 2.356,
     "truncated_fraction": 0.0,
     "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0
+   }
+  },
+  {
+   "arm": "base2",
+   "dataset": "vqav2",
+   "role": "rl",
+   "tier": "dev",
+   "prompt": "short",
+   "image_mode": "swapped",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 500,
+    "official": null,
+    "normalized": {
+     "overall": 0.286,
+     "by_answer_type": {
+      "all": 0.286
+     }
+    },
+    "mean_output_tokens": 2.266,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "paired_with_original": {
+     "n": 500,
+     "original": {
+      "normalized": 0.732
+     },
+     "normalized_answer_changed_fraction": 0.694
+    }
+   }
+  },
+  {
+   "arm": "base2",
+   "dataset": "vqav2",
+   "role": "rl",
+   "tier": "dev",
+   "prompt": "stepwise",
+   "image_mode": "original",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 500,
+    "official": null,
+    "normalized": {
+     "overall": 0.66,
+     "by_answer_type": {
+      "all": 0.66
+     }
+    },
+    "mean_output_tokens": 62.208,
+    "truncated_fraction": 0.036,
+    "answer_tag_fraction": 0.384,
     "empty_answer_fraction": 0.0
    }
   },

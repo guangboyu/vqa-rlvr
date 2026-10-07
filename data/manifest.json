@@ -21,6 +21,13 @@
     "textvqa": {
       "eval": 5000,
       "eval_seed": 0
+    },
+    "chartqa": {},
+    "clevrcomp": {
+      "train_shard": 0,
+      "test_shard": 1,
+      "per_image": 5,
+      "seed": 0
     }
   },
   "subsets": {
@@ -70,6 +77,86 @@
         "lmms-lab/textvqa": "9c0699cd19768ac5ab97568f6b3cbac4c0062884"
       },
       "qids_sha": "67d059db15fa5e27de8fcaa79f4f52fbc875b04af5996f4896dbcba442e218bb"
+    },
+    "chartqa_train": {
+      "n": 7398,
+      "source_revisions": {
+        "HuggingFaceM4/the_cauldron": "847a98a779b1652d65111daf20c972dfcd333605",
+        "lmms-lab/VQAv2": "32665d35052eb4a6d4414851c3c829a72754915a",
+        "lmms-lab/GQA": "a6e72d6e1b912da88af8b2f9eba05d5ea8ec2dd8",
+        "leonardPKU/clevr_cogen_a_train": "d5a8da66aa97c9c19ebe4075b7c7f777fef850a6",
+        "lmms-lab/textvqa": "9c0699cd19768ac5ab97568f6b3cbac4c0062884",
+        "HuggingFaceM4/ChartQA": "b605b6e08b57faf4359aeb2fe6a3ca595f99b6c5",
+        "https://vizwiz.cs.colorado.edu/VizWiz_all_answers/VQA_test.json": "fa113f0e90230ab4690bb41c4d74e40f7087cc7c192dd8363fa4d6bad339b7aa",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/images/test.zip": "4d03f8c21823a3e4d1f501b1234e7380eb7cf2429ff0eb0281741ff1cc44f22a",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/vqa_data/API.zip": "76de4354ca2fbc57dd2369b579dc9bb5684e41d6a135b36b324a5ba25b7b9ca2",
+        "xai-org/RealworldQA": "17e7f75e092e47169732462ea3cdfebe911105dd"
+      },
+      "qids_sha": "b4127ef4cceb2bcead8fa0c725e09f27d1740039674451d467b88a2d6ebad78c"
+    },
+    "chartqa_val": {
+      "n": 960,
+      "source_revisions": {
+        "HuggingFaceM4/the_cauldron": "847a98a779b1652d65111daf20c972dfcd333605",
+        "lmms-lab/VQAv2": "32665d35052eb4a6d4414851c3c829a72754915a",
+        "lmms-lab/GQA": "a6e72d6e1b912da88af8b2f9eba05d5ea8ec2dd8",
+        "leonardPKU/clevr_cogen_a_train": "d5a8da66aa97c9c19ebe4075b7c7f777fef850a6",
+        "lmms-lab/textvqa": "9c0699cd19768ac5ab97568f6b3cbac4c0062884",
+        "HuggingFaceM4/ChartQA": "b605b6e08b57faf4359aeb2fe6a3ca595f99b6c5",
+        "https://vizwiz.cs.colorado.edu/VizWiz_all_answers/VQA_test.json": "fa113f0e90230ab4690bb41c4d74e40f7087cc7c192dd8363fa4d6bad339b7aa",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/images/test.zip": "4d03f8c21823a3e4d1f501b1234e7380eb7cf2429ff0eb0281741ff1cc44f22a",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/vqa_data/API.zip": "76de4354ca2fbc57dd2369b579dc9bb5684e41d6a135b36b324a5ba25b7b9ca2",
+        "xai-org/RealworldQA": "17e7f75e092e47169732462ea3cdfebe911105dd"
+      },
+      "qids_sha": "aa37723e8fd1de2ee10e01dcb06d79a5bcabe6cc81fd366cadadea0657c408ad"
+    },
+    "chartqa_test": {
+      "n": 1250,
+      "source_revisions": {
+        "HuggingFaceM4/the_cauldron": "847a98a779b1652d65111daf20c972dfcd333605",
+        "lmms-lab/VQAv2": "32665d35052eb4a6d4414851c3c829a72754915a",
+        "lmms-lab/GQA": "a6e72d6e1b912da88af8b2f9eba05d5ea8ec2dd8",
+        "leonardPKU/clevr_cogen_a_train": "d5a8da66aa97c9c19ebe4075b7c7f777fef850a6",
+        "lmms-lab/textvqa": "9c0699cd19768ac5ab97568f6b3cbac4c0062884",
+        "HuggingFaceM4/ChartQA": "b605b6e08b57faf4359aeb2fe6a3ca595f99b6c5",
+        "https://vizwiz.cs.colorado.edu/VizWiz_all_answers/VQA_test.json": "fa113f0e90230ab4690bb41c4d74e40f7087cc7c192dd8363fa4d6bad339b7aa",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/images/test.zip": "4d03f8c21823a3e4d1f501b1234e7380eb7cf2429ff0eb0281741ff1cc44f22a",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/vqa_data/API.zip": "76de4354ca2fbc57dd2369b579dc9bb5684e41d6a135b36b324a5ba25b7b9ca2",
+        "xai-org/RealworldQA": "17e7f75e092e47169732462ea3cdfebe911105dd"
+      },
+      "qids_sha": "e5545e53e498154de9c476603674ef3da7753bc9cc59d13fabad770fa6adab4d"
+    },
+    "clevrcomp_train": {
+      "n": 14585,
+      "source_revisions": {
+        "HuggingFaceM4/the_cauldron": "847a98a779b1652d65111daf20c972dfcd333605",
+        "lmms-lab/VQAv2": "32665d35052eb4a6d4414851c3c829a72754915a",
+        "lmms-lab/GQA": "a6e72d6e1b912da88af8b2f9eba05d5ea8ec2dd8",
+        "leonardPKU/clevr_cogen_a_train": "d5a8da66aa97c9c19ebe4075b7c7f777fef850a6",
+        "lmms-lab/textvqa": "9c0699cd19768ac5ab97568f6b3cbac4c0062884",
+        "HuggingFaceM4/ChartQA": "b605b6e08b57faf4359aeb2fe6a3ca595f99b6c5",
+        "https://vizwiz.cs.colorado.edu/VizWiz_all_answers/VQA_test.json": "fa113f0e90230ab4690bb41c4d74e40f7087cc7c192dd8363fa4d6bad339b7aa",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/images/test.zip": "4d03f8c21823a3e4d1f501b1234e7380eb7cf2429ff0eb0281741ff1cc44f22a",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/vqa_data/API.zip": "76de4354ca2fbc57dd2369b579dc9bb5684e41d6a135b36b324a5ba25b7b9ca2",
+        "xai-org/RealworldQA": "17e7f75e092e47169732462ea3cdfebe911105dd"
+      },
+      "qids_sha": "21aac503e26587076b1fd802b737da2a25cddbe9ba9ea9c40b964b3238c33bd6"
+    },
+    "clevrcomp_test": {
+      "n": 2917,
+      "source_revisions": {
+        "HuggingFaceM4/the_cauldron": "847a98a779b1652d65111daf20c972dfcd333605",
+        "lmms-lab/VQAv2": "32665d35052eb4a6d4414851c3c829a72754915a",
+        "lmms-lab/GQA": "a6e72d6e1b912da88af8b2f9eba05d5ea8ec2dd8",
+        "leonardPKU/clevr_cogen_a_train": "d5a8da66aa97c9c19ebe4075b7c7f777fef850a6",
+        "lmms-lab/textvqa": "9c0699cd19768ac5ab97568f6b3cbac4c0062884",
+        "HuggingFaceM4/ChartQA": "b605b6e08b57faf4359aeb2fe6a3ca595f99b6c5",
+        "https://vizwiz.cs.colorado.edu/VizWiz_all_answers/VQA_test.json": "fa113f0e90230ab4690bb41c4d74e40f7087cc7c192dd8363fa4d6bad339b7aa",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/images/test.zip": "4d03f8c21823a3e4d1f501b1234e7380eb7cf2429ff0eb0281741ff1cc44f22a",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/vqa_data/API.zip": "76de4354ca2fbc57dd2369b579dc9bb5684e41d6a135b36b324a5ba25b7b9ca2",
+        "xai-org/RealworldQA": "17e7f75e092e47169732462ea3cdfebe911105dd"
+      },
+      "qids_sha": "cebbf1175a6a3b65ec94df6daa3c75d9c390f78050e2f245622f61d81c5a0ddd"
     }
   }
 }
