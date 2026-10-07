@@ -79,7 +79,9 @@ def main() -> None:
                         "optional OOD datasets must be named")
     parser.add_argument("--prompts", nargs="+", choices=sorted(PROMPTS), default=["short"])
     parser.add_argument("--role", choices=("test", "dev"), default="test")
-    parser.add_argument("--tier", choices=tuple(Protocol.TIERS), default="full")
+    parser.add_argument("--tier", default="full",
+                        help=f"{', '.join(Protocol.TIERS)}, or first-N (the role's first N "
+                        "questions in their fixed order)")
     parser.add_argument("--image-mode", choices=IMAGE_MODES, default="original",
                         help="black and swapped need the original-image cell first; canvas "
                         "pads each image onto the 608x608 RL training canvas")
