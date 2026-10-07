@@ -106,6 +106,14 @@ def test_python_failure_retains_successor(batch_job, kind):
     assert any(event[0] == "sbatch" for event in events)
     assert not any(event[0] == "scancel" for event in events)
 
+def test_train_successor_keeps_the_first_jobs_gpu_type_and_time(batch_job):
+    code, events, output = batch_job(SLURM_JOB_PARTITION="free-gpu", HPC_GRES="gpu:A30:1",
+                                     HPC_TIME="06:00:00")
+    assert code == 0, output
+    submission = next(event for event in events if event[0] == "sbatch")
+    assert {"--partition=free-gpu", "--gres=gpu:A30:1", "--time=06:00:00"} <= set(submission)
+
+
 
 @pytest.mark.parametrize("kind", ["train", "eval"])
 def test_gpu_failure_already_has_successor(batch_job, kind):

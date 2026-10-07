@@ -1,0 +1,194 @@
+{
+ "version": "rl-pool-v1",
+ "name": "overfit32-chartqa-base2",
+ "datasets": [
+  "chartqa"
+ ],
+ "selection": {
+  "keep": "1 <= correct samples <= 7",
+  "records": [
+   {
+    "dataset": "chartqa",
+    "record": "results/records/base2-dec3ad6e3a/chartqa-rl-dev-reasoning-t1k8-bd2999d358.json",
+    "model": {
+     "source": "Qwen/Qwen3-VL-2B-Instruct",
+     "label": "base2",
+     "run": null,
+     "step": null,
+     "weights": {
+      "hub": "Qwen/Qwen3-VL-2B-Instruct",
+      "revision": "89644892e4d85e24eaac8bacfd4f463576704203"
+     }
+    },
+    "protocol_id": "bd2999d358c8e9527706abf53dac1d22c615b78dba2361507e08906847fd1129",
+    "tier": "dev",
+    "samples_per_question": 8,
+    "scored": 500,
+    "rule": "GRPO correctness reward: normalized score of the tagged answer"
+   }
+  ],
+  "first": 32
+ },
+ "members": [
+  {
+   "dataset": "chartqa",
+   "qid": "train-6930",
+   "correct_samples": 7
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-6142",
+   "correct_samples": 3
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-728",
+   "correct_samples": 2
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-1105",
+   "correct_samples": 1
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-5349",
+   "correct_samples": 7
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-4353",
+   "correct_samples": 4
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-6343",
+   "correct_samples": 7
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-194",
+   "correct_samples": 7
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-5654",
+   "correct_samples": 3
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-2975",
+   "correct_samples": 3
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-4051",
+   "correct_samples": 1
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-7071",
+   "correct_samples": 6
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-5128",
+   "correct_samples": 5
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-1407",
+   "correct_samples": 2
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-4069",
+   "correct_samples": 5
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-4306",
+   "correct_samples": 6
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-725",
+   "correct_samples": 7
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-5751",
+   "correct_samples": 4
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-5475",
+   "correct_samples": 3
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-2038",
+   "correct_samples": 2
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-5482",
+   "correct_samples": 6
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-1173",
+   "correct_samples": 3
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-5787",
+   "correct_samples": 5
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-3653",
+   "correct_samples": 5
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-2215",
+   "correct_samples": 2
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-7178",
+   "correct_samples": 2
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-3143",
+   "correct_samples": 1
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-5099",
+   "correct_samples": 6
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-3219",
+   "correct_samples": 6
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-434",
+   "correct_samples": 7
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-6208",
+   "correct_samples": 7
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "train-7007",
+   "correct_samples": 3
+  }
+ ]
+}

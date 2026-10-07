@@ -3,6 +3,8 @@ on some but not all of its sampled answers.
 
     python -m scripts.learnability --preset grpo_2b_main --label base2 --tier first-2500
     python -m scripts.build_pool --name mixed-base2 results/records/base2-*/*-rl-first-2500-*.json
+    python -m scripts.build_pool --name overfit32-chartqa-base2 --limit 32 \
+        results/records/base2-*/chartqa-rl-dev-reasoning-t1k8-*.json
 
 Writes data/pools/<name>.json; train_grpo.py --pool <name> trains on it. The selection
 model, rule, and source records are part of the pool's definition.
@@ -25,11 +27,13 @@ def main():
     parser.add_argument("--name", required=True)
     parser.add_argument("--keep", nargs=2, type=int, default=(1, 7), metavar=("LOW", "HIGH"),
                         help="correct samples per question to keep (default 1 7 of 8)")
+    parser.add_argument("--limit", type=int, default=None,
+                        help="keep only the first N kept questions (an overfitting check)")
     parser.add_argument("--data-dir", type=Path, default=DATA_DIR)
     args = parser.parse_args()
 
     records = [RunRecord.load(path) for path in args.records]
-    pool = filtered_pool(args.name, records, *args.keep)
+    pool = filtered_pool(args.name, records, *args.keep, limit=args.limit)
     path = pool_path(args.data_dir, args.name)
     if path.exists():
         raise SystemExit(f"{path} exists; a declared pool is never rewritten")

@@ -83,6 +83,14 @@ def test_a_filtered_pool_keeps_questions_with_mixed_outcomes():
     assert pool["selection"]["keep"] == "1 <= correct samples <= 7"
 
 
+def test_a_limited_pool_keeps_the_first_mixed_questions():
+    records = [Learnability("vqav2", {"a": 0, "b": 3, "c": 8}),
+               Learnability("gqa", {"d": 7, "e": 1})]
+    pool = filtered_pool("overfit", records, low=1, high=7, limit=2)
+    assert [(m["dataset"], m["qid"]) for m in pool["members"]] == [("vqav2", "b"), ("gqa", "d")]
+    assert pool["selection"]["first"] == 2
+
+
 def test_refill_draws_are_seeded_per_update_and_skip_the_updates_own_questions():
     keys = tuple(("gqa", str(i)) for i in range(20))
     stream = RefillStream(keys, seed=42)

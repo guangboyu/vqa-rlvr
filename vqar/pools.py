@@ -68,9 +68,11 @@ def provenance(data_dir: Path, pool: str | None) -> dict | None:
             "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
 
 
-def filtered_pool(name: str, records: list, low: int, high: int) -> dict:
+def filtered_pool(name: str, records: list, low: int, high: int,
+                  limit: int | None = None) -> dict:
     """A pool of the questions whose correct-sample count under the training reward lies in
-    [low, high], taken from learnability records (one per dataset)."""
+    [low, high], taken from learnability records (one per dataset). `limit` keeps only the
+    first kept questions in record order, e.g. a small set for an overfitting check."""
     members, sources = [], []
     for record in records:
         learnability = record.metrics["learnability"]
@@ -83,10 +85,13 @@ def filtered_pool(name: str, records: list, low: int, high: int) -> dict:
                         "tier": record.protocol["tier"],
                         "samples_per_question": record.metrics["samples_per_question"],
                         "scored": record.metrics["n"], "rule": learnability["rule"]})
+    selection = {"keep": f"{low} <= correct samples <= {high}", "records": sources}
+    if limit is not None:
+        members = members[:limit]
+        selection["first"] = limit
     return {"version": VERSION, "name": name,
             "datasets": sorted({s["dataset"] for s in sources}),
-            "selection": {"keep": f"{low} <= correct samples <= {high}", "records": sources},
-            "members": members}
+            "selection": selection, "members": members}
 
 
 @dataclass(frozen=True)

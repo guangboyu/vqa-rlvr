@@ -3,6 +3,8 @@
 # evaluate every kept adapter on the dev tier in the same job.
 # Submit with --job-name and --output; create the output directory first.
 # Arguments: source-directory run-directory training-entrypoint [training options].
+# Successors keep the first job's partition; export HPC_GRES and HPC_TIME when the first job
+# overrides the GPU type or time limit below (e.g. HPC_GRES=gpu:A30:1 on free-gpu).
 #SBATCH --partition=free-gpu32
 #SBATCH --gres=gpu:RTX6000:1
 #SBATCH --cpus-per-task=8
@@ -68,6 +70,7 @@ if [ "$CHAIN_LEFT" -gt 0 ]; then
         NEXT=$(sbatch --parsable --job-name="$SLURM_JOB_NAME" \
         --cpus-per-task="$SLURM_CPUS_PER_TASK" --mem="${SLURM_MEM_PER_NODE}M" \
         --output="$RUN/slurm-%j.log" --export=ALL,CHAIN_LEFT=$((CHAIN_LEFT - 1)) ${AVOID_NODES:+--exclude=$AVOID_NODES} \
+        ${SLURM_JOB_PARTITION:+--partition=$SLURM_JOB_PARTITION} ${HPC_GRES:+--gres=$HPC_GRES} ${HPC_TIME:+--time=$HPC_TIME} \
         --dependency=afternotok:"$SLURM_JOB_ID" \
             "$SELF" "$REPO" "$RUN" "$ENTRY" "$@")
     fi
