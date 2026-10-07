@@ -91,8 +91,8 @@ gpu_memory_utilization = 0.88
 
 # The matched-question control (2026-10-05): one SFT epoch on exactly the 4,000 questions the
 # short-prompt GRPO run from Instruct drew (data/pools/part1-short2-actual4000.json, built by
-# scripts/build_draw_pool.py), 125 updates. Trained and evaluated on HPC3; its merged model is
-# not kept locally, so its records are checked by their stored weight hash only.
+# scripts/build_draw_pool.py), 125 updates. Trained and evaluated on HPC3; the merged model was
+# copied back for the pass@k and OOD cells.
 [[arms]]
 label = "sft4k2"
 name = "SFT on the 4,000 RL questions"
@@ -275,7 +275,12 @@ seed = 42
 [[passk.comparisons]]
 prompt = "short"
 reference = "base2"
-candidates = ["p1-f-short2-base", "sft2"]
+candidates = ["p1-f-short2-base", "sft2", "sft4k2"]
+
+[[passk.comparisons]]
+prompt = "short"
+reference = "p1-f-short2-base"
+candidates = ["sft4k2"]
 
 [[passk.comparisons]]
 prompt = "short"

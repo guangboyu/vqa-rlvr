@@ -63,6 +63,22 @@
    "score": 63.39869281045751,
    "normalized": 63.39869281045751,
    "n": 765
+  },
+  {
+   "arm": "sft4k2",
+   "dataset": "vizwiz",
+   "primary": "official",
+   "score": 42.3925,
+   "normalized": 42.419999999999995,
+   "n": 8000
+  },
+  {
+   "arm": "sft4k2",
+   "dataset": "realworldqa",
+   "primary": "project",
+   "score": 63.79084967320261,
+   "normalized": 63.79084967320261,
+   "n": 765
   }
  ],
  "comparisons": [
@@ -90,6 +106,21 @@
    "delta": 1.0725,
    "low": 0.6468461503479012,
    "high": 1.5076398728158378,
+   "resamples": 10000,
+   "seed": 0,
+   "image_groups": 7928,
+   "bootstrap_unit": "image group",
+   "point_estimate_unit": "question"
+  },
+  {
+   "reference": "base2",
+   "candidate": "sft4k2",
+   "dataset": "vizwiz",
+   "primary": "official",
+   "n": 8000,
+   "delta": -0.11125,
+   "low": -0.6734273443507472,
+   "high": 0.45266975115668373,
    "resamples": 10000,
    "seed": 0,
    "image_groups": 7928,
@@ -127,6 +158,21 @@
    "point_estimate_unit": "question"
   },
   {
+   "reference": "p1-f-short2-base",
+   "candidate": "sft4k2",
+   "dataset": "vizwiz",
+   "primary": "official",
+   "n": 8000,
+   "delta": -1.1837499999999999,
+   "low": -1.6787604948112027,
+   "high": -0.6985681115386277,
+   "resamples": 10000,
+   "seed": 0,
+   "image_groups": 7928,
+   "bootstrap_unit": "image group",
+   "point_estimate_unit": "question"
+  },
+  {
    "reference": "base2",
    "candidate": "sft2",
    "dataset": "realworldqa",
@@ -157,6 +203,21 @@
    "point_estimate_unit": "question"
   },
   {
+   "reference": "base2",
+   "candidate": "sft4k2",
+   "dataset": "realworldqa",
+   "primary": "project",
+   "n": 765,
+   "delta": 3.6601307189542487,
+   "low": 1.6993464052287581,
+   "high": 5.6356487549148095,
+   "resamples": 10000,
+   "seed": 0,
+   "image_groups": 762,
+   "bootstrap_unit": "image group",
+   "point_estimate_unit": "question"
+  },
+  {
    "reference": "sft2",
    "candidate": "p1-f-short2-base",
    "dataset": "realworldqa",
@@ -180,6 +241,21 @@
    "delta": 1.045751633986928,
    "low": -0.39215686274509803,
    "high": 2.486910994764398,
+   "resamples": 10000,
+   "seed": 0,
+   "image_groups": 762,
+   "bootstrap_unit": "image group",
+   "point_estimate_unit": "question"
+  },
+  {
+   "reference": "p1-f-short2-base",
+   "candidate": "sft4k2",
+   "dataset": "realworldqa",
+   "primary": "project",
+   "n": 765,
+   "delta": 0.9150326797385622,
+   "low": -0.9126466753585397,
+   "high": 2.737940026075619,
    "resamples": 10000,
    "seed": 0,
    "image_groups": 762,

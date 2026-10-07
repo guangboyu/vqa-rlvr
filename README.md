@@ -96,7 +96,8 @@ instead of 24.1 on GQA), and the reasoning prompt still costs Instruct 3.8 point
 their intervals, SFT's halve to +1.2 and +1.5, and short-prompt GRPO's TextVQA lead over SFT
 holds (+0.8, interval [+0.2, +1.5]) ([results](docs/supplementary/results.md#exact-match-misses-rescored-by-an-llm-judge)).
 The same lead appears on a second far-OOD set, VizWiz: short-prompt GRPO beats SFT by 1.0 point
-(interval [+0.5, +1.6]) ([results](docs/supplementary/results.md#extra-ood-sets)).
+(interval [+0.5, +1.6]) and SFT on its own 4,000 questions by 1.2
+([results](docs/supplementary/results.md#extra-ood-sets)).
 
 **6. RL sharpens what the model already samples; it does not add answers.** On the first 1,000
 test questions of each dataset, sampled 32 times at temperature 1, short-prompt GRPO raises

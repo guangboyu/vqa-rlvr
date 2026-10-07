@@ -247,14 +247,17 @@ matches only some annotators counts in the mean score but never as a pass. Offic
 | SFT 2B | short | VQAv2 | 71.87 | 62.75 | 70.04 | 75.06 | 78.59 | 80.98 | 82.40 |
 | Instruct → short-prompt GRPO | short | VQAv2 | 75.49 | 65.94 | 69.10 | 71.77 | 74.00 | 75.64 | 76.60 |
 | SFT → short-prompt GRPO | short | VQAv2 | 76.59 | 66.88 | 70.14 | 72.74 | 74.99 | 76.84 | 78.00 |
+| SFT on the 4,000 RL questions | short | VQAv2 | 70.42 | 61.67 | 69.19 | 74.45 | 78.09 | 80.53 | 82.30 |
 | Instruct 2B | short | GQA | 55.55 | 55.55 | 63.17 | 69.63 | 75.05 | 79.43 | 82.70 |
 | SFT 2B | short | GQA | 56.04 | 56.04 | 66.22 | 74.30 | 80.26 | 84.56 | 87.30 |
 | Instruct → short-prompt GRPO | short | GQA | 58.12 | 58.12 | 62.70 | 66.59 | 69.84 | 72.62 | 75.10 |
 | SFT → short-prompt GRPO | short | GQA | 60.73 | 60.73 | 65.35 | 69.09 | 72.22 | 74.80 | 77.00 |
+| SFT on the 4,000 RL questions | short | GQA | 53.50 | 53.50 | 63.93 | 72.27 | 78.83 | 83.93 | 87.90 |
 | Instruct 2B | short | TextVQA | 75.64 | 67.77 | 72.70 | 76.08 | 78.71 | 80.62 | 82.00 |
 | SFT 2B | short | TextVQA | 70.70 | 63.48 | 70.92 | 75.78 | 79.19 | 81.73 | 83.70 |
 | Instruct → short-prompt GRPO | short | TextVQA | 78.16 | 70.18 | 73.28 | 75.58 | 77.44 | 78.89 | 80.10 |
 | SFT → short-prompt GRPO | short | TextVQA | 76.19 | 68.28 | 72.51 | 75.42 | 77.76 | 79.78 | 81.60 |
+| SFT on the 4,000 RL questions | short | TextVQA | 72.81 | 65.06 | 71.57 | 75.91 | 79.12 | 81.59 | 83.50 |
 | Instruct 2B | reasoning | VQAv2 | 52.00 | 45.65 | 55.04 | 62.13 | 67.69 | 72.36 | 76.20 |
 | Instruct → GRPO | reasoning | VQAv2 | 75.31 | 65.54 | 68.08 | 70.01 | 71.56 | 72.92 | 74.30 |
 | Instruct 2B | reasoning | GQA | 34.02 | 34.02 | 44.91 | 54.87 | 63.85 | 71.67 | 78.40 |
@@ -274,6 +277,12 @@ Candidate minus reference, points, with 95% intervals that resample images:
 | SFT 2B − Instruct 2B | short | VQAv2 | -0.08 [-0.93, +0.78] | -0.18 [-1.10, +0.74] | +2.68 [+1.79, +3.60] | +2.60 [+1.50, +3.70] |
 | SFT 2B − Instruct 2B | short | GQA | +0.49 [-0.55, +1.54] | +0.49 [-0.55, +1.54] | +4.67 [+3.43, +5.91] | +4.60 [+3.00, +6.30] |
 | SFT 2B − Instruct 2B | short | TextVQA | -4.94 [-5.89, -3.97] | -4.29 [-5.35, -3.19] | -0.30 [-1.39, +0.80] | +1.70 [+0.60, +2.90] |
+| SFT on the 4,000 RL questions − Instruct 2B | short | VQAv2 | -1.53 [-2.18, -0.88] | -1.27 [-1.99, -0.56] | +2.07 [+1.29, +2.88] | +2.50 [+1.50, +3.60] |
+| SFT on the 4,000 RL questions − Instruct 2B | short | GQA | -2.05 [-2.93, -1.15] | -2.05 [-2.93, -1.15] | +2.64 [+1.56, +3.72] | +5.20 [+3.60, +6.80] |
+| SFT on the 4,000 RL questions − Instruct 2B | short | TextVQA | -2.83 [-3.59, -2.06] | -2.72 [-3.61, -1.82] | -0.17 [-1.05, +0.73] | +1.50 [+0.50, +2.50] |
+| SFT on the 4,000 RL questions − Instruct → short-prompt GRPO | short | VQAv2 | -5.07 [-5.93, -4.22] | -4.28 [-5.22, -3.35] | +2.68 [+1.69, +3.71] | +5.70 [+4.20, +7.30] |
+| SFT on the 4,000 RL questions − Instruct → short-prompt GRPO | short | GQA | -4.62 [-5.73, -3.51] | -4.62 [-5.73, -3.51] | +5.68 [+4.33, +7.06] | +12.80 [+10.70, +15.00] |
+| SFT on the 4,000 RL questions − Instruct → short-prompt GRPO | short | TextVQA | -5.35 [-6.18, -4.52] | -5.12 [-6.00, -4.26] | +0.33 [-0.47, +1.16] | +3.40 [+2.20, +4.70] |
 | SFT → short-prompt GRPO − SFT 2B | short | VQAv2 | +4.72 [+4.05, +5.42] | +4.12 [+3.37, +4.91] | -2.32 [-3.21, -1.47] | -4.40 [-5.70, -3.10] |
 | SFT → short-prompt GRPO − SFT 2B | short | GQA | +4.69 [+3.67, +5.73] | +4.69 [+3.67, +5.73] | -5.21 [-6.40, -4.03] | -10.30 [-12.20, -8.40] |
 | SFT → short-prompt GRPO − SFT 2B | short | TextVQA | +5.49 [+4.82, +6.16] | +4.79 [+4.12, +5.46] | -0.36 [-0.95, +0.20] | -2.10 [-3.20, -1.10] |
@@ -289,7 +298,10 @@ repeats the pattern (pass@1 +4.1 to +4.8, pass@32 −2.1 to −10.3 against SFT)
 reasoning prompt, GRPO's large pass@1 gain (+9.8 to +25.0) turns into −1.3 to −5.8 at k = 32,
 with the VQAv2 and TextVQA intervals including zero. One epoch of SFT does the opposite: pass@1
 stays within 0.5 points of Instruct on VQAv2 and GQA (−4.3 on TextVQA) while pass@32 rises by
-1.7–4.6 points. The normalized scorer gives the same crossover
+1.7–4.6 points. With the training questions matched the contrast is sharpest: SFT on the 4,000
+questions short-prompt GRPO drew trails it by 4.3–5.1 points at pass@1 and leads it by 3.4–12.8
+at pass@32, although under greedy decoding the two are within a point of each other.
+The normalized scorer gives the same crossover
 (`python -m scripts.pass_at_k --declared --variant normalized`), so casing does not explain it.
 This matches what Yue et al. report for text: RL with a verifiable reward makes the model choose
 answers it could already produce more often rather than adding new ones, and here it costs some
@@ -431,6 +443,7 @@ Primary score, normalized companion in parentheses (`python -m scripts.compare_o
 | SFT 2B | 42.53 (42.55) | 62.35 (62.35) |
 | Instruct → short-prompt GRPO | 43.58 (43.60) | 62.88 (62.88) |
 | SFT → short-prompt GRPO | 43.01 (43.04) | 63.40 (63.40) |
+| SFT on the 4,000 RL questions | 42.39 (42.42) | 63.79 (63.79) |
 <!-- /report:ood -->
 
 Candidate minus reference, points, with 95% intervals that resample images:
@@ -440,8 +453,10 @@ Candidate minus reference, points, with 95% intervals that resample images:
 | --- | ---: | ---: |
 | SFT 2B − Instruct 2B | +0.03 [-0.56, +0.62] | +2.22 [+0.13, +4.31] |
 | Instruct → short-prompt GRPO − Instruct 2B | +1.07 [+0.65, +1.51] | +2.75 [+1.17, +4.45] |
+| SFT on the 4,000 RL questions − Instruct 2B | -0.11 [-0.67, +0.45] | +3.66 [+1.70, +5.64] |
 | Instruct → short-prompt GRPO − SFT 2B | +1.04 [+0.51, +1.58] | +0.52 [-1.57, +2.74] |
 | SFT → short-prompt GRPO − SFT 2B | +0.48 [+0.10, +0.86] | +1.05 [-0.39, +2.49] |
+| SFT on the 4,000 RL questions − Instruct → short-prompt GRPO | -1.18 [-1.68, -0.70] | +0.92 [-0.91, +2.74] |
 <!-- /report:ood-deltas -->
 
 Short-prompt GRPO's far-OOD edge over SFT, seen on TextVQA, replicates on VizWiz: +1.04 points
@@ -450,8 +465,9 @@ methods help by 2–3 points over Instruct and do not differ from each other (+0
 [−1.57, +2.74]); with 765 questions it resolves only differences of about 2 points. VizWiz scores
 are low for every arm because 37% of its questions have "unanswerable" as the majority
 reference and the models almost never say so: Instruct 2B does in 69 of 8,000 answers, scoring
-15.8 on those questions against 58.3 on the rest. The SFT-4k arm is missing here because its
-merged model stays on the cluster.
+15.8 on those questions against 58.3 on the rest. SFT on the same 4,000 questions short-prompt
+GRPO drew is level with Instruct on VizWiz and 1.18 points behind GRPO (interval [−1.68,
+−0.70]), so GRPO's VizWiz lead is not a matter of data volume.
 
 ## Image resolution
 
