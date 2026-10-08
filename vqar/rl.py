@@ -20,7 +20,7 @@ from vqar.training import ROOT
 ROLLOUT_TEMPERATURE = 1.0
 
 
-def to_grpo_columns(batch: dict, template: str) -> dict:
+def to_grpo_columns(batch: dict, template: str, canvas_size: int = config.RL_IMAGE_SIZE) -> dict:
     """GRPO rows: conversational `prompt` + `image`; question/answers/dataset and the
     rollout template ride along as extra columns that TRL forwards to every reward."""
     return {
@@ -28,7 +28,7 @@ def to_grpo_columns(batch: dict, template: str) -> dict:
             [{"role": "user", "content": PROMPTS[template].text.format(question=q)}]
             for q in batch["question"]
         ],
-        "image": [to_uniform_canvas(img) for img in batch["image"]],
+        "image": [to_uniform_canvas(img, canvas_size) for img in batch["image"]],
         "question": batch["question"],
         "answers": batch["answers"],
         "dataset": batch["dataset"],
@@ -43,7 +43,9 @@ def load_rl_dataset(preset, data_dir: Path | None = None):
     check_trainable(preset.datasets)
     rows = load_pool(data_dir or ROOT / "data", preset.datasets, preset.seed, preset.pool)
     columns = rows.select_columns(["image", "question", "answers", "dataset", "qid"])
-    return columns.with_transform(partial(to_grpo_columns, template=preset.rollout_prompt))
+    return columns.with_transform(partial(
+        to_grpo_columns, template=preset.rollout_prompt,
+        canvas_size=getattr(preset, "canvas_size", config.RL_IMAGE_SIZE)))
 
 
 def build_rewards(names: tuple[str, ...]):

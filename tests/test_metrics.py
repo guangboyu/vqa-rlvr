@@ -156,6 +156,19 @@ def test_chartqa_normalized_accuracy(prediction, answers, expected):
     assert metrics.chartqa_normalized_accuracy(prediction, answers) == expected
 
 
+@pytest.mark.parametrize("prediction,answers,expected", [
+    ("Developed, Ages 15\u201324", ["[Developed, Ages 15-24]"], 1.0),  # en dash
+    ("1\u20135 mins", ["1-5 mins"], 1.0),
+    ("Should, Should not", ["[Should not, Should]"], 1.0),  # list items in another order
+    ("2003, 2009", ["[2003,2009]"], 1.0),
+    ("Niger", ["[Gambia, Niger]"], 0.0),  # half a list is wrong
+    ("Should, Should not", ["Should not, Should"], 0.0),  # only bracketed lists are sets
+    ("12", ["12.4"], 1.0),  # the normalized rule still applies
+])
+def test_chartqa_list_accuracy(prediction, answers, expected):
+    assert metrics.chartqa_list_accuracy(prediction, answers) == expected
+
+
 @pytest.mark.parametrize("prediction,expected", [
     ("C", 1.0), ("C.", 1.0), (" c ", 1.0), ("D", 0.0), ("C. Carpo-metacarpal bossing", 0.0),
 ])

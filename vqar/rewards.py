@@ -9,6 +9,7 @@ reward is a config change, not a code change.
 """
 
 from vqar.answers import reward_answer
+from vqar.metrics import chartqa_list_accuracy
 from vqar.registry import PROMPTS, score
 
 # The format reward wants reasoning followed by one short, terminal <answer> tag.
@@ -35,6 +36,23 @@ def correctness_reward(prompts, completions, answers, dataset, rollout_prompt,
     return out
 
 
+def list_aware_correctness_reward(prompts, completions, answers, dataset, rollout_prompt,
+                                  **kwargs) -> list[float]:
+    """correctness_reward, except ChartQA answers also count with Unicode dashes and with
+    list items in any order (the normalized scorer marks those right answers 0)."""
+    out = []
+    for completion, golds, ds, template in zip(completions, answers, dataset, rollout_prompt,
+                                               strict=True):
+        pred = reward_answer(_text(completion), PROMPTS[template].answer_rule)
+        if pred is None:
+            out.append(0.0)
+        elif ds == "chartqa":
+            out.append(chartqa_list_accuracy(pred, golds))
+        else:
+            out.append(score(ds, pred, golds, "normalized"))
+    return out
+
+
 def _well_formed(text: str) -> bool:
     text = text.strip()
     if text.count("<answer>") != 1 or not text.endswith("</answer>"):
@@ -56,5 +74,6 @@ def format_reward(prompts, completions, **kwargs) -> list[float]:
 
 REWARDS = {
     "correctness": correctness_reward,
+    "correctness_lists": list_aware_correctness_reward,
     "format": format_reward,
 }

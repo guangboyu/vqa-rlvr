@@ -199,6 +199,25 @@ def chartqa_normalized_accuracy(prediction: str, gt_answers: list[str]) -> float
     return float(any(correct(answer) for answer in gt_answers))
 
 
+# Unicode hyphens and dashes models write where ChartQA labels use an ASCII hyphen.
+_DASHES = str.maketrans(dict.fromkeys("\u2010\u2011\u2012\u2013\u2014\u2212", "-"))
+
+
+def chartqa_list_accuracy(prediction: str, gt_answers: list[str]) -> float:
+    """The normalized rule with Unicode dashes read as hyphens, and bracketed list references
+    ('[Gambia, Niger]') matched as unordered sets of items: 'Niger, Gambia' counts."""
+    prediction = prediction.translate(_DASHES)
+    gt_answers = [answer.translate(_DASHES) for answer in gt_answers]
+    if chartqa_normalized_accuracy(prediction, gt_answers):
+        return 1.0
+
+    def items(text: str) -> list[str]:
+        return sorted(normalize_answer(part) for part in text.strip().strip("[]").split(","))
+
+    return float(any(answer.strip().startswith("[") and items(prediction) == items(answer)
+                     for answer in gt_answers))
+
+
 _CHOICE = re.compile(r"^\s*(?:option\s+|answer\s*:?\s*)?\(?([A-Ea-e])\)?(?:[.):,\s]|$)",
                      re.IGNORECASE)
 

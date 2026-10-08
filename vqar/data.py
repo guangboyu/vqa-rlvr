@@ -64,18 +64,18 @@ def cap_pixels(image: PILImage.Image, max_pixels: int = MAX_PIXELS) -> PILImage.
     return image.resize((max(1, int(w * scale)), max(1, int(h * scale))), PILImage.LANCZOS)
 
 
-def to_uniform_canvas(image: PILImage.Image) -> PILImage.Image:
-    """Resize to fit (aspect preserved) and center on a black RL_IMAGE_SIZE square.
+def to_uniform_canvas(image: PILImage.Image, size: int = RL_IMAGE_SIZE) -> PILImage.Image:
+    """Resize to fit (aspect preserved) and center on a black square of side `size`.
 
     Every RL prompt image goes through this, so rollouts and training share one
     vision-token budget; the `canvas` evaluation image mode applies it too.
     """
     image = image.convert("RGB")
     w, h = image.size
-    scale = RL_IMAGE_SIZE / max(w, h)
+    scale = size / max(w, h)
     image = image.resize((max(1, round(w * scale)), max(1, round(h * scale))))
-    canvas = PILImage.new("RGB", (RL_IMAGE_SIZE, RL_IMAGE_SIZE))
-    canvas.paste(image, ((RL_IMAGE_SIZE - image.width) // 2, (RL_IMAGE_SIZE - image.height) // 2))
+    canvas = PILImage.new("RGB", (size, size))
+    canvas.paste(image, ((size - image.width) // 2, (size - image.height) // 2))
     return canvas
 
 

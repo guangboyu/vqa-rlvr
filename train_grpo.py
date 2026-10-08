@@ -78,6 +78,9 @@ def main() -> None:
     parser.add_argument("--num-iterations", type=int, default=None,
                         help="gradient passes per generation batch (default 1: the clip "
                         "never binds)")
+    parser.add_argument("--canvas-size", type=int, default=None,
+                        help="side of the square canvas RL images are fitted onto (default 608; "
+                        "larger keeps chart text legible and costs vision tokens)")
     parser.add_argument("--epsilon-high", type=float, default=None,
                         help="upper clip of the policy ratio (DAPO clip-higher uses 0.28)")
     parser.add_argument("--rollout-prompt", choices=sorted(PROMPTS), default=None,

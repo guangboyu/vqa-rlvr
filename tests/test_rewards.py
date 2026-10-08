@@ -1,4 +1,4 @@
-from vqar.rewards import correctness_reward, format_reward
+from vqar.rewards import correctness_reward, format_reward, list_aware_correctness_reward
 
 GOOD = (
     "Let me count the objects step by step. There are three cubes on the left and "
@@ -9,6 +9,14 @@ GOOD = (
 
 def completion(text):
     return [{"role": "assistant", "content": text}]
+
+
+def test_the_list_aware_reward_pays_reordered_chartqa_lists_and_leaves_other_data_alone():
+    kwargs = dict(prompts=None, rollout_prompt=["reasoning"] * 2,
+                  completions=[completion("<answer>Niger, Gambia</answer>")] * 2,
+                  answers=[["[Gambia, Niger]"], ["[Gambia, Niger]"]], dataset=["chartqa", "gqa"])
+    assert correctness_reward(**kwargs) == [0.0, 0.0]
+    assert list_aware_correctness_reward(**kwargs) == [1.0, 0.0]
 
 
 class TestCorrectness:

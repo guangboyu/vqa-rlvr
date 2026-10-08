@@ -100,3 +100,22 @@ def test_recipe_knobs_reach_the_grpo_settings_and_stay_out_of_default_records():
         "loss_type": "grpo", "scale_rewards": "none", "num_iterations": 2, "epsilon_high": 0.28}
     assert not set(config.RECIPE_KNOBS) & set(config.dump(default))
     assert config.dump(knob)["loss_type"] == "grpo"
+
+
+def test_the_canvas_size_knob_reaches_the_rl_images():
+    from argparse import Namespace
+
+    from PIL import Image
+
+    from vqar import config
+    from vqar.rl import to_grpo_columns
+    from vqar.training import resolve_preset
+
+    preset = resolve_preset(config.GRPO_PRESETS, Namespace(preset="grpo_2b_main",
+                                                            hardware="24gb", canvas_size=896))
+    assert preset.canvas_size == 896 and config.dump(preset)["canvas_size"] == 896
+    assert "canvas_size" not in config.dump(config.GRPO_PRESETS["grpo_2b_main"])
+    batch = {"question": ["q"], "image": [Image.new("RGB", (800, 400))], "answers": [["a"]],
+             "dataset": ["chartqa"], "qid": ["1"]}
+    assert to_grpo_columns(batch, "short", 896)["image"][0].size == (896, 896)
+    assert to_grpo_columns(batch, "short")["image"][0].size == (608, 608)
