@@ -446,3 +446,18 @@ name = "loss-dr-grpo"
 change = "token losses divided by a fixed constant (loss_type dr_grpo)"
 flags = ["--loss-type", "dr_grpo"]
 expect = "− at 300 updates: dividing by the 640-token cap instead of ~200 written tokens shrinks each step about 3×"
+
+# Batch 2 (2026-10-08), from the overfitting check: right answers the reward scored 0, and
+# chart values misread at the 608-pixel training canvas. The canvas knob runs only if the
+# resolution check (Instruct 2B on dev, original images vs canvas) shows the canvas costs.
+[[knobs.chartqa.knob]]
+name = "reward-lists"
+change = "list-aware ChartQA reward: Unicode dashes as hyphens, bracketed lists as unordered sets"
+flags = ["--rewards", "correctness_lists"]
+expect = "small +: about 2% of questions have list or dash answers the current reward marks wrong"
+
+[[knobs.chartqa.knob]]
+name = "canvas-896"
+change = "896-pixel training canvas instead of 608 (784 vision tokens instead of 361; 4 completions per micro-batch)"
+flags = ["--canvas-size", "896", "--batch-size", "4", "--grad-accum", "8"]
+expect = "+ if the 608 canvas costs accuracy in the resolution check"
