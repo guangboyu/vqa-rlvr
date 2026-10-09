@@ -574,7 +574,16 @@ that speed early learning, so a + is a candidate for a full-length run, not a re
 Official relaxed accuracy, points; `python -m scripts.knobs summarize chartqa`.
 
 <!-- report:knobs-chartqa -->
-No knob has been run yet.
+| Knob | Change | Expected | Reasoning Δ | Short Δ | Reasoning tokens | Train GPU-h | Verdict |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
+| repeat | the baseline again, same seed | the noise floor: GPU kernels make same-seed runs differ | +0.52 [-1.25, +2.40] | +0.31 [-0.21, +0.84] | 198 → 186 | 1.1 | — |
+| loss-grpo | average each response's token losses first (loss_type grpo) | 0 or −, longer responses: a long wrong answer is penalized less per token | +0.21 [-1.57, +1.98] | +0.00 [-0.52, +0.52] | 198 → 211 | 1.1 | 0 |
+| length-1024 | 1,024-token response cap (4 completions per micro-batch, same 32 per update) | small +, longer responses: 4.7% of pilot responses hit the 640 cap and score 0 | -0.21 [-2.09, +1.67] | +0.21 [-0.31, +0.73] | 198 → 227 | 1.3 | 0 |
+| scale-none | advantages not divided by the group's reward spread (Dr. GRPO) | about 0 | -1.46 [-3.34, +0.42] | +0.42 [+0.00, +0.94] | 198 → 213 | 1.1 | 0 |
+| kl-0.04 | KL penalty 0.04 to the starting model (original GRPO) | slight − at 300 updates: the penalty slows learning | -0.94 [-2.92, +1.04] | +0.21 [-0.31, +0.84] | 198 → 210 | 1.3 | 0 |
+| loss-dr-grpo | token losses divided by a fixed constant (loss_type dr_grpo) | − at 300 updates: dividing by the 640-token cap instead of ~200 written tokens shrinks each step about 3× | -1.15 [-3.13, +0.84] | +0.21 [-0.31, +0.84] | 198 → 211 | 1.1 | 0 |
+| reward-lists | list-aware ChartQA reward: Unicode dashes as hyphens, bracketed lists as unordered sets | small +: about 2% of questions have list or dash answers the current reward marks wrong | -0.52 [-2.51, +1.46] | +0.42 [-0.31, +1.15] | 198 → 197 | 1.1 | 0 |
+| canvas-896 | 896-pixel training canvas instead of 608 (784 vision tokens instead of 361; 4 completions per micro-batch) | + if the 608 canvas costs accuracy in the resolution check | +1.04 [-0.94, +3.03] | +0.21 [-0.21, +0.63] | 198 → 197 | 1.6 | 0 |
 <!-- /report:knobs-chartqa -->
 
 ## Image resolution
@@ -1060,6 +1069,7 @@ with varied rewards over 1,000 updates.
 | `base8` | GQA | reasoning | 500 | 8 | 31.2 | 25.4 | 43.4 |
 | `base8` | GQA | short | 2,500 | 8 | 23.6 | 19.2 | 57.2 |
 | `base8` | GQA | reasoning | 5,000 | 8 | 34.7 | 23.9 | 41.4 |
+| `base8` | MedThinkVQA | reasoning | 500 | 8 | 39.2 | 58.6 | 2.2 |
 | `base8` | VQAv2 | reasoning | 500 | 8 | 31.8 | 21.0 | 47.2 |
 | `base8` | VQAv2 | short | 2,500 | 8 | 25.9 | 13.8 | 60.2 |
 | `base8` | VQAv2 | reasoning | 5,000 | 8 | 33.1 | 22.9 | 43.9 |

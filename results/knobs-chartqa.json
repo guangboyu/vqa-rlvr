@@ -1,0 +1,312 @@
+{
+ "family": "chartqa",
+ "dataset": "chartqa",
+ "scorer": "official",
+ "role": "dev",
+ "baseline": {
+  "adapter": "runs/chartqa-pilot-20261007/grpo2-base/checkpoints",
+  "change": "pilot Instruct \u2192 GRPO: lr 1e-5, 4 questions \u00d7 8 samples, token-level loss, 640-token cap, no KL"
+ },
+ "train": [
+  "--preset",
+  "grpo_2b_main",
+  "--datasets",
+  "chartqa",
+  "--max-steps",
+  "300",
+  "--rollout-lora",
+  "--hardware",
+  "24gb",
+  "--save-steps",
+  "100",
+  "--no-dev-eval",
+  "--no-wandb"
+ ],
+ "noise_floor": 0.5219206680584552,
+ "knobs": [
+  {
+   "name": "repeat",
+   "change": "the baseline again, same seed",
+   "expect": "the noise floor: GPU kernels make same-seed runs differ",
+   "flags": [],
+   "train_hours": 1.1041217777777779,
+   "reasoning": {
+    "accuracy": 75.99164926931107,
+    "baseline": 75.46972860125261,
+    "tokens": 185.79436325678498,
+    "baseline_tokens": 198.0991649269311,
+    "n": 958,
+    "delta": 0.5219206680584552,
+    "low": -1.2526096033402923,
+    "high": 2.4008350730688934,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "short": {
+    "accuracy": 66.91022964509395,
+    "baseline": 66.59707724425887,
+    "tokens": 4.080375782881002,
+    "baseline_tokens": 4.090814196242171,
+    "n": 958,
+    "delta": 0.31315240083507306,
+    "low": -0.20876826722338201,
+    "high": 0.8350730688935281,
+    "resamples": 10000,
+    "seed": 0
+   }
+  },
+  {
+   "name": "loss-grpo",
+   "change": "average each response's token losses first (loss_type grpo)",
+   "expect": "0 or \u2212, longer responses: a long wrong answer is penalized less per token",
+   "flags": [
+    "--loss-type",
+    "grpo"
+   ],
+   "train_hours": 1.1288099444444444,
+   "reasoning": {
+    "accuracy": 75.67849686847599,
+    "baseline": 75.46972860125261,
+    "tokens": 210.70146137787057,
+    "baseline_tokens": 198.0991649269311,
+    "n": 958,
+    "delta": 0.20876826722338201,
+    "low": -1.5657620041753653,
+    "high": 1.9832985386221296,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "short": {
+    "accuracy": 66.59707724425887,
+    "baseline": 66.59707724425887,
+    "tokens": 4.083507306889353,
+    "baseline_tokens": 4.090814196242171,
+    "n": 958,
+    "delta": 0.0,
+    "low": -0.5219206680584552,
+    "high": 0.5219206680584552,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "verdict": "0"
+  },
+  {
+   "name": "length-1024",
+   "change": "1,024-token response cap (4 completions per micro-batch, same 32 per update)",
+   "expect": "small +, longer responses: 4.7% of pilot responses hit the 640 cap and score 0",
+   "flags": [
+    "--max-completion-length",
+    "1024",
+    "--batch-size",
+    "4",
+    "--grad-accum",
+    "8"
+   ],
+   "train_hours": 1.2598472777777778,
+   "reasoning": {
+    "accuracy": 75.26096033402922,
+    "baseline": 75.46972860125261,
+    "tokens": 226.7212943632568,
+    "baseline_tokens": 198.0991649269311,
+    "n": 958,
+    "delta": -0.20876826722338201,
+    "low": -2.0876826722338206,
+    "high": 1.6701461377870561,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "short": {
+    "accuracy": 66.80584551148226,
+    "baseline": 66.59707724425887,
+    "tokens": 4.081419624217119,
+    "baseline_tokens": 4.090814196242171,
+    "n": 958,
+    "delta": 0.20876826722338201,
+    "low": -0.31315240083507306,
+    "high": 0.7306889352818371,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "verdict": "0"
+  },
+  {
+   "name": "scale-none",
+   "change": "advantages not divided by the group's reward spread (Dr. GRPO)",
+   "expect": "about 0",
+   "flags": [
+    "--scale-rewards",
+    "none"
+   ],
+   "train_hours": 1.1195895,
+   "reasoning": {
+    "accuracy": 74.00835073068893,
+    "baseline": 75.46972860125261,
+    "tokens": 212.6409185803758,
+    "baseline_tokens": 198.0991649269311,
+    "n": 958,
+    "delta": -1.4613778705636742,
+    "low": -3.3402922755741122,
+    "high": 0.41753653444676403,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "short": {
+    "accuracy": 67.01461377870564,
+    "baseline": 66.59707724425887,
+    "tokens": 4.061586638830898,
+    "baseline_tokens": 4.090814196242171,
+    "n": 958,
+    "delta": 0.41753653444676403,
+    "low": 0.0,
+    "high": 0.9394572025052191,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "verdict": "0"
+  },
+  {
+   "name": "kl-0.04",
+   "change": "KL penalty 0.04 to the starting model (original GRPO)",
+   "expect": "slight \u2212 at 300 updates: the penalty slows learning",
+   "flags": [
+    "--kl-beta",
+    "0.04"
+   ],
+   "train_hours": 1.2650054444444443,
+   "reasoning": {
+    "accuracy": 74.53027139874739,
+    "baseline": 75.46972860125261,
+    "tokens": 209.77974947807934,
+    "baseline_tokens": 198.0991649269311,
+    "n": 958,
+    "delta": -0.9394572025052191,
+    "low": -2.9227557411273484,
+    "high": 1.0438413361169103,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "short": {
+    "accuracy": 66.80584551148226,
+    "baseline": 66.59707724425887,
+    "tokens": 4.076200417536534,
+    "baseline_tokens": 4.090814196242171,
+    "n": 958,
+    "delta": 0.20876826722338201,
+    "low": -0.31315240083507306,
+    "high": 0.8350730688935281,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "verdict": "0"
+  },
+  {
+   "name": "loss-dr-grpo",
+   "change": "token losses divided by a fixed constant (loss_type dr_grpo)",
+   "expect": "\u2212 at 300 updates: dividing by the 640-token cap instead of ~200 written tokens shrinks each step about 3\u00d7",
+   "flags": [
+    "--loss-type",
+    "dr_grpo"
+   ],
+   "train_hours": 1.1226379444444445,
+   "reasoning": {
+    "accuracy": 74.32150313152401,
+    "baseline": 75.46972860125261,
+    "tokens": 210.77557411273486,
+    "baseline_tokens": 198.0991649269311,
+    "n": 958,
+    "delta": -1.1482254697286012,
+    "low": -3.1315240083507305,
+    "high": 0.8350730688935281,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "short": {
+    "accuracy": 66.80584551148226,
+    "baseline": 66.59707724425887,
+    "tokens": 4.062630480167015,
+    "baseline_tokens": 4.090814196242171,
+    "n": 958,
+    "delta": 0.20876826722338201,
+    "low": -0.31315240083507306,
+    "high": 0.8350730688935281,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "verdict": "0"
+  },
+  {
+   "name": "reward-lists",
+   "change": "list-aware ChartQA reward: Unicode dashes as hyphens, bracketed lists as unordered sets",
+   "expect": "small +: about 2% of questions have list or dash answers the current reward marks wrong",
+   "flags": [
+    "--rewards",
+    "correctness_lists"
+   ],
+   "train_hours": 1.0950861666666667,
+   "reasoning": {
+    "accuracy": 74.94780793319416,
+    "baseline": 75.46972860125261,
+    "tokens": 197.1169102296451,
+    "baseline_tokens": 198.0991649269311,
+    "n": 958,
+    "delta": -0.5219206680584552,
+    "low": -2.5052192066805845,
+    "high": 1.4613778705636742,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "short": {
+    "accuracy": 67.01461377870564,
+    "baseline": 66.59707724425887,
+    "tokens": 4.083507306889353,
+    "baseline_tokens": 4.090814196242171,
+    "n": 958,
+    "delta": 0.41753653444676403,
+    "low": -0.31315240083507306,
+    "high": 1.1482254697286012,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "verdict": "0"
+  },
+  {
+   "name": "canvas-896",
+   "change": "896-pixel training canvas instead of 608 (784 vision tokens instead of 361; 4 completions per micro-batch)",
+   "expect": "+ if the 608 canvas costs accuracy in the resolution check",
+   "flags": [
+    "--canvas-size",
+    "896",
+    "--batch-size",
+    "4",
+    "--grad-accum",
+    "8"
+   ],
+   "train_hours": 1.5506289722222222,
+   "reasoning": {
+    "accuracy": 76.51356993736952,
+    "baseline": 75.46972860125261,
+    "tokens": 196.62734864300626,
+    "baseline_tokens": 198.0991649269311,
+    "n": 958,
+    "delta": 1.0438413361169103,
+    "low": -0.9394572025052191,
+    "high": 3.02713987473904,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "short": {
+    "accuracy": 66.80584551148226,
+    "baseline": 66.59707724425887,
+    "tokens": 4.072025052192067,
+    "baseline_tokens": 4.090814196242171,
+    "n": 958,
+    "delta": 0.20876826722338201,
+    "low": -0.20876826722338201,
+    "high": 0.6263048016701461,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "verdict": "0"
+  }
+ ]
+}

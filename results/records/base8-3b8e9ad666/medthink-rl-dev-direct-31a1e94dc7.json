@@ -1,0 +1,107 @@
+{
+  "schema": "run-record/1",
+  "legacy": false,
+  "model_id": "3b8e9ad666ccecfdb34ff163a43cf05108bfe8e64a13cda9ea8196b73d63ad2b",
+  "protocol_id": "31a1e94dc792d93fb6bdd88c790a4160c2adb6611fbbd44bda8482ee1022f731",
+  "model": {
+    "source": "Qwen/Qwen3-VL-8B-Instruct",
+    "label": "base8",
+    "run": null,
+    "step": null,
+    "weights": {
+      "hub": "Qwen/Qwen3-VL-8B-Instruct",
+      "revision": "0c351dd01ed87e9c1b53cbc748cba10e6187ff3b"
+    }
+  },
+  "protocol": {
+    "dataset": "medthink",
+    "ladder": "in-domain",
+    "role": "rl",
+    "tier": "dev",
+    "question_limit": 500,
+    "prompt": "direct",
+    "prompt_text": "{question}\nOutput an empty <think></think> block. Then write the final answer as a single word or phrase inside <answer> </answer> tags.",
+    "max_tokens": 512,
+    "temperature": 0.0,
+    "samples": 1,
+    "image_mode": "original",
+    "max_pixels": 786432,
+    "scorers": {
+      "official": "choice_letter_accuracy/v1",
+      "normalized": "choice_accuracy/v1"
+    },
+    "extraction": "last_answer_tag_or_full_text",
+    "answer_tag_rule": "raw text contains </answer>",
+    "data": {
+      "subsets": {
+        "medthink_train": "52950321cfb06f90"
+      },
+      "selection_sha256": "99725f60068e7f97bf902d39df3e96688098e8feae2160e8d4c5f2c36af09d68",
+      "image_groups_sha256": "8b24e344f6cd468ca0728ac8a398db8aab1e957013b5981b7ed1df02316e9097"
+    }
+  },
+  "metrics": {
+    "n": 500,
+    "official": {
+      "overall": 0.392,
+      "by_answer_type": {
+        "CT": 0.40229885057471265,
+        "Clinical photography": 0.6,
+        "Endoscopy": 0.0,
+        "MRI": 0.3645833333333333,
+        "Non-modality / Workflow / Post-processing": 0.35714285714285715,
+        "Nuclear medicine & Molecular imaging": 0.5,
+        "Pathology": 1.0,
+        "Ultrasound": 0.4305555555555556,
+        "X-ray": 0.3671875
+      }
+    },
+    "normalized": {
+      "overall": 0.392,
+      "by_answer_type": {
+        "CT": 0.40229885057471265,
+        "Clinical photography": 0.6,
+        "Endoscopy": 0.0,
+        "MRI": 0.3645833333333333,
+        "Non-modality / Workflow / Post-processing": 0.35714285714285715,
+        "Nuclear medicine & Molecular imaging": 0.5,
+        "Pathology": 1.0,
+        "Ultrasound": 0.4305555555555556,
+        "X-ray": 0.3671875
+      }
+    },
+    "mean_output_tokens": 276.372,
+    "truncated_fraction": 0.208,
+    "answer_tag_fraction": 0.792,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.392,
+    "answers_scored_differently": 0
+  },
+  "provenance": {
+    "code_version": "0d4defc67b752693b14f07376da631026106c624",
+    "uncommitted_changes": false,
+    "source_sha256": {
+      "vqar/eval/__init__.py": "2aa88c809409a57502d0d9b2893e14c3b5bf99d971bceefcc1ed4716ef295f81",
+      "vqar/eval/examples.py": "bfc72cc97e560db5dd6c62aa6af7ff7928b1865f7e55591873fb71745807ce97",
+      "vqar/eval/protocol.py": "d8c63fc0fab4f652cea522839054385389880708811e0b4ce8d3e94025a1dc33",
+      "vqar/eval/record.py": "6be2298f531240b01df2feecedd50af2d32a1c17f6029951ddf3f7723834b023",
+      "vqar/eval/runner.py": "f0a55a3f8fcaddc6c4154cef031a22911f5cc0cafe7a7cd436c811b2b75e8fca",
+      "vqar/inference.py": "f77143773554fbf3710e045220e2efb36d5698035a760094a9aace008bf593bf",
+      "vqar/config.py": "18a86040896aaff118b73158c81294cf8876fee85e90ce783894da3b6be23771",
+      "vqar/data.py": "bfcba6aa0b2ab1c5c5aec74229265dc063e5a49fd133da1592ba32ee5bb84990",
+      "vqar/metrics.py": "582ee896e56d5df27896cf815480ed0a4cd15fc21d00ca6b355e4b55deacb34b",
+      "vqar/registry.py": "608acd9bcdd608965df5d993d4c5100823aaeb064e296ca6312458bcbeef5f1d",
+      "vqar/splits.py": "206963ba5aaa52b03482f52b268832dc1bd611613adfd2ea0fb1aac11c2eb693",
+      "vqar/ood_metrics.py": "9449e0a85c4b7ff3efcbc88264ee1e03d53689c39c2fe030a13887465fa1b226",
+      "vqar/ood.py": "d59220be09094fa5a5ffbb6e791b38ee5b3c8dca0ca381ef64a28bf0f94ccb8f",
+      "uv.lock": "8c79fab440350a15e75e9507c3b5338ecc63beb92fc12c6ef18fbe01122ac323"
+    },
+    "versions": {
+      "torch": "2.11.0+cu129",
+      "transformers": "5.13.0",
+      "vllm": "0.23.0+cu129",
+      "datasets": "5.0.0"
+    },
+    "timestamp": "2026-10-08T23:54:01+00:00"
+  }
+}
