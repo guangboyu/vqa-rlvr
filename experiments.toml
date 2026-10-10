@@ -99,6 +99,16 @@ name = "SFT on the 4,000 RL questions"
 model = "checkpoints/merged/sft4k2_final125"
 run = "closeout-sft4k2"
 
+# Short-prompt GRPO from Instruct for one full epoch of the 55,438-question VQAv2 + GQA pool
+# (2026-10-07..09): 13,859 updates, each pool question drawn once, otherwise the recipe of
+# p1-f-short2-base, which stopped at 1,000 updates (4,000 questions). Free A30s on HPC3,
+# 6-hour chained segments; the end-of-epoch adapter is the reported model, chosen in advance.
+# Commands: runs/fullpool-20261007/launch.sh and finish.sh (local).
+[[arms]]
+label = "p1-fp-short2-base"
+name = "Instruct → short-prompt GRPO, full pool"
+model = "checkpoints/merged/p1_fullpool_short2_base"
+
 # The ChartQA pilot (Part 2, 2026-10-07): ChartQA's human questions passed the screening gate,
 # so the 2B arms train on its 7,378-question pool: one SFT epoch, then 300 GRPO updates each
 # under the frozen recipe (correctness reward = ChartQA relaxed accuracy), on the local RTX 4090.
@@ -272,6 +282,22 @@ candidates = ["p1-f-short8-base"]
 reference = "p1-f-grpo8-sft"
 candidates = ["p1-f-short8-sft"]
 
+# The full-pool run against the 1,000-update run, its start and SFT, on the results page.
+[matrices.fullpool]
+arms = ["base2", "sft2", "p1-f-short2-base", "p1-fp-short2-base"]
+
+[[matrices.fullpool.comparisons]]
+reference = "base2"
+candidates = ["p1-fp-short2-base"]
+
+[[matrices.fullpool.comparisons]]
+reference = "p1-f-short2-base"
+candidates = ["p1-fp-short2-base"]
+
+[[matrices.fullpool.comparisons]]
+reference = "sft2"
+candidates = ["p1-fp-short2-base"]
+
 # The recipe experiments on the results page.
 [matrices.recipe]
 arms = ["p1-krandom", "sft2", "p1-kfiltered", "p1-ashort", "p1-ashortsft", "p1-r3refill",
@@ -326,7 +352,12 @@ candidates = ["p1-f-short2-base", "sft2", "sft4k2"]
 [[passk.heldout.comparisons]]
 prompt = "short"
 reference = "p1-f-short2-base"
-candidates = ["sft4k2"]
+candidates = ["sft4k2", "p1-fp-short2-base"]
+
+[[passk.heldout.comparisons]]
+prompt = "short"
+reference = "base2"
+candidates = ["p1-fp-short2-base"]
 
 [[passk.heldout.comparisons]]
 prompt = "short"

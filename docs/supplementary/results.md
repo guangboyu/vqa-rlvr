@@ -226,6 +226,57 @@ pixel budget; GRPO samples eight answers per question over 1,000 updates on the 
 canvas. So this is not a comparison at equal compute, and the full-SFT model predates the fix
 that seeds the adapter initialization, so the two SFT runs do not share an initialization.
 
+## Short-prompt RL on the full pool
+
+The headline short-prompt GRPO run stopped at 1,000 updates, 4,000 of the 55,438 pool
+questions. Run for one full epoch of the pool instead (13,859 updates of 4 questions, each
+question drawn once, otherwise the same recipe; 43.8 GPU-hours on free A30s in 13 chained
+segments), it shows what fourteen times the updates and all of the data buy on VQAv2 and GQA.
+The end-of-epoch adapter is the reported model, chosen before training
+(`[matrices.fullpool]`; `runs/fullpool-20261007/`):
+
+<!-- report:fullpool -->
+| Arm | Prompt | VQAv2 | GQA | CLEVR counting | TextVQA (far-OOD) |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Instruct 2B | short | 77.87 (77.91) | 59.45 (59.46) | 97.67 (97.67) | 80.53 (80.55) |
+| Instruct 2B | reasoning | 55.06 (64.68) | 36.13 (51.95) | 87.13 (87.13) | 69.74 (69.75) |
+| SFT 2B | short | 79.87 (79.89) | 62.35 (62.35) | 99.40 (99.40) | 80.08 (80.10) |
+| SFT 2B | reasoning | 67.99 (68.17) | 56.61 (57.00) | 92.10 (92.10) | 68.86 (68.87) |
+| Instruct → short-prompt GRPO | short | 78.62 (78.66) | 60.34 (60.35) | 99.50 (99.50) | 81.01 (81.02) |
+| Instruct → short-prompt GRPO | reasoning | 61.85 (69.81) | 42.89 (54.01) | 86.50 (86.50) | 72.34 (72.35) |
+| Instruct → short-prompt GRPO, full pool | short | 79.82 (79.86) | 62.39 (62.39) | 99.60 (99.60) | 80.69 (80.69) |
+| Instruct → short-prompt GRPO, full pool | reasoning | 64.92 (70.80) | 45.64 (54.47) | 86.30 (86.30) | 73.43 (73.43) |
+<!-- /report:fullpool -->
+
+Candidate minus reference, official scorer, 95% intervals over questions:
+
+<!-- report:fullpool-deltas -->
+| Comparison | Prompt | Scorer | VQAv2 | GQA | CLEVR counting | TextVQA (far-OOD) |
+| --- | --- | --- | ---: | ---: | ---: | ---: |
+| Instruct → short-prompt GRPO, full pool − Instruct 2B | short | official | +1.95 [+1.33, +2.58] | +2.93 [+2.39, +3.47] | +1.93 [+1.43, +2.47] | +0.16 [-0.45, +0.78] |
+| Instruct → short-prompt GRPO, full pool − Instruct 2B | reasoning | official | +9.87 [+8.78, +10.99] | +9.51 [+8.70, +10.29] | -0.83 [-2.27, +0.53] | +3.68 [+2.72, +4.65] |
+| Instruct → short-prompt GRPO, full pool − SFT 2B | short | official | -0.06 [-0.66, +0.56] | +0.04 [-0.48, +0.55] | +0.20 [+0.00, +0.43] | +0.60 [-0.03, +1.25] |
+| Instruct → short-prompt GRPO, full pool − SFT 2B | reasoning | official | -3.07 [-4.29, -1.82] | -10.96 [-11.81, -10.13] | -5.80 [-7.13, -4.47] | +4.57 [+3.43, +5.68] |
+| Instruct → short-prompt GRPO, full pool − Instruct → short-prompt GRPO | short | official | +1.19 [+0.62, +1.76] | +2.04 [+1.55, +2.54] | +0.10 [+0.00, +0.23] | -0.32 [-0.89, +0.26] |
+| Instruct → short-prompt GRPO, full pool − Instruct → short-prompt GRPO | reasoning | official | +3.07 [+2.06, +4.05] | +2.75 [+1.99, +3.50] | -0.20 [-1.60, +1.20] | +1.08 [+0.16, +2.01] |
+<!-- /report:fullpool-deltas -->
+
+The extra data closes SFT's in-domain lead. Short-prompt accuracy rises 1.2 points on
+VQAv2 and 2.0 on GQA over the 1,000-update run, to +2.0 and +2.9 over Instruct, level with
+one SFT epoch on both (−0.06 [−0.66, +0.56] and +0.04 [−0.48, +0.55]). This is the
+matched-question control's conclusion reached from the other side: given the same questions,
+RL and SFT end at the same in-domain ceiling. The far-OOD edge does not grow: on TextVQA the
+full-pool run sits 0.3 points below the 1,000-update run and 0.6 above SFT, an interval that
+now includes zero ([−0.03, +1.25]). Training shows why so little moves. Every question is
+new when it is drawn, so the training reward is accuracy on unseen pool questions: it rises
+from 0.70 over the first 1,000 updates to 0.73 over the last, while the share of groups whose
+eight answers all score alike, which give no gradient, grows from 79% to 89% and entropy
+falls from 0.17 to 0.07. On held-out questions the narrowing continues: against Instruct,
+pass@1 gains 4.7, 7.1 and 3.4 points on VQAv2, GQA and TextVQA while pass@32 falls 5.8,
+10.8 and 4.6, against 3.2, 7.6 and 1.9 after 1,000 updates (table below). On short-answer VQA
+more RL buys a small, SFT-sized in-domain gain and a further loss of coverage; on ChartQA,
+with reasoning, the extra data kept paying ([below](#chartqa-rl-where-reasoning-pays)).
+
 ## Held-out pass@k before and after RL
 
 pass@k asks whether training lets a model answer questions it could not answer before, or
@@ -248,16 +299,19 @@ matches only some annotators counts in the mean score but never as a pass. Offic
 | Instruct → short-prompt GRPO | short | VQAv2 | 75.49 | 65.94 | 69.10 | 71.77 | 74.00 | 75.64 | 76.60 |
 | SFT → short-prompt GRPO | short | VQAv2 | 76.59 | 66.88 | 70.14 | 72.74 | 74.99 | 76.84 | 78.00 |
 | SFT on the 4,000 RL questions | short | VQAv2 | 70.42 | 61.67 | 69.19 | 74.45 | 78.09 | 80.53 | 82.30 |
+| Instruct → short-prompt GRPO, full pool | short | VQAv2 | 77.26 | 67.68 | 69.64 | 71.22 | 72.49 | 73.44 | 74.00 |
 | Instruct 2B | short | GQA | 55.55 | 55.55 | 63.17 | 69.63 | 75.05 | 79.43 | 82.70 |
 | SFT 2B | short | GQA | 56.04 | 56.04 | 66.22 | 74.30 | 80.26 | 84.56 | 87.30 |
 | Instruct → short-prompt GRPO | short | GQA | 58.12 | 58.12 | 62.70 | 66.59 | 69.84 | 72.62 | 75.10 |
 | SFT → short-prompt GRPO | short | GQA | 60.73 | 60.73 | 65.35 | 69.09 | 72.22 | 74.80 | 77.00 |
 | SFT on the 4,000 RL questions | short | GQA | 53.50 | 53.50 | 63.93 | 72.27 | 78.83 | 83.93 | 87.90 |
+| Instruct → short-prompt GRPO, full pool | short | GQA | 62.62 | 62.62 | 65.11 | 67.02 | 68.69 | 70.30 | 71.90 |
 | Instruct 2B | short | TextVQA | 75.64 | 67.77 | 72.70 | 76.08 | 78.71 | 80.62 | 82.00 |
 | SFT 2B | short | TextVQA | 70.70 | 63.48 | 70.92 | 75.78 | 79.19 | 81.73 | 83.70 |
 | Instruct → short-prompt GRPO | short | TextVQA | 78.16 | 70.18 | 73.28 | 75.58 | 77.44 | 78.89 | 80.10 |
 | SFT → short-prompt GRPO | short | TextVQA | 76.19 | 68.28 | 72.51 | 75.42 | 77.76 | 79.78 | 81.60 |
 | SFT on the 4,000 RL questions | short | TextVQA | 72.81 | 65.06 | 71.57 | 75.91 | 79.12 | 81.59 | 83.50 |
+| Instruct → short-prompt GRPO, full pool | short | TextVQA | 79.12 | 71.12 | 73.25 | 74.70 | 75.83 | 76.71 | 77.40 |
 | Instruct 2B | reasoning | VQAv2 | 52.00 | 45.65 | 55.04 | 62.13 | 67.69 | 72.36 | 76.20 |
 | Instruct → GRPO | reasoning | VQAv2 | 75.31 | 65.54 | 68.08 | 70.01 | 71.56 | 72.92 | 74.30 |
 | Instruct 2B | reasoning | GQA | 34.02 | 34.02 | 44.91 | 54.87 | 63.85 | 71.67 | 78.40 |
@@ -283,6 +337,12 @@ Candidate minus reference, points, with 95% intervals that resample images:
 | SFT on the 4,000 RL questions − Instruct → short-prompt GRPO | short | VQAv2 | -5.07 [-5.93, -4.22] | -4.28 [-5.22, -3.35] | +2.68 [+1.69, +3.71] | +5.70 [+4.20, +7.30] |
 | SFT on the 4,000 RL questions − Instruct → short-prompt GRPO | short | GQA | -4.62 [-5.73, -3.51] | -4.62 [-5.73, -3.51] | +5.68 [+4.33, +7.06] | +12.80 [+10.70, +15.00] |
 | SFT on the 4,000 RL questions − Instruct → short-prompt GRPO | short | TextVQA | -5.35 [-6.18, -4.52] | -5.12 [-6.00, -4.26] | +0.33 [-0.47, +1.16] | +3.40 [+2.20, +4.70] |
+| Instruct → short-prompt GRPO, full pool − Instruct → short-prompt GRPO | short | VQAv2 | +1.77 [+0.82, +2.72] | +1.74 [+0.71, +2.76] | -0.55 [-1.63, +0.51] | -2.60 [-3.80, -1.40] |
+| Instruct → short-prompt GRPO, full pool − Instruct → short-prompt GRPO | short | GQA | +4.50 [+2.99, +6.04] | +4.50 [+2.99, +6.04] | +0.43 [-1.17, +2.05] | -3.20 [-5.10, -1.30] |
+| Instruct → short-prompt GRPO, full pool − Instruct → short-prompt GRPO | short | TextVQA | +0.96 [+0.11, +1.82] | +0.94 [+0.02, +1.85] | -0.88 [-1.85, +0.07] | -2.70 [-4.00, -1.40] |
+| Instruct → short-prompt GRPO, full pool − Instruct 2B | short | VQAv2 | +5.31 [+4.26, +6.38] | +4.74 [+3.62, +5.88] | -1.16 [-2.33, -0.03] | -5.80 [-7.40, -4.20] |
+| Instruct → short-prompt GRPO, full pool − Instruct 2B | short | GQA | +7.07 [+5.54, +8.66] | +7.07 [+5.54, +8.66] | -2.61 [-4.21, -0.99] | -10.80 [-12.90, -8.70] |
+| Instruct → short-prompt GRPO, full pool − Instruct 2B | short | TextVQA | +3.48 [+2.55, +4.46] | +3.35 [+2.29, +4.43] | -1.38 [-2.54, -0.25] | -4.60 [-6.10, -3.20] |
 | SFT → short-prompt GRPO − SFT 2B | short | VQAv2 | +4.72 [+4.05, +5.42] | +4.12 [+3.37, +4.91] | -2.32 [-3.21, -1.47] | -4.40 [-5.70, -3.10] |
 | SFT → short-prompt GRPO − SFT 2B | short | GQA | +4.69 [+3.67, +5.73] | +4.69 [+3.67, +5.73] | -5.21 [-6.40, -4.03] | -10.30 [-12.20, -8.40] |
 | SFT → short-prompt GRPO − SFT 2B | short | TextVQA | +5.49 [+4.82, +6.16] | +4.79 [+4.12, +5.46] | -0.36 [-0.95, +0.20] | -2.10 [-3.20, -1.10] |
@@ -728,7 +788,19 @@ Official relaxed accuracy, points; `python -m scripts.knobs summarize chartqa`.
 | loss-dr-grpo | token losses divided by a fixed constant (loss_type dr_grpo) | − at 300 updates: dividing by the 640-token cap instead of ~200 written tokens shrinks each step about 3× | -1.15 [-3.13, +0.84] | +0.21 [-0.31, +0.84] | 198 → 211 | 1.1 | 0 |
 | reward-lists | list-aware ChartQA reward: Unicode dashes as hyphens, bracketed lists as unordered sets | small +: about 2% of questions have list or dash answers the current reward marks wrong | -0.52 [-2.51, +1.46] | +0.42 [-0.31, +1.15] | 198 → 197 | 1.1 | 0 |
 | canvas-896 | 896-pixel training canvas instead of 608 (784 vision tokens instead of 361; 4 completions per micro-batch) | + if the 608 canvas costs accuracy in the resolution check | +1.04 [-0.94, +3.03] | +0.21 [-0.21, +0.63] | 198 → 197 | 1.6 | 0 |
+| image-budget | each image kept in shape within the 0.79 MP evaluation budget, no padding (up to 768 vision tokens; 4 completions per micro-batch) | +, about canvas-896's: same pixels on most charts, no padding tokens | +0.10 [-1.77, +1.98] | +0.73 [+0.21, +1.36] | 198 → 195 | 1.2 | 0 |
 <!-- /report:knobs-chartqa -->
+
+No knob moves reasoning-prompt accuracy beyond the repeat at this budget; the largest
+changes, −1.5 without reward scaling and +1.0 with the 896-pixel canvas, sit inside
+intervals about ±2 points wide. The last three knobs came from the overfitting check
+([validation](validation.md#part-2-checks-2026-10-08)). The list-aware reward, which
+concerns about 2% of questions, moves dev accuracy by −0.5. Training on the evaluation image
+geometry instead of the 608 canvas moves it by +0.1, although that canvas costs Instruct 4.3
+points when it is the image evaluated: every trained model is evaluated on the original
+images, so at 300 updates the training geometry does not limit what RL learns about reading
+charts. The same run's short answers rise 0.7 points [+0.2, +1.4], against the repeat's 0.3,
+a small difference outside the reasoning-prompt verdict.
 
 ## Image resolution
 

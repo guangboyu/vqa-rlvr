@@ -310,7 +310,10 @@ These checks ran on ChartQA before any training knob was promoted to a full run.
   canvas (−4.28 [−6.78, −1.77]); numeric answers lose 7.6 points (68.1 → 60.5) and text
   answers none (72.4 → 75.0). Photos lose at most 1 point on the same canvas
   ([image resolution](results.md#image-resolution)). `train_grpo.py --image-fit budget`
-  trains on the evaluation geometry instead (opt-in; recorded runs keep the canvas).
+  trains on the evaluation geometry instead (opt-in; recorded runs keep the canvas). As a
+  300-update ChartQA knob it reads 0 against the canvas-trained baseline, +0.1 points on dev
+  ([knobs](results.md#training-knobs-chartqa)): the trained models are evaluated on original
+  images either way.
 - **Sampler against trainer, evaluation geometry.** Images of varying shape could make vLLM
   and the trainer's processor expand image tokens differently. `scripts/check_logprob_gap.py
   --datasets chartqa --questions 32 --image-fit budget` (Instruct 2B, 256 responses) found

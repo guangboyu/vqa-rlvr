@@ -307,6 +307,45 @@
     "seed": 0
    },
    "verdict": "0"
+  },
+  {
+   "name": "image-budget",
+   "change": "each image kept in shape within the 0.79 MP evaluation budget, no padding (up to 768 vision tokens; 4 completions per micro-batch)",
+   "expect": "+, about canvas-896's: same pixels on most charts, no padding tokens",
+   "flags": [
+    "--image-fit",
+    "budget",
+    "--batch-size",
+    "4",
+    "--grad-accum",
+    "8"
+   ],
+   "train_hours": 1.1889990833333335,
+   "reasoning": {
+    "accuracy": 75.5741127348643,
+    "baseline": 75.46972860125261,
+    "tokens": 195.02296450939457,
+    "baseline_tokens": 198.0991649269311,
+    "n": 958,
+    "delta": 0.10438413361169101,
+    "low": -1.7745302713987474,
+    "high": 1.9832985386221296,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "short": {
+    "accuracy": 67.3277661795407,
+    "baseline": 66.59707724425887,
+    "tokens": 4.085594989561587,
+    "baseline_tokens": 4.090814196242171,
+    "n": 958,
+    "delta": 0.7306889352818371,
+    "low": 0.20876826722338201,
+    "high": 1.3569937369519833,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "verdict": "0"
   }
  ]
 }

@@ -70,7 +70,10 @@ SFT by 0.9 points (interval [+0.2, +1.6]), while SFT itself moves TextVQA by −
 both add about 1 point there. Most of SFT's in-domain lead is the amount of data: trained on
 exactly the 4,000 questions short-prompt GRPO drew, SFT leads it by 0.2 points on VQAv2
 (interval [−0.3, +0.7]) and 0.5 on GQA, and GRPO stays 0.9 ahead on TextVQA
-([results](docs/supplementary/results.md#sft-on-exactly-the-rl-questions)).
+([results](docs/supplementary/results.md#sft-on-exactly-the-rl-questions)). Run on the whole
+55,438-question pool (13,859 updates), short-prompt GRPO reaches SFT's level, +2.0 and +2.9
+over Instruct (within 0.1 points of SFT), with no further TextVQA gain and a wider pass@32
+deficit ([results](docs/supplementary/results.md#short-prompt-rl-on-the-full-pool)).
 
 **3. RL after SFT keeps the SFT ceiling.** GRPO from the SFT model keeps short-prompt
 accuracy within 0.5 points of SFT on VQAv2 and GQA at both sizes, and adds up to 0.8 on
