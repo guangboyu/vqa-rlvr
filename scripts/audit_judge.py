@@ -2,6 +2,7 @@
 
     python -m scripts.audit_judge --dry-run    # draw the sample, estimate the cost
     python -m scripts.audit_judge              # writes results/judge-audit.json
+    python -m scripts.audit_judge --pilot chartqa   # a pilot's misses -> judge-audit-chartqa.json
 
 The judge (vqar/judge.py) runs on a small model and never sees the image. This audit draws a
 seeded, stratified sample of its verdicts on the headline records' exact-match misses: misses
@@ -23,15 +24,14 @@ import time
 from datasets import Image as ImageFeature
 from PIL import Image
 
-from scripts.judge_records import MATRIX, item, misses, read_cell, stratum
-from vqar.eval.matrix import declared_records, load_matrix
+from scripts.judge_records import audit_path, item, judged_cells, misses, read_cell, stratum
+from vqar.eval.matrix import declared_records
 from vqar.eval.report import ROOT
 from vqar.eval.runner import DATA_DIR, RECORDS_DIR
 from vqar.judge import AUDIT_MODEL, Judge
 from vqar.splits import load_role
 
-OUTPUT = ROOT / "results" / "judge-audit.json"
-DATASETS = ("vqav2", "gqa", "textvqa")
+DATASETS = ("vqav2", "gqa", "textvqa")  # the headline datasets audited; a pilot audits its own
 PER_STRATUM = 50
 MAX_SIDE = 1024
 PROMPT = """You are checking an automatic grader of visual question answering.
@@ -45,13 +45,14 @@ differences. Do not accept an answer that is wrong for the image, only partly ri
 unfinished reasoning instead of a final answer. Reply with exactly one word: yes or no."""
 
 
-def candidates(judge: Judge) -> dict[str, dict[tuple, dict]]:
-    """Distinct judged misses of the headline cells, grouped by stratum."""
-    arms, protocols = load_matrix(ROOT / "experiments.toml", MATRIX)
+def candidates(judge: Judge, pilot: str | None,
+               datasets: tuple[str, ...]) -> dict[str, dict[tuple, dict]]:
+    """Distinct judged misses of the headline (or a pilot's) cells, grouped by stratum."""
+    arms, protocols, _ = judged_cells(pilot)
     records = declared_records(arms, protocols, RECORDS_DIR, DATA_DIR, ROOT)
     strata = {}
     for (_, protocol), record in records.items():
-        if protocol.dataset not in DATASETS:
+        if protocol.dataset not in datasets:
             continue
         for row in misses(read_cell(record)):
             verdict = judge.cached_verdict(*item(row))
@@ -78,7 +79,7 @@ def image_payloads(sample: list[dict]) -> dict[tuple[str, str], tuple[str, str]]
     """(dataset, qid) -> (media type, base64 data), images shrunk to at most MAX_SIDE pixels."""
     wanted = {(row["dataset"], row["qid"]) for row in sample}
     payloads = {}
-    for dataset in DATASETS:
+    for dataset in sorted({row["dataset"] for row in sample}):
         rows = load_role(DATA_DIR, [dataset], "test", seed=None)
         rows = rows.cast_column("image", ImageFeature(decode=False))
         for qid, image in zip(rows["qid"], rows["image"], strict=True):
@@ -151,9 +152,15 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--pilot", default=None,
+                        help="audit a single-dataset pilot's judged misses ([pilots.NAME])")
     args = parser.parse_args()
+    datasets = DATASETS
+    if args.pilot:
+        datasets = (judged_cells(args.pilot)[1][0].dataset,)
+    output = audit_path(args.pilot)
     judge = Judge(cache_path=ROOT / ".judge_cache" / "judge.db")
-    sample = draw(candidates(judge))
+    sample = draw(candidates(judge, args.pilot, datasets))
     images = image_payloads(sample)
     requests = [request(i, row, images[row["dataset"], row["qid"]])
                 for i, row in enumerate(sample)]
@@ -175,8 +182,8 @@ def main() -> None:
               "rates": summarize(sample),
               "items": [{key: value for key, value in row.items() if key != "answers"}
                         for row in sample]}
-    OUTPUT.write_text(json.dumps(report, indent=1) + "\n")
-    print(f"wrote {OUTPUT}: {len(answers)} of {len(sample)} audited, ${report['cost_usd']:.2f}")
+    output.write_text(json.dumps(report, indent=1) + "\n")
+    print(f"wrote {output}: {len(answers)} of {len(sample)} audited, ${report['cost_usd']:.2f}")
 
 
 if __name__ == "__main__":

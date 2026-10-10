@@ -12,7 +12,7 @@ from itertools import islice
 from pathlib import Path
 
 from vqar import config
-from vqar.data import to_uniform_canvas
+from vqar.data import cap_pixels, to_uniform_canvas
 from vqar.pools import RefillStream, load_pool
 from vqar.registry import PROMPTS, check_trainable
 from vqar.training import ROOT
@@ -20,7 +20,16 @@ from vqar.training import ROOT
 ROLLOUT_TEMPERATURE = 1.0
 
 
-def to_grpo_columns(batch: dict, template: str, canvas_size: int = config.RL_IMAGE_SIZE) -> dict:
+def fit_rl_image(image, image_fit: str = "canvas", canvas_size: int = config.RL_IMAGE_SIZE):
+    """A rollout image: centered on the square canvas, or shrunk into the evaluation pixel
+    budget with its shape kept. Either way vLLM and the trainer get the same PIL image."""
+    if image_fit == "budget":
+        return cap_pixels(image.convert("RGB"))
+    return to_uniform_canvas(image, canvas_size)
+
+
+def to_grpo_columns(batch: dict, template: str, canvas_size: int = config.RL_IMAGE_SIZE,
+                    image_fit: str = "canvas") -> dict:
     """GRPO rows: conversational `prompt` + `image`; question/answers/dataset and the
     rollout template ride along as extra columns that TRL forwards to every reward."""
     return {
@@ -28,7 +37,7 @@ def to_grpo_columns(batch: dict, template: str, canvas_size: int = config.RL_IMA
             [{"role": "user", "content": PROMPTS[template].text.format(question=q)}]
             for q in batch["question"]
         ],
-        "image": [to_uniform_canvas(img, canvas_size) for img in batch["image"]],
+        "image": [fit_rl_image(img, image_fit, canvas_size) for img in batch["image"]],
         "question": batch["question"],
         "answers": batch["answers"],
         "dataset": batch["dataset"],
@@ -45,7 +54,8 @@ def load_rl_dataset(preset, data_dir: Path | None = None):
     columns = rows.select_columns(["image", "question", "answers", "dataset", "qid"])
     return columns.with_transform(partial(
         to_grpo_columns, template=preset.rollout_prompt,
-        canvas_size=getattr(preset, "canvas_size", config.RL_IMAGE_SIZE)))
+        canvas_size=getattr(preset, "canvas_size", config.RL_IMAGE_SIZE),
+        image_fit=getattr(preset, "image_fit", "canvas")))
 
 
 def build_rewards(names: tuple[str, ...]):

@@ -189,8 +189,8 @@ def batches(items: list, size: int) -> list[list]:
 # ---- GPU stages (heavy imports inside) ----
 
 def load_rows(preset, questions: int, data_dir: Path | None):
-    """The first `questions` rows of the preset's RL pool as GRPO rows (canvas image,
-    rollout-template prompt), in the training seed's order."""
+    """The first `questions` rows of the preset's RL pool as GRPO rows (image fitted as the
+    preset trains, rollout-template prompt), in the training seed's order."""
     from vqar.rl import load_rl_dataset
 
     dataset = load_rl_dataset(preset, data_dir)
@@ -449,6 +449,8 @@ def main():
                         help="questions per generation batch (default: as in training, "
                         "batch size x accumulation / group size)")
     parser.add_argument("--max-completion-length", type=int, default=None)
+    parser.add_argument("--image-fit", choices=("canvas", "budget"), default=None,
+                        help="RL image geometry, as train_grpo.py --image-fit")
     parser.add_argument("--gpu-memory-utilization", type=float, default=0.35)
     parser.add_argument("--seed", type=int, default=0, help="vLLM engine seed (TRL: rank 0)")
     parser.add_argument("--top", type=int, default=10, help="token rows to report")
@@ -466,7 +468,8 @@ def main():
 
     preset = GRPO_PRESETS[args.preset]
     overrides = {"datasets": tuple(args.datasets) if args.datasets else None, "pool": args.pool,
-                 "max_completion_length": args.max_completion_length}
+                 "max_completion_length": args.max_completion_length,
+                 "image_fit": args.image_fit}
     preset = replace(preset, **{k: v for k, v in overrides.items() if v is not None})
     args.samples = args.samples or preset.num_generations
     args.questions_per_batch = args.questions_per_batch or max(

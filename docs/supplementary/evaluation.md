@@ -118,7 +118,13 @@ understates reasoning. MedThinkVQA (radiology cases with five candidate diagnose
 images per case are shown, and multi-image datasets add first-image-only and no-image cells) is
 rejected as well: Instruct 2B answers from the clinical history and options alone. A black, a
 swapped, a single or no image each leave its 37.2% short-prompt accuracy within 2 points, and
-90% of its reasoning responses run past the 512-token budget.
+90% of its reasoning responses run past the 512-token budget. Instruct 8B (2026-10-08,
+[table](../../results/screening/medthink-base8.md)) confirms the rejection: it scores 49.6%
+with the images and 45.8% with none; a swapped image costs 6.2 points [+2.8, +9.6] and a
+black one 2.6 [−1.0, +6.2], both short of the 10-point gate, and only 27% of its sampled
+reasoning responses end in a readable answer. Of its 30 points over chance (20% with five
+options), 26 remain without any image, so RL on these questions would mostly train text
+reasoning, not visual question answering.
 
 ## Held-out hygiene
 

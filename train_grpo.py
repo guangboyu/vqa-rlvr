@@ -81,6 +81,9 @@ def main() -> None:
     parser.add_argument("--canvas-size", type=int, default=None,
                         help="side of the square canvas RL images are fitted onto (default 608; "
                         "larger keeps chart text legible and costs vision tokens)")
+    parser.add_argument("--image-fit", choices=("canvas", "budget"), default=None,
+                        help="pad RL images onto the square canvas (default), or keep each "
+                        "image's shape within the evaluation pixel budget (up to 768 tokens)")
     parser.add_argument("--epsilon-high", type=float, default=None,
                         help="upper clip of the policy ratio (DAPO clip-higher uses 0.28)")
     parser.add_argument("--rollout-prompt", choices=sorted(PROMPTS), default=None,

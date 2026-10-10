@@ -7,7 +7,8 @@ templates, a short answer and step-by-step reasoning, and scored twice, with the
 authors' evaluator and with a normalized matcher. Reading the two prompts side by side
 separates what each training method changes: **with a correctness reward, GRPO turns the
 reasoning prompt into a direct answer and brings it up to the short-answer ceiling, and
-short-answer SFT is what raises that ceiling on the training distribution.**
+short-answer SFT is what raises that ceiling on the training distribution.** On ChartQA,
+where reasoning pays, the same recipe keeps the reasoning and improves it.
 
 The 2B pipeline runs on one 24 GB GPU; separate 80/96 GB profiles run the 8B recipes. The
 recorded demo runs without a GPU.
@@ -106,13 +107,22 @@ GRPO turns a pass@1 gain of 10 to 25 points into −1 to −6 at k = 32. One epo
 reverse: pass@1 about level, pass@32 up 1.7–4.6 points
 ([results](docs/supplementary/results.md#held-out-passk-before-and-after-rl)).
 
-**Next: where reasoning pays (pilot).** ChartQA's human-written questions are the first dataset
-where reasoning helped in screening (numeric answers, +5.6 points). There, 300 GRPO updates at 2B
-keep the reasoning (about 200 tokens) and raise reasoning-prompt accuracy from 69.7 to 76.4, seven
-points above the best short-answer arm. Unlike finding 6, the reasoning-trained model stays ahead
-of Instruct at every k up to 32 (pass@32 +1.5 [+0.6, +2.6]), while short-prompt GRPO on the same
-data again trails at pass@32 (−3.5). One seed, one dataset, a pilot budget
-([results](docs/supplementary/results.md#chartqa-pilot-rl-where-reasoning-pays)).
+**7. Where reasoning pays, RL keeps it, and more data keeps paying.** ChartQA's human-written
+questions are the first dataset where reasoning helped in screening (numeric answers, +5.6
+points). There, GRPO at 2B keeps the reasoning (160–200 tokens) and raises reasoning-prompt
+accuracy from 69.7 to 76.4 in 300 updates and to 80.1 after one epoch of the pool (+10.4,
+interval [+8.2, +12.6]), ten points above the best short-answer arm, while short-prompt GRPO
+gains 1.7. Under the audited judge half of the reasoning gain remains (+5.5, interval [+3.5,
++7.4]), against a fifth on VQAv2. Unlike finding 6, reasoning-trained GRPO keeps Instruct's
+coverage at k = 32 (+0.5, interval [−0.7, +1.7]); short-prompt GRPO on the same data falls
+9.0 points behind. One seed, one dataset
+([results](docs/supplementary/results.md#chartqa-rl-where-reasoning-pays)).
+
+**8. The habit RL teaches carries across datasets.** GRPO trained on ChartQA keeps a shorter
+chain of reasoning on photos and gains 15–16 points on VQAv2 and GQA under the reasoning
+prompt; GRPO trained on VQAv2 and GQA answers in under ten tokens everywhere and loses 6.7
+points on ChartQA. Short answers move by at most 0.6 points across the two families
+([results](docs/supplementary/results.md#transfer-between-training-data)).
 
 Differences below about 0.5 points under the reasoning prompt are within the run-to-run
 noise of greedy vLLM decoding (three repeats of Instruct 2B span 0.4 points) and are not

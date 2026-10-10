@@ -129,6 +129,9 @@ class GRPOPreset:
     epsilon_high: float = 0.2
     # Side of the square canvas RL images are fitted onto (vqar.data.to_uniform_canvas).
     canvas_size: int = RL_IMAGE_SIZE
+    # "canvas" pads RL images onto that square; "budget" keeps each image's shape within
+    # MAX_PIXELS, as SFT data and evaluation show it (vqar.rl.fit_rl_image).
+    image_fit: str = "canvas"
     lora_r: int = 16
     lora_alpha: int = 32
     lora_targets: tuple[str, ...] = (
@@ -299,7 +302,7 @@ OPD_PRESETS: dict[str, OPDPreset] = {
 # not written, so earlier run configs and the auto-resume check against them stay the same.
 OPT_IN_FIELDS = {"refill_rounds": 0, "rollout_lora": False, "vllm_sleep": True,
                  "loss_type": "dapo", "scale_rewards": "group", "num_iterations": 1,
-                 "epsilon_high": 0.2, "canvas_size": RL_IMAGE_SIZE}
+                 "epsilon_high": 0.2, "canvas_size": RL_IMAGE_SIZE, "image_fit": "canvas"}
 RECIPE_KNOBS = ("loss_type", "scale_rewards", "num_iterations", "epsilon_high")
 
 

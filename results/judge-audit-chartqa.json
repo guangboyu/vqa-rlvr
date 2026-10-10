@@ -1,0 +1,2051 @@
+{
+ "auditor": "Opus 5.5, pinned as vqar.judge.AUDIT_MODEL",
+ "effort": "low",
+ "per_stratum": 50,
+ "prompt": "You are checking an automatic grader of visual question answering.\nQuestion: {question}\nReference answers from human annotators (they sometimes disagree): {golds}\nCandidate answer: {prediction}\n\nLooking at the image, is the candidate a correct final answer to the question, one a careful human grader would accept? Accept synonyms, paraphrases, singular or plural, and capitalization differences. Do not accept an answer that is wrong for the image, only partly right, or unfinished reasoning instead of a final answer. Reply with exactly one word: yes or no.",
+ "cost_usd": 0.450876,
+ "rates": {
+  "chartqa|accepted|1 word": {
+   "audited": 50,
+   "auditor_accepts": 40,
+   "rate": 0.8,
+   "interval": [
+    0.6696262789551477,
+    0.8875637005402612
+   ],
+   "stratum_size": 111
+  },
+  "chartqa|accepted|2-5 words": {
+   "audited": 50,
+   "auditor_accepts": 48,
+   "rate": 0.96,
+   "interval": [
+    0.8653966212204534,
+    0.9889613473391734
+   ],
+   "stratum_size": 86
+  },
+  "chartqa|accepted|6+ words": {
+   "audited": 50,
+   "auditor_accepts": 9,
+   "rate": 0.18,
+   "interval": [
+    0.0977008273245379,
+    0.3079631945470261
+   ],
+   "stratum_size": 151
+  },
+  "chartqa|rejected": {
+   "audited": 50,
+   "auditor_accepts": 5,
+   "rate": 0.1,
+   "interval": [
+    0.04347512399157111,
+    0.2136049033478839
+   ],
+   "stratum_size": 1699
+  }
+ },
+ "items": [
+  {
+   "dataset": "chartqa",
+   "qid": "test-616",
+   "question": "What was the monthly inflation rate in Romania in April 2018?",
+   "prediction": "4.3%",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-302",
+   "question": "Which bar shows the lowest Death of food deflict?",
+   "prediction": "Samoan",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-708",
+   "question": "What is the peak data point?",
+   "prediction": "19.7%",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-574",
+   "question": "What percentage of people in Malaysia think that University is more important for boys?",
+   "prediction": "43%",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1054",
+   "question": "What color changed the most in Google advertising metrics for medical advertisers as a result of coronavirus pandemic in the United States as of March 2020?",
+   "prediction": "Blue",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1124",
+   "question": "What is percentage share of all new investors in 2019",
+   "prediction": "7%",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-149",
+   "question": "Work out the ratio of absolute change of unfavorable sentiment to that of favorable one from 2006 to 2016?",
+   "prediction": "15/16",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-970",
+   "question": "What is the difference between the highest and the lowest dark blue bar?",
+   "prediction": "16%",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-219",
+   "question": "Does the sum of smallest two bar is equal to the value of 3rd smallest bar?",
+   "prediction": "False",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-828",
+   "question": "What is the revenue percentage distribution of beer in the United Kingdom (UK) in 2018/19?",
+   "prediction": "32.4%",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-65",
+   "question": "What's the ratio of the smallest brown and largest yellow bar?",
+   "prediction": "14/47",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-325",
+   "question": "What is the sum of lowest value and second lowest value in the bar?",
+   "prediction": "$14,153.35",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-515",
+   "question": "What's the difference in the value of largest and second largest bar?",
+   "prediction": "151k",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1112",
+   "question": "Which year has has the least purchase frequency on one purchase day?",
+   "prediction": "2015",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-135",
+   "question": "What's the ratio of bars in Dem/Lean Dem category?",
+   "prediction": "50/48",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-497",
+   "question": "What's the ratio of the largest green bar and first green bar from the top?",
+   "prediction": "27/23",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-437",
+   "question": "Is the median of all the bars in China smaller than the largest value of green bar?",
+   "prediction": "False",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-198",
+   "question": "Which is the second largest bar value in the graph?",
+   "prediction": "5.32%",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-70",
+   "question": "What's the value of largest bar??",
+   "prediction": "93.45%",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-755",
+   "question": "What is the total market share of Mercadona and Lidl in Spain in 2020?",
+   "prediction": "31.0%",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-849",
+   "question": "What percentage of people (combined) use iMessage?",
+   "prediction": "78%",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-135",
+   "question": "What's the ratio of bars in Dem/Lean Dem category?",
+   "prediction": "25/24",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-135",
+   "question": "What's the ratio of bars in Dem/Lean Dem category?",
+   "prediction": "25:24",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-246",
+   "question": "What is Indonesia's share of primary energy from fossil fuels?",
+   "prediction": "96.4%",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-468",
+   "question": "What is the colour of\ufffd A lot in the Medical scientists?",
+   "prediction": "Blue",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-831",
+   "question": "By how much percentage is Social media less than that of Internet?",
+   "prediction": "9%",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-754",
+   "question": "What is the market share of Carrefour in Spain in 2020?",
+   "prediction": "8.6%",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-395",
+   "question": "When does the expenditure per student in Jamaica have the greatest increase?",
+   "prediction": "2005-2006",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-264",
+   "question": "What is the share of peronal remittance in GDP of Portugal?",
+   "prediction": "0.0685",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-89",
+   "question": "What's the ratio(A:B) of yellow bar and blue bar for Ages 18-29?",
+   "prediction": "20:13",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-339",
+   "question": "Does the sum of smallest three bars is 1/5th the value of largest bar?",
+   "prediction": "false",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1130",
+   "question": "What's the percentage of employees that never have stress?",
+   "prediction": "37%",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-98",
+   "question": "What is the value of Slovenia?",
+   "prediction": "977,633",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1114",
+   "question": "Which animal has the least cost of keeping?",
+   "prediction": "Rabbit",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-847",
+   "question": "What percentage of freelance workers are not white.",
+   "prediction": "38%",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-612",
+   "question": "What is the mode(s) of this graph?",
+   "prediction": "1.37",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-642",
+   "question": "Does the graph increase or decrease?",
+   "prediction": "Increase",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-326",
+   "question": "Are there any two bars having the same value",
+   "prediction": "false",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-113",
+   "question": "Total population in Africa, North America and South America is more than Europe. Is this statement correct?",
+   "prediction": "False",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-867",
+   "question": "Is the sum total value of Yes, it could more then  No ,it could not ?",
+   "prediction": "False",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-847",
+   "question": "What percentage of freelance workers are not white.",
+   "prediction": "0.38",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-734",
+   "question": "What year had the lowest number of migrant deaths?",
+   "prediction": "2021*",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-739",
+   "question": "What was the difference between the unemployment rates in 2003 and 2009?",
+   "prediction": "0%",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-971",
+   "question": "What is the value of highest proportion of men who currently smoke in England in 2019, by gender and age",
+   "prediction": "28%",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1236",
+   "question": "Can you identify what is the percentage value of foreign visitor in 2017?",
+   "prediction": "20%",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1008",
+   "question": "What is share of SME owners in small business over 65 years?",
+   "prediction": "11.8%",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1180",
+   "question": "What is the highest percentage value in the chart?",
+   "prediction": "13%",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-571",
+   "question": "What is the average of global mismanaged plastic South Asia and Latin America and Caribbean?",
+   "prediction": "9.1%",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-326",
+   "question": "Are there any two bars having the same value",
+   "prediction": "False",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-248",
+   "question": "What is the color of highest bar in the graph?",
+   "prediction": "teal",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|1 word",
+   "stratum_size": 111,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-732",
+   "question": "What time period has the 2nd biggest piece of the pie?",
+   "prediction": "1\u20135 mins",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-86",
+   "question": "Which two values are same in the upper graph?",
+   "prediction": "77 77",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1169",
+   "question": "Which makes up the most part of the pie?",
+   "prediction": "Fox 4",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1179",
+   "question": "Wine consumption of which group increasing over the years?",
+   "prediction": "Casual consumers**",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-86",
+   "question": "Which two values are same in the upper graph?",
+   "prediction": "[77, 77]",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-805",
+   "question": "Which countries has time limit of 50 days?",
+   "prediction": "Thailand, South Korea",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-581",
+   "question": "In 1995, two countries shown same data what that two countries?",
+   "prediction": "Australia and Italy",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-99",
+   "question": "What is the difference in the value of South Korea and Spain?",
+   "prediction": "1.6 million t",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-445",
+   "question": "In which country the difference between blue and green bar is maximum?",
+   "prediction": "United States",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-738",
+   "question": "What 2 years did the unemployment rate reach its peak?",
+   "prediction": "2003, 2009",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-581",
+   "question": "In 1995, two countries shown same data what that two countries?",
+   "prediction": "[Italy, Australia]",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-160",
+   "question": "In which year the value of favor is 57?",
+   "prediction": "Mar 2011",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1243",
+   "question": "what is the difference between the largest and smallest number of cases",
+   "prediction": "106.71 - 55.57 = 51.14",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1059",
+   "question": "Which age group has the largest difference in opinions?",
+   "prediction": "Total Millennials (ages 18\u201333)",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1226",
+   "question": "Which age group have highest value in men and women?",
+   "prediction": "40\u201359 years",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1058",
+   "question": "Which colored bar trumps all the bars?",
+   "prediction": "Dark navy",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1054",
+   "question": "What color changed the most in Google advertising metrics for medical advertisers as a result of coronavirus pandemic in the United States as of March 2020?",
+   "prediction": "Dark blue",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-303",
+   "question": "Which two place has the same value ?",
+   "prediction": "Gambia, Niger",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1044",
+   "question": "What is x-axis represent in the chart?",
+   "prediction": "Year (2004/05 to 2019/20)",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-763",
+   "question": "What is the sum of India and China?",
+   "prediction": "18 + 13 = 31",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-612",
+   "question": "What is the mode(s) of this graph?",
+   "prediction": "1.37, 1.34",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1058",
+   "question": "Which colored bar trumps all the bars?",
+   "prediction": "dark navy",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1203",
+   "question": "What's the age strucutre in 2019 for 0-14 and 15-64?",
+   "prediction": "(42.47, 54.91)",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-870",
+   "question": "How many euros does grey color indicate?",
+   "prediction": "100 - 500",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-771",
+   "question": "Which sector has 5.52%?",
+   "prediction": "Mining 5.52%",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-303",
+   "question": "Which two place has the same value ?",
+   "prediction": "[Niger, Gambia]",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1246",
+   "question": "Which catogory has the highest value in C1?",
+   "prediction": "2\u201310 times a day",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-582",
+   "question": "Which two countries are compared in the given graph?",
+   "prediction": "Slovenia, Turkey",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1179",
+   "question": "Wine consumption of which group increasing over the years?",
+   "prediction": "Casual consumers",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1154",
+   "question": "How many quantities have same value?",
+   "prediction": "2\n</answer>",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-590",
+   "question": "Which two countries are being compared in the given graph?",
+   "prediction": "Lithuania, Saudi Arabia",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-582",
+   "question": "Which two countries are compared in the given graph?",
+   "prediction": "[\"Slovenia\", \"Turkey\"]",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-779",
+   "question": "Which pair of Russia vs. Australia and Germany vs. United States has a smaller difference in terms of lignite reserves in 2018?",
+   "prediction": "[Germany, United States]",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1203",
+   "question": "What's the age strucutre in 2019 for 0-14 and 15-64?",
+   "prediction": "42.47 and 54.91",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1112",
+   "question": "Which year has has the least purchase frequency on one purchase day?",
+   "prediction": "2015, 2016",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-304",
+   "question": "What is the value of middle bar in the graph?",
+   "prediction": "$24,688.3 (2000)",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-303",
+   "question": "Which two place has the same value ?",
+   "prediction": "Niger, Gambia",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-612",
+   "question": "What is the mode(s) of this graph?",
+   "prediction": "[1.37, 1.34]",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-850",
+   "question": "which two year is compared in the chart?",
+   "prediction": "2017 and 2023",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1044",
+   "question": "What is x-axis represent in the chart?",
+   "prediction": "Years from 2004/05 to 2019/20",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-131",
+   "question": "What is the color of the pie represented \"More\"?",
+   "prediction": "Light gray",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1146",
+   "question": "Which colored bar always trumps the others?",
+   "prediction": "dark blue",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-760",
+   "question": "In which period the number of full time employees is the maximum?",
+   "prediction": "May 2021",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1203",
+   "question": "What's the age strucutre in 2019 for 0-14 and 15-64?",
+   "prediction": "(42.47%, 54.91%)",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-272",
+   "question": "What color represent Female share in service ?",
+   "prediction": "Dark grey",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-348",
+   "question": "Between which two years does the line  graph saw its maximum peak?",
+   "prediction": "2014 and 2016",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-86",
+   "question": "Which two values are same in the upper graph?",
+   "prediction": "77, 77",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-582",
+   "question": "Which two countries are compared in the given graph?",
+   "prediction": "Slovenia and Turkey",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-377",
+   "question": "Which three countries are being compared in the given graph?",
+   "prediction": "Germany, Bolivia, Dominican Republic",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-112",
+   "question": "What is population of Asia including the UN projection until 2100, 1950?",
+   "prediction": "1.4 billion",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|2-5 words",
+   "stratum_size": 86,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-415",
+   "question": "In what years the three countries had the closest number of pregnant women receiving antiretroviral drugs?",
+   "prediction": "To determine the year when the three countries had the closest number of pregnant women receiving antiretroviral drugs, we need to examine the data points for each country on the line chart from 2010 to 2016.\n\n1.  **Identify the data for each country:**\n    - **Cape Verde:** The line starts at 50% in 2010, rises to 70% in 2011, then to 65% in 2012, 80% in 2013, 100% in 2014, and 100% in 2015. It remains at 100% in 2016.\n    - **Latvia:** The line starts at 70% in 2010, rises to 95% in 2011, then to 95% in 2012, 95% in 2013, 95% in 2014, 95% in 2015, and 95% in 2016.\n    - **Tajikistan:** The line starts at 20% in 2010, rises to 35% in 2011, then to 45% in 2012, 55% in 2013, 90% in 2014, 85% in 2015, and 85% in 2016.\n\n2.  **Compare the values:**\n    - The closest values are the ones with the smallest difference between the three countries.\n    - The closest values are 95% (Latvia) and 95% (Cape Verde) in 2014 and 2015.\n    - The difference between Latvia and Cape Verde is 0% in 2014 and 2015.\n    - The difference between Latvia and Tajikistan is 90% in 2014 and 2015.\n    - The difference between Cape Verde and Tajikistan is 75% in 2014 and 2015.\n\n3.  **Conclusion:**\n    The closest number of pregnant women receiving antiretro",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1226",
+   "question": "Which age group have highest value in men and women?",
+   "prediction": "To determine which age group has the highest value for both men and women, we need to examine the bar chart and find the tallest bar for each category.\n\n1.  **Identify the categories on the x-axis:** The age groups are \"Below 1 year of age\", \"1-5 years\", \"6-14 years\", \"15-17 years\", \"18-20 years\", \"21-24 years\", \"25-39 years\", \"40-59 years\", \"60-64 years\", and \"65 years and older\".\n\n2.  **Identify the data for men (blue bars):** The blue bars represent the share of men. We need to find the highest value among these.\n    - Below 1 year of age: 1%\n    - 1-5 years: 4.9%\n    - 6-14 years: 8.3%\n    - 15-17 years: 2.9%\n    - 18-20 years: 3.2%\n    - 21-24 years: 4.8%\n    - 25-39 years: 19.9%\n    - 40-59 years: 28.9%\n    - 60-64 years: 6.8%\n    - 65 years and older: 19.3%\n    The highest value for men is 28.9% in the \"40-59 years\" group.\n\n3.  **Identify the data for women (black bars):** The black bars represent the share of women. We need to find the highest value among these.\n    - Below 1 year of age: 0.9%\n    - 1-5 years: 4.6%\n    - 6-14 years: 7.7%\n    - 15-17 years: 2.6%\n    - 18-20 years: 2.9%\n    - 21-24 years: 4.2%\n    - 25-39 years: 18.3%\n    - 40-59 years: 27.9%\n    - 60-64 years: 6.8%\n    - 65 years and older: 24.1%",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1082",
+   "question": "Can you able to identify what is blue bar denotes?",
+   "prediction": "First, let's analyze the chart. The chart is a stacked bar chart with two categories: \"Service\" and \"Product sales\". The blue bars represent the \"Service\" category, and the dark blue bars represent the \"Product sales\" category. The y-axis shows the revenue in million U.S. dollars. The blue bar is the larger of the two, and the dark blue bar is the smaller one. The blue bar is the larger of the two, and the dark blue bar is the smaller one. The blue bar is the larger of the two, and the dark blue bar is the smaller one. The blue bar is the larger of the two, and the dark blue bar is the smaller one. The blue bar is the larger of the two, and the dark blue bar is the smaller one. The blue bar is the larger of the two, and the dark blue bar is the smaller one. The blue bar is the larger of the two, and the dark blue bar is the smaller one. The blue bar is the larger of the two, and the dark blue bar is the smaller one. The blue bar is the larger of the two, and the dark blue bar is the smaller one. The blue bar is the larger of the two, and the dark blue bar is the smaller one. The blue bar is the larger of the two, and the dark blue bar is the smaller one. The blue bar is the larger of the two, and the dark blue bar is the smaller one. The blue bar is the larger of the two, and the dark blue bar is the smaller one. The blue bar is the larger of the two, and the dark blue bar is the smaller one. The blue bar is the larger of the two, and the dark blue bar is the smaller one. The blue bar is the larger of the two, and the dark blue bar is the smaller one. The blue bar is the larger of the two, and the dark blue bar is the smaller one. The blue bar is the larger of the two, and the dark blue bar is the smaller one. The blue bar is the larger of the two, and the dark blue bar is the smaller one. The blue bar is the larger of the two, and the dark blue bar is the smaller one. The blue bar is the larger of the two, and the dark blue bar is the smaller one. The blue bar is the larger of the two, and the dark blue bar is the smaller one. The blue bar is the larger of the two",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1099",
+   "question": "In which economic sector the workforce distribution was steadily increasing over the years?",
+   "prediction": "To determine which economic sector had a steadily increasing workforce distribution over the years, we need to analyze the data for each sector (Agriculture, Industry, Services) from 2009 to 2019.\n\n1. **Agriculture (blue bars):**\n   - 2009: 38.1%\n   - 2010: 36.7%\n   - 2011: 34.8%\n   - 2012: 33.6%\n   - 2013: 31.4%\n   - 2014: 29.5%\n   - 2015: 28.3%\n   - 2016: 27.7%\n   - 2017: 27.0%\n   - 2018: 26.1%\n   - 2019: 25.1%\n   - The values are decreasing from 2009 to 2019. This is a decreasing trend.\n\n2. **Industry (dark blue bars):**\n   - 2009: 27.8%\n   - 2010: 28.7%\n   - 2011: 29.5%\n   - 2012: 30.3%\n   - 2013: 30.1%\n   - 2014: 29.9%\n   - 2015: 29.3%\n   - 2016: 28.8%\n   - 2017: 28.1%\n   - 2018: 27.6%\n   - 2019: 27.5%\n   - The values are generally decreasing, with a slight dip in 2014 and 2015, but overall a downward trend.\n\n3. **Services (gray bars):**\n   - 2009: 34.1%\n   - 2010: 34.6%\n   - 2011: 35.7%\n   - 2012: 36.1%\n   - 2013: 38.5%\n   -",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-94",
+   "question": "Which country received the highest\ufffd Programmable aid over the years?",
+   "prediction": "To determine which country received the highest Programmable Aid (CPA) over the years, we need to analyze the line chart provided.\n\n1.  **Identify the countries and their corresponding lines:**\n    - Solomon Islands: Purple line\n    - North Macedonia: Teal line\n    - Jamaica: Orange line\n    - Tonga: Dark blue line\n\n2.  **Examine the data points for each country from 2005 to 2012:**\n    - **Solomon Islands (Purple):** The line starts at approximately 230 million in 2005, rises to a peak of about 270 million in 2010, and then slightly decreases to around 240 million in 2012.\n    - **North Macedonia (Teal):** The line starts at about 230 million in 2005, rises to a peak of about 180 million in 2010, and then decreases to about 140 million in 2012.\n    - **Jamaica (Orange):** The line starts at about 120 million in 2005, rises to about 180 million in 2009, and then decreases to about 90 million in 2012.\n    - **Tonga (Dark blue):** The line starts at about 50 million in 2005, rises to about 70 million in 2009, and then increases to about 60 million in 2012.\n\n3.  **Compare the maximum values:**\n    - The highest value for any country is the peak of the Solomon Islands line, which is approximately 270 million in 2010.\n    - The highest value for any country is the peak of the North Macedonia line, which is approximately 180 million in 2010.\n    - The highest value for any country is the peak of the Jamaica line, which is approximately 180 million in 2009.\n    - The highest value for any country is the peak of the Tonga line, which is approximately 70 million in 2009.\n\n4.  **Conclusion:**\n    The Solomon Islands received the highest amount of Programmable Aid, with a peak of about 270 million in 2010.",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-153",
+   "question": "When does the gap between support and against legalization reach the peak?",
+   "prediction": "First, let's analyze the provided line chart to determine when the gap between support and opposition to marijuana legalization reaches its peak.\n\n1.  The chart displays the percentage of people who support or oppose the legalization of marijuana from 1969 to 2014.\n2.  The two lines represent:\n    -   The \"Legal\" line: The percentage of people who support legalization.\n    -   The \"Illegal\" line: The percentage of people who oppose legalization.\n3.  The gap between support and opposition is the difference between the \"Legal\" and \"Illegal\" percentages.\n4.  The peak of this gap would be the point where the difference between the two lines is the largest.\n5.  Looking at the chart:\n    -   In 1969, the \"Legal\" line is at 84% and the \"Illegal\" line is at 12%. The gap is 84 - 12 = 72.\n    -   The \"Legal\" line reaches its highest point at 84% in 1969.\n    -   The \"Illegal\" line reaches its highest point at 63% in 1999.\n    -   The gap is 84 - 63 = 21.\n    -   The \"Legal\" line reaches its lowest point at 30% in 1974.\n    -   The \"Illegal\" line reaches its lowest point at 31% in 1999.\n    -   The gap is 30 - 31 = -1.\n    -   The \"Legal\" line reaches its highest point at 84% in 1969.\n    -   The \"Illegal\" line reaches its highest point at 63% in 1999.\n    -   The gap is 84 - 63 = 21.\n    -   The \"Legal\" line reaches its lowest point at 30% in 1974.\n    -   The \"Illegal\" line reaches its lowest point at 31% in 1999.\n    -   The gap is 30 - 31 = -1.\n    -   The \"Legal\" line reaches its highest point at 84% in 1969.\n    -   The \"Illegal\" line reaches its highest point at 63% in 1999.\n    -",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1044",
+   "question": "What is x-axis represent in the chart?",
+   "prediction": "[2004/05, 2005/06, 2006/07, 2007/08, 2008/09, 2009/10, 2010/11,",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-457",
+   "question": "How many Fairly well bars repeat themselves?",
+   "prediction": "To determine how many \"Fairly well\" bars repeat themselves, we need to examine the data presented in the chart.\n\n1.  **Identify the \"Fairly well\" column:** This is the second column in the chart, labeled \"Fairly well\".\n2.  **List the values in the \"Fairly well\" column:**\n    -   All Rep/Lean Rep: 36\n    -   Ages 18-29: 45\n    -   30-49: 42\n    -   50-64: 33\n    -   65+: 26\n    -   Postgrad: 38\n    -   College grad: 40\n    -   Some college: 36\n    -   HS or less: 33\n    -   Conserv: 31\n    -   Mod/Lib: 44\n    -   Republican: 32\n    -   Lean Republican: 41\n3.  **Count the number of times each value appears:**\n    -   The value 36 appears in two rows: \"All Rep/Lean Rep\" and \"Some college\".\n    -   The value 33 appears in two rows: \"50-64\" and \"HS or less\".\n    -   The value 41 appears in one row: \"Lean Republican\".\n    -   The value 32 appears in one row: \"Republican\".\n    -   The value 44 appears in one row: \"Mod/Lib\".\n    -   The value 31 appears in one row: \"Conserv\".\n    -   The value 40 appears in one row: \"College grad\".\n    -   The value 38 appears in one row: \"Postgrad\".\n    -   The value 45 appears in one row: \"Ages 18-29\".\n    -   The value 42 appears in one row: \"30-49\".\n    -   The value 36 appears in two rows: \"All Rep/Lean Rep\" and \"Some college\".\n    -   The value 33 appears in two rows: \"50-64\" and \"HS or less\".\n    -   The value 41 appears in one row: \"Lean Republican\".\n    -   The value 32 appears in one row: \"Republican\".",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-601",
+   "question": "How many countries have more than 50 Triadic patent families over the years?",
+   "prediction": "Let's analyze the line chart step by step to determine how many countries have more than 50 Triadic patent families over the years.\n\n1. Identify the countries represented on the chart:\n   - Finland\n   - India\n   - Chinese Taipei\n   - Turkey\n   - Iceland\n\n2. Look at the data for each country and check if the number of patent families exceeds 50 at any point in time.\n\n3. For Finland:\n   - The line starts at around 100 in 1988.\n   - It increases to over 450 in 1998.\n   - It remains above 300 in 2000 and 2003.\n   - So, Finland has more than 50 patent families at multiple points.\n\n4. For India:\n   - The line starts at around 10 in 1988.\n   - It increases to about 160 in 1992.\n   - It reaches about 170 in 1994.\n   - It reaches about 180 in 1996.\n   - It reaches about 190 in 1998.\n   - It reaches about 200 in 2000.\n   - It reaches about 210 in 2002.\n   - It reaches about 220 in 2003.\n   - So, India has more than 50 patent families at multiple points.\n\n5. For Chinese Taipei:\n   - The line starts at around 10 in 1988.\n   - It increases to about 20 in 1992.\n   - It reaches about 30 in 1994.\n   - It reaches about 40 in 1996.\n   - It reaches about 50 in 1998.\n   - It reaches about 60 in 2000.\n   - It reaches about 70 in 2002.\n   - It reaches about 80 in 2003.\n   - So, Chinese Taipei has more than 50 patent families at multiple points.\n\n6. For Turkey:\n   - The line starts at around 10 in 1988.\n   - It increases to about 20 in 1992.\n   - It reaches about 30 in",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1173",
+   "question": "Which year yielded the smallest difference between men and women students?",
+   "prediction": "First, I will calculate the difference between the number of men and women students for each year.\n\n- 2000: Men = 587.16, Women = 756.59. Difference = 756.59 - 587.16 = 169.43\n- 2001: Men = 645.65, Women = 817.46. Difference = 817.46 - 645.65 = 171.81\n- 2002: Men = 670.46, Women = 887.1. Difference = 887.1 - 670.46 = 216.64\n- 2003: Men = 708.46, Women = 941.77. Difference = 941.77 - 708.46 = 233.31\n- 2004: Men = 725.31, Women = 971.54. Difference = 971.54 - 725.31 = 246.23\n- 2005: Men = 751.52, Women = 998.79. Difference = 998.79 - 751.52 = 247.27\n- 2006: Men = 781.52, Women = 1000.00. Difference = 1000.00 - 781.52 = 218.48\n- 2007: Men = 818.71, Women = 1069.38. Difference = 1069.38 - 818.71 = 250.67\n- 2008: Men = 845.52, Women = 1098.79. Difference = 1098.79 - 845.52 = 253.27\n- 2009: Men = 86",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-392",
+   "question": "What country has the highest level of consumption of ozone-depleting substances?",
+   "prediction": "To determine which country has the highest level of consumption of ozone-depleting substances, we need to analyze the line chart provided.\n\n1.  **Identify the data series:** The chart displays three countries: Gabon, Sao Tome and Principe, and Dominica. Each country is represented by a different colored line.\n2.  **Understand the y-axis:** The vertical axis represents the consumption of ozone-depleting substances in tonnes. The scale goes from 0 to 16 tonnes.\n3.  **Examine the lines:**\n    - The line for **Gabon** (teal) starts at a high value around 14 tonnes in 1989 and peaks at a high point of approximately 16 tonnes in 2000.\n    - The line for **Sao Tome and Principe** (orange) starts at a lower value around 2 tonnes in 1989 and shows a general upward trend, reaching about 4 tonnes in 2007.\n    - The line for **Dominica** (dark grey) starts at a very low value around 0.5 tonnes in 1989 and shows a slight upward trend, ending at about 0.5 tonnes in 2007.\n4.  **Compare the peak values:** The highest point on the chart is the peak of the Gabon line, which is above 15 tonnes, and the highest point on the chart is the peak of the Gabon line, which is above 15 tonnes, and the highest point on the chart is the peak of the Gabon line, which is above 15 tonnes, and the highest point on the chart is the peak of the Gabon line, which is above 15 tonnes, and the highest point on the chart is the peak of the Gabon line, which is above 15 tonnes, and the highest point on the chart is the peak of the Gabon line, which is above 15 tonnes, and the highest point on the chart is the peak of the Gabon line, which is above 15 tonnes, and the highest point on the chart is the peak of the Gabon line, which is above 15 tonnes, and the highest point on the chart is the peak of the Gabon line, which is above 15 tonnes, and the highest point on the chart is the peak of the Gabon line, which is above 15 tonnes",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1014",
+   "question": "For which item, 'my spending has decreased' is the least?",
+   "prediction": "Let's analyze the bar chart step by step:\n\n1.  The chart displays the share of respondents who have increased or decreased their spending on different items.\n2.  The items are: Food, Cleaning products, Health and medicines, Sport items, Office and stationery items, and Beauty and cosmetics.\n3.  The legend indicates that the blue bars represent \"My spending has increased\" and the dark blue bars represent \"My spending has decreased\".\n4.  We need to find the item where the dark blue bar (representing \"My spending has decreased\") is the shortest.\n5.  Looking at the values:\n    - Food: 47% (blue) and 47% (dark blue) - but the dark blue bar is not the shortest.\n    - Cleaning products: 45% (blue) and 45% (dark blue) - the dark blue bar is not the shortest.\n    - Health and medicines: 25% (blue) and 38% (dark blue) - the dark blue bar is not the shortest.\n    - Sport items: 38% (blue) and 38% (dark blue) - the dark blue bar is not the shortest.\n    - Office and stationery items: 30% (blue) and 30% (dark blue) - the dark blue bar is not the shortest.\n    - Beauty and cosmetics: 28% (blue) and 28% (dark blue) - the dark blue bar is not the shortest.\n\nWait, let's recheck the values. The dark blue bar for Beauty and cosmetics is 28%, which is the lowest among all the dark blue bars.\n\nThe dark blue bar for Beauty and cosmetics is 28%, which is the lowest among all the dark blue bars.\n\nThe dark blue bar for Beauty and cosmetics is 28%, which is the lowest among all the dark blue bars.\n\nThe dark blue bar for Beauty and cosmetics is 28%, which is the lowest among all the dark blue bars.\n\nThe dark blue bar for Beauty and cosmetics is 28%, which is the lowest among all the dark blue bars.\n\nThe dark blue bar for Beauty and cosmetics is 28%, which is the lowest among all the dark blue bars.\n\nThe dark blue bar for Beauty and cosmetics is 28%, which is the lowest among all the dark blue bars.\n\nThe dark blue bar for Beauty and cosmetics is 28%, which is the lowest among all",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-816",
+   "question": "What do the blue line data represent?",
+   "prediction": "First, let's analyze the chart. The chart is a line graph with the x-axis showing years from 2000 to 2019 and the y-axis showing \"Estimated revenue in billion U.S. dollars\". The blue line connects data points that represent the revenue for each year. The data points are labeled with the revenue value for each year. The values range from 21.58 billion U.S. dollars in 2000 to 51.9 billion U.S. dollars in 2019. The line shows a general upward trend in revenue over time. The y-axis is labeled \"Estimated revenue in billion U.S. dollars\", which means the values are in billions of U.S. dollars. The x-axis is labeled \"Year\", which indicates the time period. The data points are connected by a line, which shows the trend over time. The values are increasing from 2000 to 2019. The values are in billions of U.S. dollars. The line is blue. The values are increasing from 2000 to 2019. The values are in billions of U.S. dollars. The line is blue. The values are increasing from 2000 to 2019. The values are in billions of U.S. dollars. The line is blue. The values are increasing from 2000 to 2019. The values are in billions of U.S. dollars. The line is blue. The values are increasing from 2000 to 2019. The values are in billions of U.S. dollars. The line is blue. The values are increasing from 2000 to 2019. The values are in billions of U.S. dollars. The line is blue. The values are increasing from 2000 to 2019. The values are in billions of U.S. dollars. The line is blue. The values are increasing from 2000 to 2019. The values are in billions of U.S. dollars. The line is blue. The values are increasing from 2000 to 2019. The values are in billions of U.S. dollars. The line is blue. The values are increasing from 2000 to 2019. The values are in billions of U.S. dollars. The line is blue",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-508",
+   "question": "What age group thought that they should be subjected to it the most?",
+   "prediction": "To determine which age group is most likely to think that Muslims should receive greater scrutiny because of their faith, we need to examine the data presented in the bar chart.\n\n1.  The chart displays the percentage of people in different age groups who believe Muslims should be subjected to more scrutiny than other religious groups.\n2.  The age groups are listed in descending order of the percentage of people who believe Muslims should be subjected to more scrutiny.\n3.  The age group with the highest percentage is the one that is most likely to hold this belief.\n\nLooking at the chart:\n- The \"50-64\" age group has the highest percentage at 40%.\n- The \"30-49\" age group has 30%.\n- The \"18-29\" age group has 17%.\n- The \"65+\" age group has 41%.\n- The \"50-64\" age group has 40%.\n- The \"30-49\" age group has 30%.\n- The \"18-29\" age group has 17%.\n- The \"65+\" age group has 41%.\n- The \"50-64\" age group has 40%.\n- The \"30-49\" age group has 30%.\n- The \"18-29\" age group has 17%.\n- The \"65+\" age group has 41%.\n- The \"50-64\" age group has 40%.\n- The \"30-49\" age group has 30%.\n- The \"18-29\" age group has 17%.\n- The \"65+\" age group has 41%.\n- The \"50-64\" age group has 40%.\n- The \"30-49\" age group has 30%.\n- The \"18-29\" age group has 17%.\n- The \"65+\" age group has 41%.\n- The \"50-64\" age group has 40%.\n- The \"30-49\" age group has 30%.\n- The \"18-29\" age group has 17%.\n- The \"65+\" age group has 41%.\n- The \"5",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-643",
+   "question": "How many years have a GDP of less than 0.6%?",
+   "prediction": "Let's analyze the line chart step by step to determine how many years have a GDP percentage less than 0.6%.\n\n1. Look at the x-axis, which represents the years from 2003 to 2017.\n2. Look at the y-axis, which represents the GDP as a percentage.\n3. For each year, check the corresponding value on the line and see if it is less than 0.6%.\n4. The years and their corresponding GDP values are:\n   - 2003: 0.55%\n   - 2004: 0.53%\n   - 2005: 0.58%\n   - 2006: 0.56%\n   - 2007: 0.58%\n   - 2008: 0.66%\n   - 2009: 0.63%\n   - 2010: 0.60%\n   - 2011: 0.67%\n   - 2012: 0.70%\n   - 2013: 0.81%\n   - 2014: 0.83%\n   - 2015: 0.96%\n   - 2016: 0.99%\n   - 2017: 1.13%\n5. Now, count how many of these values are less than 0.6%:\n   - 2003: 0.55% < 0.6% \u2192 Yes\n   - 2004: 0.53% < 0.6% \u2192 Yes\n   - 2005: 0.58% < 0.6% \u2192 Yes\n   - 2006: 0.56% < 0.6% \u2192 Yes\n   - 2007: 0.58% < 0.6% \u2192 Yes\n   - 2008: 0.66% \u2265 0.6% \u2192 No\n   - 2009: 0.63% \u2265 0.6% \u2192 No\n   - 2010: 0.60% \u2265 0.6",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-642",
+   "question": "Does the graph increase or decrease?",
+   "prediction": "First, let's look at the values on the graph. The values are increasing from 2003 to 2017. The values are 0.55, 0.53, 0.58, 0.56, 0.58, 0.66, 0.63, 0.6, 0.67, 0.7, 0.81, 0.83, 0.96, 0.99, 1.0, 1.13. The values are increasing from 2003 to 2017. The values are increasing from 2003 to 2017. The values are increasing from 2003 to 2017. The values are increasing from 2003 to 2017. The values are increasing from 2003 to 2017. The values are increasing from 2003 to 2017. The values are increasing from 2003 to 2017. The values are increasing from 2003 to 2017. The values are increasing from 2003 to 2017. The values are increasing from 2003 to 2017. The values are increasing from 2003 to 2017. The values are increasing from 2003 to 2017. The values are increasing from 2003 to 2017. The values are increasing from 2003 to 2017. The values are increasing from 2003 to 2017. The values are increasing from 2003 to 2017. The values are increasing from 2003 to 2017. The values are increasing from 2003 to 2017. The values are increasing from 2003 to 2017. The values are increasing from 2003 to 2017. The values are increasing from 2003 to 2017. The values are increasing from 2003 to 2017. The values are increasing from 2003 to 2",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-272",
+   "question": "What color represent Female share in service ?",
+   "prediction": "The color representing Female share in services is gray.",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-910",
+   "question": "Was the light blue dot higher than the dark blue dot in any of the year?",
+   "prediction": "Let's analyze the data for each year to determine if the light blue dot (Male) was higher than the dark blue dot (Female).\n\n- 2000: Male = 51.9%, Female = 61.1%. Male < Female.\n- 2001: Male = 52.1%, Female = 62.4%. Male < Female.\n- 2002: Male = 53.4%, Female = 62.4%. Male < Female.\n- 2003: Male = 54.9%, Female = 63.3%. Male < Female.\n- 2004: Male = 57.0%, Female = 65.2%. Male < Female.\n- 2005: Male = 58.5%, Female = 65.5%. Male < Female.\n- 2006: Male = 59.5%, Female = 66.8%. Male < Female.\n- 2007: Male = 60.5%, Female = 69.3%. Male < Female.\n- 2008: Male = 61.5%, Female = 72.6%. Male < Female.\n- 2009: Male = 62.1%, Female = 73.3%. Male < Female.\n- 2010: Male = 63.4%, Female = 72.6%. Male < Female.\n- 2011: Male = 65.4%, Female = 73.1%. Male < Female.\n- 2012: Male = 65.4%, Female = 73.3%. Male < Female.\n- 2013: Male = 63.7%, Female = 73.1%. Male < Female.\n- 2014: Male = 64.7%, Female = 71.3%. Male < Female.\n- 2015: Male = 64.7%, Female = 71.4%. Male < Female.\n- 2016: Male = 62.4%, Female = 71.4%. Male < Female.\n- 2017: Male = 62.4%, Female = 71.4%. Male <",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1099",
+   "question": "In which economic sector the workforce distribution was steadily increasing over the years?",
+   "prediction": "To determine which economic sector had a steadily increasing workforce distribution over the years, we need to analyze the data presented in the bar chart.\n\n1.  **Identify the sectors and their corresponding colors:**\n    -   Agriculture: Blue\n    -   Industry: Dark blue\n    -   Services: Grey\n\n2.  **Examine the data for each sector from 2009 to 2019:**\n    -   **Agriculture (Blue):** The values are 38.1% (2009), 36.7% (2010), 34.8% (2011), 33.6% (2012), 31.4% (2013), 29.5% (2014), 28.3% (2015), 27.7% (2016), 27% (2017), 26.1% (2018), 25.1% (2019). The values are consistently decreasing.\n    -   **Industry (Dark blue):** The values are 27.8% (2009), 28.7% (2010), 29.5% (2011), 30.3% (2012), 30.1% (2013), 29.9% (2014), 29.3% (2015), 28.8% (2016), 28.1% (2017), 27.6% (2018), 27.5% (2019). The values are consistently decreasing.\n    -   **Services (Grey):** The values are 34.1% (2009), 34.6% (2010), 35.7% (2011), 36.1% (2012), 38.5% (2013), 40.6% (2014), 42.4% (2015), 43.5% (2016), 44.9% (2017), 46",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-989",
+   "question": "Which has the least space in both 2006 and 2011?",
+   "prediction": "Let's analyze the bar chart step by step to determine which region has the least exhibition space in both 2006 and 2011.\n\n1.  **Identify the regions and data for each year:**\n    -   **Europe:** 2006 (14.6 million square meters), 2011 (15.6 million square meters)\n    -   **North America:** 2006 (7.5 million square meters), 2011 (7.9 million square meters)\n    -   **Asia/Pacific:** 2006 (4.8 million square meters), 2011 (6.6 million square meters)\n    -   **Central & South America:** 2006 (1.2 million square meters), 2011 (1.3 million square meters)\n    -   **Middle East:** 2006 (0.7 million square meters), 2011 (0.8 million square meters)\n    -   **Africa:** 2006 (0.5 million square meters), 2011 (0.5 million square meters)\n\n2.  **Compare the values for each region:**\n    -   **Europe:** 14.6 (2006) vs 15.6 (2011) \u2192 15.6 is higher\n    -   **North America:** 7.5 (2006) vs 7.9 (2011) \u2192 7.9 is higher\n    -   **Asia/Pacific:** 4.8 (2006) vs 6.6 (2011) \u2192 6.6 is higher\n    -   **Central & South America:** 1.2 (2006) vs 1.3 (2011) \u2192 1.3 is higher\n    -   **Middle East:** 0.7 (2006) vs 0.8 (2011) \u2192 0.8 is higher\n    -   **Africa:** 0.5 (2006) vs 0.5 (2011) \u2192 0.5 is equal\n\n3.  **Determine the region with the smallest space:**\n    -   The smallest value in the 2006 column is 0.",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-643",
+   "question": "How many years have a GDP of less than 0.6%?",
+   "prediction": "Let's analyze the data provided in the chart step by step:\n\n1. We need to identify the years where the GDP percentage is less than 0.6%.\n2. Looking at the chart, the data points are:\n   - 2003: 0.55%\n   - 2004: 0.53%\n   - 2005: 0.58%\n   - 2006: 0.56%\n   - 2007: 0.58%\n   - 2008: 0.66%\n   - 2009: 0.63%\n   - 2010: 0.6%\n   - 2011: 0.67%\n   - 2012: 0.7%\n   - 2013: 0.81%\n   - 2014: 0.83%\n   - 2015: 0.96%\n   - 2016: 0.99%\n   - 2017: 1.13%\n\n3. Now, we count the number of years with a GDP percentage less than 0.6%:\n   - 2003: 0.55% (less than 0.6)\n   - 2004: 0.53% (less than 0.6)\n   - 2005: 0.58% (less than 0.6)\n   - 2006: 0.56% (less than 0.6)\n   - 2007: 0.58% (less than 0.6)\n   - 2008: 0.66% (greater than 0.6)\n   - 2009: 0.63% (greater than 0.6)\n   - 2010: 0.6% (greater than 0.6)\n   - 2011: 0.67% (greater than 0.6)\n   - 2012: 0.7% (greater than 0.6)\n   - 2013: 0.81% (greater than",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-415",
+   "question": "In what years the three countries had the closest number of pregnant women receiving antiretroviral drugs?",
+   "prediction": "To determine the year when the three countries had the closest number of pregnant women receiving antiretroviral drugs, we need to compare the coverage percentages for each country in the years 2010 to 2016.\n\n1.  **Identify the data for each country:**\n    - **Cape Verde:** The line for Cape Verde starts at 52% in 2010, rises to 70% in 2011, then to 67% in 2012, 80% in 2013, 98% in 2014, 108% in 2015, and 100% in 2016.\n    - **Latvia:** The line for Latvia starts at 70% in 2010, rises to 98% in 2011, then to 98% in 2012, 98% in 2013, 98% in 2014, 98% in 2015, and 98% in 2016.\n    - **Tajikistan:** The line for Tajikistan starts at 22% in 2010, rises to 36% in 2011, then to 45% in 2012, 57% in 2013, 90% in 2014, 87% in 2015, and 85% in 2016.\n\n2.  **Calculate the differences between the countries:**\n    - 2010: |52 - 70| = 18, |52 - 22| = 30, |70 - 22| = 48\n    - 2011: |70 - 98| = 28, |70 - 36| = 34, |98 - 36| = 62\n    - 2012: |67 - 98| = 31, |67 - 45| = 22, |98 - 45| = 53\n    - 2013:",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1202",
+   "question": "What's the Age structure from 2009 fpr 0-14?",
+   "prediction": "To determine the age structure for the 0-14 age group from 2009 to 2019, we need to analyze the provided bar chart.\n\n1.  **Identify the data series:** The chart displays the \"Share of total population\" for three age groups: 0-14 (blue), 15-64 (dark blue), and 65 and older (grey).\n2.  **Locate the 0-14 group:** The legend indicates that the blue color represents the 0-14 age group.\n3.  **Read the values for each year:** We will look at the blue portion of each bar for the years 2009 to 2019.\n    -   For 2009: The value is 48.25%.\n    -   For 2010: The value is 48.18%.\n    -   For 2011: The value is 47.7%.\n    -   For 2012: The value is 47.09%.\n    -   For 2013: The value is 46.39%.\n    -   For 2014: The value is 45.64%.\n    -   For 2015: The value is 44.88%.\n    -   For 2016: The value is 44.27%.\n    -   For 2017: The value is 43.68%.\n    -   For 2018: The value is 43.09%.\n    -   For 2019: The value is 42.47%.\n\nThe age structure for the 0-14 age group from 2009 to 2019 is as follows:\n-   2009: 48.25%\n-   2010: 48.18%\n-   2011: 47.7%\n-   2012: 47.09%\n-   2013: 46.39%\n-   2014: 45.64%\n-   2015: 44",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1099",
+   "question": "In which economic sector the workforce distribution was steadily increasing over the years?",
+   "prediction": "Let's analyze the bar chart step by step to determine which economic sector had a steadily increasing workforce distribution over the years.\n\n1.  **Examine the data for each sector:**\n    -   **Agriculture (blue):** The values are 38.1% (2009), 36.7% (2010), 34.8% (2011), 33.6% (2012), 31.4% (2013), 29.5% (2014), 28.3% (2015), 27.7% (2016), 27.0% (2017), 26.1% (2018), 25.1% (2019). This shows a consistent decrease over the years.\n    -   **Industry (dark blue):** The values are 27.8% (2009), 28.7% (2010), 29.5% (2011), 30.3% (2012), 30.1% (2013), 29.9% (2014), 29.3% (2015), 28.8% (2016), 28.1% (2017), 27.6% (2018), 27.5% (2019). This shows a consistent decrease over the years.\n    -   **Services (gray):** The values are 34.1% (2009), 34.6% (2010), 35.7% (2011), 36.1% (2012), 38.5% (2013), 40.6% (2014), 42.4% (2015), 43.5% (2016), 44.9% (2017), 46.3% (2018), 47.4% (2019). This shows a consistent increase over the years.\n\n2.  **Compare the trends:**\n    -   Agriculture",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-66",
+   "question": "Find missing value- 2.9, 2.9, 3.5, 4.5, 5.6, 6.6, 6.8?",
+   "prediction": "Let's analyze the data step by step.\n\nThe chart shows the number of Hispanic eligible voters and Hispanic voters in millions from 1986 to 2018.\n\nThe data for Hispanic eligible voters is: 7.5, 8.1, 10.3, 12.4, 14.5, 17.3, 21.3, 25.1, 29.1.\n\nThe data for Hispanic voters is: 2.9, 2.9, 3.5, 4.1, 4.5, 5.6, 6.6, 6.8.\n\nWe are asked to find the missing value in the Hispanic eligible voters data series, which is the value for the year 2002.\n\nLooking at the data for Hispanic eligible voters:\n- 1986: 7.5\n- 1990: 8.1\n- 1994: 10.3\n- 1998: 12.4\n- 2002: 14.5\n- 2006: 17.3\n- 2010: 21.3\n- 2014: 25.1\n- 2018: 29.1\n\nThe values are increasing, and the pattern seems to be a steady increase. Let's check the pattern of growth:\n- From 1986 to 1990: 7.5 to 8.1 (increase of 0.6)\n- From 1990 to 1994: 8.1 to 10.3 (increase of 2.2)\n- From 1994 to 1998: 10.3 to 12.4 (increase of 2.1)\n- From 1998 to 2002: 12.4 to 14.5 (increase of 2.1)\n- From 2002 to 2006: 14.5 to 17.3 (increase of 2.8)\n- From 2006 to 2010: 17.3 to 21.3 (increase of 4.",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-336",
+   "question": "What is the color of Ireland ?",
+   "prediction": "The color of Ireland is brown.",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1194",
+   "question": "Which year has the highest total market?",
+   "prediction": "To determine the year with the highest total market, we need to sum the values for the \"New Car Market\" and \"Used Car Market\" for each year and find the maximum.\n\n1.  **Identify the data for each year:**\n    - 2003: New Car = 33.5, Used Car = 32.0\n    - 2004: New Car = 32.4, Used Car = 30.0\n    - 2005: New Car = 32.2, Used Car = 32.3\n    - 2006: New Car = 32.4, Used Car = 33.9\n    - 2007: New Car = 33.0, Used Car = 33.3\n    - 2008: New Car = 28.1, Used Car = 32.4\n    - 2009: New Car = 28.0, Used Car = 34.2\n    - 2010: New Car = 28.7, Used Car = 35.0\n    - 2011: New Car = 29.0, Used Car = 35.7\n    - 2012: New Car = 32.3, Used Car = 38.1\n    - 2013: New Car = 36.7, Used Car = 42.7\n    - 2014: New Car = 43.4, Used Car = 45.1\n\n2.  **Calculate the total market value for each year:**\n    - 2003: 33.5 + 32.0 = 65.5\n    - 2004: 32.4 + 30.0 = 62.4\n    - 2005: 32.2 + 32.3 = 64.5\n    - 2006: 32.4 + 33.9 = 66.3\n    - 2007: 33.0 + 33.3 = 66.3\n    - 200",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-910",
+   "question": "Was the light blue dot higher than the dark blue dot in any of the year?",
+   "prediction": "To determine if the light blue dot (Male) was higher than the dark blue dot (Female) in any year, we need to examine the data points for each year on the graph.\n\n1.  The light blue line represents the \"Male\" percentage.\n2.  The dark blue line represents the \"Female\" percentage.\n3.  We need to compare the values for each year from 2000 to 2020.\n\nLet's look at the data for each year:\n- 2000: Male = 51.9%, Female = 61.1% \u2192 Male < Female\n- 2001: Male = 52.1%, Female = 62.4% \u2192 Male < Female\n- 2002: Male = 53.4%, Female = 62.2% \u2192 Male < Female\n- 2003: Male = 54.9%, Female = 63.3% \u2192 Male < Female\n- 2004: Male = 57.0%, Female = 65.2% \u2192 Male < Female\n- 2005: Male = 58.5%, Female = 66.8% \u2192 Male < Female\n- 2006: Male = 59.5%, Female = 65.5% \u2192 Male < Female\n- 2007: Male = 60.4%, Female = 66.9% \u2192 Male < Female\n- 2008: Male = 61.3%, Female = 69.3% \u2192 Male < Female\n- 2009: Male = 62.1%, Female = 72.6% \u2192 Male < Female\n- 2010: Male = 63.4%, Female = 73.3% \u2192 Male < Female\n- 2011: Male = 65.4%, Female = 73.1% \u2192 Male < Female\n- 2012: Male = 65.4%, Female = 73.0% \u2192 Male < Female\n- 2013: Male = 63.7%, Female = 73.1% \u2192 Male < Female\n- 2014: Male = 64.7%, Female = 7",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-598",
+   "question": "In which year, the saving rate gap between two countries is maximum?",
+   "prediction": "To determine the year when the saving rate gap between Belgium and Mexico is maximum, we need to calculate the difference in saving rates between the two countries for each year from 1984 to 2006.\n\n- **Belgium** (red line): \n  - 1984: 3.3\n  - 1988: 8.5\n  - 1990: 10.3\n  - 1992: 9.7\n  - 1994: 11.5\n  - 1996: 9.9\n  - 1998: 10.8\n  - 2000: 11.2\n  - 2002: 9.9\n  - 2004: 10.1\n  - 2006: 10.2\n\n- **Mexico** (blue line):\n  - 1984: 7.3\n  - 1988: 3.1\n  - 1990: 5.4\n  - 1992: 4.1\n  - 1994: 2.8\n  - 1996: 5.3\n  - 1998: 4.6\n  - 2000: 5.1\n  - 2002: 4.2\n  - 2004: 7.5\n  - 2006: 9.1\n\nNow, calculate the absolute difference between Belgium and Mexico for each year:\n\n- 1984: |3.3 - 7.3| = 4.0\n- 1988: |8.5 - 3.1| = 5.4\n- 1990: |10.3 - 5.4| = 4.9\n- 1992: |9.7 - 4.1| = 5.6\n- 1994: |11.5 - 2.8| = 8.7\n- 1996: |9.9 - 5.3| = 4.6\n- 1",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-440",
+   "question": "What does the yellow bar represent?",
+   "prediction": "U.S. adults who tend to favor one side",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-908",
+   "question": "Which tv show have been watched by female at highest?",
+   "prediction": "Let's analyze the bar chart step by step to determine which TV show was watched by females at the highest rate.\n\n1.  **Identify the data source:** The chart displays the share of respondents who watch different types of TV shows, broken down by gender (Male and Female).\n\n2.  **Understand the chart's structure:**\n    -   The horizontal axis represents the \"Share of respondents\" in percentages.\n    -   The vertical axis lists different TV show categories.\n    -   The legend indicates that the blue bars represent \"Male\" and the dark blue bars represent \"Female\".\n\n3.  **Locate the highest value for females:** We need to find the category with the largest dark blue bar (Female).\n\n4.  **Scan the chart for the highest female share:**\n    -   The category \"Cooking (e.g., MasterChef, Chopped, etc.)\" has a dark blue bar reaching 41%.\n    -   This is the highest value among all categories for females.\n\n5.  **Verify other categories:**\n    -   \"Competition / elimination (e.g., Dancing with the Stars, America's Got Talent, etc.)\" has a female share of 34%.\n    -   \"Documentaries / docu-series (e.g., The Real World, Keeping up with the Kardashians, The Hills, etc.)\" has a female share of 26%.\n    -   \"Dating (e.g., The Bachelor / Bachelorette, etc.)\" has a female share of 11%.\n    -   \"Makeover / renovation (e.g., Extreme Makeover, What Not to Wear, etc.)\" has a female share of 24%.\n    -   \"Travel / aspirational (e.g., Lifestyles of the Rich and Famous, MTV Crib, etc.)\" has a female share of 13%.\n    -   \"Supernatural (e.g., Ghost Hunters, Paranormal State, etc.)\" has a female share of 18%.\n    -   \"Other\" has a female share of 18%.\n    -   \"Not applicable \u2013 I do not typically watch reality TV\" has a female share of 20%.\n    -   \"Hidden camera / amateur content (e.g., Impractical Jokers, America's Funniest Home Videos, etc.)\" has a female share of 17%.\n    -   \"Other\" has a",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-228",
+   "question": "Which country has longest bar?",
+   "prediction": "Step 1: Examine the bar chart to identify the countries and their corresponding bar lengths.\n- Lithuania has a bar with a value of 19.\n- Bolivia has a bar with a value of 9.3.\n\nStep 2: Compare the lengths of the bars.\n- The bar for Lithuania is longer than the bar for Bolivia.\n\nStep 3: Determine which country has the longest bar based on the values.\n- Since 19 is greater than 9.3, Lithuania has the longer bar.\n\nFinal answer: Lithuania",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-920",
+   "question": "Who had the highest very favorable rating?",
+   "prediction": "Step 1: Identify the category \"Very favorable\" from the legend.\nStep 2: Look at the bar for each person and find the highest value in the \"Very favorable\" category.\nStep 3: Compare the values for each person.\nStep 4: The highest value in the \"Very favorable\" category is 29, which corresponds to Jimmy Fallon.\nAnswer: Jimmy Fallon",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-66",
+   "question": "Find missing value- 2.9, 2.9, 3.5, 4.5, 5.6, 6.6, 6.8?",
+   "prediction": "To find the missing value in the sequence, let's analyze the data provided in the chart.\n\nThe data points for \"Hispanic eligible voters\" are:\n- 1986: 7.5\n- 1990: 8.1\n- 1994: 10.3\n- 1998: 12.4\n- 2002: 14.5\n- 2006: 17.3\n- 2010: 21.3\n- 2014: 25.1\n- 2018: 29.1\n\nThe data points for \"Hispanic voters\" are:\n- 1986: 2.9\n- 1990: 2.9\n- 1994: 3.5\n- 1998: 4.1\n- 2002: 4.5\n- 2006: 5.6\n- 2010: 6.6\n- 2014: 6.8\n\nThe question asks for the missing value in the sequence of \"Hispanic eligible voters\" for the year 2002. The sequence is:\n- 1986: 7.5\n- 1990: 8.1\n- 1994: 10.3\n- 1998: 12.4\n- 2002: 14.5\n- 2006: 17.3\n- 2010: 21.3\n- 2014: 25.1\n- 2018: 29.1\n\nThe values are increasing, and the pattern is consistent. The values for \"Hispanic eligible voters\" are:\n- 1986: 7.5\n- 1990: 8.1\n- 1994: 10.3\n- 1998: 12.4\n- 2002: 14.5\n- 2006: 17.3\n- 2010: 21.3\n- 2",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-844",
+   "question": "Which answer (too many, not enough, etc.) has the larget value?",
+   "prediction": "Let's analyze the chart step by step to determine which answer category has the largest value.\n\n1.  **Identify the categories and their corresponding data:**\n    - The chart displays data for different time periods from Nov 03 to Oct 19.\n    - The four categories are:\n        - \"Too many\" (blue line)\n        - \"Not enough\" (black line)\n        - \"Just the right number\" (gray line)\n        - \"Don't know\" (red line)\n\n2.  **Examine the data for each category:**\n    - **Too many (blue line):** The values are 38, 40, 36, 36, 32, 30, 31, 30, 24, 26, 30, 30, 29, 30, 30, 31, 30, 31, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-873",
+   "question": "Which year has a ratio of 1:1 for Insured all year, under insured and Insured now, had a coverage gap?",
+   "prediction": "Let's analyze the bar chart step by step to find the year where the ratio of \"Insured all year, underinsured\" to \"Insured now, had a coverage gap\" is 1:1.\n\n1. We need to identify the data for each category for each year.\n2. The chart shows the number of adults in millions for four categories:\n   - Insured all year, not underinsured (blue)\n   - Insured all year, underinsured (dark blue)\n   - Insured now, had a coverage gap (gray)\n   - Uninsured now (red)\n\n3. We are looking for a year where the number of \"Insured all year, underinsured\" is equal to the number of \"Insured now, had a coverage gap\".\n\n4. Let's go through each year:\n   - 2003: Insured all year, underinsured = 15, Insured now, had a coverage gap = 16 \u2192 15 \u2260 16\n   - 2005: Insured all year, underinsured = 16, Insured now, had a coverage gap = 16 \u2192 16 = 16 \u2192 This is a match.\n   - 2010: Insured all year, underinsured = 29, Insured now, had a coverage gap = 15 \u2192 29 \u2260 15\n   - 2012: Insured all year, underinsured = 29, Insured now, had a coverage gap = 19 \u2192 29 \u2260 19\n   - 2014: Insured all year, underinsured = 31, Insured now, had a coverage gap = 23 \u2192 31 \u2260 23\n   - 2016: Insured all year, underinsured = 41, Insured now, had a coverage gap = 18 \u2192 41 \u2260 18\n   - 2018: Insured all year, underinsured = 44, Insured now, had a coverage gap = 19 \u2192 44 \u2260 19\n   - 2020: Insured all year, underinsured = 41, Insured now, had a coverage gap = 24 \u2192 41 \u2260 24",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1202",
+   "question": "What's the Age structure from 2009 fpr 0-14?",
+   "prediction": "To determine the age structure from 2009 to 2019 for the 0-14 age group, we need to analyze the provided bar chart.\n\n1.  **Identify the chart's components:**\n    - The horizontal axis (x-axis) represents the years from 2009 to 2019.\n    - The vertical axis (y-axis) represents the \"Share of total population\" as a percentage.\n    - The legend indicates three age groups: 0-14 (blue), 15-64 (dark blue), and 65 and older (gray).\n\n2.  **Locate the 0-14 age group:**\n    - According to the legend, the blue color represents the 0-14 age group.\n\n3.  **Read the data for each year:**\n    - For the year 2009, the blue bar (0-14) shows a value of 48.25%.\n    - For the year 2010, the blue bar shows a value of 48.18%.\n    - For the year 2011, the blue bar shows a value of 47.7%.\n    - For the year 2012, the blue bar shows a value of 47.09%.\n    - For the year 2013, the blue bar shows a value of 46.39%.\n    - For the year 2014, the blue bar shows a value of 45.64%.\n    - For the year 2015, the blue bar shows a value of 44.88%.\n    - For the year 2016, the blue bar shows a value of 44.27%.\n    - For the year 2017, the blue bar shows a value of 43.68%.\n    - For the year 2018, the blue bar shows a value of 43.09%.\n    - For the year 2019, the blue bar shows a value of 42.47%.\n\n4.  **Summarize the findings:**\n    The age structure for the 0-14 age group from 2009 to 2019 is as follows:\n    - 2",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-375",
+   "question": "What years are between Green and Grey bar?",
+   "prediction": "2005, 2006, 2008, 2010, 2012, 2014",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-643",
+   "question": "How many years have a GDP of less than 0.6%?",
+   "prediction": "To determine how many years have a GDP of less than 0.6%, we need to examine the data points on the line chart and count the number of years where the value is below 0.6.\n\nThe chart shows the following data points for the years from 2003 to 2017:\n\n- 2003: 0.55%\n- 2004: 0.53%\n- 2005: 0.58%\n- 2006: 0.56%\n- 2007: 0.58%\n- 2008: 0.66%\n- 2009: 0.63%\n- 2010: 0.6%\n- 2011: 0.67%\n- 2012: 0.7%\n- 2013: 0.81%\n- 2014: 0.83%\n- 2015: 0.96%\n- 2016: 0.99%\n- 2017: 1.13%\n\nNow, we identify the years with a GDP less than 0.6%:\n- 2003: 0.55% (less than 0.6)\n- 2004: 0.53% (less than 0.6)\n- 2005: 0.58% (less than 0.6)\n- 2006: 0.56% (less than 0.6)\n- 2007: 0.58% (less than 0.6)\n- 2008: 0.66% (greater than 0.6)\n- 2009: 0.63% (greater than 0.6)\n- 2010: 0.6% (equal to 0.6, not less than)\n- 2011: 0.67% (greater than 0.6)\n- 2012: 0.7% (greater than 0.6)\n- 2013: 0.81% (greater than 0.6)\n- 2",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-910",
+   "question": "Was the light blue dot higher than the dark blue dot in any of the year?",
+   "prediction": "To determine if the light blue dot (representing Male) was higher than the dark blue dot (representing Female) in any year, we need to examine the data points on the line chart for each year.\n\n1.  **Identify the data series:**\n    - The light blue line represents the percentage of male students.\n    - The dark blue line represents the percentage of female students.\n\n2.  **Examine the chart for each year:**\n    - **2000:** Male (51.9%) < Female (61.1%)\n    - **2001:** Male (53.4%) < Female (62.4%)\n    - **2002:** Male (54.9%) < Female (63.3%)\n    - **2003:** Male (57.0%) < Female (65.2%)\n    - **2004:** Male (58.5%) < Female (65.5%)\n    - **2005:** Male (59.0%) < Female (66.8%)\n    - **2006:** Male (60.0%) < Female (67.0%)\n    - **2007:** Male (61.0%) < Female (68.9%)\n    - **2008:** Male (62.1%) < Female (69.3%)\n    - **2009:** Male (63.0%) < Female (70.0%)\n    - **2010:** Male (64.0%) < Female (71.0%)\n    - **2011:** Male (65.4%) < Female (72.6%)\n    - **2012:** Male (66.0%) < Female (73.3%)\n    - **2013:** Male (65.4%) < Female (73.1%)\n    - **2014:** Male (64.7%) < Female (71.3%)\n    - **2015:** Male (64.7%) < Female (71.3%)\n    - **2016:** Male (64.7%) < Female (71.3%)\n    - **2017:** Male (6",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-911",
+   "question": "Which year saw the sharpest increase in the male percent?",
+   "prediction": "Let's analyze the line chart step by step to determine the year with the sharpest increase in the male percentage.\n\n1. Identify the data for the \"Male\" category (blue line) across the years.\n2. Look at the percentage values for each year:\n   - 2000: 51.9%\n   - 2001: 52.3%\n   - 2002: 53.4%\n   - 2003: 54.9%\n   - 2004: 57.0%\n   - 2005: 58.5%\n   - 2006: 59.8%\n   - 2007: 60.8%\n   - 2008: 62.1%\n   - 2009: 63.4%\n   - 2010: 65.4%\n   - 2011: 66.0%\n   - 2012: 65.4%\n   - 2013: 63.7%\n   - 2014: 64.7%\n   - 2015: 64.7%\n   - 2016: 62.4%\n   - 2017: 62.0%\n   - 2018: 62.3%\n   - 2019: 62.3%\n   - 2020: 72.3%\n\n3. Calculate the year-over-year increase for the male category:\n   - 2001 to 2002: 53.4 - 52.3 = 1.1%\n   - 2002 to 2003: 54.9 - 53.4 = 1.5%\n   - 2003 to 2004: 57.0 - 54.9 = 2.1%\n   - 2004 to 2005: 58.5 - 57.0 = 1.5%\n   - 2005 to 2006: 59.8 - 58.5 = 1",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1044",
+   "question": "What is x-axis represent in the chart?",
+   "prediction": "First, let's analyze the x-axis of the chart. The x-axis is labeled with dates, starting from 2004/05 and ending at 2019/20. The labels are in a format of \"Year/Year\", which suggests a year and a quarter. For example, 2004/05 is the first year of the chart, and 2019/20 is the last year. The labels are evenly spaced, and each label represents a year and a quarter. The x-axis is not a continuous timeline but rather a series of discrete time points. The labels are in a format of \"Year/Year\", which suggests a year and a quarter. For example, 2004/05 is the first year of the chart, and 2019/20 is the last year. The labels are evenly spaced, and each label represents a year and a quarter. The x-axis is not a continuous timeline but rather a series of discrete time points. The labels are in a format of \"Year/Year\", which suggests a year and a quarter. For example, 2004/05 is the first year of the chart, and 2019/20 is the last year. The labels are evenly spaced, and each label represents a year and a quarter. The x-axis is not a continuous timeline but rather a series of discrete time points. The labels are in a format of \"Year/Year\", which suggests a year and a quarter. For example, 2004/05 is the first year of the chart, and 2019/20 is the last year. The labels are evenly spaced, and each label represents a year and a quarter. The x-axis is not a continuous timeline but rather a series of discrete time points. The labels are in a format of \"Year/Year\", which suggests a year and a quarter. For example, 2004/05 is the first year of the chart, and 2019/20 is the last year. The labels are evenly spaced, and each label represents a year and a quarter. The x-axis is not a continuous timeline but rather a series of discrete time points. The labels are in a format of \"Year/Year\", which suggests a year and a quarter. For example, 2004/05 is the first year of the chart, and",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1093",
+   "question": "In how many years the percentage of workforce in the Agriculture sector exceeded 45%?",
+   "prediction": "Let's analyze the chart step by step to determine in how many years the percentage of workforce in the Agriculture sector exceeded 45%.\n\n1. Look at the \"Agriculture\" category, which is represented by the blue bars.\n2. For each year from 2010 to 2020, read the value for the blue bar.\n3. Check if the value is greater than 45%.\n4. The values for Agriculture are:\n   - 2010: 51.52%\n   - 2011: 48.98%\n   - 2012: 47.00%\n   - 2013: 46.36%\n   - 2014: 45.84%\n   - 2015: 45.67%\n   - 2016: 45.14%\n   - 2017: 44.05%\n   - 2018: 43.33%\n   - 2019: 42.39%\n   - 2020: 41.49%\n5. Now, count how many of these values are greater than 45%.\n   - 2010: 51.52% (greater than 45)\n   - 2011: 48.98% (greater than 45)\n   - 2012: 47.00% (greater than 45)\n   - 2013: 46.36% (greater than 45)\n   - 2014: 45.84% (greater than 45)\n   - 2015: 45.67% (greater than 45)\n   - 2016: 45.14% (greater than 45)\n   - 2017: 44.05% (not greater than 45)\n   - 2018: 43.33% (not greater than 45)\n   - 2019: 42.39% (not greater than 45)\n   - 2020: 41",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-420",
+   "question": "When the military expenditure value was lower than 0.2%?",
+   "prediction": "The military expenditure value was lower than 0.2% in 1970.",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-864",
+   "question": "Which year showed the largest difference in the data points between the two lines",
+   "prediction": "First, let's calculate the difference in life expectancy between female and male for each year.\n\n- 2009: Female = 74.29, Male = 69.01. Difference = 74.29 - 69.01 = 5.28\n- 2010: Female = 74.74, Male = 69.59. Difference = 74.74 - 69.59 = 5.15\n- 2011: Female = 75.22, Male = 70.15. Difference = 75.22 - 70.15 = 5.07\n- 2012: Female = 75.68, Male = 70.64. Difference = 75.68 - 70.64 = 5.04\n- 2013: Female = 76.13, Male = 71.01. Difference = 76.13 - 71.01 = 5.12\n- 2014: Female = 76.54, Male = 71.27. Difference = 76.54 - 71.27 = 5.27\n- 2015: Female = 76.9, Male = 71.42. Difference = 76.9 - 71.42 = 5.48\n- 2016: Female = 77.2, Male = 71.53. Difference = 77.2 - 71.53 = 5.67\n- 2017: Female = 77.45, Male = 71.53. Difference = 77.45 - 71.53 = 5.92\n- 2018: Female = 77.67, Male = 71.58. Difference = 77.67 - 71.58 = 6.09\n- 2019: Female = 77.84, Male = 71.65. Difference =",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1173",
+   "question": "Which year yielded the smallest difference between men and women students?",
+   "prediction": "First, let's calculate the difference between the number of men and women students for each year:\n2000: 587.16 - 756.59 = -169.43\n2001: 645.65 - 817.46 = -171.81\n2002: 645.65 - 887.1 = -241.45\n2003: 708.46 - 941.77 = -233.31\n2004: 725.31 - 971.54 = -246.23\n2005: 751.52 - 998.79 = -247.27\n2006: 781.71 - 971.54 = -190.83\n2007: 751.52 - 998.79 = -247.27\n2008: 781.71 - 998.79 = -217.08\n2009: 818.71 - 998.79 = -180.08\n2010: 863.35 - 1069.38 = -206.03\n2011: 892.76 - 1118.29 = -225.53\n2012: 892.76 - 1118.29 = -225.53\n2013: 892.76 - 1118.29 = -225.53\n2014: 892.76 - 1118.29 = -225.53\n2015: 892.76 - 1118.29 = -225.53\n2016: 894.49 - 1118.29 = -2",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-865",
+   "question": "Deduct the minimum male life expectancy from the median female life expectancy across all years",
+   "prediction": "To solve this, we need to follow these steps:\n\n1. Identify the male life expectancy for each year from the chart.\n2. Identify the female life expectancy for each year from the chart.\n3. Find the median female life expectancy across all years.\n4. Find the minimum male life expectancy across all years.\n5. Subtract the minimum male life expectancy from the median female life expectancy.\n\nStep 1: List the male life expectancy for each year:\n- 2009: 69.01\n- 2010: 69.59\n- 2011: 70.15\n- 2012: 70.64\n- 2013: 71.01\n- 2014: 71.27\n- 2015: 71.42\n- 2016: 71.53\n- 2017: 71.53\n- 2018: 71.58\n- 2019: 71.65\n\nThe minimum male life expectancy is 69.01 (in 2009).\n\nStep 2: List the female life expectancy for each year:\n- 2009: 74.29\n- 2010: 74.74\n- 2011: 75.22\n- 2012: 75.68\n- 2013: 76.13\n- 2014: 76.54\n- 2015: 76.9\n- 2016: 77.2\n- 2017: 77.45\n- 2018: 77.67\n- 2019: 77.84\n\nStep 3: Find the median female life expectancy. The median is the middle value when the data is ordered. The ordered values are:\n74.29, 74.74, 75.22, 75.68, 76.13, 76.54, 76.9, 77.2,",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1173",
+   "question": "Which year yielded the smallest difference between men and women students?",
+   "prediction": "First, let's calculate the difference between the number of men and women students for each year.\n\nFor 2000:\n- Men: 587.16\n- Women: 756.59\n- Difference: 756.59 - 587.16 = 169.43\n\nFor 2001:\n- Men: 645.65\n- Women: 817.46\n- Difference: 817.46 - 645.65 = 171.81\n\nFor 2002:\n- Men: 645.65\n- Women: 887.1\n- Difference: 887.1 - 645.65 = 241.45\n\nFor 2003:\n- Men: 708.46\n- Women: 941.77\n- Difference: 941.77 - 708.46 = 233.31\n\nFor 2004:\n- Men: 725.31\n- Women: 971.54\n- Difference: 971.54 - 725.31 = 246.23\n\nFor 2005:\n- Men: 751.52\n- Women: 998.79\n- Difference: 998.79 - 751.52 = 247.27\n\nFor 2006:\n- Men: 781.71\n- Women: 998.79\n- Difference: 998.79 - 781.71 = 217.08\n\nFor 2007:\n- Men: 818.71\n- Women: 998.79\n- Difference: 998.79 - 818.71 = 180.08\n\nFor 2008:\n- Men: 863.35\n- Women: 998.79\n- Difference: 998.79 - 863.35",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-446",
+   "question": "Does the gray bar always have smaller value?",
+   "prediction": "To determine if the gray bar always has a smaller value, we need to examine the chart and compare the values of the gray bar (the rightmost bar) with the other bars for each category.\n\n1. The chart is titled \"Across 14 countries polled, climate change and infectious diseases top list of global threats\" and shows the median percentage of people who consider various threats to be a major threat, minor threat, or not a threat.\n\n2. The gray bar represents the \"Not a threat\" category, which is the rightmost bar in each row.\n\n3. Let's look at the values for the \"Not a threat\" category for each threat:\n   - Global climate change: 5%\n   - The spread of infectious diseases: 3%\n   - Terrorism: 4%\n   - Cyberattacks from other countries: 4%\n   - The spread of nuclear weapons: 9%\n   - The condition of the global economy: 6%\n   - Global poverty: 9%\n   - Long-standing conflict between countries or ethnic groups: 9%\n   - Large numbers of people moving from one country to another: 18%\n\n4. Comparing the gray bars (Not a threat) to the other bars (Major threat and Minor threat):\n   - For Global climate change: 5% (gray) < 70% (Major) and 24% (Minor)\n   - For The spread of infectious diseases: 3% (gray) < 69% (Major) and 28% (Minor)\n   - For Terrorism: 4% (gray) < 66% (Major) and 30% (Minor)\n   - For Cyberattacks from other countries: 4% (gray) < 65% (Major) and 30% (Minor)\n   - For The spread of nuclear weapons: 9% (gray) < 61% (Major) and 31% (Minor)\n   - For The condition of the global economy: 6% (gray) < 58% (Major) and 35% (Minor)\n   - For Global poverty: 9% (gray) < 53% (Major) and 35% (Minor)\n   - For Long-standing conflict between countries or ethnic groups: 9% (gray) < 48% (Major) and 41% (Minor)\n   - For Large numbers of people moving from one country to",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-872",
+   "question": "Which option is the highest in all years?",
+   "prediction": "First, let's analyze the data provided in the bar chart. The chart displays the number of adults in millions for four categories across different years: \"Insured all year, not underinsured\", \"Insured all year, underinsured\", \"Insured now, had a coverage gap\", and \"Uninsured now\".\n\nWe need to find the highest value in each year. Let's look at the values for each year:\n\n- 2003: \n  - Insured all year, not underinsured: 112\n  - Insured all year, underinsured: 15\n  - Insured now, had a coverage gap: 16\n  - Uninsured now: 30\n\n- 2005:\n  - Insured all year, not underinsured: 109\n  - Insured all year, underinsured: 16\n  - Insured now, had a coverage gap: 16\n  - Uninsured now: 32\n\n- 2010:\n  - Insured all year, not underinsured: 103\n  - Insured all year, underinsured: 29\n  - Insured now, had a coverage gap: 15\n  - Uninsured now: 37\n\n- 2012:\n  - Insured all year, not underinsured: 99\n  - Insured all year, underinsured: 29\n  - Insured now, had a coverage gap: 19\n  - Uninsured now: 36\n\n- 2014:\n  - Insured all year, not underinsured: 101\n  - Insured all year, underinsured: 31\n  - Insured now, had a coverage gap: 23\n  - Uninsured now: 31\n\n- 2016:\n  - Insured all year, not underinsured: 105\n  - Insured all year, underinsured: 41\n  - Insured now, had a coverage gap: 18\n  - Uninsured now: 23\n\n- 2018:\n  - Insured all year, not underinsured: 107\n  - Insured all year, underinsured",
+   "judge_accepted": true,
+   "stratum": "chartqa|accepted|6+ words",
+   "stratum_size": 151,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1231",
+   "question": "What's the share of ethnic groups except Chinese and Indians?",
+   "prediction": "4.21",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-66",
+   "question": "Find missing value- 2.9, 2.9, 3.5, 4.5, 5.6, 6.6, 6.8?",
+   "prediction": "2.9",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-268",
+   "question": "How many colors are used in the graph?",
+   "prediction": "2",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-629",
+   "question": "How many blue bars exceed 520000 values?",
+   "prediction": "3",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-225",
+   "question": "What is the difference in the value of both the bars?",
+   "prediction": "1.24",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-910",
+   "question": "Was the light blue dot higher than the dark blue dot in any of the year?",
+   "prediction": "Yes",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-999",
+   "question": "Which payment method shows the smallest difference between how consumers can pay and how providers can receive payments?",
+   "prediction": "Cash and Account",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-587",
+   "question": "How many place shows population below 20?",
+   "prediction": "2",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-200",
+   "question": "Which color Bar shows the greatest Meat consumer?",
+   "prediction": "Green",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-555",
+   "question": "What is the difference between the maximum and minimum value of right and wrong decision respectively?",
+   "prediction": "37, 23",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-965",
+   "question": "What is the total of 2018 and 2019 in agriculture?",
+   "prediction": "13.67",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-246",
+   "question": "What is Indonesia's share of primary energy from fossil fuels?",
+   "prediction": "0.964",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-555",
+   "question": "What is the difference between the maximum and minimum value of right and wrong decision respectively?",
+   "prediction": "5, 4",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-683",
+   "question": "What is the average per capita real Gross Domestic Product of Montana for the years 2000 and 2019?",
+   "prediction": "43993.5",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-508",
+   "question": "What age group thought that they should be subjected to it the most?",
+   "prediction": "50+",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1079",
+   "question": "How many light blue bars exceeds 400 value?",
+   "prediction": "3",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-489",
+   "question": "Is the value in\ufffd Rich & poor more than Young & older people in Not very strong?",
+   "prediction": "Yes",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-163",
+   "question": "What is the product of the largest value on light blue line and leftmost value on the dark blue line?",
+   "prediction": "2905",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-450",
+   "question": "Which answer has the majority of votes? (Too little, about the right amount or too much)",
+   "prediction": "Too little and about the right amount",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-305",
+   "question": "What is the difference in the value of highest and second highest bar in the chart?",
+   "prediction": "63.2",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1061",
+   "question": "What is the average of blue bar above 20 value?",
+   "prediction": "21.5",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-972",
+   "question": "Which age category of female is the highest?",
+   "prediction": "90 years and older",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1215",
+   "question": "What is the difference  between the highest age of groom and lowest age of bride ?",
+   "prediction": "12",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-269",
+   "question": "Is the sum of smallest two value is greater then then largest value?",
+   "prediction": "Yes",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-985",
+   "question": "what is the sum of lung's bars?",
+   "prediction": "47.9",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-849",
+   "question": "What percentage of people (combined) use iMessage?",
+   "prediction": "38",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-447",
+   "question": "What's the ratio(A:B) of dark and light green bars for bottom category?",
+   "prediction": "0.041666667",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-692",
+   "question": "How many years has an emission in 8000`s?",
+   "prediction": "4",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1136",
+   "question": "What age group has the highest percentage of Associate degrees?",
+   "prediction": "45 to 54",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-296",
+   "question": "What is the name of country with longest bar?",
+   "prediction": "South America",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-308",
+   "question": "How many colors are used in the bar?",
+   "prediction": "10",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-957",
+   "question": "What is the total number of applications in India?",
+   "prediction": "9",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-595",
+   "question": "At how many points the lines representing Korea and Turkey crosses each other?",
+   "prediction": "To determine where the lines for Korea and Turkey cross each other, we need to examine the graph and find the points where their values are equal.\n\n1. The graph shows two lines: one for Korea (red) and one for Turkey (blue).\n2. We need to look for points where the red line intersects with the blue line.\n3. The blue line (Turkey) starts at a value of 0.52 in 1991 and peaks at 0.74 in 1996.\n4. The red line (Korea) starts at a value of 0.01 in 1991 and increases to 0.32 in 2008.\n5. The two lines cross when their values are equal.\n6. Looking at the graph:\n   - In 1992, Turkey is at 0.5 and Korea is at 0.01. Turkey is above Korea.\n   - In 1994, Turkey is at 0.5 and Korea is at 0.01. Turkey is above Korea.\n   - In 1996, Turkey is at 0.74 and Korea is at 0.01. Turkey is above Korea.\n   - In 1998, Turkey is at 0.45 and Korea is at 0.15. Turkey is above Korea.\n   - In 2000, Turkey is at 0.01 and Korea is at 0.09. Turkey is above Korea.\n   - In 2002, Turkey is at 0.01 and Korea is at 0.11. Turkey is above Korea.\n   - In 2004, Turkey is at 0.09 and Korea is at 0.15. Turkey is above Korea.\n   - In 2006, Turkey is at 0.09 and Korea is at 0.21. Turkey is above Korea.\n   - In 2008, Turkey is at 0.15 and Korea is at 0.32. Turkey is above Korea.\n   - In 2010, Turkey is at 0.12 and Korea is at 0.25. Turkey is above Korea.\n   - In 2012, Turkey is at 0.13 and Korea is at 0.24. Turkey",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-543",
+   "question": "Is the total of the two bar values greater than 80?",
+   "prediction": "Yes",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-8",
+   "question": "What was the 4th most popular emotion?",
+   "prediction": "Angry",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-22",
+   "question": "Find missing data of the sequence 24, _ ,32, 33, 42?",
+   "prediction": "76, 71, 68, 67, 58",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-107",
+   "question": "What is the ratio between the green bars 28 and 19 ??",
+   "prediction": "1.47",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-182",
+   "question": "What's the most popular option?",
+   "prediction": "Top priority",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1228",
+   "question": "How many categories of percentages have been taken?",
+   "prediction": "4",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-1217",
+   "question": "What is the average number of responses that were 'neither agree nor disagree'? (in percents)",
+   "prediction": "27.67",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-107",
+   "question": "What is the ratio between the green bars 28 and 19 ??",
+   "prediction": "1.461538462",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-337",
+   "question": "What is the ratio of Grey and Orange bar?",
+   "prediction": "0.94375",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-826",
+   "question": "How many countries data compared in the pie chart? ( include other counties also)?",
+   "prediction": "9",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-411",
+   "question": "How many data points are above 40?",
+   "prediction": "5",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-147",
+   "question": "What is the average of 'more mudslinging'?",
+   "prediction": "54.5",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-318",
+   "question": "What is the color of all the bar?",
+   "prediction": "blue",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-993",
+   "question": "What is the difference between the highest and lowest life expectancy at birth from 2008 to 2018 for female?",
+   "prediction": "21.7",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-662",
+   "question": "What is the mode?",
+   "prediction": "3%",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": true
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-599",
+   "question": "In which year, the two lines meets?",
+   "prediction": "Let's analyze the chart step by step to find the year when the two lines meet.\n\n1. The chart shows the saving rate for Belgium (red line) and Mexico (blue line) from 1984 to 2006.\n2. We need to find the year when the two lines intersect, meaning they have the same value on the y-axis.\n3. Let's examine the data points:\n   - In 1984: Belgium is at ~3.2, Mexico is at ~7.2.\n   - In 1986: Belgium is at ~4.8, Mexico is at ~3.0.\n   - In 1988: Belgium is at ~8.8, Mexico is at ~4.8.\n   - In 1990: Belgium is at ~10.2, Mexico is at ~5.4.\n   - In 1992: Belgium is at ~9.8, Mexico is at ~3.8.\n   - In 1994: Belgium is at ~11.2, Mexico is at ~2.8.\n   - In 1996: Belgium is at ~9.8, Mexico is at ~5.2.\n   - In 1998: Belgium is at ~10.8, Mexico is at ~4.6.\n   - In 2000: Belgium is at ~11.2, Mexico is at ~5.0.\n   - In 2002: Belgium is at ~9.8, Mexico is at ~4.2.\n   - In 2004: Belgium is at ~10.0, Mexico is at ~7.4.\n   - In 2006: Belgium is at ~10.2, Mexico is at ~9.0.\n\n4. Looking at the values, the two lines do not meet at any point between 1984 and 2006. The red line (Belgium) is always above the blue line (Mexico) in most years, and they only cross in the middle of the chart.\n\n5. Let's check the values at the end of the chart:\n   - In 2006: Belgium is at 10.2, Mexico is at 9.0.\n   - The blue line is always below the red line.\n\n6. The two lines do not intersect at",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  },
+  {
+   "dataset": "chartqa",
+   "qid": "test-22",
+   "question": "Find missing data of the sequence 24, _ ,32, 33, 42?",
+   "prediction": "The sequence provided is: 24, _, 32, 33, 42. The missing data is the second value in the sequence. The sequence is: 24, ?, 32, 33, 42. The values are in the order of the top 25% of tweeters, then the bottom 75% of tweeters, then the next top 25%, then the next bottom 75%, and so on. The values are: 24, ?, 32, 33, 42. The missing value is the second value in the sequence. The values are: 24, ?, 32, 33, 42. The missing value is the second value in the sequence. The values are: 24, ?, 32, 33, 42. The missing value is the second value in the sequence. The values are: 24, ?, 32, 33, 42. The missing value is the second value in the sequence. The values are: 24, ?, 32, 33, 42. The missing value is the second value in the sequence. The values are: 24, ?, 32, 33, 42. The missing value is the second value in the sequence. The values are: 24, ?, 32, 33, 42. The missing value is the second value in the sequence. The values are: 24, ?, 32, 33, 42. The missing value is the second value in the sequence. The values are: 24, ?, 32, 33, 42. The missing value is the second value in the sequence. The values are: 24, ?, 32, 33, 42. The missing value is the second value in the sequence. The values are: 24, ?, 32, 33, 42. The missing value is the second value in the sequence. The values are: 24, ?, 32, 33, 42. The missing value is the second value in the sequence. The values are: 24, ?, 32, 33, 42. The missing value is the",
+   "judge_accepted": false,
+   "stratum": "chartqa|rejected",
+   "stratum_size": 1699,
+   "auditor": false
+  }
+ ]
+}

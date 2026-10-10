@@ -9,6 +9,7 @@ the corrected campaign and the July runs appear only in labeled history tables.
 
 import json
 import re
+import tomllib
 from pathlib import Path
 from typing import NamedTuple
 
@@ -336,7 +337,7 @@ def declared(rows: list[dict], comparisons: list[tuple[str, str]],
              variants: tuple[str, ...] = SCORER_VARIANTS) -> list[dict]:
     """The arm-comparison rows of one matrix's declared pairs, under the given scorers."""
     pairs = set(comparisons)
-    return [row for row in rows if "contrast" not in row and "pilot" not in row
+    return [row for row in rows if not {"contrast", "pilot", "transfer"} & row.keys()
             and row["variant"] in variants and (row["reference"], row["candidate"]) in pairs]
 
 
@@ -506,11 +507,15 @@ def knobs_table(knobs: dict | None) -> str:
                   "Train GPU-h", "Verdict"], rows, 3)
 
 
+def judged_datasets(judge: dict) -> list[str]:
+    return sorted({cell["dataset"] for cell in judge["cells"]}, key=dataset_order)
+
+
 def judge_table(arms: list[Arm], judge: dict | None) -> str:
     """Official, judge-adjusted and audited accuracy, and the share of misses the judge accepts."""
     if judge is None:
         return "The judge has not rescored the final records yet.\n"
-    datasets = ordered_datasets()
+    datasets = judged_datasets(judge)
     found = {(c["arm"], c["prompt"], c["dataset"]): c for c in judge["cells"]}
 
     def text(c):
@@ -530,7 +535,7 @@ def judge_deltas_table(arms: list[Arm], judge: dict | None) -> str:
     if judge is None:
         return "The judge has not rescored the final records yet.\n"
     names = {arm.label: arm.name for arm in arms}
-    datasets = ordered_datasets()
+    datasets = judged_datasets(judge)
     grouped = {}
     for row in judge["paired_deltas"]:
         key = (row["candidate"], row["reference"], row["prompt"])
@@ -608,6 +613,25 @@ def pilot_deltas_table(arms: list[Arm], rows: list[dict], pilot: str) -> str:
     return table(["Comparison", "Prompt", "Official"], lines, 2)
 
 
+def transfer_table(arms: list[Arm], rows: list[dict], spec: dict | None, prompt: str) -> str:
+    """Each arm minus the reference on every listed test set under one prompt, official
+    scorer, with 95% intervals over questions."""
+    rows = [row for row in rows if "transfer" in row and row["prompt"] == prompt]
+    if spec is None or not rows:
+        return "No transfer comparison has been computed yet.\n"
+    names = {arm.label: arm.name for arm in arms}
+    found = {(row["candidate"], row["dataset"]): row for row in rows}
+    lines = []
+    for entry in spec["rows"]:
+        cells = []
+        for dataset in spec["datasets"]:
+            row = found.get((entry["arm"], dataset))
+            cells.append(f"{row['delta']:+.2f} [{row['low']:+.2f}, {row['high']:+.2f}]"
+                         if row else "—")
+        lines.append([names[entry["arm"]], entry["trained_on"], *cells])
+    return table(["Arm", "Trained on", *map(column, spec["datasets"])], lines, 2)
+
+
 def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
     """Every markdown block, and the JSON export for the demo."""
     toml = root / "experiments.toml"
@@ -625,10 +649,12 @@ def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
     comparisons = load_comparisons(toml, "headline")
     matched, _ = load_matrix(toml, "matched")
     pilot_arms, _, _ = load_pilot(toml, "chartqa")
+    transfer = tomllib.loads(toml.read_text()).get("transfer")
     passk = load_result(root / "results", "passk-heldout.json")
     chartqa_passk = load_result(root / "results", "passk-chartqa.json")
     knobs = load_result(root / "results", "knobs-chartqa.json")
     judge = load_result(root / "results", "judge-final.json")
+    chartqa_judge = load_result(root / "results", "judge-chartqa.json")
     ood = load_result(root / "results", "ood.json")
     blocks = {
         "matched": matrix_table(matched, cells),
@@ -638,11 +664,15 @@ def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
         "chartqa-pilot-deltas": pilot_deltas_table(pilot_arms, deltas, "chartqa"),
         "chartqa-passk": passk_table(every_arm, chartqa_passk),
         "knobs-chartqa": knobs_table(knobs),
+        "transfer-reasoning": transfer_table(every_arm, deltas, transfer, "reasoning"),
+        "transfer-short": transfer_table(every_arm, deltas, transfer, "short"),
         "chartqa-passk-deltas": passk_deltas_table(every_arm, chartqa_passk),
         "passk": passk_table(every_arm, passk),
         "passk-deltas": passk_deltas_table(every_arm, passk),
         "judge": judge_table(arms, judge),
         "judge-deltas": judge_deltas_table(arms, judge),
+        "chartqa-judge": judge_table(pilot_arms, chartqa_judge),
+        "chartqa-judge-deltas": judge_deltas_table(pilot_arms, chartqa_judge),
         "ood": ood_table(every_arm, ood),
         "ood-deltas": ood_deltas_table(every_arm, ood),
         "matrix": matrix_table(arms, cells),

@@ -5,6 +5,7 @@
 Reads the comparisons declared in experiments.toml, pairs the two arms' records of every
 declared original-image protocol, pairs any cell evaluated under a larger image budget with
 its default-budget cell and any cell evaluated on the RL canvas with its original-image cell,
+pairs each [transfer] arm with the reference on every listed test set,
 and writes results/paired-deltas.json, which the report turns into tables. Needs the
 predictions beside the records, which stay local.
 """
@@ -13,8 +14,9 @@ import json
 import tomllib
 
 from vqar.config import MAX_PIXELS
-from vqar.eval.matrix import declared_records, load_comparisons, load_matrix, load_pilot
+from vqar.eval.matrix import Arm, declared_records, load_comparisons, load_matrix, load_pilot
 from vqar.eval.paired import paired_bootstrap, question_scores
+from vqar.eval.protocol import Protocol
 from vqar.eval.report import ROOT, load_cells
 from vqar.eval.runner import DATA_DIR, RECORDS_DIR
 from vqar.registry import SCORER_VARIANTS
@@ -96,8 +98,35 @@ def pilot_comparisons() -> list[dict]:
     return rows
 
 
+def transfer_comparisons() -> list[dict]:
+    """Each [transfer] arm minus the reference on every listed test set (full test role, both
+    prompts, official scorer), in and out of its training data."""
+    matrix = tomllib.loads((ROOT / "experiments.toml").read_text())
+    spec = matrix.get("transfer")
+    if spec is None:
+        return []
+    arms = {arm["label"]: Arm(**arm) for arm in matrix["arms"]}
+    labels = [spec["reference"], *(row["arm"] for row in spec["rows"])]
+    protocols = [Protocol(dataset, prompt=prompt) for dataset in spec["datasets"]
+                 for prompt in ("short", "reasoning")]
+    records = declared_records([arms[label] for label in labels], protocols, RECORDS_DIR,
+                               DATA_DIR, ROOT)
+    rows = []
+    for row in spec["rows"]:
+        for protocol in protocols:
+            pair = records.get((spec["reference"], protocol)), records.get((row["arm"], protocol))
+            if None in pair:
+                continue
+            scores = [question_scores(r.predictions_path(), "official") for r in pair]
+            rows.append({"transfer": row["trained_on"], "reference": spec["reference"],
+                         "candidate": row["arm"], "dataset": protocol.dataset,
+                         "prompt": protocol.prompt, "variant": "official",
+                         **paired_bootstrap(*scores)})
+    return rows
+
+
 def main():
-    rows = comparisons() + resolution_contrasts() + pilot_comparisons()
+    rows = comparisons() + resolution_contrasts() + pilot_comparisons() + transfer_comparisons()
     OUTPUT.write_text(json.dumps(rows, indent=1) + "\n")
     print(f"wrote {OUTPUT.relative_to(ROOT)}")
 

@@ -1,0 +1,137 @@
+{
+ "tier": "dev",
+ "samples": 8,
+ "temperature": 1.0,
+ "sampled_max_tokens": 640,
+ "scorer": "normalized",
+ "gates": {
+  "min_pool_questions": 2000,
+  "min_parse_rate": 0.95,
+  "max_short_accuracy": 0.9,
+  "min_matched_payoff_high": 0.0,
+  "min_image_drop_low": 0.1,
+  "min_learnable_share": 0.25,
+  "declared": [
+   "split separable",
+   "license"
+  ]
+ },
+ "ranking": "passed candidates by matched payoff, then RL headroom, both descending",
+ "rows": [
+  {
+   "model": "base8",
+   "dataset": "medthink",
+   "display_name": "MedThinkVQA",
+   "role": "rl",
+   "validation_only": false,
+   "tier": "dev",
+   "pool_questions": 6847,
+   "declared": {
+    "split_unit": "case",
+    "split_separable": true,
+    "license": "CC BY-NC-SA 4.0 (research use)",
+    "license_usable": true
+   },
+   "samples": 8,
+   "pass_at_1": 0.15325,
+   "pass_at_k": 0.414,
+   "rl_headroom": {
+    "n": 500,
+    "delta": 26.075,
+    "low": 22.975,
+    "high": 29.225,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "learnable_share": 0.392,
+   "parse_rate": 0.2695,
+   "questions": 500,
+   "short_accuracy": 0.496,
+   "reasoning_accuracy": 0.072,
+   "direct_accuracy": 0.392,
+   "stepwise_accuracy": 0.046,
+   "reasoning_behavior": {
+    "mean_output_tokens": 499.216,
+    "truncated_fraction": 0.874,
+    "answer_tag_fraction": 0.126
+   },
+   "direct_behavior": {
+    "mean_output_tokens": 276.372,
+    "truncated_fraction": 0.208,
+    "answer_tag_fraction": 0.792
+   },
+   "stepwise_behavior": {
+    "mean_output_tokens": 507.2,
+    "truncated_fraction": 0.924,
+    "answer_tag_fraction": 0.076
+   },
+   "reasoning_payoff": {
+    "n": 500,
+    "delta": -42.4,
+    "low": -46.800000000000004,
+    "high": -37.8,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "matched_payoff": {
+    "n": 500,
+    "delta": -34.599999999999994,
+    "low": -38.800000000000004,
+    "high": -30.4,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "image_dependence": {
+    "n": 500,
+    "delta": 2.6,
+    "low": -1.0,
+    "high": 6.2,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "wrong_image_dependence": {
+    "n": 500,
+    "delta": 6.2,
+    "low": 2.8000000000000003,
+    "high": 9.6,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "multi_image_gain": {
+    "n": 500,
+    "delta": 4.2,
+    "low": 1.4000000000000001,
+    "high": 7.000000000000001,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "text_only_drop": {
+    "n": 500,
+    "delta": 3.8,
+    "low": 0.2,
+    "high": 7.3999999999999995,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "failed_gates": [
+    "parse rate",
+    "reasoning not worse",
+    "image needed"
+   ],
+   "status": "rejected",
+   "missing": [],
+   "records": {
+    "short": "/home/guangbo/codes/VQA/results/records/base8-3b8e9ad666/medthink-rl-dev-short-27c9fc0462.json",
+    "black": "/home/guangbo/codes/VQA/results/records/base8-3b8e9ad666/medthink-rl-dev-short-black-1f80e5ad56.json",
+    "swapped": "/home/guangbo/codes/VQA/results/records/base8-3b8e9ad666/medthink-rl-dev-short-swapped-4813912ce0.json",
+    "reasoning": "/home/guangbo/codes/VQA/results/records/base8-3b8e9ad666/medthink-rl-dev-reasoning-af852625e5.json",
+    "direct": "/home/guangbo/codes/VQA/results/records/base8-3b8e9ad666/medthink-rl-dev-direct-31a1e94dc7.json",
+    "stepwise": "/home/guangbo/codes/VQA/results/records/base8-3b8e9ad666/medthink-rl-dev-stepwise-91713158d0.json",
+    "sampled": "/home/guangbo/codes/VQA/results/records/base8-3b8e9ad666/medthink-rl-dev-reasoning-t1k8-08b592aad0.json",
+    "first": "/home/guangbo/codes/VQA/results/records/base8-3b8e9ad666/medthink-rl-dev-short-first-c675e0746f.json",
+    "none": "/home/guangbo/codes/VQA/results/records/base8-3b8e9ad666/medthink-rl-dev-short-none-b09e144ec2.json"
+   },
+   "rank": null
+  }
+ ]
+}

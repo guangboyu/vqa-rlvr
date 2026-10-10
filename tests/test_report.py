@@ -138,6 +138,22 @@ def test_each_matrix_shows_only_its_declared_comparisons_and_scorers():
     assert declared(rows, [("base", "tuned")], ("official",)) == [row]
 
 
+def test_transfer_rows_fill_one_line_per_arm_and_stay_out_of_matrix_tables():
+    from vqar.eval.matrix import Arm
+    from vqar.eval.report import declared, transfer_table
+
+    arms = [Arm("base", "Base", "m"), Arm("tuned", "Tuned", "n")]
+    spec = {"reference": "base", "datasets": ["vqav2", "chartqa"],
+            "rows": [{"arm": "tuned", "trained_on": "ChartQA"}]}
+    row = {"transfer": "ChartQA", "reference": "base", "candidate": "tuned",
+           "dataset": "vqav2", "prompt": "reasoning", "variant": "official",
+           "n": 3, "delta": 15.2, "low": 14.0, "high": 16.4}
+    lines = transfer_table(arms, [row], spec, "reasoning").splitlines()
+    assert lines[2] == "| Tuned | ChartQA | +15.20 [+14.00, +16.40] | — |"
+    assert transfer_table(arms, [row], spec, "short").startswith("No transfer comparison")
+    assert declared([row], [("base", "tuned")]) == []
+
+
 def test_a_larger_image_budget_is_reported_as_a_paired_change():
     from vqar.eval.matrix import Arm
     from vqar.eval.report import deltas_table, resolution_table

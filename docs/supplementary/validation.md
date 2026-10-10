@@ -282,3 +282,37 @@ These checks preceded the recipe experiments and the final rerun.
   intervals excluding zero), rejects CLEVR counting as saturated and TextVQA for having no
   training pool, as expected ([evaluation](evaluation.md)).
 
+
+## Part 2 checks (2026-10-08)
+
+These checks ran on ChartQA before any training knob was promoted to a full run.
+
+- **Overfitting check.** Can the frozen GRPO recipe fit its own training data? The set is
+  32 ChartQA pool questions that Instruct 2B answers right 1–7 times in 8 (pool
+  `overfit32-chartqa-base2`); 200 updates of 4 questions make 25 passes over it. The pass
+  rule was fixed before the run: mean training reward over the last five passes at least
+  0.90, and at least 0.25 above the first pass. The first run rose from 0.38 to 0.70 and
+  failed. Its completions showed two defects outside the learning algorithm. The reward
+  marked right answers wrong when the label is a bracketed list or uses a Unicode dash
+  (`[Gambia, Niger]` against `Gambia, Niger`; 22 of the 1,250 test labels are bracketed).
+  And the 608-pixel training canvas blurred chart values the model read correctly at full
+  resolution (next item). With a list-aware reward (`--rewards correctness_lists`) and an
+  896-pixel canvas the rerun rose from 0.51 to 0.80, still short of 0.90: 15 questions
+  ended solved (last-five mean at least 0.95), 12 between 0.5 and 0.95, 4 below 0.5 and 1
+  at zero. The rising reward, the solved questions and a normal sampler–trainer gap show
+  the update path working. A proposed explanation for the rest, not tested by its own run:
+  the conservative step size (learning rate 1e-5 on LoRA r16) meets groups that score
+  all alike and so give no gradient, 54% of groups over the last five passes. Scripts:
+  `runs/overfit-20261008/` (local).
+- **Training image geometry.** RL pads every image onto a 608 × 608 canvas (361 vision
+  tokens); evaluation keeps each image's shape within 0.79 megapixels. On ChartQA's dev role
+  Instruct 2B scores 69.52 under the reasoning prompt with original images and 65.24 on the
+  canvas (−4.28 [−6.78, −1.77]); numeric answers lose 7.6 points (68.1 → 60.5) and text
+  answers none (72.4 → 75.0). Photos lose at most 1 point on the same canvas
+  ([image resolution](results.md#image-resolution)). `train_grpo.py --image-fit budget`
+  trains on the evaluation geometry instead (opt-in; recorded runs keep the canvas).
+- **Sampler against trainer, evaluation geometry.** Images of varying shape could make vLLM
+  and the trainer's processor expand image tokens differently. `scripts/check_logprob_gap.py
+  --datasets chartqa --questions 32 --image-fit budget` (Instruct 2B, 256 responses) found
+  prompt token IDs identical in every response and a mean per-token gap of 0.0116, against
+  0.0120 on the canvas; importance-sampling ratios averaged 1.023 and 1.022.

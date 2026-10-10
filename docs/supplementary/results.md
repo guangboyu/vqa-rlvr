@@ -469,18 +469,20 @@ reference and the models almost never say so: Instruct 2B does in 69 of 8,000 an
 GRPO drew is level with Instruct on VizWiz and 1.18 points behind GRPO (interval [−1.68,
 −0.70]), so GRPO's VizWiz lead is not a matter of data volume.
 
-## ChartQA pilot: RL where reasoning pays
+## ChartQA: RL where reasoning pays
 
 On every dataset above, reasoning lowered accuracy and correctness-only GRPO deleted it. ChartQA's
 human-written questions are the first candidate where it does not: in screening on training
 questions, reasoning helped numeric answers by 5.6 points and cost text answers 5.5
-([screening](evaluation.md#dataset-screening)). The 2B pilot trains on its 7,378-question pool:
-one SFT epoch, then 300 GRPO updates per arm under the frozen recipe, with ChartQA's relaxed
-accuracy (5% tolerance on numbers) as the correctness reward, on one RTX 4090 (3.3 GPU-hours for
-training, merges and evaluation). 300 updates is a pilot budget: the reasoning-prompt dev
-curve of GRPO from Instruct was still rising at update 300 (71.0, 72.4 and 74.0 at updates 100,
-200 and 300). Official (normalized) accuracy on all 1,250 human test questions, the official
-score by answer type, and mean output tokens:
+([screening](evaluation.md#dataset-screening)). The 2B arms train on its 7,378-question pool
+under the frozen recipe, with ChartQA's relaxed accuracy (5% tolerance on numbers) as the
+correctness reward, on one RTX 4090: one SFT epoch, then GRPO from Instruct with the reasoning
+prompt, from Instruct with the short prompt, and from SFT with the reasoning prompt. Each GRPO
+arm ran twice: a 300-update pilot (3.3 GPU-hours for every arm, with merges and evaluation)
+and one full epoch, 1,844 updates in which each pool question is drawn once, the exposure SFT
+had (15.7 GPU-hours of training for the three arms). The epoch length was fixed before
+training, and its final checkpoint is the reported model. Official (normalized) accuracy on
+all 1,250 human test questions, the official score by answer type, and mean output tokens:
 
 <!-- report:chartqa-pilot -->
 | Arm | Prompt | Accuracy | number answers | text answers | Output tokens |
@@ -495,6 +497,12 @@ score by answer type, and mean output tokens:
 | Instruct → short-prompt GRPO (ChartQA) | reasoning | 72.08 (72.96) | 71.86 | 72.53 | 198 |
 | SFT → GRPO (ChartQA) | short | 69.44 (69.60) | 66.95 | 74.46 | 4 |
 | SFT → GRPO (ChartQA) | reasoning | 76.48 (77.28) | 76.89 | 75.66 | 168 |
+| Instruct → GRPO (ChartQA, 1 epoch) | short | 66.72 (66.96) | 63.95 | 72.29 | 4 |
+| Instruct → GRPO (ChartQA, 1 epoch) | reasoning | 80.08 (80.96) | 80.60 | 79.04 | 162 |
+| Instruct → short-prompt GRPO (ChartQA, 1 epoch) | short | 67.52 (67.76) | 65.03 | 72.53 | 4 |
+| Instruct → short-prompt GRPO (ChartQA, 1 epoch) | reasoning | 75.60 (76.48) | 76.29 | 74.22 | 177 |
+| SFT → GRPO (ChartQA, 1 epoch) | short | 69.68 (69.84) | 66.47 | 76.14 | 4 |
+| SFT → GRPO (ChartQA, 1 epoch) | reasoning | 79.76 (80.56) | 80.48 | 78.31 | 197 |
 <!-- /report:chartqa-pilot -->
 
 Candidate minus reference, official scorer, with 95% intervals over questions:
@@ -508,22 +516,39 @@ Candidate minus reference, official scorer, with 95% intervals over questions:
 | Instruct → GRPO (ChartQA) − Instruct 2B | reasoning | +6.72 [+4.56, +8.80] |
 | Instruct → short-prompt GRPO (ChartQA) − Instruct 2B | short | +1.12 [+0.32, +1.92] |
 | Instruct → short-prompt GRPO (ChartQA) − Instruct 2B | reasoning | +2.40 [+0.56, +4.16] |
+| Instruct → GRPO (ChartQA, 1 epoch) − Instruct 2B | short | +0.88 [-0.16, +2.00] |
+| Instruct → GRPO (ChartQA, 1 epoch) − Instruct 2B | reasoning | +10.40 [+8.16, +12.64] |
+| Instruct → short-prompt GRPO (ChartQA, 1 epoch) − Instruct 2B | short | +1.68 [+0.32, +3.04] |
+| Instruct → short-prompt GRPO (ChartQA, 1 epoch) − Instruct 2B | reasoning | +5.92 [+3.68, +8.08] |
 | SFT → GRPO (ChartQA) − SFT 2B (ChartQA) | short | +0.64 [-0.16, +1.44] |
 | SFT → GRPO (ChartQA) − SFT 2B (ChartQA) | reasoning | +10.24 [+7.68, +12.72] |
 | Instruct → short-prompt GRPO (ChartQA) − SFT 2B (ChartQA) | short | -1.84 [-3.60, -0.08] |
 | Instruct → short-prompt GRPO (ChartQA) − SFT 2B (ChartQA) | reasoning | +5.84 [+3.12, +8.56] |
+| SFT → GRPO (ChartQA, 1 epoch) − SFT 2B (ChartQA) | short | +0.88 [-0.24, +2.00] |
+| SFT → GRPO (ChartQA, 1 epoch) − SFT 2B (ChartQA) | reasoning | +13.52 [+10.88, +16.08] |
+| Instruct → GRPO (ChartQA, 1 epoch) − Instruct → GRPO (ChartQA) | short | +0.56 [-0.48, +1.60] |
+| Instruct → GRPO (ChartQA, 1 epoch) − Instruct → GRPO (ChartQA) | reasoning | +3.68 [+1.76, +5.60] |
+| Instruct → short-prompt GRPO (ChartQA, 1 epoch) − Instruct → short-prompt GRPO (ChartQA) | short | +0.56 [-0.72, +1.84] |
+| Instruct → short-prompt GRPO (ChartQA, 1 epoch) − Instruct → short-prompt GRPO (ChartQA) | reasoning | +3.52 [+1.44, +5.60] |
+| SFT → GRPO (ChartQA, 1 epoch) − SFT → GRPO (ChartQA) | short | +0.24 [-0.80, +1.28] |
+| SFT → GRPO (ChartQA, 1 epoch) − SFT → GRPO (ChartQA) | reasoning | +3.28 [+1.44, +5.20] |
 <!-- /report:chartqa-pilot-deltas -->
 
-Here GRPO keeps the reasoning and improves it. Under the reasoning prompt, GRPO from Instruct
-writes as much as before (about 200 tokens, 97% closing the answer tag) and gains 6.7 points,
-8.4 on numeric questions; GRPO after SFT, whose SFT start had shortened its reasoning to 76
-tokens, grows it back to 168 and gains 10.2 points over SFT. In training, GRPO from Instruct kept
-its completions at 207 → 202 tokens and its entropy at 0.24 → 0.23, against 152 → 8 tokens and
-0.73 → 0.06 on VQAv2 and GQA. Both reasoning-trained models now beat every short-answer arm: the
-reasoning prompt scores 76.4–76.5 against 69.4 for the best short answer (SFT → GRPO), so on
-this dataset RL with reasoning lifts accuracy above the short-answer ceiling. The short-answer
-ceiling itself moves as on the general data: short-prompt GRPO adds 1.1 points, SFT 3.0. One
-training seed, one dataset, 300 updates; the judge rescoring has not been run on these models.
+Here GRPO keeps the reasoning and improves it, and more data keeps paying. Under the reasoning
+prompt, GRPO from Instruct gains 6.7 points in 300 updates and 10.4 [+8.2, +12.6] after the
+epoch (69.7 → 80.1, and +3.7 [+1.8, +5.6] over the pilot), on numeric answers (68.0 → 80.6)
+and text answers (73.0 → 79.0) alike. It still reasons, at 162 tokens per response against
+Instruct's 205, where the same recipe cut VQAv2 and GQA responses to 8 tokens; in the pilot's
+training its completions went from 207 to 202 tokens and its entropy from 0.24 to 0.23,
+against 152 → 8 tokens and 0.73 → 0.06 on VQAv2 and GQA. GRPO after SFT, whose start had
+shortened its reasoning to 76 tokens, grows it back to 197 and ends 13.5 [+10.9, +16.1]
+points above SFT, level with GRPO from Instruct (79.8 against 80.1). Short answers gain far
+less from the extra data: short-prompt GRPO adds 1.1 points in 300 updates and 1.7 [+0.3,
++3.0] after the epoch, +0.6 [−0.7, +1.8] over the pilot. The best short answer (SFT → GRPO
+after the epoch, 69.7) stays 10 points below both reasoning-trained arms, so on this dataset RL
+with reasoning lifts accuracy above the short-answer ceiling. Short-prompt training also raises
+the reasoning prompt's score, by 5.9 [+3.7, +8.1] points after the epoch, at 177 tokens. One
+training seed and one dataset throughout.
 
 pass@k on all 1,250 test questions, 32 samples at temperature 1 (official scorer, %;
 `python -m scripts.pass_at_k --declared chartqa`):
@@ -534,10 +559,13 @@ pass@k on all 1,250 test questions, 32 samples at temperature 1 (official scorer
 | Instruct 2B | short | ChartQA (human) | 62.68 | 62.68 | 68.79 | 73.83 | 78.30 | 82.38 | 86.08 |
 | SFT 2B (ChartQA) | short | ChartQA (human) | 60.97 | 60.97 | 71.05 | 78.09 | 83.22 | 87.01 | 89.76 |
 | Instruct → short-prompt GRPO (ChartQA) | short | ChartQA (human) | 64.93 | 64.93 | 69.61 | 73.46 | 76.86 | 79.91 | 82.56 |
+| Instruct → short-prompt GRPO (ChartQA, 1 epoch) | short | ChartQA (human) | 67.75 | 67.75 | 70.04 | 71.94 | 73.71 | 75.39 | 77.12 |
 | Instruct 2B | reasoning | ChartQA (human) | 66.44 | 66.44 | 75.68 | 82.10 | 86.46 | 89.24 | 91.04 |
 | SFT 2B (ChartQA) | reasoning | ChartQA (human) | 58.00 | 58.00 | 72.32 | 81.99 | 88.15 | 92.07 | 94.56 |
 | Instruct → GRPO (ChartQA) | reasoning | ChartQA (human) | 74.86 | 74.86 | 81.66 | 86.08 | 89.08 | 91.14 | 92.56 |
 | SFT → GRPO (ChartQA) | reasoning | ChartQA (human) | 73.14 | 73.14 | 82.41 | 87.89 | 91.32 | 93.50 | 95.12 |
+| Instruct → GRPO (ChartQA, 1 epoch) | reasoning | ChartQA (human) | 79.78 | 79.78 | 83.77 | 86.58 | 88.69 | 90.24 | 91.52 |
+| SFT → GRPO (ChartQA, 1 epoch) | reasoning | ChartQA (human) | 79.41 | 79.41 | 84.81 | 88.29 | 90.61 | 92.19 | 93.28 |
 <!-- /report:chartqa-passk -->
 
 <!-- report:chartqa-passk-deltas -->
@@ -547,16 +575,132 @@ pass@k on all 1,250 test questions, 32 samples at temperature 1 (official scorer
 | SFT → GRPO (ChartQA) − SFT 2B (ChartQA) | reasoning | ChartQA (human) | +15.14 [+13.96, +16.33] | +15.14 [+13.96, +16.33] | +5.90 [+4.85, +6.98] | +0.56 [-0.56, +1.68] |
 | Instruct → short-prompt GRPO (ChartQA) − Instruct 2B | short | ChartQA (human) | +2.25 [+1.79, +2.72] | +2.25 [+1.79, +2.72] | -0.37 [-0.90, +0.15] | -3.52 [-4.72, -2.32] |
 | SFT 2B (ChartQA) − Instruct 2B | short | ChartQA (human) | -1.70 [-2.77, -0.65] | -1.70 [-2.77, -0.65] | +4.26 [+3.21, +5.36] | +3.68 [+2.32, +5.04] |
+| Instruct → GRPO (ChartQA, 1 epoch) − Instruct 2B | reasoning | ChartQA (human) | +13.35 [+12.00, +14.69] | +13.35 [+12.00, +14.69] | +4.48 [+3.40, +5.59] | +0.48 [-0.72, +1.68] |
+| SFT → GRPO (ChartQA, 1 epoch) − SFT 2B (ChartQA) | reasoning | ChartQA (human) | +21.41 [+19.96, +22.85] | +21.41 [+19.96, +22.85] | +6.30 [+5.08, +7.58] | -1.28 [-2.48, -0.08] |
+| Instruct → short-prompt GRPO (ChartQA, 1 epoch) − Instruct 2B | short | ChartQA (human) | +5.08 [+4.02, +6.16] | +5.08 [+4.02, +6.16] | -1.89 [-2.97, -0.84] | -8.96 [-10.72, -7.28] |
 <!-- /report:chartqa-passk-deltas -->
 
-Held-out pass@k separates the two ways GRPO trained on ChartQA. Trained with reasoning, GRPO
-from Instruct is ahead at every k: +8.4 [+7.4, +9.5] at pass@1 and still +1.5 [+0.6, +2.6] at
-pass@32 (91.0 → 92.6); GRPO after SFT gains 15.1 at pass@1 and stays level at pass@32 (+0.6
-[−0.6, +1.7]). Short-prompt GRPO on the same questions reproduces the general-data pattern: +2.2
-at pass@1, below Instruct from k = 8, and −3.5 [−4.7, −2.3] at pass@32. SFT again does the
-reverse, −1.7 at pass@1 and +3.7 at pass@32. Most of the reasoning advantage at k = 1 is
-concentration on answers Instruct could already sample (it narrows from 8.4 to 1.5 points by
-k = 32); the remainder is a coverage gain that short-prompt RL does not produce.
+The full epoch separates the two kinds of RL further. Trained with reasoning, GRPO from
+Instruct gains 13.3 [+12.0, +14.7] points at pass@1 and ends level with Instruct at pass@32
+(+0.5 [−0.7, +1.7]; the pilot was +1.5 [+0.6, +2.6]): the extra updates concentrate
+probability on answers Instruct could already sample, without losing them. GRPO after SFT
+gains 21.4 at pass@1 and ends 1.3 points below SFT at pass@32 ([−2.5, −0.1]). Short-prompt
+GRPO narrows with every update: its pass@1 gain grows from 2.2 to 5.1 while its pass@32 gap
+widens from −3.5 to −9.0 [−10.7, −7.3], below Instruct from k = 4 on. SFT does the reverse,
+−1.7 at pass@1 and +3.7 at pass@32. At the same data and update budget, then, reasoning RL
+keeps Instruct's coverage at k = 32 and short-answer RL gives up 9 points of it.
+
+The exact-match misses of these 16 cells were rescored by the judge that rescored the headline
+cells, and an image-aware audit checked 50 of its verdicts per stratum on ChartQA ($0.24 for
+the judge, $0.45 for the audit; `python -m scripts.judge_records --pilot chartqa`, then
+`python -m scripts.audit_judge --pilot chartqa`). The auditor confirms 80% of the judge's
+one-word acceptances, 96% of its two-to-five-word ones and 18% of longer ones, mostly
+unfinished reasoning the judge took for an answer, and finds 10% of its rejections correct.
+Official / judge-adjusted / audited accuracy, with the share of misses the judge accepts:
+
+<!-- report:chartqa-judge -->
+| Arm | Prompt | ChartQA (human) |
+| --- | --- | ---: |
+| Instruct 2B | short | 65.84 / 68.16 / 67.89 (7%) |
+| Instruct 2B | reasoning | 69.68 / 80.00 / 77.17 (34%) |
+| SFT 2B (ChartQA) | short | 68.80 / 70.88 / 70.58 (7%) |
+| SFT 2B (ChartQA) | reasoning | 66.24 / 72.00 / 69.83 (17%) |
+| Instruct → GRPO (ChartQA) | short | 66.16 / 68.16 / 67.94 (6%) |
+| Instruct → GRPO (ChartQA) | reasoning | 76.40 / 81.84 / 80.11 (23%) |
+| Instruct → short-prompt GRPO (ChartQA) | short | 66.96 / 68.88 / 68.60 (6%) |
+| Instruct → short-prompt GRPO (ChartQA) | reasoning | 72.08 / 80.56 / 78.20 (31%) |
+| SFT → GRPO (ChartQA) | short | 69.44 / 71.20 / 71.00 (6%) |
+| SFT → GRPO (ChartQA) | reasoning | 76.48 / 80.96 / 79.66 (19%) |
+| Instruct → GRPO (ChartQA, 1 epoch) | short | 66.72 / 68.96 / 68.65 (7%) |
+| Instruct → GRPO (ChartQA, 1 epoch) | reasoning | 80.08 / 83.52 / 82.62 (17%) |
+| Instruct → short-prompt GRPO (ChartQA, 1 epoch) | short | 67.52 / 69.44 / 69.17 (6%) |
+| Instruct → short-prompt GRPO (ChartQA, 1 epoch) | reasoning | 75.60 / 81.28 / 79.57 (24%) |
+| SFT → GRPO (ChartQA, 1 epoch) | short | 69.68 / 71.20 / 70.96 (5%) |
+| SFT → GRPO (ChartQA, 1 epoch) | reasoning | 79.76 / 83.44 / 81.98 (18%) |
+<!-- /report:chartqa-judge -->
+
+Paired differences in points, official / adjusted / audited:
+
+<!-- report:chartqa-judge-deltas -->
+| Comparison | Prompt | ChartQA (human) |
+| --- | --- | ---: |
+| SFT 2B (ChartQA) − Instruct 2B | short | +2.96 / +2.72 / +2.69 |
+| SFT 2B (ChartQA) − Instruct 2B | reasoning | -3.44 / -8.00 / -7.34 |
+| Instruct → GRPO (ChartQA) − Instruct 2B | short | +0.32 / +0.00 / +0.05 |
+| Instruct → GRPO (ChartQA) − Instruct 2B | reasoning | +6.72 / +1.84 / +2.94 |
+| Instruct → short-prompt GRPO (ChartQA) − Instruct 2B | short | +1.12 / +0.72 / +0.71 |
+| Instruct → short-prompt GRPO (ChartQA) − Instruct 2B | reasoning | +2.40 / +0.56 / +1.03 |
+| Instruct → GRPO (ChartQA, 1 epoch) − Instruct 2B | short | +0.88 / +0.80 / +0.77 |
+| Instruct → GRPO (ChartQA, 1 epoch) − Instruct 2B | reasoning | +10.40 / +3.52 / +5.45 |
+| Instruct → short-prompt GRPO (ChartQA, 1 epoch) − Instruct 2B | short | +1.68 / +1.28 / +1.28 |
+| Instruct → short-prompt GRPO (ChartQA, 1 epoch) − Instruct 2B | reasoning | +5.92 / +1.28 / +2.40 |
+| SFT → GRPO (ChartQA) − SFT 2B (ChartQA) | short | +0.64 / +0.32 / +0.42 |
+| SFT → GRPO (ChartQA) − SFT 2B (ChartQA) | reasoning | +10.24 / +8.96 / +9.84 |
+| Instruct → short-prompt GRPO (ChartQA) − SFT 2B (ChartQA) | short | -1.84 / -2.00 / -1.98 |
+| Instruct → short-prompt GRPO (ChartQA) − SFT 2B (ChartQA) | reasoning | +5.84 / +8.56 / +8.37 |
+| SFT → GRPO (ChartQA, 1 epoch) − SFT 2B (ChartQA) | short | +0.88 / +0.32 / +0.38 |
+| SFT → GRPO (ChartQA, 1 epoch) − SFT 2B (ChartQA) | reasoning | +13.52 / +11.44 / +12.15 |
+| Instruct → GRPO (ChartQA, 1 epoch) − Instruct → GRPO (ChartQA) | short | +0.56 / +0.80 / +0.72 |
+| Instruct → GRPO (ChartQA, 1 epoch) − Instruct → GRPO (ChartQA) | reasoning | +3.68 / +1.68 / +2.51 |
+| Instruct → short-prompt GRPO (ChartQA, 1 epoch) − Instruct → short-prompt GRPO (ChartQA) | short | +0.56 / +0.56 / +0.57 |
+| Instruct → short-prompt GRPO (ChartQA, 1 epoch) − Instruct → short-prompt GRPO (ChartQA) | reasoning | +3.52 / +0.72 / +1.38 |
+| SFT → GRPO (ChartQA, 1 epoch) − SFT → GRPO (ChartQA) | short | +0.24 / +0.00 / -0.04 |
+| SFT → GRPO (ChartQA, 1 epoch) − SFT → GRPO (ChartQA) | reasoning | +3.28 / +2.48 / +2.32 |
+<!-- /report:chartqa-judge-deltas -->
+
+On ChartQA, as on VQAv2, part of what exact match credits to RL is answer form, but here half
+of the reasoning gain survives. Instruct's reasoning-prompt misses are often right answers in
+the wrong form, such as a unit added ("20%" for 20) or a list without brackets, and the judge
+accepts 34% of them; GRPO learns the reward's form, and the accepted share falls to 17%. Under
+the audited scorer, one epoch of GRPO from Instruct gains 5.5 points [+3.5, +7.4] under the
+reasoning prompt instead of 10.4, still 2.5 [+0.7, +4.3] over the pilot; GRPO after SFT gains
+12.2 [+9.6, +14.7] over SFT, whose short reasoning had few form errors to correct. On VQAv2 the
+same scorer kept about a fifth of the official gain (4.4 of 23.2). Reasoning itself pays more
+under the audited scorer: Instruct scores 77.2 with reasoning against 67.9 with a short
+answer, and one epoch of reasoning-trained GRPO reaches 82.6, 11.7 points above the best
+short-answer arm (SFT → GRPO, 71.0). Short-prompt GRPO's +1.7 becomes +1.3 [−0.1, +2.6].
+
+## Transfer between training data
+
+Each model trained on one dataset family was also scored on the other family's test sets,
+against Instruct 2B: full test roles, official scorer, 95% intervals over questions
+(`[transfer]` in experiments.toml; `python -m scripts.paired_deltas`). Under the reasoning
+prompt:
+
+<!-- report:transfer-reasoning -->
+| Arm | Trained on | VQAv2 | GQA | TextVQA (far-OOD) | CLEVR counting | ChartQA (human) |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| Instruct → GRPO (ChartQA, 1 epoch) | ChartQA | +15.21 [+13.99, +16.40] | +15.94 [+15.11, +16.76] | +5.85 [+4.90, +6.80] | +2.67 [+1.27, +4.07] | +10.40 [+8.16, +12.64] |
+| Instruct → short-prompt GRPO (ChartQA, 1 epoch) | ChartQA | +4.83 [+3.79, +5.88] | +6.58 [+5.87, +7.31] | +0.86 [-0.03, +1.80] | +0.53 [-0.67, +1.77] | +5.92 [+3.68, +8.08] |
+| Instruct → GRPO | VQAv2 + GQA | +23.22 [+21.95, +24.47] | +24.10 [+23.17, +24.98] | +10.24 [+9.17, +11.29] | +12.13 [+10.90, +13.37] | -6.72 [-9.68, -3.84] |
+| Instruct → short-prompt GRPO | VQAv2 + GQA | +6.80 [+5.85, +7.78] | +6.76 [+6.07, +7.43] | +2.60 [+1.75, +3.45] | -0.63 [-1.90, +0.60] | +0.48 [-1.20, +2.16] |
+| SFT 2B | VQAv2 + GQA | +12.93 [+11.59, +14.28] | +20.47 [+19.56, +21.36] | -0.89 [-2.05, +0.29] | +4.97 [+3.57, +6.30] | -7.92 [-10.80, -5.12] |
+<!-- /report:transfer-reasoning -->
+
+Under the short prompt:
+
+<!-- report:transfer-short -->
+| Arm | Trained on | VQAv2 | GQA | TextVQA (far-OOD) | CLEVR counting | ChartQA (human) |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| Instruct → GRPO (ChartQA, 1 epoch) | ChartQA | -0.25 [-0.57, +0.07] | -0.02 [-0.25, +0.22] | +0.12 [-0.25, +0.49] | -0.60 [-0.90, -0.33] | +0.88 [-0.16, +2.00] |
+| Instruct → short-prompt GRPO (ChartQA, 1 epoch) | ChartQA | -0.35 [-0.74, +0.02] | +0.05 [-0.21, +0.31] | +0.16 [-0.31, +0.63] | +1.77 [+1.30, +2.27] | +1.68 [+0.32, +3.04] |
+| Instruct → GRPO | VQAv2 + GQA | +0.07 [-0.32, +0.47] | +0.60 [+0.29, +0.91] | +0.49 [+0.05, +0.94] | +1.80 [+1.30, +2.33] | +0.00 [-0.88, +0.88] |
+| Instruct → short-prompt GRPO | VQAv2 + GQA | +0.75 [+0.27, +1.23] | +0.89 [+0.48, +1.30] | +0.48 [-0.00, +0.97] | +1.83 [+1.33, +2.37] | +0.56 [-0.40, +1.52] |
+| SFT 2B | VQAv2 + GQA | +2.00 [+1.36, +2.67] | +2.89 [+2.34, +3.47] | -0.45 [-1.11, +0.22] | +1.73 [+1.27, +2.20] | -0.16 [-1.60, +1.28] |
+<!-- /report:transfer-short -->
+
+What GRPO teaches here is a response habit, and the habit travels. Trained on ChartQA with
+reasoning, the model keeps reasoning on photos, shorter and more accurate: 66–83 tokens on
+VQAv2, GQA and TextVQA against Instruct's 107–148, and +15.2 points on VQAv2, +15.9 on GQA
+and +5.9 on TextVQA under the reasoning prompt. Trained on VQAv2 and GQA, GRPO answers in
+8–10 tokens under the reasoning prompt on every test set; the habit pays on photos (+23 to
++24 points on its training datasets) and costs 6.7 points on ChartQA ([−9.7, −3.8]), where
+reasoning pays. SFT on the same VQA questions, at 36 tokens on ChartQA, costs 7.9 there
+([−10.8, −5.1]). Under the short prompt no model loses more than 0.6 points on the other
+family's test sets, so training on one family left the other's short answers intact. Each
+model still leads on its own data: under the reasoning prompt the VQA-trained model scores
+78.3 on VQAv2 against 70.3 for the ChartQA-trained one, and 63.0 on ChartQA against 80.1.
+Whether one model trained on both families learns when to reason is the next experiment.
 
 ## Training knobs (ChartQA)
 

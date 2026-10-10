@@ -119,3 +119,26 @@ def test_the_canvas_size_knob_reaches_the_rl_images():
              "dataset": ["chartqa"], "qid": ["1"]}
     assert to_grpo_columns(batch, "short", 896)["image"][0].size == (896, 896)
     assert to_grpo_columns(batch, "short")["image"][0].size == (608, 608)
+
+
+def test_the_budget_image_fit_keeps_the_shape_within_the_evaluation_budget():
+    from argparse import Namespace
+
+    from PIL import Image
+
+    from vqar import config
+    from vqar.rl import to_grpo_columns
+    from vqar.training import resolve_preset
+
+    preset = resolve_preset(config.GRPO_PRESETS, Namespace(preset="grpo_2b_main",
+                                                            hardware="24gb", image_fit="budget"))
+    assert config.dump(preset)["image_fit"] == "budget"
+    assert "image_fit" not in config.dump(config.GRPO_PRESETS["grpo_2b_main"])
+    small, large = Image.new("RGB", (800, 400)), Image.new("L", (2000, 1000))
+    batch = {"question": ["q", "q"], "image": [small, large], "answers": [["a"], ["a"]],
+             "dataset": ["chartqa"] * 2, "qid": ["1", "2"]}
+    fitted = to_grpo_columns(batch, "short", image_fit="budget")["image"]
+    assert fitted[0].size == (800, 400)
+    width, height = fitted[1].size
+    assert width * height <= config.MAX_PIXELS and abs(width / height - 2) < 0.01
+    assert fitted[1].mode == "RGB"

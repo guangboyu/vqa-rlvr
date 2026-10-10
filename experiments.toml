@@ -127,6 +127,24 @@ name = "SFT → GRPO (ChartQA)"
 model = "checkpoints/merged/cqa_grpo2_sft"
 run = "cqa-grpo2-sft"
 
+# The same three GRPO arms for one full epoch of the pool (2026-10-08): 1,844 updates x 4
+# questions, each pool question drawn once, the learning rate decaying over the new horizon.
+# Commands: runs/chartqa-epoch-20261007/run_epoch.sh (local).
+[[arms]]
+label = "cqa-grpo2-base-e1"
+name = "Instruct → GRPO (ChartQA, 1 epoch)"
+model = "checkpoints/merged/cqa_grpo2_base_e1"
+
+[[arms]]
+label = "cqa-short2-base-e1"
+name = "Instruct → short-prompt GRPO (ChartQA, 1 epoch)"
+model = "checkpoints/merged/cqa_short2_base_e1"
+
+[[arms]]
+label = "cqa-grpo2-sft-e1"
+name = "SFT → GRPO (ChartQA, 1 epoch)"
+model = "checkpoints/merged/cqa_grpo2_sft_e1"
+
 # Recipe experiments: 2B from Instruct, one change each against the baseline, which is
 # the frozen recipe with the merged-weight sampler. The 8B format-reward run changes the
 # corrected campaign's 8B recipe instead.
@@ -343,6 +361,21 @@ prompt = "short"
 reference = "base2"
 candidates = ["cqa-short2-base", "cqa-sft2"]
 
+[[passk.chartqa.comparisons]]
+prompt = "reasoning"
+reference = "base2"
+candidates = ["cqa-grpo2-base-e1"]
+
+[[passk.chartqa.comparisons]]
+prompt = "reasoning"
+reference = "cqa-sft2"
+candidates = ["cqa-grpo2-sft-e1"]
+
+[[passk.chartqa.comparisons]]
+prompt = "short"
+reference = "base2"
+candidates = ["cqa-short2-base-e1"]
+
 # Extra OOD sets (2026-10-06): short prompt, greedy, seed 42, as frozen before any prediction.
 # VizWiz is scored with the authors' evaluator, RealWorldQA with project-defined exact match.
 # `python -m scripts.compare_ood` writes results/ood.json.
@@ -367,15 +400,57 @@ candidates = ["sft4k2"]
 # prompts, and the paired differences the results page shows.
 [pilots.chartqa]
 dataset = "chartqa"
-arms = ["base2", "cqa-sft2", "cqa-grpo2-base", "cqa-short2-base", "cqa-grpo2-sft"]
+arms = ["base2", "cqa-sft2", "cqa-grpo2-base", "cqa-short2-base", "cqa-grpo2-sft",
+        "cqa-grpo2-base-e1", "cqa-short2-base-e1", "cqa-grpo2-sft-e1"]
 
 [[pilots.chartqa.comparisons]]
 reference = "base2"
-candidates = ["cqa-sft2", "cqa-grpo2-base", "cqa-short2-base"]
+candidates = ["cqa-sft2", "cqa-grpo2-base", "cqa-short2-base", "cqa-grpo2-base-e1",
+              "cqa-short2-base-e1"]
 
 [[pilots.chartqa.comparisons]]
 reference = "cqa-sft2"
-candidates = ["cqa-grpo2-sft", "cqa-short2-base"]
+candidates = ["cqa-grpo2-sft", "cqa-short2-base", "cqa-grpo2-sft-e1"]
+
+# A full epoch against the 300-update pilot from the same start.
+[[pilots.chartqa.comparisons]]
+reference = "cqa-grpo2-base"
+candidates = ["cqa-grpo2-base-e1"]
+
+[[pilots.chartqa.comparisons]]
+reference = "cqa-short2-base"
+candidates = ["cqa-short2-base-e1"]
+
+[[pilots.chartqa.comparisons]]
+reference = "cqa-grpo2-sft"
+candidates = ["cqa-grpo2-sft-e1"]
+
+# Transfer between training data (2026-10-08): each model trained on one dataset family,
+# scored on the other's test sets, against Instruct 2B (full test roles, both prompts,
+# official scorer). `python -m scripts.paired_deltas` computes the differences.
+[transfer]
+reference = "base2"
+datasets = ["vqav2", "gqa", "textvqa", "clevr", "chartqa"]
+
+[[transfer.rows]]
+arm = "cqa-grpo2-base-e1"
+trained_on = "ChartQA"
+
+[[transfer.rows]]
+arm = "cqa-short2-base-e1"
+trained_on = "ChartQA"
+
+[[transfer.rows]]
+arm = "p1-f-grpo2-base"
+trained_on = "VQAv2 + GQA"
+
+[[transfer.rows]]
+arm = "p1-f-short2-base"
+trained_on = "VQAv2 + GQA"
+
+[[transfer.rows]]
+arm = "sft2"
+trained_on = "VQAv2 + GQA"
 
 # The corrected campaign, on the history page.
 [matrices.corrected]
@@ -461,3 +536,12 @@ name = "canvas-896"
 change = "896-pixel training canvas instead of 608 (784 vision tokens instead of 361; 4 completions per micro-batch)"
 flags = ["--canvas-size", "896", "--batch-size", "4", "--grad-accum", "8"]
 expect = "+ if the 608 canvas costs accuracy in the resolution check"
+
+# Batch 3 (2026-10-09): show RL the images evaluation sees. The 608 canvas cost Instruct 4.3
+# points on ChartQA dev and canvas-896 read +1.04 (within noise); this keeps each chart's shape
+# within the evaluation budget instead of padding it onto a square.
+[[knobs.chartqa.knob]]
+name = "image-budget"
+change = "each image kept in shape within the 0.79 MP evaluation budget, no padding (up to 768 vision tokens; 4 completions per micro-batch)"
+flags = ["--image-fit", "budget", "--batch-size", "4", "--grad-accum", "8"]
+expect = "+, about canvas-896's: same pixels on most charts, no padding tokens"

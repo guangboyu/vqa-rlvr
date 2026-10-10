@@ -2,6 +2,7 @@
 
     python -m scripts.judge_records --dry-run    # count misses, estimate the cost
     python -m scripts.judge_records              # judge, then write results/judge-final.json
+    python -m scripts.judge_records --pilot chartqa  # writes results/judge-chartqa.json
 
 A miss is a non-empty prediction the official scorer gives 0: no match on GQA and CLEVR, no
 annotator match on VQAv2 and TextVQA. The judge sees the question, the references and the
@@ -19,18 +20,17 @@ conservative estimate.
 import argparse
 import json
 import random
+from pathlib import Path
 
-from vqar.eval.matrix import declared_records, load_comparisons, load_matrix
+from vqar.eval.matrix import declared_records, load_comparisons, load_matrix, load_pilot
 from vqar.eval.paired import paired_bootstrap
 from vqar.eval.report import ROOT
 from vqar.eval.runner import DATA_DIR, RECORDS_DIR
 from vqar.judge import Judge
 
 OUTPUT = ROOT / "results" / "judge-final.json"
-AUDIT = ROOT / "results" / "judge-audit.json"
 MATRIX = "headline"
 CONTROLS_PER_CELL = 100
-AUDITED_DATASETS = ("vqav2", "gqa", "textvqa")
 
 
 def read_cell(record) -> list[dict]:
@@ -73,10 +73,25 @@ def stratum(dataset: str, accepted: bool, prediction: str) -> str:
             else f"{dataset}|rejected")
 
 
-def audit_rates() -> dict[str, float] | None:
-    if not AUDIT.exists():
+def audit_path(pilot: str | None) -> Path:
+    """scripts.audit_judge's rates: the headline audit, or a pilot's own."""
+    return ROOT / "results" / (f"judge-audit-{pilot}.json" if pilot else "judge-audit.json")
+
+
+def audit_rates(path: Path) -> dict[str, float] | None:
+    if not path.exists():
         return None
-    return {name: rate["rate"] for name, rate in json.loads(AUDIT.read_text())["rates"].items()}
+    return {name: rate["rate"] for name, rate in json.loads(path.read_text())["rates"].items()}
+
+
+def judged_cells(pilot: str | None):
+    """The arms, protocols and (reference, candidate) pairs to rescore: a pilot's, or the
+    headline matrix's."""
+    matrix_path = ROOT / "experiments.toml"
+    if pilot:
+        return load_pilot(matrix_path, pilot)
+    arms, protocols = load_matrix(matrix_path, MATRIX)
+    return arms, protocols, load_comparisons(matrix_path, MATRIX)
 
 
 def scores(scorer: str, rows: list[dict], verdict, dataset: str, rates) -> dict[str, float]:
@@ -92,7 +107,7 @@ def scores(scorer: str, rows: list[dict], verdict, dataset: str, rates) -> dict[
 
 
 def scorers_for(dataset: str, rates) -> tuple[str, ...]:
-    audited = rates is not None and dataset in AUDITED_DATASETS
+    audited = rates is not None and any(name.startswith(f"{dataset}|") for name in rates)
     return ("official", "adjusted", "audited") if audited else ("official", "adjusted")
 
 
@@ -122,11 +137,15 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--dry-run", action="store_true", help="count and estimate only")
-    parser.add_argument("--output", default=str(OUTPUT))
+    parser.add_argument("--pilot", default=None,
+                        help="rescore a single-dataset pilot's cells ([pilots.NAME])")
+    parser.add_argument("--output", default=None,
+                        help="default: results/judge-final.json, or judge-<pilot>.json")
     args = parser.parse_args()
+    output = args.output or (ROOT / "results" / f"judge-{args.pilot}.json" if args.pilot
+                             else OUTPUT)
 
-    matrix_path = ROOT / "experiments.toml"
-    arms, protocols = load_matrix(matrix_path, MATRIX)
+    arms, protocols, comparisons = judged_cells(args.pilot)
     records = declared_records(arms, protocols, RECORDS_DIR, DATA_DIR, ROOT)
     cells = {cell: read_cell(record) for cell, record in records.items()
              if record.metrics["official"] is not None}
@@ -148,7 +167,7 @@ def main() -> None:
     def verdict(row):
         return found[key_of(item(row))]
 
-    rates = audit_rates()
+    rates = audit_rates(audit_path(args.pilot))
     names = {arm.label: arm.name for arm in arms}
     summary = [{"arm": label, "name": names[label], "dataset": protocol.dataset,
                 "prompt": protocol.prompt,
@@ -156,7 +175,7 @@ def main() -> None:
                                  rates)}
                for (label, protocol), rows in cells.items()]
     deltas = []
-    for reference, candidate in load_comparisons(matrix_path, MATRIX):
+    for reference, candidate in comparisons:
         for protocol in protocols:
             pair = cells.get((reference, protocol)), cells.get((candidate, protocol))
             if None in pair:
@@ -179,10 +198,10 @@ def main() -> None:
         "cells": summary,
         "paired_deltas": deltas,
     }
-    with open(args.output, "w") as handle:
+    with open(output, "w") as handle:
         json.dump(report, handle, indent=1)
         handle.write("\n")
-    print(f"wrote {args.output}: {len(summary)} cells, {len(deltas)} paired deltas, "
+    print(f"wrote {output}: {len(summary)} cells, {len(deltas)} paired deltas, "
           f"total judge spend ${judge.spend():.2f}")
 
 

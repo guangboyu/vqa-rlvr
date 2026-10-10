@@ -47,7 +47,8 @@ def test_strata_split_accepted_misses_by_answer_length():
     assert stratum("vqav2", False, "anything") == "vqav2|rejected"
 
 
-def test_audited_scorer_only_where_an_audit_exists():
+def test_audited_scorer_only_for_datasets_the_audit_sampled():
+    rates = {"gqa|accepted|1 word": 0.9, "gqa|rejected": 0.05}
     assert scorers_for("gqa", None) == ("official", "adjusted")
-    assert scorers_for("clevr", {"x": 1.0}) == ("official", "adjusted")
-    assert scorers_for("gqa", {"x": 1.0}) == ("official", "adjusted", "audited")
+    assert scorers_for("clevr", rates) == ("official", "adjusted")
+    assert scorers_for("gqa", rates) == ("official", "adjusted", "audited")
