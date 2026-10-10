@@ -7,7 +7,15 @@ import pytest
 from fixtures import every_dataset
 
 from vqar import config
-from vqar.pools import VERSION, RefillStream, filtered_pool, load_pool, pool_path, provenance
+from vqar.pools import (
+    VERSION,
+    RefillStream,
+    filtered_pool,
+    load_pool,
+    pool_path,
+    provenance,
+    union_pool,
+)
 
 
 @pytest.fixture
@@ -89,6 +97,23 @@ def test_a_limited_pool_keeps_the_first_mixed_questions():
     pool = filtered_pool("overfit", records, low=1, high=7, limit=2)
     assert [(m["dataset"], m["qid"]) for m in pool["members"]] == [("vqav2", "b"), ("gqa", "d")]
     assert pool["selection"]["first"] == 2
+
+
+def test_a_union_pool_adds_whole_rl_roles_to_declared_pools_and_loads(data_dir):
+    from vqar.splits import load_role
+
+    vqav2 = load_role(data_dir, ["vqav2"], "rl", None)["qid"]
+    declare(data_dir, "vqa-two", [{"dataset": "vqav2", "qid": q} for q in vqav2[:2]],
+            datasets=("vqav2",))
+    pool = union_pool("mix", data_dir, ["vqa-two"], ["gqa"])
+    gqa = load_role(data_dir, ["gqa"], "rl", None)["qid"]
+    assert len(pool["members"]) == 2 + len(gqa) and pool["datasets"] == ["gqa", "vqav2"]
+    assert [part.get("pool") or part["role"] for part in pool["selection"]["union"]] == [
+        "vqa-two", "gqa rl"]
+    pool_path(data_dir, "mix").write_text(json.dumps(pool))
+    assert len(load_pool(data_dir, ("vqav2", "gqa"), seed=0, pool="mix")) == len(pool["members"])
+    with pytest.raises(ValueError, match="overlap"):
+        union_pool("twice", data_dir, ["vqa-two"], ["vqav2"])
 
 
 def test_refill_draws_are_seeded_per_update_and_skip_the_updates_own_questions():

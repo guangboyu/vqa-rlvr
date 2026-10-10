@@ -109,6 +109,15 @@ label = "p1-fp-short2-base"
 name = "Instruct → short-prompt GRPO, full pool"
 model = "checkpoints/merged/p1_fullpool_short2_base"
 
+# One model on both families (2026-10-09): Instruct 2B -> reasoning-prompt GRPO on the union of
+# the questions p1-f-grpo2-base and cqa-grpo2-base-e1 trained on, each drawn once (pool
+# mix-chartqa-vqa4k, 2,844 updates). Does it learn when to reason? Commands:
+# runs/mix-20261009/run.sh (local).
+[[arms]]
+label = "mix-grpo2-base"
+name = "Instruct → GRPO (VQAv2 + GQA + ChartQA)"
+model = "checkpoints/merged/mix_grpo2_base"
+
 # The ChartQA pilot (Part 2, 2026-10-07): ChartQA's human questions passed the screening gate,
 # so the 2B arms train on its 7,378-question pool: one SFT epoch, then 300 GRPO updates each
 # under the frozen recipe (correctness reward = ChartQA relaxed accuracy), on the local RTX 4090.
@@ -432,7 +441,7 @@ candidates = ["sft4k2"]
 [pilots.chartqa]
 dataset = "chartqa"
 arms = ["base2", "cqa-sft2", "cqa-grpo2-base", "cqa-short2-base", "cqa-grpo2-sft",
-        "cqa-grpo2-base-e1", "cqa-short2-base-e1", "cqa-grpo2-sft-e1"]
+        "cqa-grpo2-base-e1", "cqa-short2-base-e1", "cqa-grpo2-sft-e1", "mix-grpo2-base"]
 
 [[pilots.chartqa.comparisons]]
 reference = "base2"
@@ -455,6 +464,11 @@ candidates = ["cqa-short2-base-e1"]
 [[pilots.chartqa.comparisons]]
 reference = "cqa-grpo2-sft"
 candidates = ["cqa-grpo2-sft-e1"]
+
+# The mixture against the ChartQA-only model with the same ChartQA questions.
+[[pilots.chartqa.comparisons]]
+reference = "cqa-grpo2-base-e1"
+candidates = ["mix-grpo2-base"]
 
 # Transfer between training data (2026-10-08): each model trained on one dataset family,
 # scored on the other's test sets, against Instruct 2B (full test roles, both prompts,
@@ -482,6 +496,22 @@ trained_on = "VQAv2 + GQA"
 [[transfer.rows]]
 arm = "sft2"
 trained_on = "VQAv2 + GQA"
+
+[[transfer.rows]]
+arm = "mix-grpo2-base"
+trained_on = "VQAv2 + GQA + ChartQA"
+
+# The mixture against each single-family model, fixed before it trained.
+[matrices.mixture]
+arms = ["base2", "p1-f-grpo2-base", "cqa-grpo2-base-e1", "mix-grpo2-base"]
+
+[[matrices.mixture.comparisons]]
+reference = "p1-f-grpo2-base"
+candidates = ["mix-grpo2-base"]
+
+[[matrices.mixture.comparisons]]
+reference = "cqa-grpo2-base-e1"
+candidates = ["mix-grpo2-base"]
 
 # The corrected campaign, on the history page.
 [matrices.corrected]

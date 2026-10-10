@@ -94,6 +94,27 @@ def filtered_pool(name: str, records: list, low: int, high: int,
             "selection": selection, "members": members}
 
 
+def union_pool(name: str, data_dir: Path, pools: list[str], roles: list[str]) -> dict:
+    """A pool of other declared pools' members plus whole rl roles, e.g. the questions two
+    single-dataset runs drew, so one run can train on exactly their union."""
+    members, parts = [], []
+    for pool in pools:
+        declared = read_pool(data_dir, pool)
+        members += [{"dataset": m["dataset"], "qid": m["qid"]} for m in declared["members"]]
+        parts.append({"pool": pool, "members": len(declared["members"]),
+                      "sha256": hashlib.sha256(pool_path(data_dir, pool).read_bytes()).hexdigest()})
+    for dataset in roles:
+        qids = load_role(data_dir, [dataset], "rl", seed=None)["qid"]
+        members += [{"dataset": dataset, "qid": qid} for qid in qids]
+        parts.append({"role": f"{dataset} rl", "members": len(qids)})
+    if len({(m["dataset"], m["qid"]) for m in members}) != len(members):
+        raise ValueError(f"{name}: the parts overlap")
+    datasets = sorted({m["dataset"] for m in members})
+    return {"version": VERSION, "name": name, "datasets": datasets,
+            "source_data": split_provenance(data_dir, datasets),
+            "selection": {"union": parts}, "members": members}
+
+
 @dataclass(frozen=True)
 class RefillStream:
     """Replacement questions for dead groups, drawn from the run's own pool.

@@ -563,6 +563,8 @@ all 1,250 human test questions, the official score by answer type, and mean outp
 | Instruct → short-prompt GRPO (ChartQA, 1 epoch) | reasoning | 75.60 (76.48) | 76.29 | 74.22 | 177 |
 | SFT → GRPO (ChartQA, 1 epoch) | short | 69.68 (69.84) | 66.47 | 76.14 | 4 |
 | SFT → GRPO (ChartQA, 1 epoch) | reasoning | 79.76 (80.56) | 80.48 | 78.31 | 197 |
+| Instruct → GRPO (VQAv2 + GQA + ChartQA) | short | — | — | — | — |
+| Instruct → GRPO (VQAv2 + GQA + ChartQA) | reasoning | — | — | — | — |
 <!-- /report:chartqa-pilot -->
 
 Candidate minus reference, official scorer, with 95% intervals over questions:
@@ -677,6 +679,8 @@ Official / judge-adjusted / audited accuracy, with the share of misses the judge
 | Instruct → short-prompt GRPO (ChartQA, 1 epoch) | reasoning | 75.60 / 81.28 / 79.57 (24%) |
 | SFT → GRPO (ChartQA, 1 epoch) | short | 69.68 / 71.20 / 70.96 (5%) |
 | SFT → GRPO (ChartQA, 1 epoch) | reasoning | 79.76 / 83.44 / 81.98 (18%) |
+| Instruct → GRPO (VQAv2 + GQA + ChartQA) | short | — |
+| Instruct → GRPO (VQAv2 + GQA + ChartQA) | reasoning | — |
 <!-- /report:chartqa-judge -->
 
 Paired differences in points, official / adjusted / audited:
@@ -735,6 +739,7 @@ prompt:
 | Instruct → GRPO | VQAv2 + GQA | +23.22 [+21.95, +24.47] | +24.10 [+23.17, +24.98] | +10.24 [+9.17, +11.29] | +12.13 [+10.90, +13.37] | -6.72 [-9.68, -3.84] |
 | Instruct → short-prompt GRPO | VQAv2 + GQA | +6.80 [+5.85, +7.78] | +6.76 [+6.07, +7.43] | +2.60 [+1.75, +3.45] | -0.63 [-1.90, +0.60] | +0.48 [-1.20, +2.16] |
 | SFT 2B | VQAv2 + GQA | +12.93 [+11.59, +14.28] | +20.47 [+19.56, +21.36] | -0.89 [-2.05, +0.29] | +4.97 [+3.57, +6.30] | -7.92 [-10.80, -5.12] |
+| Instruct → GRPO (VQAv2 + GQA + ChartQA) | VQAv2 + GQA + ChartQA | — | — | — | — | — |
 <!-- /report:transfer-reasoning -->
 
 Under the short prompt:
@@ -747,6 +752,7 @@ Under the short prompt:
 | Instruct → GRPO | VQAv2 + GQA | +0.07 [-0.32, +0.47] | +0.60 [+0.29, +0.91] | +0.49 [+0.05, +0.94] | +1.80 [+1.30, +2.33] | +0.00 [-0.88, +0.88] |
 | Instruct → short-prompt GRPO | VQAv2 + GQA | +0.75 [+0.27, +1.23] | +0.89 [+0.48, +1.30] | +0.48 [-0.00, +0.97] | +1.83 [+1.33, +2.37] | +0.56 [-0.40, +1.52] |
 | SFT 2B | VQAv2 + GQA | +2.00 [+1.36, +2.67] | +2.89 [+2.34, +3.47] | -0.45 [-1.11, +0.22] | +1.73 [+1.27, +2.20] | -0.16 [-1.60, +1.28] |
+| Instruct → GRPO (VQAv2 + GQA + ChartQA) | VQAv2 + GQA + ChartQA | — | — | — | — | — |
 <!-- /report:transfer-short -->
 
 What GRPO teaches here is a response habit, and the habit travels. Trained on ChartQA with
