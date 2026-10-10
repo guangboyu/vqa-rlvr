@@ -430,3 +430,218 @@ def load_medthink(max_images: int) -> dict[str, Dataset]:
 
 def _yield(records):
     yield from records
+
+
+# Medical candidates (Part 2, 2026-10-10). Images are read one at a time inside the generator,
+# from a zip archive or a file, so a large source never sits in memory. Records go in as a
+# tuple: datasets treats a list in gen_kwargs as shards and calls the generator once per
+# element, which would reopen a 10 GB archive for every question.
+
+
+def _content_key(payload: bytes) -> str:
+    import hashlib
+
+    return hashlib.sha256(payload).hexdigest()
+
+
+def _split_by_image(records: list[dict], seed: int, held_out: float) -> dict[str, list[dict]]:
+    """Re-split questions by image: a seeded `held_out` share of images each for test and
+    val, the rest train. Records carry `key`, a content hash, so exact copies stay together."""
+    import random
+
+    keys = sorted({record["key"] for record in records})
+    random.Random(seed).shuffle(keys)
+    n = round(len(keys) * held_out)
+    split_of = {key: "test" for key in keys[:n]}
+    split_of.update({key: "val" for key in keys[n:2 * n]})
+    splits = {"train": [], "val": [], "test": []}
+    for record in records:
+        splits[split_of.get(record["key"], "train")].append(record)
+    return splits
+
+
+def _unified(record: dict, payload: bytes) -> dict:
+    row = {name: record[name] for name in ("dataset", "qid", "question", "answers", "answer_type")}
+    return {**row, "image": {"bytes": _rgb_png(payload), "path": None}}
+
+
+def _from_zip(archive: str, records: list[dict]) -> Dataset:
+    """Unified rows whose images are zip members (`member`), read lazily."""
+    def generate(archive, records):
+        import zipfile
+
+        with zipfile.ZipFile(archive) as source:
+            for record in records:
+                yield _unified(record, source.read(record["member"]))
+
+    return _build(generate, archive=archive, records=tuple(records))
+
+
+def _from_files(records: list[dict]) -> Dataset:
+    """Unified rows whose images are files on disk (`file`), read lazily."""
+    def generate(records):
+        from pathlib import Path
+
+        for record in records:
+            yield _unified(record, Path(record["file"]).read_bytes())
+
+    return _build(generate, records=tuple(records))
+
+
+KVASIR_X1 = "SimulaMet/Kvasir-VQA-x1"
+
+
+def _kvasir_atomic(rows: list[dict], split: str) -> list[dict]:
+    """The complexity-1 rows as their atomic question and short label (`original`); the
+    rephrased question and sentence answer can disagree with that label (a yes/no wording
+    over a location label), so the label's own question is shown."""
+    import json
+
+    atomic = []
+    for index, row in enumerate(rows):
+        if row["complexity"] != 1:
+            continue
+        (pair,) = json.loads(row["original"])
+        atomic.append({"dataset": "kvasirx1", "qid": f"{split}-c1-{index}",
+                       "img_id": row["img_id"], "question": pair["q"].strip(),
+                       "answers": [pair["a"].strip()], "answer_type": row["question_class"][0]})
+    return atomic
+
+
+def load_kvasir_x1(seed: int, held_out: float) -> dict[str, Dataset]:
+    """Kvasir-VQA-x1's atomic questions on GI endoscopy images, re-split by image.
+
+    The release's train and test splits share 3,821 of 6,449 images (and nearly every test
+    atomic question), so both are pooled, de-duplicated by (image, question), and re-split.
+    """
+    from pathlib import Path
+
+    import pyarrow.parquet as pq
+    from huggingface_hub import snapshot_download
+
+    root = Path(snapshot_download(KVASIR_X1, repo_type="dataset",
+                                  revision=SOURCE_REVISIONS[KVASIR_X1]))
+    records, seen = [], set()
+    for split in ("train", "test"):
+        rows = pq.read_table(root / "data" / f"{split}-00000-of-00001.parquet",
+                             columns=["img_id", "complexity", "original",
+                                      "question_class"]).to_pylist()
+        for record in _kvasir_atomic(rows, split):
+            if (record["img_id"], record["question"]) not in seen:
+                seen.add((record["img_id"], record["question"]))
+                records.append(record)
+    keys = {}
+    for record in records:
+        record["file"] = str(root / "images" / f"{record['img_id']}.jpg")
+        if record["img_id"] not in keys:
+            keys[record["img_id"]] = _content_key(Path(record["file"]).read_bytes())
+        record["key"] = keys[record["img_id"]]
+    return {name: _from_files(part)
+            for name, part in _split_by_image(records, seed, held_out).items()}
+
+
+OMNIMEDVQA = "foreverbeliever/OmniMedVQA"
+
+
+def _omnimed_question(row: dict, letters: list[str]) -> str:
+    options = "\n".join(f"{letter}. {row[f'option_{letter}']}" for letter in letters)
+    return f"{row['question']}\n{options}\nAnswer with the letter of the correct option."
+
+
+def _omnimed_record(row: dict) -> dict | None:
+    """One open-access item as a multiple-choice question; None when no option is the answer."""
+    letters = [letter for letter in "ABCD" if row.get(f"option_{letter}") is not None]
+    correct = [letter for letter in letters if row[f"option_{letter}"] == row["gt_answer"]]
+    if len(correct) != 1:
+        return None
+    return {"dataset": "omnimedvqa", "qid": row["question_id"],
+            "member": f"OmniMedVQA/{row['image_path']}",
+            "question": _omnimed_question(row, letters),
+            "answers": [correct[0], row["gt_answer"]],
+            "answer_type": row["question_type"]}
+
+
+def load_omnimedvqa(seed: int, held_out: float) -> dict[str, Dataset]:
+    """OmniMedVQA's open-access items (the restricted half ships without images), re-split
+    by image: the benchmark has no training split."""
+    import json
+    import zipfile
+
+    from huggingface_hub import hf_hub_download
+
+    archive = hf_hub_download(OMNIMEDVQA, "OmniMedVQA.zip", repo_type="dataset",
+                              revision=SOURCE_REVISIONS[OMNIMEDVQA])
+    records, keys = [], {}
+    with zipfile.ZipFile(archive) as source:
+        for name in sorted(n for n in source.namelist()
+                           if "/QA_information/Open-access/" in n and n.endswith(".json")):
+            for row in json.loads(source.read(name)):
+                record = _omnimed_record(row)
+                if record is None:
+                    continue
+                if record["member"] not in keys:
+                    keys[record["member"]] = _content_key(source.read(record["member"]))
+                record["key"] = keys[record["member"]]
+                records.append(record)
+    return {name: _from_zip(archive, part)
+            for name, part in _split_by_image(records, seed, held_out).items()}
+
+
+SLAKE = "BoKelvin/SLAKE"
+
+
+def load_slake() -> dict[str, Dataset]:
+    """SLAKE's English questions of each official split (split by image by its authors)."""
+    import json
+
+    from huggingface_hub import hf_hub_download
+
+    def fetch(filename: str) -> str:
+        return hf_hub_download(SLAKE, filename, repo_type="dataset",
+                               revision=SOURCE_REVISIONS[SLAKE])
+
+    archive = fetch("imgs.zip")
+    subsets = {}
+    for split in ("train", "validation", "test"):
+        rows = json.loads(open(fetch(f"{split}.json")).read())
+        records = [{"dataset": "slake", "qid": str(row["qid"]),
+                    "member": f"imgs/{row['img_name']}", "question": row["question"].strip(),
+                    "answers": [row["answer"].strip()],
+                    "answer_type": row["answer_type"].lower()}
+                   for row in rows if row["q_lang"] == "en"]
+        subsets[split] = _from_zip(archive, records)
+    return subsets
+
+
+PATHVQA = "flaviagiammarino/path-vqa"
+
+
+def _pathvqa_generate(paths: list[str], split: str) -> Iterator[dict]:
+    """Rows straight from the parquet files, one batch at a time (never a Dataset)."""
+    import pyarrow.parquet as pq
+
+    index = 0
+    for path in paths:
+        for batch in pq.ParquetFile(path).iter_batches(batch_size=256):
+            for row in batch.to_pylist():
+                answer = row["answer"].strip()
+                yield _unified({"dataset": "pathvqa", "qid": f"{split}-{index}",
+                                "question": row["question"].strip(), "answers": [answer],
+                                "answer_type": "yes/no" if answer.lower() in ("yes", "no")
+                                else "open"}, row["image"]["bytes"])
+                index += 1
+
+
+def load_pathvqa() -> dict[str, Dataset]:
+    """PathVQA's official splits: pathology textbook and PEIR images, yes/no and open answers."""
+    from pathlib import Path
+
+    from huggingface_hub import snapshot_download
+
+    root = Path(snapshot_download(PATHVQA, repo_type="dataset",
+                                  revision=SOURCE_REVISIONS[PATHVQA]))
+    subsets = {}
+    for split in ("train", "validation", "test"):
+        paths = sorted(str(path) for path in (root / "data").glob(f"{split}-*.parquet"))
+        subsets[split] = _build(_pathvqa_generate, paths=paths, split=split)
+    return subsets

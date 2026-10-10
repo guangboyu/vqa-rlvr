@@ -183,3 +183,33 @@ def test_choice_letter_accuracy_is_strict(prediction, expected):
 ])
 def test_choice_accuracy_reads_a_leading_letter_or_the_option_text(prediction, expected):
     assert metrics.choice_accuracy(prediction, ["C", "Carpo-metacarpal bossing"]) == expected
+
+
+@pytest.mark.parametrize("prediction,answers,expected", [
+    ("Pink; Red", ["red; pink"], 1.0),        # order and case do not matter
+    ("pink, red", ["red; pink"], 0.0),        # strict: only ';' separates values
+    ("pink", ["red; pink"], 0.0),             # a subset is not the set
+])
+def test_label_set_match_is_strict(prediction, answers, expected):
+    assert metrics.label_set_match(prediction, answers) == expected
+
+
+@pytest.mark.parametrize("prediction,answers,expected", [
+    ("pink, red", ["red; pink"], 1.0),
+    ("pink and red", ["red; pink"], 1.0),
+    ("lower-right", ["lower-rigth"], 1.0),    # the label typo is fixed, the label is not
+    (">20mm", [">20"], 1.0),
+    ("5-10 mm", ["5-10mm"], 1.0),
+    ("center left; upper-left", ["upper-left; center-left"], 1.0),
+    ("20", [">20mm"], 0.0),
+    ("", ["none"], 0.0),
+])
+def test_normalized_label_set_match_forgives_separators_and_label_typos(prediction, answers,
+                                                                        expected):
+    assert metrics.normalized_label_set_match(prediction, answers) == expected
+
+
+def test_casefold_exact_match_keeps_punctuation_and_rejects_blanks():
+    assert metrics.casefold_exact_match(" Left  Lung ", ["left lung"]) == 1.0
+    assert metrics.casefold_exact_match("left lung.", ["left lung"]) == 0.0
+    assert metrics.casefold_exact_match(" ", [""]) == 0.0

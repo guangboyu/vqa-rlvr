@@ -92,6 +92,13 @@ general datasets had passed the first five although reasoning hurt them:
 | image needed | a black and a swapped image each cost at least 10 points (lower 95% bound) |
 | learnable | at least 25% of questions have 1–7 of 8 samples right |
 
+Since 2026-10-10 the gates are split by what they protect, because RL counts as a win when
+it beats the starting model or SFT, with or without reasoning. Training questions, a separable
+split, a usable license, not saturated and image needed hold for any RL. The other three
+decide a route: reasoning-prompt RL needs the parse rate, reasoning no worse than a direct
+answer, and the learnable share of sampled reasoning responses; short-answer RL needs the
+learnable share of 8 short-prompt samples at T = 1, a ninth cell added to the battery. A
+candidate passes when the common gates hold and at least one route is viable.
 Survivors are ranked by matched payoff, then RL headroom. Every candidate gets a row,
 rejects included with the gates they failed, in `results/screening/screening.{json,md}`.
 A dataset without a training pool (TextVQA) is rejected; `--validate-on-test` screens it on

@@ -82,3 +82,43 @@ def test_chartqa_answer_types():
     assert _chartqa_answer_type("12.5") == "number"
     assert _chartqa_answer_type("1,234") == "number"
     assert _chartqa_answer_type("Blue") == "text"
+
+
+def test_kvasir_atomic_rows_show_the_labels_own_question():
+    from vqar.data import _kvasir_atomic
+
+    rows = [{"img_id": "a", "complexity": 1, "question_class": ["instrument_location"],
+             "original": '[{"q": "Where in the image is the instrument?", "a": "none"}]'},
+            {"img_id": "a", "complexity": 2, "question_class": ["x", "y"],
+             "original": '[{"q": "q1", "a": "1"}, {"q": "q2", "a": "2"}]'}]
+    (record,) = _kvasir_atomic(rows, "train")
+    assert record["question"] == "Where in the image is the instrument?"
+    assert record["answers"] == ["none"] and record["answer_type"] == "instrument_location"
+    assert record["qid"] == "train-c1-0"
+
+
+def test_omnimed_items_become_lettered_choices_or_are_dropped():
+    from vqar.data import _omnimed_record
+
+    row = {"question_id": "X_1", "question": "Which organ?", "gt_answer": "Liver",
+           "option_A": "Kidney", "option_B": "Liver", "option_C": "Lung", "option_D": None,
+           "image_path": "Images/X/1.png", "question_type": "Anatomy Identification"}
+    record = _omnimed_record(row)
+    assert record["answers"] == ["B", "Liver"]
+    assert record["question"].splitlines()[1:] == [
+        "A. Kidney", "B. Liver", "C. Lung", "Answer with the letter of the correct option."]
+    assert record["member"] == "OmniMedVQA/Images/X/1.png"
+    assert _omnimed_record({**row, "gt_answer": "Heart"}) is None
+
+
+def test_re_split_keeps_every_question_of_an_image_together():
+    from vqar.data import _split_by_image
+
+    records = [{"key": f"img{i // 3}", "qid": str(i)} for i in range(300)]
+    splits = _split_by_image(records, seed=0, held_out=0.1)
+    assert [len({r["key"] for r in splits[s]}) for s in ("train", "val", "test")] == [80, 10, 10]
+    owners = {}
+    for name, part in splits.items():
+        for record in part:
+            assert owners.setdefault(record["key"], name) == name
+    assert _split_by_image(records, seed=0, held_out=0.1) == splits

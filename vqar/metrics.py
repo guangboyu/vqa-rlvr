@@ -160,6 +160,13 @@ def exact_string_match(prediction: str, gt_answers: list[str]) -> float:
     return float(prediction in gt_answers)
 
 
+def casefold_exact_match(prediction: str, gt_answers: list[str]) -> float:
+    """Strict project scorer: the case-folded, whitespace-collapsed prediction equals a
+    reference; no punctuation, article or number normalization."""
+    pred = " ".join(prediction.casefold().split())
+    return float(bool(pred) and any(pred == " ".join(a.casefold().split()) for a in gt_answers))
+
+
 def _relaxed_float(text: str) -> float | None:
     try:
         return float(text.rstrip("%")) / 100.0 if text.endswith("%") else float(text)
@@ -236,3 +243,31 @@ def choice_accuracy(prediction: str, gt_answers: list[str]) -> float:
         return float(match.group(1).upper() == gt_answers[0].upper())
     return float(any(normalize_answer(prediction) == normalize_answer(text)
                      for text in gt_answers[1:]))
+
+
+# Kvasir-VQA labels: values from a closed vocabulary, several joined by "; " ("pink; red").
+# Two label typos are fixed by normalization only; the stored labels stay as released.
+_LABEL_SEPARATORS = re.compile(r";|,|\band\b")
+
+
+def _kvasir_fix(text: str) -> str:
+    text = re.sub(r"(\d)\s+mm\b", r"\1mm", text.casefold().replace("rigth", "right"))
+    return re.sub(r">\s*20(?!mm)", ">20mm", text)
+
+
+def label_set_match(prediction: str, gt_answers: list[str]) -> float:
+    """Strict: the values, split on ";" and case-folded, equal a reference's values as a set."""
+    def values(text):
+        return {value.strip() for value in text.casefold().split(";") if value.strip()}
+
+    return float(any(values(prediction) == values(answer) for answer in gt_answers))
+
+
+def normalized_label_set_match(prediction: str, gt_answers: list[str]) -> float:
+    """Lenient: values split on ";", "," or "and", VQA-normalized, the two label typos fixed,
+    and compared as sets, so order and separators do not matter."""
+    def values(text):
+        parts = _LABEL_SEPARATORS.split(_kvasir_fix(text))
+        return {normalize_answer(part) for part in parts if normalize_answer(part)}
+
+    return float(any(values(prediction) == values(answer) for answer in gt_answers))

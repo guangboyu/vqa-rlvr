@@ -117,7 +117,7 @@ def test_the_battery_reads_the_training_pool_with_the_learnability_protocol():
     assert [p.slug() for p in cells.protocols().values()] == [
         "gqa-rl-dev-short", "gqa-rl-dev-short-black", "gqa-rl-dev-short-swapped",
         "gqa-rl-dev-reasoning", "gqa-rl-dev-direct", "gqa-rl-dev-stepwise",
-        "gqa-rl-dev-reasoning-t1k8"]
+        "gqa-rl-dev-reasoning-t1k8", "gqa-rl-dev-short-t1k8"]
     assert not cells.validation_only
     assert cells.sampled.temperature == ROLLOUT_TEMPERATURE
     # The same cell as `scripts.learnability --preset grpo_2b_main --tier dev`.
@@ -154,23 +154,41 @@ def test_gates_and_their_boundaries():
     assert failed_gates(2_000, good, {"parse_rate": 0.95, "short_accuracy": 0.899}) == []
     assert failed_gates(1_999, good, {}) == ["training questions"]
     assert failed_gates(5_000, good, {"parse_rate": 0.949, "short_accuracy": 0.90}) == [
-        "parse rate", "not saturated"]
+        "not saturated"]
     assert failed_gates(5_000, None, {}) == ["split separable", "license"]
     closed = screening.Declaration("patient", False, "research only", False)
     assert failed_gates(5_000, closed, {}) == ["split separable", "license"]
 
 
-def test_reasoning_image_and_learnability_gates():
+def test_the_image_gate_holds_for_any_way_of_training():
     failed_gates, good = screening.failed_gates, screening.DECLARED["gqa"]
-    passing = {"matched_payoff": {"high": 0.0}, "image_dependence": {"low": 10.0},
-               "wrong_image_dependence": {"low": 25.0}, "learnable_share": 0.25}
+    passing = {"image_dependence": {"low": 10.0}, "wrong_image_dependence": {"low": 25.0}}
     assert failed_gates(5_000, good, passing) == []
-    assert failed_gates(5_000, good, {**passing, "matched_payoff": {"high": -0.1}}) == [
-        "reasoning not worse"]
     assert failed_gates(5_000, good, {**passing,
                                       "wrong_image_dependence": {"low": 9.9}}) == [
         "image needed"]
-    assert failed_gates(5_000, good, {**passing, "learnable_share": 0.249}) == ["learnable"]
+
+
+def test_each_rollout_prompt_has_its_own_conditions():
+    reasoning = {"parse_rate": 0.95, "matched_payoff": {"high": 0.0}, "learnable_share": 0.25}
+    routes = screening.route_failures
+    assert routes({}) == {"reasoning": None, "short": None}
+    assert routes(reasoning)["reasoning"] == []
+    assert routes({**reasoning, "matched_payoff": {"high": -0.1}, "parse_rate": 0.9})[
+        "reasoning"] == ["parse rate", "reasoning not worse"]
+    assert routes({**reasoning, "learnable_share": 0.249})["reasoning"] == ["learnable"]
+    assert routes({"short_learnable_share": 0.25})["short"] == []
+    assert routes({"short_learnable_share": 0.249})["short"] == ["learnable"]
+
+
+def test_a_candidate_passes_on_either_route_and_fails_only_when_both_do():
+    status = screening.status_of
+    assert status([], {"reasoning": ["reasoning not worse"], "short": []}, True) == "passed"
+    assert status([], {"reasoning": [], "short": None}, True) == "passed"
+    assert status([], {"reasoning": ["learnable"], "short": ["learnable"]}, True) == "rejected"
+    assert status([], {"reasoning": ["parse rate"], "short": None}, False) == "incomplete"
+    assert status(["image needed"], {"reasoning": [], "short": []}, True) == "rejected"
+    assert status([], {"reasoning": [], "short": []}, False) == "incomplete"
 
 
 def row(model, dataset, status, payoff=0.0, headroom=0.0):
@@ -221,14 +239,14 @@ def test_the_battery_end_to_end_from_records(setup, monkeypatch):
     clevr = rows["clevr"]
     assert clevr["status"] == "incomplete"
     assert clevr["missing"] == ["short", "black", "swapped", "reasoning", "direct", "stepwise",
-                                "sampled"]
+                                "sampled", "sampled_short"]
     assert "reasoning_payoff" not in clevr
 
     table = screening.markdown(screening.rank(list(rows.values())))
     assert "test (validation only)" in table
     assert "rejected (failed: not saturated, image needed)" in table
-    assert "incomplete: missing short, black, swapped, reasoning, direct, stepwise, sampled" \
-        in table
+    assert ("incomplete: missing short, black, swapped, reasoning, direct, stepwise, sampled, "
+            "sampled_short") in table
 
 
 def test_older_learnability_records_are_recounted_from_their_predictions(setup):
@@ -258,11 +276,11 @@ def test_dry_run_lists_the_battery_and_from_records_writes_the_table(setup, tmp_
     screen_datasets.main()
     printed = capsys.readouterr().out.splitlines()
     assert printed[0].startswith("base gqa short: gqa-rl-dev-short: missing, ")
-    assert [line.split(": ")[1] for line in printed[:7]] == [
+    assert [line.split(": ")[1] for line in printed[:8]] == [
         "gqa-rl-dev-short", "gqa-rl-dev-short-black", "gqa-rl-dev-short-swapped",
         "gqa-rl-dev-reasoning", "gqa-rl-dev-direct", "gqa-rl-dev-stepwise",
-        "gqa-rl-dev-reasoning-t1k8"]
-    assert printed[7].startswith("base textvqa: no training pool")
+        "gqa-rl-dev-reasoning-t1k8", "gqa-rl-dev-short-t1k8"]
+    assert printed[8].startswith("base textvqa: no training pool")
 
     run_battery(battery("gqa"), model, data, records)
     out = tmp_path / "screening"

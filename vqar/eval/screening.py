@@ -12,11 +12,18 @@ training pool (the rl role, else the sft role; never dev or test rows):
   accuracy(image) − accuracy(black) and accuracy(image) − accuracy(swapped);
 - reasoning prompt, 8 samples at T = 1 with the GRPO completion budget (the protocol of
   scripts.learnability): pass@1, pass@8, the RL headroom pass@8 − pass@1, and the
-  learnable share (1–7 of 8 correct), all under the GRPO correctness reward.
+  learnable share (1–7 of 8 correct), all under the GRPO correctness reward;
+- short prompt, 8 samples at T = 1: the same measures for short-answer RL.
 
 Accuracies use the normalized scorer, the one every role can score. Differences carry
 paired 95% bootstrap intervals over questions. The gates are fixed here, before any
-candidate is measured; survivors are ranked by matched payoff, then RL headroom.
+candidate is measured. Some gates hold for any RL (enough questions, a separable split, a
+usable license, not saturated, the image needed); the rest decide which way of training can
+work: reasoning-prompt RL needs readable reasoning answers, a learning signal and reasoning
+no worse than a direct answer, short-answer RL needs a learning signal. A candidate passes
+when the common gates hold and at least one route is viable (since 2026-10-10: RL counts
+when it beats the starting model or SFT, with or without reasoning). Survivors are ranked by
+matched payoff, then RL headroom.
 """
 
 import json
@@ -48,6 +55,7 @@ MIN_MATCHED_PAYOFF_HIGH = 0.0  # stepwise must not be worse than direct: upper b
 MIN_IMAGE_DROP_LOW = 0.10  # black and swapped images each cost at least 10 points (lower bound)
 MIN_LEARNABLE_SHARE = 0.25  # questions with 1-7 of 8 samples right
 RANKING = "passed candidates by matched payoff, then RL headroom, both descending"
+ROUTES = ("reasoning", "short")  # the rollout prompts RL can train under
 
 
 @dataclass(frozen=True)
@@ -76,6 +84,15 @@ DECLARED = {
     # No patient IDs are released; cases are the unit, and no image file is shared between
     # the official train and test cases (byte hashes, up to eight images per case).
     "medthink": Declaration("case", True, "CC BY-NC-SA 4.0 (research use)", True),
+    # Medical candidates, declared 2026-10-10; the owner confirmed non-commercial use. No
+    # patient IDs are released for any of them (see the registry on the re-splits).
+    "kvasirx1": Declaration("image", True, "CC BY-NC 4.0 (images from HyperKvasir and "
+                            "Kvasir-Instrument)", True),
+    "omnimedvqa": Declaration("image", True, "open-access subset; each source dataset's own "
+                              "license (research use)", True),
+    "slake": Declaration("image", True, "CC BY 4.0", True),
+    "pathvqa": Declaration("image", True, "MIT (release); textbook and PEIR images, research "
+                           "use", True),
 }
 
 
@@ -92,6 +109,7 @@ class Battery:
     stepwise: Protocol
     first: Protocol | None = None  # multi-image datasets: the first image only
     none: Protocol | None = None  # multi-image datasets: no image at all
+    sampled_short: Protocol | None = None  # short-answer RL's learnability
 
     @property
     def role(self) -> str:
@@ -107,8 +125,9 @@ class Battery:
         cells = {"short": self.short, "black": self.black, "swapped": self.swapped,
                  "reasoning": self.reasoning, "direct": self.direct, "stepwise": self.stepwise,
                  "sampled": self.sampled}
-        cells.update({name: protocol for name, protocol in (("first", self.first),
-                                                            ("none", self.none)) if protocol})
+        cells.update({name: protocol for name, protocol in (
+            ("sampled_short", self.sampled_short), ("first", self.first),
+            ("none", self.none)) if protocol})
         return cells
 
 
@@ -141,6 +160,8 @@ def battery(dataset: str, tier: str = TIER, validate_on_test: bool = False) -> B
         sampled=Protocol(dataset, prompt="reasoning", role=role, tier=tier,
                          max_tokens=SAMPLED_MAX_TOKENS, temperature=TEMPERATURE,
                          samples=SAMPLES),
+        sampled_short=Protocol(dataset, prompt="short", role=role, tier=tier,
+                               temperature=TEMPERATURE, samples=SAMPLES),
     )
 
 
@@ -198,7 +219,7 @@ def scores(record: RunRecord) -> dict[str, float]:
 def measure(records: dict[str, RunRecord]) -> dict:
     """Every measure whose records exist; the four cells must share their questions."""
     by_question = {name: scores(record) for name, record in records.items()
-                   if name != "sampled"}
+                   if not name.startswith("sampled")}
     result = {}
     if "sampled" in records:
         sampled = records["sampled"]
@@ -206,6 +227,12 @@ def measure(records: dict[str, RunRecord]) -> dict:
         by_question["sampled"] = counts
         result.update(sampling_measures(counts, sampled.protocol["samples"]))
         result["parse_rate"] = parse_rate(read_lines(sampled), sampled.protocol["prompt"])
+    if "sampled_short" in records:
+        sampled = records["sampled_short"]
+        counts = correct_counts(sampled)
+        by_question["sampled_short"] = counts
+        result.update({f"short_{name}": value for name, value in
+                       sampling_measures(counts, sampled.protocol["samples"]).items()})
     if len({frozenset(questions) for questions in by_question.values()}) > 1:
         raise ValueError("The battery's records scored different questions.")
     if by_question:
@@ -236,24 +263,46 @@ def mean(values: dict[str, float]) -> float:
 
 
 def failed_gates(pool_size: int, declaration: Declaration | None, measures: dict) -> list[str]:
-    """The gates a candidate fails. A measure not yet taken fails nothing."""
-    parse = measures.get("parse_rate")
+    """The gates any way of training needs. A measure not yet taken fails nothing."""
     short = measures.get("short_accuracy")
-    matched = measures.get("matched_payoff")
     drops = [measures.get(name) for name in ("image_dependence", "wrong_image_dependence")]
-    learnable = measures.get("learnable_share")
     checks = {
         "training questions": pool_size >= MIN_POOL_QUESTIONS,
         "split separable": declaration is not None and declaration.split_separable,
         "license": declaration is not None and declaration.license_usable,
-        "parse rate": parse is None or parse >= MIN_PARSE_RATE,
         "not saturated": short is None or short < MAX_SHORT_ACCURACY,
-        "reasoning not worse": matched is None or matched["high"] >= 100 * MIN_MATCHED_PAYOFF_HIGH,
         "image needed": all(drop is None or drop["low"] >= 100 * MIN_IMAGE_DROP_LOW
                             for drop in drops),
-        "learnable": learnable is None or learnable >= MIN_LEARNABLE_SHARE,
     }
     return [name for name, passed in checks.items() if not passed]
+
+
+def route_failures(measures: dict) -> dict[str, list[str] | None]:
+    """Per rollout prompt, the conditions RL under it fails; None until they are measured."""
+    parse, learnable = measures.get("parse_rate"), measures.get("learnable_share")
+    matched = measures.get("matched_payoff")
+    reasoning = None
+    if None not in (parse, learnable, matched):
+        reasoning = [name for name, passed in (
+            ("parse rate", parse >= MIN_PARSE_RATE),
+            ("reasoning not worse", matched["high"] >= 100 * MIN_MATCHED_PAYOFF_HIGH),
+            ("learnable", learnable >= MIN_LEARNABLE_SHARE)) if not passed]
+    short_learnable = measures.get("short_learnable_share")
+    short = None if short_learnable is None else (
+        [] if short_learnable >= MIN_LEARNABLE_SHARE else ["learnable"])
+    return {"reasoning": reasoning, "short": short}
+
+
+def status_of(failed: list[str], routes: dict, complete: bool) -> str:
+    """Rejected when a common gate fails or every measured route fails and none is left
+    unmeasured; passed when complete and some route is viable; otherwise incomplete."""
+    if failed:
+        return "rejected"
+    if any(found == [] for found in routes.values()):
+        return "passed" if complete else "incomplete"
+    if all(found is not None for found in routes.values()):
+        return "rejected"
+    return "incomplete"
 
 
 def screen(model: str, dataset: str, cells: Battery | None,
@@ -264,7 +313,8 @@ def screen(model: str, dataset: str, cells: Battery | None,
     declaration = DECLARED.get(dataset)
     measures = measure(found)
     failed = failed_gates(pool_size, declaration, measures)
-    status = "rejected" if failed else "incomplete" if missing or cells is None else "passed"
+    routes = route_failures(measures)
+    status = status_of(failed, routes, complete=not missing and cells is not None)
     return {
         "model": model, "dataset": dataset, "display_name": DATASETS[dataset].display_name,
         "role": cells.role if cells else None,
@@ -273,7 +323,7 @@ def screen(model: str, dataset: str, cells: Battery | None,
         "pool_questions": pool_size,
         "declared": asdict(declaration) if declaration else None,
         **measures,
-        "failed_gates": failed, "status": status, "missing": missing,
+        "failed_gates": failed, "routes": routes, "status": status, "missing": missing,
         "records": {name: str(record.path) for name, record in found.items()},
     }
 
@@ -282,8 +332,10 @@ def rank(rows: list[dict]) -> list[dict]:
     """Per model: passed rows numbered in ranking order, then incomplete, then rejected."""
     def order(row):
         if row["status"] == "passed":
-            return (row["model"], 0, -row["matched_payoff"]["delta"],
-                    -row["rl_headroom"]["delta"], row["dataset"])
+            headroom = max(row.get(name, {"delta": 0.0})["delta"]
+                           for name in ("rl_headroom", "short_rl_headroom"))
+            return (row["model"], 0, -row["matched_payoff"]["delta"], -headroom,
+                    row["dataset"])
         return (row["model"], 1 if row["status"] == "incomplete" else 2, 0, 0, row["dataset"])
 
     ranked, position = [], {}
@@ -325,17 +377,20 @@ def markdown(rows: list[dict]) -> str:
         "Screening battery on each candidate's training pool (normalized scorer; "
         "differences in points with paired 95% bootstrap intervals).",
         "",
-        f"Gates: at least {MIN_POOL_QUESTIONS:,} training questions; split separable and "
-        f"license usable (declared); parse rate ≥ {100 * MIN_PARSE_RATE:.0f}% of sampled "
-        f"reasoning responses; short-prompt accuracy < {100 * MAX_SHORT_ACCURACY:.0f}%; "
-        "stepwise not worse than direct (upper bound ≥ 0); black and swapped images each "
-        f"cost ≥ {100 * MIN_IMAGE_DROP_LOW:.0f} points (lower bound); learnable share ≥ "
-        f"{100 * MIN_LEARNABLE_SHARE:.0f}%. Ranking: {RANKING}.",
+        f"Gates for any RL: at least {MIN_POOL_QUESTIONS:,} training questions; split "
+        "separable and license usable (declared); short-prompt accuracy < "
+        f"{100 * MAX_SHORT_ACCURACY:.0f}%; black and swapped images each cost ≥ "
+        f"{100 * MIN_IMAGE_DROP_LOW:.0f} points (lower bound). Routes: reasoning-prompt RL "
+        f"needs parse rate ≥ {100 * MIN_PARSE_RATE:.0f}% of sampled reasoning responses, "
+        "stepwise not worse than direct (upper bound ≥ 0) and a learnable share ≥ "
+        f"{100 * MIN_LEARNABLE_SHARE:.0f}%; short-answer RL needs a short-prompt learnable "
+        f"share ≥ {100 * MIN_LEARNABLE_SHARE:.0f}%. A candidate passes with the common gates "
+        f"and at least one viable route. Ranking: {RANKING}.",
         "",
         "| Model | Rank | Dataset | Pool | Questions | Short (%) | Reasoning payoff | "
         "Matched payoff | pass@1 → pass@k (%) | RL headroom | Learnable (%) | "
-        "Image: black | Image: swapped | Parse (%) | Status |",
-        "|---|---:|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|",
+        "Image: black | Image: swapped | Parse (%) | Short learnable (%) | Routes | Status |",
+        "|---|---:|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---|",
     ]
     for row in rows:
         pool = row["role"] or "none"
@@ -344,6 +399,9 @@ def markdown(rows: list[dict]) -> str:
         passes = ("—" if row.get("pass_at_1") is None else
                   f"{percent(row['pass_at_1'])} → {percent(row['pass_at_k'])}")
         status = row["status"]
+        routes = row.get("routes") or {}
+        viable = ", ".join(name for name in ROUTES if routes.get(name) == []) or (
+            "none" if all(routes.get(name) is not None for name in ROUTES) else "—")
         if row["failed_gates"]:
             status += " (failed: " + ", ".join(row["failed_gates"]) + ")"
         elif row["missing"]:
@@ -354,5 +412,6 @@ def markdown(rows: list[dict]) -> str:
             interval(row.get("reasoning_payoff")), interval(row.get("matched_payoff")),
             passes, interval(row.get("rl_headroom")), percent(row.get("learnable_share")),
             interval(row.get("image_dependence")), interval(row.get("wrong_image_dependence")),
-            percent(row.get("parse_rate")), status]) + " |")
+            percent(row.get("parse_rate")), percent(row.get("short_learnable_share")),
+            viable, status]) + " |")
     return "\n".join(lines) + "\n"

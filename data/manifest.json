@@ -31,6 +31,16 @@
     },
     "medthink": {
       "max_images": 8
+    },
+    "slake": {},
+    "pathvqa": {},
+    "omnimedvqa": {
+      "seed": 0,
+      "held_out_percent": 10
+    },
+    "kvasirx1": {
+      "seed": 0,
+      "held_out_percent": 10
     }
   },
   "subsets": {
@@ -194,6 +204,258 @@
         "xai-org/RealworldQA": "17e7f75e092e47169732462ea3cdfebe911105dd"
       },
       "qids_sha": "0ba9fb944eb8517d208a472e7a8c0feb923af212405a8fe8eba9b6b13d77c300"
+    },
+    "slake_train": {
+      "n": 4919,
+      "source_revisions": {
+        "HuggingFaceM4/the_cauldron": "847a98a779b1652d65111daf20c972dfcd333605",
+        "lmms-lab/VQAv2": "32665d35052eb4a6d4414851c3c829a72754915a",
+        "lmms-lab/GQA": "a6e72d6e1b912da88af8b2f9eba05d5ea8ec2dd8",
+        "leonardPKU/clevr_cogen_a_train": "d5a8da66aa97c9c19ebe4075b7c7f777fef850a6",
+        "lmms-lab/textvqa": "9c0699cd19768ac5ab97568f6b3cbac4c0062884",
+        "HuggingFaceM4/ChartQA": "b605b6e08b57faf4359aeb2fe6a3ca595f99b6c5",
+        "bio-nlp-umass/MedThinkVQA": "5555b80e167c4796efab92fe709fb05914077dc0",
+        "SimulaMet/Kvasir-VQA-x1": "61e41148c3214bc5140ad0ab4c28520a512e2a73",
+        "foreverbeliever/OmniMedVQA": "1ba51c28fc0773bdf7efb8396e5bcfd4227e22da",
+        "BoKelvin/SLAKE": "a9083ce6c34ac3ffb17671a605962924d8a8f9e9",
+        "flaviagiammarino/path-vqa": "1685832883334b5bb5beaf4e4b333fdeecaa4ad9",
+        "https://vizwiz.cs.colorado.edu/VizWiz_all_answers/VQA_test.json": "fa113f0e90230ab4690bb41c4d74e40f7087cc7c192dd8363fa4d6bad339b7aa",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/images/test.zip": "4d03f8c21823a3e4d1f501b1234e7380eb7cf2429ff0eb0281741ff1cc44f22a",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/vqa_data/API.zip": "76de4354ca2fbc57dd2369b579dc9bb5684e41d6a135b36b324a5ba25b7b9ca2",
+        "xai-org/RealworldQA": "17e7f75e092e47169732462ea3cdfebe911105dd"
+      },
+      "qids_sha": "cccfc137fa9e698f5f004cbf176a9a9d90d791d313d22e71cc2d725c00258acc"
+    },
+    "slake_validation": {
+      "n": 1053,
+      "source_revisions": {
+        "HuggingFaceM4/the_cauldron": "847a98a779b1652d65111daf20c972dfcd333605",
+        "lmms-lab/VQAv2": "32665d35052eb4a6d4414851c3c829a72754915a",
+        "lmms-lab/GQA": "a6e72d6e1b912da88af8b2f9eba05d5ea8ec2dd8",
+        "leonardPKU/clevr_cogen_a_train": "d5a8da66aa97c9c19ebe4075b7c7f777fef850a6",
+        "lmms-lab/textvqa": "9c0699cd19768ac5ab97568f6b3cbac4c0062884",
+        "HuggingFaceM4/ChartQA": "b605b6e08b57faf4359aeb2fe6a3ca595f99b6c5",
+        "bio-nlp-umass/MedThinkVQA": "5555b80e167c4796efab92fe709fb05914077dc0",
+        "SimulaMet/Kvasir-VQA-x1": "61e41148c3214bc5140ad0ab4c28520a512e2a73",
+        "foreverbeliever/OmniMedVQA": "1ba51c28fc0773bdf7efb8396e5bcfd4227e22da",
+        "BoKelvin/SLAKE": "a9083ce6c34ac3ffb17671a605962924d8a8f9e9",
+        "flaviagiammarino/path-vqa": "1685832883334b5bb5beaf4e4b333fdeecaa4ad9",
+        "https://vizwiz.cs.colorado.edu/VizWiz_all_answers/VQA_test.json": "fa113f0e90230ab4690bb41c4d74e40f7087cc7c192dd8363fa4d6bad339b7aa",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/images/test.zip": "4d03f8c21823a3e4d1f501b1234e7380eb7cf2429ff0eb0281741ff1cc44f22a",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/vqa_data/API.zip": "76de4354ca2fbc57dd2369b579dc9bb5684e41d6a135b36b324a5ba25b7b9ca2",
+        "xai-org/RealworldQA": "17e7f75e092e47169732462ea3cdfebe911105dd"
+      },
+      "qids_sha": "021af0db921931050d6ef5af952a73df13c0acca412e796c03ee7e65afce7f19"
+    },
+    "slake_test": {
+      "n": 1061,
+      "source_revisions": {
+        "HuggingFaceM4/the_cauldron": "847a98a779b1652d65111daf20c972dfcd333605",
+        "lmms-lab/VQAv2": "32665d35052eb4a6d4414851c3c829a72754915a",
+        "lmms-lab/GQA": "a6e72d6e1b912da88af8b2f9eba05d5ea8ec2dd8",
+        "leonardPKU/clevr_cogen_a_train": "d5a8da66aa97c9c19ebe4075b7c7f777fef850a6",
+        "lmms-lab/textvqa": "9c0699cd19768ac5ab97568f6b3cbac4c0062884",
+        "HuggingFaceM4/ChartQA": "b605b6e08b57faf4359aeb2fe6a3ca595f99b6c5",
+        "bio-nlp-umass/MedThinkVQA": "5555b80e167c4796efab92fe709fb05914077dc0",
+        "SimulaMet/Kvasir-VQA-x1": "61e41148c3214bc5140ad0ab4c28520a512e2a73",
+        "foreverbeliever/OmniMedVQA": "1ba51c28fc0773bdf7efb8396e5bcfd4227e22da",
+        "BoKelvin/SLAKE": "a9083ce6c34ac3ffb17671a605962924d8a8f9e9",
+        "flaviagiammarino/path-vqa": "1685832883334b5bb5beaf4e4b333fdeecaa4ad9",
+        "https://vizwiz.cs.colorado.edu/VizWiz_all_answers/VQA_test.json": "fa113f0e90230ab4690bb41c4d74e40f7087cc7c192dd8363fa4d6bad339b7aa",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/images/test.zip": "4d03f8c21823a3e4d1f501b1234e7380eb7cf2429ff0eb0281741ff1cc44f22a",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/vqa_data/API.zip": "76de4354ca2fbc57dd2369b579dc9bb5684e41d6a135b36b324a5ba25b7b9ca2",
+        "xai-org/RealworldQA": "17e7f75e092e47169732462ea3cdfebe911105dd"
+      },
+      "qids_sha": "f4d97d388c2f84fea29d9c82a7d92f0e868b29d7e3dcadca6e178e09969b0e39"
+    },
+    "pathvqa_train": {
+      "n": 19654,
+      "source_revisions": {
+        "HuggingFaceM4/the_cauldron": "847a98a779b1652d65111daf20c972dfcd333605",
+        "lmms-lab/VQAv2": "32665d35052eb4a6d4414851c3c829a72754915a",
+        "lmms-lab/GQA": "a6e72d6e1b912da88af8b2f9eba05d5ea8ec2dd8",
+        "leonardPKU/clevr_cogen_a_train": "d5a8da66aa97c9c19ebe4075b7c7f777fef850a6",
+        "lmms-lab/textvqa": "9c0699cd19768ac5ab97568f6b3cbac4c0062884",
+        "HuggingFaceM4/ChartQA": "b605b6e08b57faf4359aeb2fe6a3ca595f99b6c5",
+        "bio-nlp-umass/MedThinkVQA": "5555b80e167c4796efab92fe709fb05914077dc0",
+        "SimulaMet/Kvasir-VQA-x1": "61e41148c3214bc5140ad0ab4c28520a512e2a73",
+        "foreverbeliever/OmniMedVQA": "1ba51c28fc0773bdf7efb8396e5bcfd4227e22da",
+        "BoKelvin/SLAKE": "a9083ce6c34ac3ffb17671a605962924d8a8f9e9",
+        "flaviagiammarino/path-vqa": "1685832883334b5bb5beaf4e4b333fdeecaa4ad9",
+        "https://vizwiz.cs.colorado.edu/VizWiz_all_answers/VQA_test.json": "fa113f0e90230ab4690bb41c4d74e40f7087cc7c192dd8363fa4d6bad339b7aa",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/images/test.zip": "4d03f8c21823a3e4d1f501b1234e7380eb7cf2429ff0eb0281741ff1cc44f22a",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/vqa_data/API.zip": "76de4354ca2fbc57dd2369b579dc9bb5684e41d6a135b36b324a5ba25b7b9ca2",
+        "xai-org/RealworldQA": "17e7f75e092e47169732462ea3cdfebe911105dd"
+      },
+      "qids_sha": "fd6375c339f93af3d08e0c78eb07a9e8dfe4de81c9b65c2ad74f403a189702af"
+    },
+    "pathvqa_validation": {
+      "n": 6259,
+      "source_revisions": {
+        "HuggingFaceM4/the_cauldron": "847a98a779b1652d65111daf20c972dfcd333605",
+        "lmms-lab/VQAv2": "32665d35052eb4a6d4414851c3c829a72754915a",
+        "lmms-lab/GQA": "a6e72d6e1b912da88af8b2f9eba05d5ea8ec2dd8",
+        "leonardPKU/clevr_cogen_a_train": "d5a8da66aa97c9c19ebe4075b7c7f777fef850a6",
+        "lmms-lab/textvqa": "9c0699cd19768ac5ab97568f6b3cbac4c0062884",
+        "HuggingFaceM4/ChartQA": "b605b6e08b57faf4359aeb2fe6a3ca595f99b6c5",
+        "bio-nlp-umass/MedThinkVQA": "5555b80e167c4796efab92fe709fb05914077dc0",
+        "SimulaMet/Kvasir-VQA-x1": "61e41148c3214bc5140ad0ab4c28520a512e2a73",
+        "foreverbeliever/OmniMedVQA": "1ba51c28fc0773bdf7efb8396e5bcfd4227e22da",
+        "BoKelvin/SLAKE": "a9083ce6c34ac3ffb17671a605962924d8a8f9e9",
+        "flaviagiammarino/path-vqa": "1685832883334b5bb5beaf4e4b333fdeecaa4ad9",
+        "https://vizwiz.cs.colorado.edu/VizWiz_all_answers/VQA_test.json": "fa113f0e90230ab4690bb41c4d74e40f7087cc7c192dd8363fa4d6bad339b7aa",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/images/test.zip": "4d03f8c21823a3e4d1f501b1234e7380eb7cf2429ff0eb0281741ff1cc44f22a",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/vqa_data/API.zip": "76de4354ca2fbc57dd2369b579dc9bb5684e41d6a135b36b324a5ba25b7b9ca2",
+        "xai-org/RealworldQA": "17e7f75e092e47169732462ea3cdfebe911105dd"
+      },
+      "qids_sha": "5043501c52dd4f1beffebb3dabca11c1cbc2c2e5da1c99aa21120f62d5c9460f"
+    },
+    "pathvqa_test": {
+      "n": 6719,
+      "source_revisions": {
+        "HuggingFaceM4/the_cauldron": "847a98a779b1652d65111daf20c972dfcd333605",
+        "lmms-lab/VQAv2": "32665d35052eb4a6d4414851c3c829a72754915a",
+        "lmms-lab/GQA": "a6e72d6e1b912da88af8b2f9eba05d5ea8ec2dd8",
+        "leonardPKU/clevr_cogen_a_train": "d5a8da66aa97c9c19ebe4075b7c7f777fef850a6",
+        "lmms-lab/textvqa": "9c0699cd19768ac5ab97568f6b3cbac4c0062884",
+        "HuggingFaceM4/ChartQA": "b605b6e08b57faf4359aeb2fe6a3ca595f99b6c5",
+        "bio-nlp-umass/MedThinkVQA": "5555b80e167c4796efab92fe709fb05914077dc0",
+        "SimulaMet/Kvasir-VQA-x1": "61e41148c3214bc5140ad0ab4c28520a512e2a73",
+        "foreverbeliever/OmniMedVQA": "1ba51c28fc0773bdf7efb8396e5bcfd4227e22da",
+        "BoKelvin/SLAKE": "a9083ce6c34ac3ffb17671a605962924d8a8f9e9",
+        "flaviagiammarino/path-vqa": "1685832883334b5bb5beaf4e4b333fdeecaa4ad9",
+        "https://vizwiz.cs.colorado.edu/VizWiz_all_answers/VQA_test.json": "fa113f0e90230ab4690bb41c4d74e40f7087cc7c192dd8363fa4d6bad339b7aa",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/images/test.zip": "4d03f8c21823a3e4d1f501b1234e7380eb7cf2429ff0eb0281741ff1cc44f22a",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/vqa_data/API.zip": "76de4354ca2fbc57dd2369b579dc9bb5684e41d6a135b36b324a5ba25b7b9ca2",
+        "xai-org/RealworldQA": "17e7f75e092e47169732462ea3cdfebe911105dd"
+      },
+      "qids_sha": "51d696ca752766864ca436e26c4e2e84f667057fc3e70f381be2e4561c06b3bf"
+    },
+    "omnimedvqa_train": {
+      "n": 71214,
+      "source_revisions": {
+        "HuggingFaceM4/the_cauldron": "847a98a779b1652d65111daf20c972dfcd333605",
+        "lmms-lab/VQAv2": "32665d35052eb4a6d4414851c3c829a72754915a",
+        "lmms-lab/GQA": "a6e72d6e1b912da88af8b2f9eba05d5ea8ec2dd8",
+        "leonardPKU/clevr_cogen_a_train": "d5a8da66aa97c9c19ebe4075b7c7f777fef850a6",
+        "lmms-lab/textvqa": "9c0699cd19768ac5ab97568f6b3cbac4c0062884",
+        "HuggingFaceM4/ChartQA": "b605b6e08b57faf4359aeb2fe6a3ca595f99b6c5",
+        "bio-nlp-umass/MedThinkVQA": "5555b80e167c4796efab92fe709fb05914077dc0",
+        "SimulaMet/Kvasir-VQA-x1": "61e41148c3214bc5140ad0ab4c28520a512e2a73",
+        "foreverbeliever/OmniMedVQA": "1ba51c28fc0773bdf7efb8396e5bcfd4227e22da",
+        "BoKelvin/SLAKE": "a9083ce6c34ac3ffb17671a605962924d8a8f9e9",
+        "flaviagiammarino/path-vqa": "1685832883334b5bb5beaf4e4b333fdeecaa4ad9",
+        "https://vizwiz.cs.colorado.edu/VizWiz_all_answers/VQA_test.json": "fa113f0e90230ab4690bb41c4d74e40f7087cc7c192dd8363fa4d6bad339b7aa",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/images/test.zip": "4d03f8c21823a3e4d1f501b1234e7380eb7cf2429ff0eb0281741ff1cc44f22a",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/vqa_data/API.zip": "76de4354ca2fbc57dd2369b579dc9bb5684e41d6a135b36b324a5ba25b7b9ca2",
+        "xai-org/RealworldQA": "17e7f75e092e47169732462ea3cdfebe911105dd"
+      },
+      "qids_sha": "4ae72e46b75f9a5c679b2354cd2d0cb215d70706ec8d774499998fb7372e6286"
+    },
+    "omnimedvqa_val": {
+      "n": 8868,
+      "source_revisions": {
+        "HuggingFaceM4/the_cauldron": "847a98a779b1652d65111daf20c972dfcd333605",
+        "lmms-lab/VQAv2": "32665d35052eb4a6d4414851c3c829a72754915a",
+        "lmms-lab/GQA": "a6e72d6e1b912da88af8b2f9eba05d5ea8ec2dd8",
+        "leonardPKU/clevr_cogen_a_train": "d5a8da66aa97c9c19ebe4075b7c7f777fef850a6",
+        "lmms-lab/textvqa": "9c0699cd19768ac5ab97568f6b3cbac4c0062884",
+        "HuggingFaceM4/ChartQA": "b605b6e08b57faf4359aeb2fe6a3ca595f99b6c5",
+        "bio-nlp-umass/MedThinkVQA": "5555b80e167c4796efab92fe709fb05914077dc0",
+        "SimulaMet/Kvasir-VQA-x1": "61e41148c3214bc5140ad0ab4c28520a512e2a73",
+        "foreverbeliever/OmniMedVQA": "1ba51c28fc0773bdf7efb8396e5bcfd4227e22da",
+        "BoKelvin/SLAKE": "a9083ce6c34ac3ffb17671a605962924d8a8f9e9",
+        "flaviagiammarino/path-vqa": "1685832883334b5bb5beaf4e4b333fdeecaa4ad9",
+        "https://vizwiz.cs.colorado.edu/VizWiz_all_answers/VQA_test.json": "fa113f0e90230ab4690bb41c4d74e40f7087cc7c192dd8363fa4d6bad339b7aa",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/images/test.zip": "4d03f8c21823a3e4d1f501b1234e7380eb7cf2429ff0eb0281741ff1cc44f22a",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/vqa_data/API.zip": "76de4354ca2fbc57dd2369b579dc9bb5684e41d6a135b36b324a5ba25b7b9ca2",
+        "xai-org/RealworldQA": "17e7f75e092e47169732462ea3cdfebe911105dd"
+      },
+      "qids_sha": "69e1b4d4bc1333b54c05c72657699063da43de968ae0ba355f245189a800d37a"
+    },
+    "omnimedvqa_test": {
+      "n": 8914,
+      "source_revisions": {
+        "HuggingFaceM4/the_cauldron": "847a98a779b1652d65111daf20c972dfcd333605",
+        "lmms-lab/VQAv2": "32665d35052eb4a6d4414851c3c829a72754915a",
+        "lmms-lab/GQA": "a6e72d6e1b912da88af8b2f9eba05d5ea8ec2dd8",
+        "leonardPKU/clevr_cogen_a_train": "d5a8da66aa97c9c19ebe4075b7c7f777fef850a6",
+        "lmms-lab/textvqa": "9c0699cd19768ac5ab97568f6b3cbac4c0062884",
+        "HuggingFaceM4/ChartQA": "b605b6e08b57faf4359aeb2fe6a3ca595f99b6c5",
+        "bio-nlp-umass/MedThinkVQA": "5555b80e167c4796efab92fe709fb05914077dc0",
+        "SimulaMet/Kvasir-VQA-x1": "61e41148c3214bc5140ad0ab4c28520a512e2a73",
+        "foreverbeliever/OmniMedVQA": "1ba51c28fc0773bdf7efb8396e5bcfd4227e22da",
+        "BoKelvin/SLAKE": "a9083ce6c34ac3ffb17671a605962924d8a8f9e9",
+        "flaviagiammarino/path-vqa": "1685832883334b5bb5beaf4e4b333fdeecaa4ad9",
+        "https://vizwiz.cs.colorado.edu/VizWiz_all_answers/VQA_test.json": "fa113f0e90230ab4690bb41c4d74e40f7087cc7c192dd8363fa4d6bad339b7aa",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/images/test.zip": "4d03f8c21823a3e4d1f501b1234e7380eb7cf2429ff0eb0281741ff1cc44f22a",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/vqa_data/API.zip": "76de4354ca2fbc57dd2369b579dc9bb5684e41d6a135b36b324a5ba25b7b9ca2",
+        "xai-org/RealworldQA": "17e7f75e092e47169732462ea3cdfebe911105dd"
+      },
+      "qids_sha": "0800efadfc0cd64074ae8e0bca1b500e8ee8850d645176fed147275e7f9bf74c"
+    },
+    "kvasirx1_train": {
+      "n": 43653,
+      "source_revisions": {
+        "HuggingFaceM4/the_cauldron": "847a98a779b1652d65111daf20c972dfcd333605",
+        "lmms-lab/VQAv2": "32665d35052eb4a6d4414851c3c829a72754915a",
+        "lmms-lab/GQA": "a6e72d6e1b912da88af8b2f9eba05d5ea8ec2dd8",
+        "leonardPKU/clevr_cogen_a_train": "d5a8da66aa97c9c19ebe4075b7c7f777fef850a6",
+        "lmms-lab/textvqa": "9c0699cd19768ac5ab97568f6b3cbac4c0062884",
+        "HuggingFaceM4/ChartQA": "b605b6e08b57faf4359aeb2fe6a3ca595f99b6c5",
+        "bio-nlp-umass/MedThinkVQA": "5555b80e167c4796efab92fe709fb05914077dc0",
+        "SimulaMet/Kvasir-VQA-x1": "61e41148c3214bc5140ad0ab4c28520a512e2a73",
+        "foreverbeliever/OmniMedVQA": "1ba51c28fc0773bdf7efb8396e5bcfd4227e22da",
+        "BoKelvin/SLAKE": "a9083ce6c34ac3ffb17671a605962924d8a8f9e9",
+        "flaviagiammarino/path-vqa": "1685832883334b5bb5beaf4e4b333fdeecaa4ad9",
+        "https://vizwiz.cs.colorado.edu/VizWiz_all_answers/VQA_test.json": "fa113f0e90230ab4690bb41c4d74e40f7087cc7c192dd8363fa4d6bad339b7aa",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/images/test.zip": "4d03f8c21823a3e4d1f501b1234e7380eb7cf2429ff0eb0281741ff1cc44f22a",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/vqa_data/API.zip": "76de4354ca2fbc57dd2369b579dc9bb5684e41d6a135b36b324a5ba25b7b9ca2",
+        "xai-org/RealworldQA": "17e7f75e092e47169732462ea3cdfebe911105dd"
+      },
+      "qids_sha": "1d1f57e0632e77e49a9a34a4be9ffe77fea1efd7289174b3e55678013bf8f845"
+    },
+    "kvasirx1_val": {
+      "n": 5114,
+      "source_revisions": {
+        "HuggingFaceM4/the_cauldron": "847a98a779b1652d65111daf20c972dfcd333605",
+        "lmms-lab/VQAv2": "32665d35052eb4a6d4414851c3c829a72754915a",
+        "lmms-lab/GQA": "a6e72d6e1b912da88af8b2f9eba05d5ea8ec2dd8",
+        "leonardPKU/clevr_cogen_a_train": "d5a8da66aa97c9c19ebe4075b7c7f777fef850a6",
+        "lmms-lab/textvqa": "9c0699cd19768ac5ab97568f6b3cbac4c0062884",
+        "HuggingFaceM4/ChartQA": "b605b6e08b57faf4359aeb2fe6a3ca595f99b6c5",
+        "bio-nlp-umass/MedThinkVQA": "5555b80e167c4796efab92fe709fb05914077dc0",
+        "SimulaMet/Kvasir-VQA-x1": "61e41148c3214bc5140ad0ab4c28520a512e2a73",
+        "foreverbeliever/OmniMedVQA": "1ba51c28fc0773bdf7efb8396e5bcfd4227e22da",
+        "BoKelvin/SLAKE": "a9083ce6c34ac3ffb17671a605962924d8a8f9e9",
+        "flaviagiammarino/path-vqa": "1685832883334b5bb5beaf4e4b333fdeecaa4ad9",
+        "https://vizwiz.cs.colorado.edu/VizWiz_all_answers/VQA_test.json": "fa113f0e90230ab4690bb41c4d74e40f7087cc7c192dd8363fa4d6bad339b7aa",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/images/test.zip": "4d03f8c21823a3e4d1f501b1234e7380eb7cf2429ff0eb0281741ff1cc44f22a",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/vqa_data/API.zip": "76de4354ca2fbc57dd2369b579dc9bb5684e41d6a135b36b324a5ba25b7b9ca2",
+        "xai-org/RealworldQA": "17e7f75e092e47169732462ea3cdfebe911105dd"
+      },
+      "qids_sha": "42fd72c95c1af29f01d747c16217244711c9779231072fae3db3599a19fb6bf8"
+    },
+    "kvasirx1_test": {
+      "n": 5716,
+      "source_revisions": {
+        "HuggingFaceM4/the_cauldron": "847a98a779b1652d65111daf20c972dfcd333605",
+        "lmms-lab/VQAv2": "32665d35052eb4a6d4414851c3c829a72754915a",
+        "lmms-lab/GQA": "a6e72d6e1b912da88af8b2f9eba05d5ea8ec2dd8",
+        "leonardPKU/clevr_cogen_a_train": "d5a8da66aa97c9c19ebe4075b7c7f777fef850a6",
+        "lmms-lab/textvqa": "9c0699cd19768ac5ab97568f6b3cbac4c0062884",
+        "HuggingFaceM4/ChartQA": "b605b6e08b57faf4359aeb2fe6a3ca595f99b6c5",
+        "bio-nlp-umass/MedThinkVQA": "5555b80e167c4796efab92fe709fb05914077dc0",
+        "SimulaMet/Kvasir-VQA-x1": "61e41148c3214bc5140ad0ab4c28520a512e2a73",
+        "foreverbeliever/OmniMedVQA": "1ba51c28fc0773bdf7efb8396e5bcfd4227e22da",
+        "BoKelvin/SLAKE": "a9083ce6c34ac3ffb17671a605962924d8a8f9e9",
+        "flaviagiammarino/path-vqa": "1685832883334b5bb5beaf4e4b333fdeecaa4ad9",
+        "https://vizwiz.cs.colorado.edu/VizWiz_all_answers/VQA_test.json": "fa113f0e90230ab4690bb41c4d74e40f7087cc7c192dd8363fa4d6bad339b7aa",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/images/test.zip": "4d03f8c21823a3e4d1f501b1234e7380eb7cf2429ff0eb0281741ff1cc44f22a",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/vqa_data/API.zip": "76de4354ca2fbc57dd2369b579dc9bb5684e41d6a135b36b324a5ba25b7b9ca2",
+        "xai-org/RealworldQA": "17e7f75e092e47169732462ea3cdfebe911105dd"
+      },
+      "qids_sha": "6e79463ad97bdeba5c6fa51fd0491ca7aa01be8853cb85b268129bc13633f21c"
     }
   }
 }

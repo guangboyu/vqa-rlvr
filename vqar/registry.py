@@ -173,6 +173,32 @@ def _medthink(sizes):
             for name, subset in data.load_medthink(sizes["max_images"]).items()}
 
 
+def _kvasirx1(sizes):
+    from vqar import data
+
+    splits = data.load_kvasir_x1(sizes["seed"], sizes["held_out_percent"] / 100)
+    return {f"kvasirx1_{name}": subset for name, subset in splits.items()}
+
+
+def _omnimedvqa(sizes):
+    from vqar import data
+
+    splits = data.load_omnimedvqa(sizes["seed"], sizes["held_out_percent"] / 100)
+    return {f"omnimedvqa_{name}": subset for name, subset in splits.items()}
+
+
+def _slake(sizes):
+    from vqar import data
+
+    return {f"slake_{name}": subset for name, subset in data.load_slake().items()}
+
+
+def _pathvqa(sizes):
+    from vqar import data
+
+    return {f"pathvqa_{name}": subset for name, subset in data.load_pathvqa().items()}
+
+
 def _prepared_ood(sizes):
     raise ValueError("Use python -m scripts.prepare_ood with pinned local source files")
 
@@ -285,6 +311,60 @@ DATASETS: dict[str, DatasetSpec] = {
             official=metrics.choice_letter_accuracy, normalized=metrics.choice_accuracy,
             official_roles=frozenset(ROLES), sizes={"max_images": 8},
             materialize=_medthink, require_split=False, max_images=8,
+        ),
+        # Medical candidates (2026-10-10), screened for RL viability before any training.
+        # Kvasir-VQA-x1's released train and test splits share most images, and OmniMedVQA has
+        # no training split, so both are re-split here by image content (10% of images each
+        # for test and dev, seed 0). Neither releases patient IDs: frames of one procedure or
+        # slices of one scan can land on both sides, so held-out scores may run optimistic.
+        DatasetSpec(
+            name="kvasirx1", display_name="Kvasir-VQA-x1 (atomic)",
+            sources={"SimulaMet/Kvasir-VQA-x1": "61e41148c3214bc5140ad0ab4c28520a512e2a73"},
+            subsets={"sft": "kvasirx1_train", "rl": "kvasirx1_train", "dev": "kvasirx1_val",
+                     "test": "kvasirx1_test"},
+            official_splits=frozenset(),
+            ladder="in-domain", answer_schema="label(s) from a closed vocabulary of about 60 "
+            "GI-endoscopy terms; several values joined by '; '",
+            official=metrics.label_set_match, normalized=metrics.normalized_label_set_match,
+            official_roles=frozenset(ROLES), sizes={"seed": 0, "held_out_percent": 10},
+            materialize=_kvasirx1, require_split=False,
+        ),
+        DatasetSpec(
+            name="omnimedvqa", display_name="OmniMedVQA (open access)",
+            sources={"foreverbeliever/OmniMedVQA": "1ba51c28fc0773bdf7efb8396e5bcfd4227e22da"},
+            subsets={"sft": "omnimedvqa_train", "rl": "omnimedvqa_train",
+                     "dev": "omnimedvqa_val", "test": "omnimedvqa_test"},
+            official_splits=frozenset(),
+            ladder="in-domain", answer_schema="option letter A-D (two to four options); "
+            "references hold the letter and the option text",
+            official=metrics.choice_letter_accuracy, normalized=metrics.choice_accuracy,
+            official_roles=frozenset(ROLES), sizes={"seed": 0, "held_out_percent": 10},
+            materialize=_omnimedvqa, require_split=False,
+        ),
+        DatasetSpec(
+            name="slake", display_name="SLAKE (English)",
+            sources={"BoKelvin/SLAKE": "a9083ce6c34ac3ffb17671a605962924d8a8f9e9"},
+            subsets={"sft": "slake_train", "rl": "slake_train", "dev": "slake_validation",
+                     "test": "slake_test"},
+            official_splits=frozenset({"sft", "rl", "dev", "test"}),
+            ladder="in-domain", answer_schema="yes/no or a short phrase; one reference",
+            official=metrics.casefold_exact_match, normalized=metrics.exact_match,
+            official_roles=frozenset(ROLES), sizes={}, materialize=_slake,
+            require_split=False,
+        ),
+        # A negative control: published RL models score as well with blank or mismatched
+        # PathVQA images, so its questions are answerable from text.
+        DatasetSpec(
+            name="pathvqa", display_name="PathVQA",
+            sources={"flaviagiammarino/path-vqa": "1685832883334b5bb5beaf4e4b333fdeecaa4ad9"},
+            subsets={"sft": "pathvqa_train", "rl": "pathvqa_train", "dev": "pathvqa_validation",
+                     "test": "pathvqa_test"},
+            official_splits=frozenset({"sft", "rl", "dev", "test"}),
+            ladder="in-domain", answer_schema="yes/no (half) or an open phrase from a figure "
+            "caption; one reference",
+            official=metrics.casefold_exact_match, normalized=metrics.exact_match,
+            official_roles=frozenset(ROLES), sizes={}, materialize=_pathvqa,
+            require_split=False,
         ),
         DatasetSpec(
             name="vizwiz", display_name="VizWiz",
