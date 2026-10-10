@@ -22,7 +22,8 @@ from vqar.registry import DATASETS, SCORER_VARIANTS, TRAINING_ROLES
 from vqar.splits import read_split
 
 ROOT = Path(__file__).resolve().parent.parent.parent
-MARKED_FILES = ("README.md", "docs/supplementary/results.md", "docs/supplementary/history.md")
+MARKED_FILES = ("README.md", "docs/supplementary/results.md", "docs/supplementary/supplement.md",
+                "docs/supplementary/history.md")
 BLOCK = re.compile(r"(<!-- report:(?P<name>[\w-]+) -->\n)(?P<body>.*?)(<!-- /report:(?P=name) -->)",
                    re.DOTALL)
 PROMPT_ORDER = ("short", "reasoning")
@@ -602,6 +603,42 @@ def pilot_table(arms: list[Arm], cells: dict, dataset: str) -> str:
                   "Output tokens"], rows, 2)
 
 
+def chartqa_headline_table(arms: list[Arm], cells: dict, judge: dict | None,
+                           labels: list[str]) -> str:
+    """The README's ChartQA table: official accuracy under both prompts, the audited judge's
+    reasoning-prompt score, and reasoning-prompt length, for the final arms."""
+    by_label = {arm.label: arm for arm in arms}
+    audited = {(c["arm"], c["prompt"]): c.get("audited") for c in judge["cells"]} if judge else {}
+    rows = []
+    for label in labels:
+        short, reasoning = (full_cell(cells, by_label[label], "chartqa", prompt)
+                            for prompt in PROMPT_ORDER)
+        judged = audited.get((label, "reasoning"))
+        rows.append([by_label[label].name,
+                     percent(short.metrics["official"]["overall"]) if short else "—",
+                     percent(reasoning.metrics["official"]["overall"]) if reasoning else "—",
+                     "—" if judged is None else f"{judged:.2f}",
+                     f"{reasoning.metrics['mean_output_tokens']:.0f}" if reasoning else "—"])
+    return table(["Arm", "Short", "Reasoning", "Reasoning, audited judge", "Reasoning tokens"],
+                 rows, 1)
+
+
+def ood_headline_table(arms: list[Arm], cells: dict, ood: dict | None) -> str:
+    """The README's out-of-domain table: short-prompt TextVQA (official) and VizWiz (the
+    authors' evaluator) for the arms evaluated on VizWiz."""
+    if ood is None:
+        return "The extra OOD sets have not been evaluated yet.\n"
+    vizwiz = {c["arm"]: c["score"] for c in ood["cells"] if c["dataset"] == "vizwiz"}
+    rows = []
+    for arm in arms:
+        if arm.label not in vizwiz:
+            continue
+        textvqa = full_cell(cells, arm, "textvqa", "short")
+        rows.append([arm.name, percent(textvqa.metrics["official"]["overall"]) if textvqa else "—",
+                     f"{vizwiz[arm.label]:.2f}"])
+    return table(["Arm (2B, short prompt)", "TextVQA", "VizWiz"], rows, 1)
+
+
 def pilot_deltas_table(arms: list[Arm], rows: list[dict], pilot: str) -> str:
     """A pilot's paired differences, official scorer, with 95% intervals over questions."""
     names = {arm.label: arm.name for arm in arms}
@@ -651,7 +688,9 @@ def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
     fullpool, _ = load_matrix(toml, "fullpool")
     mixture, _ = load_matrix(toml, "mixture")
     pilot_arms, _, _ = load_pilot(toml, "chartqa")
-    transfer = tomllib.loads(toml.read_text()).get("transfer")
+    declared_toml = tomllib.loads(toml.read_text())
+    transfer = declared_toml.get("transfer")
+    chartqa_headline = declared_toml["pilots"]["chartqa"].get("headline", [])
     passk = load_result(root / "results", "passk-heldout.json")
     chartqa_passk = load_result(root / "results", "passk-chartqa.json")
     knobs = load_result(root / "results", "knobs-chartqa.json")
@@ -678,6 +717,9 @@ def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
         "passk-deltas": passk_deltas_table(every_arm, passk),
         "judge": judge_table(arms, judge),
         "judge-deltas": judge_deltas_table(arms, judge),
+        "chartqa-headline": chartqa_headline_table(pilot_arms, cells, chartqa_judge,
+                                                   chartqa_headline),
+        "ood-headline": ood_headline_table(every_arm, cells, ood),
         "chartqa-judge": judge_table(pilot_arms, chartqa_judge),
         "chartqa-judge-deltas": judge_deltas_table(pilot_arms, chartqa_judge),
         "ood": ood_table(every_arm, ood),

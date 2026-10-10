@@ -1,151 +1,119 @@
 # What RL adds to a vision-language model's answers
 
-A hands-on study of short-answer SFT, GRPO with a verifiable reward, and on-policy
-distillation for Qwen3-VL at 2B and 8B, on VQAv2, GQA, CLEVR counting, and far-OOD
-TextVQA. Every model is evaluated on the same fixed test questions under two prompt
-templates, a short answer and step-by-step reasoning, and scored twice, with the dataset
-authors' evaluator and with a normalized matcher. Reading the two prompts side by side
-separates what each training method changes: **with a correctness reward, GRPO turns the
-reasoning prompt into a direct answer and brings it up to the short-answer ceiling, and
-short-answer SFT is what raises that ceiling on the training distribution.** On ChartQA,
-where reasoning pays, the same recipe keeps the reasoning and improves it.
+A hands-on study of when reinforcement learning with a verifiable reward improves a
+vision-language model beyond its starting point and beyond supervised fine-tuning. Qwen3-VL
+at 2B and 8B is trained with short-answer SFT, GRPO with a correctness reward, and on-policy
+distillation, then scored on fixed test questions under two prompt templates, a short answer
+and step-by-step reasoning, with the dataset authors' evaluator and a normalized matcher, and
+at milestones with an LLM judge audited by an image-aware model. **RL beats both the base model
+and SFT where the data rewards what it optimizes: on ChartQA, where reasoning pays, it keeps
+the reasoning and adds 10.4 points (5.5 under the audited judge), and out of domain it keeps a
+one-point edge over SFT.** On short-answer VQAv2 and GQA it deletes the reasoning and only
+matches SFT; those negative controls are reported as a supplement.
 
 The 2B pipeline runs on one 24 GB GPU; separate 80/96 GB profiles run the 8B recipes. The
 recorded demo runs without a GPU.
 
-## Results
+## Main results
 
-Official accuracy (%), with the normalized scorer in parentheses, on the full test subsets:
-5,000 VQAv2, 12,578 GQA, 3,000 CLEVR counting, and 5,000 TextVQA questions (its whole
-validation split). Greedy decoding, one training seed per arm. The short prompt asks for a
-single word or phrase; the reasoning prompt asks for step-by-step thinking and a tagged final
-answer.
+An RL arm counts as a win when it beats Instruct, and ideally SFT, on the test questions.
+Official accuracy (%), greedy decoding, one training seed per arm. On ChartQA's 1,250
+human-written test questions (2B), with the audited judge's score beside the reasoning prompt:
 
-<!-- report:matrix -->
-| Arm | Prompt | VQAv2 | GQA | CLEVR counting | TextVQA (far-OOD) |
-| --- | --- | ---: | ---: | ---: | ---: |
-| Instruct 2B | short | 77.87 (77.91) | 59.45 (59.46) | 97.67 (97.67) | 80.53 (80.55) |
-| Instruct 2B | reasoning | 55.06 (64.68) | 36.13 (51.95) | 87.13 (87.13) | 69.74 (69.75) |
-| SFT 2B | short | 79.87 (79.89) | 62.35 (62.35) | 99.40 (99.40) | 80.08 (80.10) |
-| SFT 2B | reasoning | 67.99 (68.17) | 56.61 (57.00) | 92.10 (92.10) | 68.86 (68.87) |
-| Instruct → GRPO | short | 77.94 (77.98) | 60.06 (60.06) | 99.47 (99.47) | 81.02 (81.03) |
-| Instruct → GRPO | reasoning | 78.27 (79.01) | 60.23 (60.30) | 99.27 (99.27) | 79.99 (80.00) |
-| SFT → GRPO | short | 79.76 (79.78) | 62.82 (62.82) | 99.70 (99.70) | 80.19 (80.20) |
-| SFT → GRPO | reasoning | 78.76 (78.88) | 61.52 (61.54) | 86.90 (86.90) | 79.02 (79.02) |
-| Instruct → short-prompt GRPO | short | 78.62 (78.66) | 60.34 (60.35) | 99.50 (99.50) | 81.01 (81.02) |
-| Instruct → short-prompt GRPO | reasoning | 61.85 (69.81) | 42.89 (54.01) | 86.50 (86.50) | 72.34 (72.35) |
-| SFT → short-prompt GRPO | short | 79.83 (79.85) | 62.50 (62.50) | 99.50 (99.50) | 80.89 (80.90) |
-| SFT → short-prompt GRPO | reasoning | 68.05 (68.31) | 56.88 (57.26) | 88.97 (88.97) | 70.72 (70.73) |
-| Instruct → gold-conditioned OPD | short | 77.96 (78.00) | 59.80 (59.80) | 97.93 (97.93) | 80.52 (80.53) |
-| Instruct → gold-conditioned OPD | reasoning | 70.41 (70.79) | 52.53 (52.73) | 86.50 (86.50) | 72.75 (72.76) |
-| Instruct 8B | short | 81.18 (81.22) | 61.66 (61.66) | 99.67 (99.67) | 83.49 (83.51) |
-| Instruct 8B | reasoning | 63.67 (68.75) | 46.84 (52.27) | 96.97 (96.97) | 74.00 (74.00) |
-| SFT 8B | short | 83.44 (83.46) | 63.86 (63.86) | 88.83 (88.83) | 84.73 (84.76) |
-| SFT 8B | reasoning | 68.36 (69.26) | 48.71 (49.18) | 96.70 (96.70) | 75.16 (75.18) |
-| Instruct 8B → GRPO | short | 81.24 (81.26) | 62.32 (62.32) | 99.63 (99.63) | 84.35 (84.37) |
-| Instruct 8B → GRPO | reasoning | 81.89 (82.19) | 62.66 (62.72) | 98.20 (98.20) | 83.28 (83.30) |
-| SFT 8B → GRPO | short | 83.23 (83.25) | 63.90 (63.90) | 97.00 (97.00) | 84.67 (84.70) |
-| SFT 8B → GRPO | reasoning | 82.03 (82.29) | 63.21 (63.32) | 98.33 (98.33) | 83.83 (83.85) |
-| Instruct 8B → short-prompt GRPO | short | 81.89 (81.93) | 62.41 (62.41) | 98.80 (98.80) | 84.29 (84.31) |
-| Instruct 8B → short-prompt GRPO | reasoning | 66.97 (70.31) | 50.05 (53.59) | 96.80 (96.80) | 74.29 (74.30) |
-| SFT 8B → short-prompt GRPO | short | 83.30 (83.32) | 63.82 (63.82) | 82.13 (82.13) | 84.73 (84.75) |
-| SFT 8B → short-prompt GRPO | reasoning | 70.23 (70.87) | 51.94 (52.36) | 96.43 (96.43) | 75.37 (75.38) |
-<!-- /report:matrix -->
+<!-- report:chartqa-headline -->
+| Arm | Short | Reasoning | Reasoning, audited judge | Reasoning tokens |
+| --- | ---: | ---: | ---: | ---: |
+| Instruct 2B | 65.84 | 69.68 | 77.17 | 205 |
+| SFT 2B (ChartQA) | 68.80 | 66.24 | 69.83 | 76 |
+| Instruct → short-prompt GRPO (ChartQA, 1 epoch) | 67.52 | 75.60 | 79.57 | 177 |
+| Instruct → GRPO (ChartQA, 1 epoch) | 66.72 | 80.08 | 82.62 | 162 |
+| SFT → GRPO (ChartQA, 1 epoch) | 69.68 | 79.76 | 81.98 | 197 |
+<!-- /report:chartqa-headline -->
 
-**1. RL removes reasoning that does not pay, and the reasoning prompt reaches the
-short-answer ceiling.** Under the reasoning prompt, 1,000 GRPO updates from Instruct raise
-official accuracy by 23.2 points on VQAv2, 24.1 on GQA, and 10.2 on far-OOD TextVQA at 2B,
-and by 18.2, 15.8, and 9.3 at 8B. The policy gets there by deleting the reasoning: mean
-responses fall from 148 tokens to 8 at 2B (118 to 8 at 8B) while the answer tag stays in
-100% of them. In-domain, the reasoning prompt now matches the short prompt of the same model
-(2B VQAv2 +0.3 points, 95% interval [−0.3, +1.0]; GQA +0.2). The corrected campaign's
-300-update runs stopped before this point (2B +6.7 on VQAv2). Paying for reasoning keeps it:
-a 0.2 format reward holds 8B responses near 130 tokens, at 9.7 points below
-correctness-only GRPO of the same length on VQAv2 and 9.6 on GQA ([results](docs/supplementary/results.md#recipe-experiments)).
-
-**2. RL lifts the short-answer ceiling a little; SFT lifts it more in-domain.** GRPO trained on the short prompt from Instruct adds 0.8 points
-on VQAv2 and 0.9 on GQA at 2B (0.7 and 0.8 at 8B); one epoch of short-answer SFT adds 2.0
-and 2.9 at 2B (2.3 and 2.2 at 8B). On far-OOD TextVQA at 2B the order reverses: short-prompt GRPO beats
-SFT by 0.9 points (interval [+0.2, +1.6]), while SFT itself moves TextVQA by −0.5; at 8B
-both add about 1 point there. Most of SFT's in-domain lead is the amount of data: trained on
-exactly the 4,000 questions short-prompt GRPO drew, SFT leads it by 0.2 points on VQAv2
-(interval [−0.3, +0.7]) and 0.5 on GQA, and GRPO stays 0.9 ahead on TextVQA
-([results](docs/supplementary/results.md#sft-on-exactly-the-rl-questions)). Run on the whole
-55,438-question pool (13,859 updates), short-prompt GRPO reaches SFT's level, +2.0 and +2.9
-over Instruct (within 0.1 points of SFT), with no further TextVQA gain and a wider pass@32
-deficit ([results](docs/supplementary/results.md#short-prompt-rl-on-the-full-pool)).
-
-**3. RL after SFT keeps the SFT ceiling.** GRPO from the SFT model keeps short-prompt
-accuracy within 0.5 points of SFT on VQAv2 and GQA at both sizes, and adds up to 0.8 on
-TextVQA. Where SFT hurt, the rollout prompt decides: at 8B, SFT costs 10.8 points of CLEVR
-counting under the short prompt (the casual counts in VQAv2 and GQA answers); GRPO with the
-reasoning prompt wins back 8.2 of them, while GRPO with the short prompt loses 6.7 more.
-
-**4. The standard RL recipe knobs do not move these results.** Against a fixed 2B baseline,
-a pool filtered to questions with a learning signal, refilling groups whose answers all
-scored the same, 16 instead of 4 questions per update at the same number of questions, and
-a 3× learning rate leave short-prompt accuracy on VQAv2, GQA, and TextVQA within 0.35
-points; a 10× learning rate costs 0.7–2.2 points there and 11 on CLEVR counting. One engineering change matters for correctness
-rather than accuracy: rollouts sampled from LoRA-merged bf16 weights come from a lagging copy
-of the trained policy (a mean log-probability gap of up to 0.2 nats per token, 1.4 on the
-near-tied token before `</answer>`); serving the adapter unmerged brings the gap under 0.01
-and is part of the final recipe ([method](docs/supplementary/method.md#sampler-and-trained-policy)).
-
-**5. Much of what exact match credits to training is answer form.** An LLM judge (Anthropic's
-Haiku 4.5) rescored every exact-match miss of the headline cells, and an image-aware audit by a
-stronger model measured how often its acceptances hold. Under that audited scorer, GRPO from
-Instruct gains 4.4 points on VQAv2 under the reasoning prompt at 2B instead of 23.2 (4.8
-instead of 24.1 on GQA), and the reasoning prompt still costs Instruct 3.8 points instead of
-22.8. Short-prompt GRPO's in-domain gains over Instruct (+0.2 and +0.4 points) fall inside
-their intervals, SFT's halve to +1.2 and +1.5, and short-prompt GRPO's TextVQA lead over SFT
-holds (+0.8, interval [+0.2, +1.5]) ([results](docs/supplementary/results.md#exact-match-misses-rescored-by-an-llm-judge)).
-The same lead appears on a second far-OOD set, VizWiz: short-prompt GRPO beats SFT by 1.0 point
-(interval [+0.5, +1.6]) and SFT on its own 4,000 questions by 1.2
-([results](docs/supplementary/results.md#extra-ood-sets)).
-
-**6. RL sharpens what the model already samples; it does not add answers.** On the first 1,000
-test questions of each dataset, sampled 32 times at temperature 1, short-prompt GRPO raises
-pass@1 over Instruct by 2.4–3.0 points but trails it by 1.9–7.6 at pass@32, and reasoning-prompt
-GRPO turns a pass@1 gain of 10 to 25 points into −1 to −6 at k = 32. One epoch of SFT does the
-reverse: pass@1 about level, pass@32 up 1.7–4.6 points
-([results](docs/supplementary/results.md#held-out-passk-before-and-after-rl)).
-
-**7. Where reasoning pays, RL keeps it, and more data keeps paying.** ChartQA's human-written
-questions are the first dataset where reasoning helped in screening (numeric answers, +5.6
-points). There, GRPO at 2B keeps the reasoning (160–200 tokens) and raises reasoning-prompt
-accuracy from 69.7 to 76.4 in 300 updates and to 80.1 after one epoch of the pool (+10.4,
-interval [+8.2, +12.6]), ten points above the best short-answer arm, while short-prompt GRPO
-gains 1.7. Under the audited judge half of the reasoning gain remains (+5.5, interval [+3.5,
-+7.4]), against a fifth on VQAv2. Unlike finding 6, reasoning-trained GRPO keeps Instruct's
-coverage at k = 32 (+0.5, interval [−0.7, +1.7]); short-prompt GRPO on the same data falls
-9.0 points behind. One seed, one dataset
+**1. Where reasoning pays, RL beats both the base model and SFT, and more data keeps paying.**
+ChartQA's human-written questions are the dataset where reasoning helped in screening (numeric
+answers, +5.6 points). One epoch of GRPO with the reasoning prompt keeps the reasoning (162
+tokens) and raises accuracy from 69.7 to 80.1 (+10.4, interval [+8.2, +12.6]); the audited
+judge keeps half of that (+5.5, interval [+3.5, +7.4]), because many of Instruct's misses are
+right answers in the wrong form ("20%" for 20). Both reasoning-trained arms end about ten
+points above the best short-answer arm, SFT included, and the full epoch adds 3.7 points over a
+300-update pilot. One seed, one dataset
 ([results](docs/supplementary/results.md#chartqa-rl-where-reasoning-pays)).
 
-**8. The habit RL teaches carries across datasets.** GRPO trained on ChartQA keeps a shorter
-chain of reasoning on photos and gains 15–16 points on VQAv2 and GQA under the reasoning
-prompt; GRPO trained on VQAv2 and GQA answers in under ten tokens everywhere and loses 6.7
-points on ChartQA. Short answers move by at most 0.6 points across the two families
+**2. Trained with reasoning, RL sharpens without narrowing.** Sampled 32 times per question,
+reasoning-trained GRPO gains 13.3 points at pass@1 over Instruct and stays level at pass@32
+(+0.5, interval [−0.7, +1.7]); short-prompt GRPO on the same data falls 9.0 points behind at
+pass@32 ([results](docs/supplementary/results.md#chartqa-rl-where-reasoning-pays)).
+
+Out of domain, at 2B with the short prompt (TextVQA official accuracy, VizWiz with the
+authors' evaluator; neither dataset was trained on):
+
+<!-- report:ood-headline -->
+| Arm (2B, short prompt) | TextVQA | VizWiz |
+| --- | ---: | ---: |
+| Instruct 2B | 80.53 | 42.50 |
+| SFT 2B | 80.08 | 42.53 |
+| Instruct → short-prompt GRPO | 81.01 | 43.58 |
+| SFT → short-prompt GRPO | 80.89 | 43.01 |
+| SFT on the 4,000 RL questions | 80.12 | 42.39 |
+<!-- /report:ood-headline -->
+
+**3. Out of domain, RL keeps an edge over SFT.** Short-prompt GRPO beats one SFT epoch by 0.9
+points on TextVQA (interval [+0.2, +1.6]) and by 1.0 on VizWiz ([+0.5, +1.6]). SFT on exactly
+the 4,000 questions RL drew does not close the gap (RL leads it by 0.9 and 1.2), and the
+audited judge keeps it on TextVQA (+0.8, [+0.2, +1.5]). About one point at 2B with one seed; at
+8B the TextVQA difference is not significant
+([results](docs/supplementary/results.md#out-of-domain-rl-keeps-an-edge-over-sft)).
+
+**4. A reasoning habit learned on charts carries over to photos.** Trained only on ChartQA and
+scored on photo questions under the reasoning prompt, GRPO keeps a shorter chain of reasoning
+(66–83 tokens against Instruct's 107–148) and gains 15.2 points on VQAv2 and 15.9 on GQA,
+while short-prompt accuracy moves by at most 0.6 points on any dataset
 ([results](docs/supplementary/results.md#transfer-between-training-data)).
 
-**9. Trained on both at once, one model does not learn when to reason.** GRPO on the union of the
-VQA and ChartQA training questions kept reasoning on charts (about 200 tokens) and shortened it
-on photos for 1,750 updates, then collapsed to 10-token answers everywhere within 250 updates.
-It ends level with the VQA-trained model on photos and 14.2 points below the ChartQA-trained
-model on ChartQA under the reasoning prompt (interval [−16.9, −11.4]). One seed, one mixing
-ratio ([results](docs/supplementary/results.md#one-model-on-both-families)).
+**5. RL after SFT keeps the SFT ceiling and repairs what SFT broke.** GRPO from the SFT model
+keeps short-prompt accuracy within 0.5 points of SFT on VQAv2 and GQA at both sizes and adds
+up to 0.8 on TextVQA. At 8B, where SFT cost 10.8 points of short-prompt CLEVR counting, GRPO
+with the reasoning prompt wins back 8.2 of them
+([full matrix](docs/supplementary/supplement.md#prompt-template--scorer-variant)).
 
 Differences below about 0.5 points under the reasoning prompt are within the run-to-run
 noise of greedy vLLM decoding (three repeats of Instruct 2B span 0.4 points) and are not
 claimed.
 
-The scorer matters under the reasoning prompt. The authors' evaluators compare some
-answers case-sensitively (VQAv2 when all annotators agree, GQA always), and for Instruct
-2B lowercasing the answers closes nearly all of the official-to-normalized gap: 9.6 of 9.6
-points on VQAv2 and 14.7 of 15.8 on GQA. Both numbers are always reported side by side.
+## Negative and null results
 
-The [results](docs/supplementary/results.md) page has the full tables: response length and
-answer tags, truncation, casing, image interventions, what each RL run trained on, training
-diagnostics, and a learnability pre-check of the RL pool.
+Reported in full, with the complete test matrix of every Part 1 arm and the per-run
+diagnostics, in the [supplementary results](docs/supplementary/supplement.md):
+
+- **On VQAv2 and GQA, RL deletes the reasoning, and most of its exact-match gain is answer
+  form.** Under the reasoning prompt, GRPO adds 23.2 points on 2B VQAv2 by cutting responses
+  from 148 tokens to 8; the audited judge leaves 4.4 of them (interval [+3.5, +5.4]), and the
+  reasoning prompt still costs Instruct 3.8 points. A 0.2 format reward keeps 8B reasoning near
+  130 tokens and scores 9.7 points below correctness-only GRPO on VQAv2
+  ([judge](docs/supplementary/supplement.md#exact-match-misses-rescored-by-an-llm-judge)).
+- **In domain, short-answer RL only matches SFT.** 1,000 updates add 0.8 and 0.9 points on
+  VQAv2 and GQA, against 2.0 and 2.9 for one SFT epoch; one epoch of the whole 55,438-question
+  pool reaches SFT's level and no further
+  ([full pool](docs/supplementary/supplement.md#short-prompt-rl-on-the-full-pool)).
+- **On VQA, RL narrows what the model can sample.** Short-prompt GRPO raises held-out pass@1
+  by 2.4–3.0 points and lowers pass@32 by 1.9–7.6 (4.6–10.8 after the full pool); one SFT epoch
+  does the reverse
+  ([pass@k](docs/supplementary/supplement.md#held-out-passk-before-and-after-rl)).
+- **Training knobs did not move results.** A filtered pool, dynamic sampling, 4× the batch and
+  3× the learning rate stay within 0.35 points on VQA; eight ChartQA knobs (loss aggregation,
+  KL, reward scaling, response cap, list-aware reward, canvas size, image geometry) read 0 at
+  300 updates. The change that mattered was for correctness: rollouts from LoRA-merged weights
+  lag the trained policy (up to 0.2 nats per token), and serving the adapter unmerged brings
+  the gap under 0.01 ([recipe](docs/supplementary/supplement.md#recipe-experiments),
+  [knobs](docs/supplementary/supplement.md#training-knobs-chartqa)).
+- **One model on both dataset families does not learn when to reason.** Trained on VQA and
+  ChartQA together, it keeps chart reasoning for 1,750 updates, then collapses to 10-token
+  answers everywhere and ends 14.2 points below the ChartQA-trained model on ChartQA
+  ([mixture](docs/supplementary/supplement.md#one-model-on-both-families)).
+- **Rejected at screening.** CLEVR compositional (nearly saturated; reasoning costs it 5.6
+  points) and MedThinkVQA (answered from the case text at 2B and 8B)
+  ([screening](docs/supplementary/evaluation.md#dataset-screening)).
 
 ## What was trained
 
@@ -161,7 +129,7 @@ four questions and eight sampled responses per update, learning rate 1e-5, no KL
 Rollouts come from vLLM serving the current LoRA adapter unmerged, so the sampled policy is
 the trained one. SFT → GRPO adds the SFT epoch on top, so it measures the value of SFT
 before the same RL. The recipe was frozen after one-change experiments against a fixed
-baseline ([results](docs/supplementary/results.md#recipe-experiments)). No dev or test image
+baseline ([results](docs/supplementary/supplement.md#recipe-experiments)). No dev or test image
 appears in any training pool; the split files in `data/splits/` list every row and
 `check_data` verifies it. The [method](docs/supplementary/method.md) has the full recipe and
 the commands that reproduce each arm.
@@ -183,6 +151,11 @@ The [evaluation](docs/supplementary/evaluation.md) page describes the harness in
 public harnesses use and lists where it departs from their practice. Run side by side with
 lmms-eval on the same model, the scorers agree exactly and GQA matches within 0.09 points;
 the 1.15-point TextVQA gap comes from lmms-eval capitalizing each question.
+
+The scorer matters under the reasoning prompt. The authors' evaluators compare some
+answers case-sensitively (VQAv2 when all annotators agree, GQA always), and for Instruct
+2B lowercasing the answers closes nearly all of the official-to-normalized gap: 9.6 of 9.6
+points on VQAv2 and 14.7 of 15.8 on GQA. Both numbers are always reported side by side.
 
 `evaluate.py` runs one model under a declared protocol (dataset, role, tier, prompt,
 decoding, image mode) and writes a record with both scorer variants and every prediction.

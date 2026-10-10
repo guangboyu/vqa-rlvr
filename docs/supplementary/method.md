@@ -6,7 +6,7 @@ Does short-answer SFT before the same RL change the result? And which standard c
 the RL recipe matter here? Every arm is evaluated on the same test questions with both
 prompt templates and both scorer variants, so a change in one view can be checked in the
 other. The recipe below was frozen after one-change experiments against a fixed baseline
-([results](results.md#recipe-experiments)); every headline number comes from arms trained
+([results](supplement.md#recipe-experiments)); every headline number comes from arms trained
 under it.
 
 ## Arms
