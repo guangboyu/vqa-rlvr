@@ -649,6 +649,7 @@ def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
     comparisons = load_comparisons(toml, "headline")
     matched, _ = load_matrix(toml, "matched")
     fullpool, _ = load_matrix(toml, "fullpool")
+    mixture, _ = load_matrix(toml, "mixture")
     pilot_arms, _, _ = load_pilot(toml, "chartqa")
     transfer = tomllib.loads(toml.read_text()).get("transfer")
     passk = load_result(root / "results", "passk-heldout.json")
@@ -664,6 +665,8 @@ def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
         "fullpool": matrix_table(fullpool, cells),
         "fullpool-deltas": deltas_table(fullpool, declared(
             deltas, load_comparisons(toml, "fullpool"), ("official",))),
+        "mixture-deltas": deltas_table(mixture, declared(
+            deltas, load_comparisons(toml, "mixture"), ("official",))),
         "chartqa-pilot": pilot_table(pilot_arms, cells, "chartqa"),
         "chartqa-pilot-deltas": pilot_deltas_table(pilot_arms, deltas, "chartqa"),
         "chartqa-passk": passk_table(every_arm, chartqa_passk),

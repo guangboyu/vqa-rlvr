@@ -127,6 +127,13 @@ prompt; GRPO trained on VQAv2 and GQA answers in under ten tokens everywhere and
 points on ChartQA. Short answers move by at most 0.6 points across the two families
 ([results](docs/supplementary/results.md#transfer-between-training-data)).
 
+**9. Trained on both at once, one model does not learn when to reason.** GRPO on the union of the
+VQA and ChartQA training questions kept reasoning on charts (about 200 tokens) and shortened it
+on photos for 1,750 updates, then collapsed to 10-token answers everywhere within 250 updates.
+It ends level with the VQA-trained model on photos and 14.2 points below the ChartQA-trained
+model on ChartQA under the reasoning prompt (interval [−16.9, −11.4]). One seed, one mixing
+ratio ([results](docs/supplementary/results.md#one-model-on-both-families)).
+
 Differences below about 0.5 points under the reasoning prompt are within the run-to-run
 noise of greedy vLLM decoding (three repeats of Instruct 2B span 0.4 points) and are not
 claimed.
