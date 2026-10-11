@@ -111,6 +111,26 @@ def test_omnimed_items_become_lettered_choices_or_are_dropped():
     assert _omnimed_record({**row, "gt_answer": "Heart"}) is None
 
 
+def test_held_out_collections_are_whole_seeded_and_leave_each_modality_in_training():
+    from vqar.data import held_out_collections
+
+    sizes = {"RadImageNet": 600, "a1": 40, "a2": 30, "a3": 20, "b1": 30, "b2": 20,
+             "c1": 50, "d1": 10, "d2": 10}
+    modality = {"RadImageNet": "mr", "a1": "a", "a2": "a", "a3": "a", "b1": "b", "b2": "b",
+                "c1": "c", "d1": "d", "d2": "d"}
+    families = (("a1", "d1"),)
+    held = held_out_collections(sizes, modality, seed=0, share=0.1, families=families,
+                                keep=("RadImageNet",))
+    assert held == held_out_collections(sizes, modality, seed=0, share=0.1,
+                                        families=families, keep=("RadImageNet",))
+    assert "RadImageNet" not in held and "c1" not in held  # c's only collection stays
+    assert ("a1" in held) == ("d1" in held)  # a family moves as one unit
+    assert sum(sizes[name] for name in held) >= 0.1 * sum(sizes.values())
+    assert len({modality[name] for name in held}) >= 2
+    for label in ("a", "b", "d"):
+        assert any(modality[n] == label and n not in held for n in sizes)
+
+
 def test_re_split_keeps_every_question_of_an_image_together():
     from vqar.data import _split_by_image
 

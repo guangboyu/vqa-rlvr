@@ -7,6 +7,7 @@
     "gqa_rl & vqav2_rl": 4,
     "gqa_rl & vqav2_sft": 12,
     "gqa_sft & vqav2_rl": 11,
-    "gqa_sft & vqav2_sft": 26
+    "gqa_sft & vqav2_sft": 26,
+    "omnimedvqa_train & omnimedx_train": 58542
   }
 }

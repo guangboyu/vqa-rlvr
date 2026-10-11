@@ -190,6 +190,13 @@ def _omnimedvqa(sizes):
     return {f"omnimedvqa_{name}": subset for name, subset in splits.items()}
 
 
+def _omnimedx(sizes):
+    from vqar import data
+
+    splits = data.load_omnimedx(sizes["seed"], sizes["test_percent"] / 100)
+    return {f"omnimedx_{name}": subset for name, subset in splits.items()}
+
+
 def _slake(sizes):
     from vqar import data
 
@@ -349,6 +356,26 @@ DATASETS: dict[str, DatasetSpec] = {
             official=metrics.choice_letter_accuracy, normalized=metrics.choice_accuracy,
             official_roles=frozenset(ROLES), sizes={"seed": 0, "held_out_percent": 10},
             materialize=_omnimedvqa, require_split=False,
+        ),
+        # OmniMedVQA again, with whole source collections held out for test (2026-10-11): the
+        # image-level re-split above lets SFT reach 99.7%, since test images come from the
+        # collections it trained on. Test collections total about 10% of the questions,
+        # drawn round-robin over imaging modalities with seed 0 (vqar.data.
+        # held_out_collections); RadImageNet stays in training, and collections that share
+        # images move together. Every open-access image already sits in one of omnimedvqa's
+        # roles and no held-out image may enter any training pool, so the split file keeps
+        # only the test rows omnimedvqa also tests on (about a tenth), training drops
+        # omnimedvqa's dev and test images, and there is no dev role.
+        DatasetSpec(
+            name="omnimedx", display_name="OmniMedVQA (held-out collections)",
+            sources={"foreverbeliever/OmniMedVQA": "1ba51c28fc0773bdf7efb8396e5bcfd4227e22da"},
+            subsets={"sft": "omnimedx_train", "rl": "omnimedx_train", "test": "omnimedx_test"},
+            official_splits=frozenset(),
+            ladder="in-domain", answer_schema="option letter A-D (two to four options); "
+            "references hold the letter and the option text",
+            official=metrics.choice_letter_accuracy, normalized=metrics.choice_accuracy,
+            official_roles=frozenset(ROLES), sizes={"seed": 0, "test_percent": 10},
+            materialize=_omnimedx, require_split=False,
         ),
         DatasetSpec(
             name="slake", display_name="SLAKE (English)",

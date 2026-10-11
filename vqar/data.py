@@ -548,13 +548,13 @@ def _omnimed_question(row: dict, letters: list[str]) -> str:
     return f"{row['question']}\n{options}\nAnswer with the letter of the correct option."
 
 
-def _omnimed_record(row: dict) -> dict | None:
+def _omnimed_record(row: dict, dataset: str = "omnimedvqa") -> dict | None:
     """One open-access item as a multiple-choice question; None when no option is the answer."""
     letters = [letter for letter in "ABCD" if row.get(f"option_{letter}") is not None]
     correct = [letter for letter in letters if row[f"option_{letter}"] == row["gt_answer"]]
     if len(correct) != 1:
         return None
-    return {"dataset": "omnimedvqa", "qid": row["question_id"],
+    return {"dataset": dataset, "qid": row["question_id"],
             "member": f"OmniMedVQA/{row['image_path']}",
             "question": _omnimed_question(row, letters),
             "answers": [correct[0], row["gt_answer"]],
@@ -585,6 +585,86 @@ def load_omnimedvqa(seed: int, held_out: float) -> dict[str, Dataset]:
                 records.append(record)
     return {name: _from_zip(archive, part)
             for name, part in _split_by_image(records, seed, held_out).items()}
+
+
+# Source collections of the open-access release that share images, each held out or trained on
+# as one unit: the first two groups share decoded pixels exactly (11, 369 and 12 images), the
+# COVID chest X-ray group shares resized copies (15 matches of a 16x16 difference hash).
+OMNIMED_FAMILIES = (("Adam Challenge", "PALM2019"),
+                    ("CoronaHack", "OCT & X-Ray 2017", "Retinal OCT-C8"),
+                    ("COVIDx CXR-4", "Chest X-Ray PA", "Covid-19 tianchi", "Covid19 heywhale"))
+OMNIMED_IN_TRAINING = ("RadImageNet",)  # about 64% of the questions; never held out
+
+
+def held_out_collections(sizes: dict[str, int], modality: dict[str, str], seed: int,
+                         share: float, families=OMNIMED_FAMILIES,
+                         keep=OMNIMED_IN_TRAINING) -> list[str]:
+    """Whole source collections for a held-out role, about `share` of all questions.
+
+    Collections that share images (`families`) move as one unit, labelled by the modality of
+    its largest collection. Units are drawn round-robin over modalities, each in a seeded
+    order, so several modalities are tested, and every modality keeps at least one unit in
+    training; the `keep` collections always stay in training.
+    """
+    import random
+
+    grouped = {name for family in families for name in family}
+    units = [tuple(sorted(f for f in family if f in sizes)) for family in families]
+    units = [unit for unit in units if unit]
+    units += [(name,) for name in sorted(sizes) if name not in grouped]
+    units = [unit for unit in units if not set(unit) & set(keep)]
+    rng = random.Random(seed)
+    by_modality: dict[str, list[tuple]] = {}
+    for unit in rng.sample(units, len(units)):
+        label = modality[max(unit, key=lambda name: sizes[name])]
+        by_modality.setdefault(label, []).append(unit)
+    order = rng.sample(sorted(by_modality), len(by_modality))
+    target, chosen, count = share * sum(sizes.values()), [], 0
+    while count < target:
+        progressed = False
+        for label in order:
+            left = [unit for unit in by_modality[label] if unit not in chosen]
+            if len(left) <= 1 or count >= target:
+                continue
+            chosen.append(left[0])
+            count += sum(sizes[name] for name in left[0])
+            progressed = True
+        if not progressed:
+            break
+    return sorted(name for unit in chosen for name in unit)
+
+
+def load_omnimedx(seed: int, test_share: float) -> dict[str, Dataset]:
+    """OmniMedVQA's open-access items with whole source collections held out for test, so a
+    model cannot score by recognizing collections it trained on (held_out_collections)."""
+    import json
+    import random
+    import zipfile
+    from collections import Counter
+
+    from huggingface_hub import hf_hub_download
+
+    archive = hf_hub_download(OMNIMEDVQA, "OmniMedVQA.zip", repo_type="dataset",
+                              revision=SOURCE_REVISIONS[OMNIMEDVQA])
+    records = []
+    with zipfile.ZipFile(archive) as source:
+        for name in sorted(n for n in source.namelist()
+                           if "/QA_information/Open-access/" in n and n.endswith(".json")):
+            for row in json.loads(source.read(name)):
+                record = _omnimed_record(row, "omnimedx")
+                if record is not None:
+                    records.append({**record, "collection": row["dataset"],
+                                    "modality": row.get("modality_type")})
+    sizes = Counter(record["collection"] for record in records)
+    modality = {name: Counter(r["modality"] for r in records if r["collection"] == name
+                              and r["modality"]).most_common(1)[0][0] for name in sizes}
+    test = set(held_out_collections(sizes, modality, seed, test_share))
+    # Rows in a seeded order: collection by collection, one collection's 13-megapixel images
+    # (ISIC2020) would fill a saved shard past Arrow's 2 GB limit.
+    rng = random.Random(seed)
+    parts = {"train": [r for r in records if r["collection"] not in test],
+             "test": [r for r in records if r["collection"] in test]}
+    return {name: _from_zip(archive, rng.sample(part, len(part))) for name, part in parts.items()}
 
 
 SLAKE = "BoKelvin/SLAKE"

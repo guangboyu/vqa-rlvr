@@ -90,6 +90,9 @@ DECLARED = {
                             "Kvasir-Instrument)", True),
     "omnimedvqa": Declaration("image", True, "open-access subset; each source dataset's own "
                               "license (research use)", True),
+    # Whole source collections held out (the strictest unit available without patient IDs).
+    "omnimedx": Declaration("source collection", True, "open-access subset; each source "
+                            "dataset's own license (research use)", True),
     "slake": Declaration("image", True, "CC BY 4.0", True),
     "pathvqa": Declaration("image", True, "MIT (release); textbook and PEIR images, research "
                            "use", True),
