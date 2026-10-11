@@ -78,13 +78,14 @@ up to 0.8 on TextVQA. At 8B, where SFT cost 10.8 points of short-prompt CLEVR co
 with the reasoning prompt wins back 8.2 of them
 ([full matrix](docs/supplementary/supplement.md#prompt-template--scorer-variant)).
 
-**6. On medical images, RL beats the base model and keeps what SFT loses.** Of five medical
-candidates, SLAKE and OmniMedVQA passed the screen. On SLAKE, one epoch of short-prompt GRPO
-gains 15.8 points over Instruct (interval [+13.1, +18.5]). SFT gains more in domain, but a model
-fine-tuned on one medical dataset loses 1.8–6.9 points on the others, while RL trained on the
-same questions stays within a point of Instruct there: RL leads SFT by 0.8–6.1 points on medical
-data neither trained on. 2B, one seed; no patient-level split is available
-([results](docs/supplementary/results.md#medical-images-rl-beats-the-base-model-and-keeps-what-sft-loses)).
+**6. On medical images, RL after SFT beats SFT, and RL keeps what SFT loses elsewhere.** Of
+five medical candidates, SLAKE and OmniMedVQA passed the screen. On SLAKE, SFT followed by one
+epoch of short-prompt GRPO scores 76.2, 1.3 points above SFT (interval [+0.0, +2.7]) and 26.4
+above Instruct; GRPO alone gains 15.8 over Instruct. A model fine-tuned on one medical dataset
+loses 1.8–6.9 points on the others, while RL trained on the same questions stays within a point
+of Instruct there (RL leads SFT by 0.8–6.1), and RL after SFT wins back half of SFT's loss on
+PathVQA. 2B, one seed; no patient-level split is available
+([results](docs/supplementary/results.md#medical-images-rl-after-sft-beats-sft-and-keeps-more-of-what-sft-loses)).
 
 Differences below about 0.5 points under the reasoning prompt are within the run-to-run
 noise of greedy vLLM decoding (three repeats of Instruct 2B span 0.4 points) and are not
@@ -120,9 +121,10 @@ diagnostics, in the [supplementary results](docs/supplementary/supplement.md):
   ChartQA together, it keeps chart reasoning for 1,750 updates, then collapses to 10-token
   answers everywhere and ends 14.2 points below the ChartQA-trained model on ChartQA
   ([mixture](docs/supplementary/supplement.md#one-model-on-both-families)).
-- **On medical images in domain, SFT beats RL.** On SLAKE one SFT epoch leads one epoch of
-  short-prompt GRPO by 9.2 points; on OmniMedVQA SFT reaches 99.7%, because its image-level
-  split leaves test images close to training ones
+- **On medical images in domain, SFT beats RL from the base model.** On SLAKE one SFT epoch
+  leads one epoch of short-prompt GRPO from Instruct by 9.2 points (RL after SFT closes the
+  gap); on OmniMedVQA SFT reaches 99.7%, because its image-level split leaves test images close
+  to training ones
   ([medical pilots](docs/supplementary/supplement.md#medical-pilots-in-detail)).
 - **Rejected at screening.** CLEVR compositional (nearly saturated; reasoning costs it 5.6
   points), MedThinkVQA (answered from the case text at 2B and 8B), and Kvasir-VQA-x1 and

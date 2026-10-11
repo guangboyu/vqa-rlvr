@@ -121,8 +121,9 @@ model = "checkpoints/merged/mix_grpo2_base"
 # Medical pilots (2026-10-10): SLAKE and OmniMedVQA passed screening, so each gets one SFT epoch
 # and 300 updates of short-prompt and of reasoning GRPO from Instruct under the frozen recipe
 # (the reward uses each dataset's normalized scorer); SLAKE's short-prompt arm also ran for one
-# full epoch (1,229 updates), the exposure SFT had. Commands: runs/medical-pilot-20261010/run.sh
-# and runs/medical-epoch-20261011/run.sh (local).
+# full epoch (1,229 updates), the exposure SFT had, and again from the SLAKE SFT model (SFT ->
+# RL, 2026-10-11). Commands: runs/medical-pilot-20261010/run.sh, runs/medical-epoch-20261011/run.sh
+# and runs/medical-sftrl-20261011/run.sh (local).
 [[arms]]
 label = "slk-sft2"
 name = "SFT 2B (SLAKE)"
@@ -137,6 +138,11 @@ model = "checkpoints/merged/slk_short2_base"
 label = "slk-short2-base-e1"
 name = "Instruct → short-prompt GRPO (SLAKE, 1 epoch)"
 model = "checkpoints/merged/slk_short2_base_e1"
+
+[[arms]]
+label = "slk-short2-sft-e1"
+name = "SFT → short-prompt GRPO (SLAKE, 1 epoch)"
+model = "checkpoints/merged/slk_short2_sft_e1"
 
 [[arms]]
 label = "slk-grpo2-base"
@@ -558,6 +564,10 @@ arm = "slk-short2-base-e1"
 trained_on = "SLAKE"
 
 [[transfers.medical.rows]]
+arm = "slk-short2-sft-e1"
+trained_on = "SLAKE (SFT, then RL)"
+
+[[transfers.medical.rows]]
 arm = "omv-sft2"
 trained_on = "OmniMedVQA"
 
@@ -589,17 +599,17 @@ candidates = ["mix-grpo2-base"]
 # unseen-data test (SFT against RL trained on the same questions).
 [pilots.slake]
 dataset = "slake"
-arms = ["base2", "slk-sft2", "slk-short2-base", "slk-short2-base-e1", "slk-grpo2-base",
-        "omv-sft2", "omv-short2-base"]
+arms = ["base2", "slk-sft2", "slk-short2-base", "slk-short2-base-e1", "slk-short2-sft-e1",
+        "slk-grpo2-base", "omv-sft2", "omv-short2-base"]
 
 [[pilots.slake.comparisons]]
 reference = "base2"
-candidates = ["slk-sft2", "slk-short2-base", "slk-short2-base-e1", "slk-grpo2-base",
-              "omv-sft2", "omv-short2-base"]
+candidates = ["slk-sft2", "slk-short2-base", "slk-short2-base-e1", "slk-short2-sft-e1",
+              "slk-grpo2-base", "omv-sft2", "omv-short2-base"]
 
 [[pilots.slake.comparisons]]
 reference = "slk-sft2"
-candidates = ["slk-short2-base", "slk-short2-base-e1"]
+candidates = ["slk-short2-base", "slk-short2-base-e1", "slk-short2-sft-e1"]
 
 [[pilots.slake.comparisons]]
 reference = "omv-sft2"
@@ -608,12 +618,12 @@ candidates = ["omv-short2-base"]
 [pilots.omnimedvqa]
 dataset = "omnimedvqa"
 arms = ["base2", "omv-sft2", "omv-short2-base", "omv-grpo2-base", "slk-sft2",
-        "slk-short2-base", "slk-short2-base-e1"]
+        "slk-short2-base", "slk-short2-base-e1", "slk-short2-sft-e1"]
 
 [[pilots.omnimedvqa.comparisons]]
 reference = "base2"
 candidates = ["omv-sft2", "omv-short2-base", "omv-grpo2-base", "slk-sft2", "slk-short2-base",
-              "slk-short2-base-e1"]
+              "slk-short2-base-e1", "slk-short2-sft-e1"]
 
 [[pilots.omnimedvqa.comparisons]]
 reference = "omv-sft2"
@@ -621,20 +631,21 @@ candidates = ["omv-short2-base"]
 
 [[pilots.omnimedvqa.comparisons]]
 reference = "slk-sft2"
-candidates = ["slk-short2-base", "slk-short2-base-e1"]
+candidates = ["slk-short2-base", "slk-short2-base-e1", "slk-short2-sft-e1"]
 
 [pilots.pathvqa]
 dataset = "pathvqa"
-arms = ["base2", "slk-sft2", "slk-short2-base", "slk-short2-base-e1", "omv-sft2",
-        "omv-short2-base"]
+arms = ["base2", "slk-sft2", "slk-short2-base", "slk-short2-base-e1", "slk-short2-sft-e1",
+        "omv-sft2", "omv-short2-base"]
 
 [[pilots.pathvqa.comparisons]]
 reference = "base2"
-candidates = ["slk-sft2", "slk-short2-base", "slk-short2-base-e1", "omv-sft2", "omv-short2-base"]
+candidates = ["slk-sft2", "slk-short2-base", "slk-short2-base-e1", "slk-short2-sft-e1",
+              "omv-sft2", "omv-short2-base"]
 
 [[pilots.pathvqa.comparisons]]
 reference = "slk-sft2"
-candidates = ["slk-short2-base", "slk-short2-base-e1"]
+candidates = ["slk-short2-base", "slk-short2-base-e1", "slk-short2-sft-e1"]
 
 [[pilots.pathvqa.comparisons]]
 reference = "omv-sft2"

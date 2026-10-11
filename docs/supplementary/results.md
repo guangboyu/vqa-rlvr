@@ -358,15 +358,17 @@ One model trained on both families at once did not learn when to reason: it kept
 reasoning for 1,750 updates, then dropped reasoning everywhere
 ([supplement](supplement.md#one-model-on-both-families)).
 
-## Medical images: RL beats the base model and keeps what SFT loses
+## Medical images: RL after SFT beats SFT and keeps more of what SFT loses
 
 Two medical datasets passed the screen ([evaluation](evaluation.md#dataset-screening)): SLAKE
 (radiology questions, English, 4,919 training questions) and OmniMedVQA (the open-access
 multiple-choice half, re-split by image). Each got the ChartQA pilot's recipe at 2B: one SFT
 epoch, and 300 updates of short-prompt and of reasoning GRPO from Instruct, the correctness
 reward using each dataset's normalized scorer; SLAKE's short-prompt arm then ran for one full
-epoch (1,229 updates), the exposure SFT had. Every model was also scored on the other medical
-test sets and on PathVQA, which neither trained on. Short prompt, each model minus Instruct
+epoch (1,229 updates), the exposure SFT had, and once more from the SLAKE SFT model (SFT →
+RL, the usual order: SFT teaches the domain's answers, RL then trains on the model's own
+samples). Every model was also scored on the other medical test sets and on PathVQA, which
+none trained on. Short prompt, each model minus Instruct
 2B, official scorer, 95% intervals over questions (`[transfers.medical]`):
 
 <!-- report:medical-transfer-short -->
@@ -374,13 +376,17 @@ test sets and on PathVQA, which neither trained on. Short prompt, each model min
 | --- | --- | ---: | ---: | ---: |
 | SFT 2B (SLAKE) | SLAKE | +25.07 [+21.87, +28.18] | +21.92 [+20.90, +22.95] | -1.83 [-2.83, -0.85] |
 | Instruct → short-prompt GRPO (SLAKE, 1 epoch) | SLAKE | +15.83 [+13.10, +18.47] | +20.78 [+19.90, +21.67] | -1.00 [-1.79, -0.21] |
+| SFT → short-prompt GRPO (SLAKE, 1 epoch) | SLAKE (SFT, then RL) | +26.39 [+23.37, +29.50] | +22.35 [+21.34, +23.36] | -0.94 [-1.85, -0.04] |
 | SFT 2B (OmniMedVQA) | OmniMedVQA | -6.88 [-9.33, -4.43] | +52.45 [+51.40, +53.48] | -3.42 [-4.23, -2.65] |
 | Instruct → short-prompt GRPO (OmniMedVQA) | OmniMedVQA | -0.75 [-1.70, +0.19] | +31.05 [+30.07, +32.04] | +0.16 [-0.28, +0.61] |
 | SFT 2B | VQAv2 + GQA | +1.13 [-0.66, +2.92] | +22.02 [+21.09, +22.94] | — |
 | Instruct → GRPO (ChartQA, 1 epoch) | ChartQA | +0.09 [-0.75, +1.04] | +16.26 [+15.49, +17.05] | — |
 <!-- /report:medical-transfer-short -->
 
-RL beats the base model in domain and holds it everywhere else; SFT wins in domain and loses
+RL after SFT gives the best SLAKE model. It scores 76.2, 1.3 points above SFT ([+0.0, +2.7];
+normalized +1.5 [+0.2, +2.9]) and 26.4 above Instruct, and it wins back half of SFT's loss on
+unseen PathVQA (+0.9 over SFT [+0.4, +1.3], level with RL from Instruct). RL alone beats the
+base model in domain and holds it everywhere else; SFT alone wins in domain and loses
 elsewhere. On SLAKE, one epoch of short-prompt GRPO gains 15.8 points over Instruct
 ([+13.1, +18.5]) and the full epoch adds 5.2 over the 300-update pilot. One SFT epoch gains
 25.1, so in domain SFT stays 9.2 points ahead ([−11.6, −6.9]). Off its training data the order
