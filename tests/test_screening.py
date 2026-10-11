@@ -292,3 +292,18 @@ def test_dry_run_lists_the_battery_and_from_records_writes_the_table(setup, tmp_
         ("gqa", "rejected"), ("textvqa", "rejected")]
     assert written["rows"][1]["failed_gates"] == ["training questions"]
     assert "| base | — | GQA | rl |" in (out / "screening.md").read_text()
+
+
+def test_writing_one_dataset_updates_its_row_and_keeps_the_others(tmp_path):
+    from scripts.screen_datasets import merged
+
+    def row(dataset, status):
+        return {"model": "base", "dataset": dataset, "status": status}
+
+    (tmp_path / "screening.json").write_text(json.dumps(
+        {"rows": [row("gqa", "rejected"), row("slake", "incomplete")]}))
+    rows = merged([row("slake", "passed")], tmp_path)
+    assert sorted((r["dataset"], r["status"]) for r in rows) == [
+        ("gqa", "rejected"), ("slake", "passed")]
+    assert merged([row("gqa", "passed")], tmp_path / "missing") == [row("gqa", "passed")]
+

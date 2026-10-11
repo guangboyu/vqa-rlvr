@@ -72,7 +72,20 @@ def run(model, arm, planned: dict, args) -> None:
                   flush=True)
 
 
+def merged(rows: list[dict], out: Path) -> list[dict]:
+    """The new rows, plus the rows of other (model, dataset) pairs already in the table, so
+    screening one dataset updates its row instead of replacing the whole table."""
+    path = out / "screening.json"
+    if not path.exists():
+        return rows
+    fresh = {(row["model"], row["dataset"]) for row in rows}
+    kept = [row for row in json.loads(path.read_text())["rows"]
+            if (row["model"], row["dataset"]) not in fresh]
+    return kept + rows
+
+
 def write(rows: list[dict], out: Path) -> None:
+    rows = rank(merged(rows, out))
     out.mkdir(parents=True, exist_ok=True)
     (out / "screening.json").write_text(json.dumps({**summary(), "rows": rows}, indent=1)
                                         + "\n")
@@ -126,7 +139,7 @@ def main():
             run(model, arm, planned, args)
         rows += collect(label, model, planned, args.data_dir, args.records_dir)
     if not args.dry_run:
-        write(rank(rows), args.out)
+        write(rows, args.out)
 
 
 if __name__ == "__main__":
