@@ -156,6 +156,10 @@ and 54.2% with a black image (−1.6 [−5.0, +1.8]); a swapped X-ray costs 4.4 
 diagnosis questions all score within 4 points with a black image. Its questions were written
 from radiology reports, and with four options the model answers most of them from the wording
 (chance is 25%), so RL on them would mostly train text cues.
+Instruct 8B ([table](../../results/screening/rexvqa-base8.md)) uses the X-ray more but still
+fails: 73.8% with it, and a black or swapped image costs 8.4 [+4.6, +12.2] and 6.4 [+3.2, +9.8]
+points, short of the 10-point gate; neither route qualifies either (reasoning is worse than a
+direct answer, and only 17% of questions give short-answer RL a learning signal).
 
 ## Held-out hygiene
 
