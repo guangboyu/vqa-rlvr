@@ -95,6 +95,9 @@ class DatasetSpec:
     metric_metadata: Mapping | None = None
     require_split: bool = True  # optional OOD data is not required to run the tutorial
     max_images: int = 1  # images shown with one question; the engine must accept that many
+    # False when the licence forbids publishing per-question results: records stay local
+    # (.gitignore) and generated tables leave the dataset out, so they match a fresh checkout.
+    public_records: bool = True
 
     def __post_init__(self):
         if unknown := set(self.subsets) - set(ROLES):
@@ -391,7 +394,7 @@ DATASETS: dict[str, DatasetSpec] = {
             "and the option text",
             official=metrics.choice_letter_accuracy, normalized=metrics.choice_accuracy,
             official_roles=frozenset(ROLES), sizes={"archive_parts": 1},
-            materialize=_rexvqa, require_split=False,
+            materialize=_rexvqa, require_split=False, public_records=False,
         ),
         DatasetSpec(
             name="vizwiz", display_name="VizWiz",

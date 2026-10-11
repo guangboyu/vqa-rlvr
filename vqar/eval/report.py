@@ -61,6 +61,8 @@ def load_cells(records_dir: Path, data_dir: Path | None = None) -> dict[Cell, Ru
         spec = DATASETS[record.protocol["dataset"]]
         if not spec.require_split and spec.ladder != "in-domain":
             continue  # optional OOD cohorts are reported from results/ood.json
+        if not spec.public_records:
+            continue  # local-only records under the dataset's licence
         if data_dir is not None and not is_current(record, data_dir):
             continue
         p = record.protocol

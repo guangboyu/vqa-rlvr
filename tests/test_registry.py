@@ -132,3 +132,10 @@ def test_training_refuses_multi_image_datasets():
     check_trainable(["vqav2", "chartqa"])
     with pytest.raises(ValueError, match="multi-image"):
         check_trainable(["medthink"])
+
+
+def test_only_datasets_whose_licence_forbids_publishing_keep_records_local():
+    from vqar.registry import DATASETS
+
+    assert [name for name, spec in DATASETS.items() if not spec.public_records] == ["rexvqa"]
+
