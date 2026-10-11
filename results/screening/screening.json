@@ -20,6 +20,116 @@
  "rows": [
   {
    "model": "base2",
+   "dataset": "omnimedx",
+   "display_name": "OmniMedVQA (held-out collections)",
+   "role": "rl",
+   "validation_only": false,
+   "tier": "dev",
+   "pool_questions": 62678,
+   "declared": {
+    "split_unit": "source collection",
+    "split_separable": true,
+    "license": "open-access subset; each source dataset's own license (research use)",
+    "license_usable": true
+   },
+   "samples": 8,
+   "pass_at_1": 0.6375,
+   "pass_at_k": 0.9,
+   "rl_headroom": {
+    "n": 500,
+    "delta": 26.25,
+    "low": 23.5,
+    "high": 28.95062499999999,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "learnable_share": 0.536,
+   "parse_rate": 0.9625,
+   "short_samples": 8,
+   "short_pass_at_1": 0.6775,
+   "short_pass_at_k": 0.8,
+   "short_rl_headroom": {
+    "n": 500,
+    "delta": 12.25,
+    "low": 10.05,
+    "high": 14.475,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "short_learnable_share": 0.256,
+   "questions": 500,
+   "short_accuracy": 0.686,
+   "reasoning_accuracy": 0.636,
+   "direct_accuracy": 0.682,
+   "stepwise_accuracy": 0.698,
+   "reasoning_behavior": {
+    "mean_output_tokens": 137.776,
+    "truncated_fraction": 0.03,
+    "answer_tag_fraction": 0.97
+   },
+   "direct_behavior": {
+    "mean_output_tokens": 11.23,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.42
+   },
+   "stepwise_behavior": {
+    "mean_output_tokens": 35.874,
+    "truncated_fraction": 0.002,
+    "answer_tag_fraction": 0.998
+   },
+   "reasoning_payoff": {
+    "n": 500,
+    "delta": -5.0,
+    "low": -9.2,
+    "high": -0.8,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "matched_payoff": {
+    "n": 500,
+    "delta": 1.6,
+    "low": -1.6,
+    "high": 4.6,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "image_dependence": {
+    "n": 500,
+    "delta": 20.0,
+    "low": 14.000000000000002,
+    "high": 25.8,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "wrong_image_dependence": {
+    "n": 500,
+    "delta": 28.199999999999996,
+    "low": 23.0,
+    "high": 33.4,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "failed_gates": [],
+   "routes": {
+    "reasoning": [],
+    "short": []
+   },
+   "status": "passed",
+   "missing": [],
+   "records": {
+    "short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/omnimedx-rl-dev-short-5b7802a04f.json",
+    "black": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/omnimedx-rl-dev-short-black-8332de73a0.json",
+    "swapped": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/omnimedx-rl-dev-short-swapped-b92b9304f0.json",
+    "reasoning": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/omnimedx-rl-dev-reasoning-818e3afdd7.json",
+    "direct": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/omnimedx-rl-dev-direct-f760b7dc62.json",
+    "stepwise": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/omnimedx-rl-dev-stepwise-c557bdc1bf.json",
+    "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/omnimedx-rl-dev-reasoning-t1k8-91e4a0081a.json",
+    "sampled_short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/omnimedx-rl-dev-short-t1k8-1c7a5a1a20.json"
+   },
+   "rank": 1
+  },
+  {
+   "model": "base2",
    "dataset": "chartqa",
    "display_name": "ChartQA (human)",
    "role": "rl",
@@ -126,7 +236,7 @@
     "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/chartqa-rl-dev-reasoning-t1k8-bd2999d358.json",
     "sampled_short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/chartqa-rl-dev-short-t1k8-4a6893d8dd.json"
    },
-   "rank": 1
+   "rank": 2
   },
   {
    "model": "base2",
@@ -236,7 +346,7 @@
     "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/slake-rl-dev-reasoning-t1k8-ea0acfa557.json",
     "sampled_short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/slake-rl-dev-short-t1k8-294d40c67d.json"
    },
-   "rank": 2
+   "rank": 3
   },
   {
    "model": "base2",
@@ -346,7 +456,7 @@
     "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/omnimedvqa-rl-dev-reasoning-t1k8-4a9d1c3bc2.json",
     "sampled_short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/omnimedvqa-rl-dev-short-t1k8-112cda1bbd.json"
    },
-   "rank": 3
+   "rank": 4
   },
   {
    "model": "base2",
@@ -458,7 +568,7 @@
     "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/vqav2-rl-dev-reasoning-t1k8-12d32186c8.json",
     "sampled_short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/vqav2-rl-dev-short-t1k8-e0e52c46eb.json"
    },
-   "rank": 4
+   "rank": 5
   },
   {
    "model": "base2",
@@ -570,7 +680,7 @@
     "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/gqa-rl-dev-reasoning-t1k8-fdb19e6372.json",
     "sampled_short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/gqa-rl-dev-short-t1k8-2a6d3861b2.json"
    },
-   "rank": 5
+   "rank": 6
   },
   {
    "model": "base2",
