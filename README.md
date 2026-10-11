@@ -127,8 +127,9 @@ diagnostics, in the [supplementary results](docs/supplementary/supplement.md):
   to training ones
   ([medical pilots](docs/supplementary/supplement.md#medical-pilots-in-detail)).
 - **Rejected at screening.** CLEVR compositional (nearly saturated; reasoning costs it 5.6
-  points), MedThinkVQA (answered from the case text at 2B and 8B), and Kvasir-VQA-x1 and
-  PathVQA (images change the answers by under 10 points)
+  points), MedThinkVQA (answered from the case text at 2B and 8B), and Kvasir-VQA-x1, PathVQA
+  and ReXVQA (images change the answers by under 10 points; a black chest X-ray leaves
+  ReXVQA's accuracy unchanged)
   ([screening](docs/supplementary/evaluation.md#dataset-screening)).
 
 ## What was trained

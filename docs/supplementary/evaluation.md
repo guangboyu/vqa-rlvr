@@ -148,6 +148,15 @@ split gates VQAv2 and GQA now pass on the short-answer route, which matches what
 showed: short-answer RL there beats Instruct by 2–3 points but not SFT, so passing the screen
 means RL can learn, not that it beats SFT.
 
+ReXVQA (chest X-rays, 2026-10-11; the first of ten image archive parts, about a tenth of each
+split's patients, one frontal view per study) fails the image gate as well. Its patient-level
+split is the cleanest of the medical candidates, but Instruct 2B scores 52.6% with the X-ray
+and 54.2% with a black image (−1.6 [−5.0, +1.8]); a swapped X-ray costs 4.4 points [+1.2,
++7.8]. No task type depends on the image: presence, negation, location and differential
+diagnosis questions all score within 4 points with a black image. Its questions were written
+from radiology reports, and with four options the model answers most of them from the wording
+(chance is 25%), so RL on them would mostly train text cues.
+
 ## Held-out hygiene
 
 Split files list the exact rows of every role. Images are compared by a hash of their

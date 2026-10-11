@@ -1166,6 +1166,120 @@
   },
   {
    "model": "base2",
+   "dataset": "rexvqa",
+   "display_name": "ReXVQA (frontal view)",
+   "role": "rl",
+   "validation_only": false,
+   "tier": "dev",
+   "pool_questions": 35607,
+   "declared": {
+    "split_unit": "patient",
+    "split_separable": true,
+    "license": "ReXGradient-160K Non-Commercial Data Access and Use Agreement (research use, no redistribution)",
+    "license_usable": true
+   },
+   "samples": 8,
+   "pass_at_1": 0.51325,
+   "pass_at_k": 0.85,
+   "rl_headroom": {
+    "n": 500,
+    "delta": 33.675,
+    "low": 30.825000000000003,
+    "high": 36.625,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "learnable_share": 0.628,
+   "parse_rate": 0.9185,
+   "short_samples": 8,
+   "short_pass_at_1": 0.51775,
+   "short_pass_at_k": 0.726,
+   "short_rl_headroom": {
+    "n": 500,
+    "delta": 20.825,
+    "low": 18.15,
+    "high": 23.575,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "short_learnable_share": 0.398,
+   "questions": 500,
+   "short_accuracy": 0.526,
+   "reasoning_accuracy": 0.534,
+   "direct_accuracy": 0.532,
+   "stepwise_accuracy": 0.5,
+   "reasoning_behavior": {
+    "mean_output_tokens": 246.674,
+    "truncated_fraction": 0.056,
+    "answer_tag_fraction": 0.944
+   },
+   "direct_behavior": {
+    "mean_output_tokens": 13.876,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.588
+   },
+   "stepwise_behavior": {
+    "mean_output_tokens": 82.372,
+    "truncated_fraction": 0.028,
+    "answer_tag_fraction": 0.972
+   },
+   "reasoning_payoff": {
+    "n": 500,
+    "delta": 0.8,
+    "low": -4.0,
+    "high": 5.4,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "matched_payoff": {
+    "n": 500,
+    "delta": -3.2,
+    "low": -7.3999999999999995,
+    "high": 1.2,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "image_dependence": {
+    "n": 500,
+    "delta": -1.6,
+    "low": -5.0,
+    "high": 1.7999999999999998,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "wrong_image_dependence": {
+    "n": 500,
+    "delta": 4.3999999999999995,
+    "low": 1.2,
+    "high": 7.8,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "failed_gates": [
+    "image needed"
+   ],
+   "routes": {
+    "reasoning": [
+     "parse rate"
+    ],
+    "short": []
+   },
+   "status": "rejected",
+   "missing": [],
+   "records": {
+    "short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/rexvqa-rl-dev-short-a4fb2d15f7.json",
+    "black": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/rexvqa-rl-dev-short-black-5def8ea718.json",
+    "swapped": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/rexvqa-rl-dev-short-swapped-56844c26a2.json",
+    "reasoning": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/rexvqa-rl-dev-reasoning-67c5074ea7.json",
+    "direct": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/rexvqa-rl-dev-direct-4e50f5934c.json",
+    "stepwise": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/rexvqa-rl-dev-stepwise-45c50ab09c.json",
+    "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/rexvqa-rl-dev-reasoning-t1k8-ca06bbb57e.json",
+    "sampled_short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/rexvqa-rl-dev-short-t1k8-d4d1e8e50a.json"
+   },
+   "rank": null
+  },
+  {
+   "model": "base2",
    "dataset": "textvqa",
    "display_name": "TextVQA",
    "role": "test",
