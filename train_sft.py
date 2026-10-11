@@ -15,7 +15,7 @@ from vqar import config
 from vqar.data import cap_pixels
 from vqar.pools import load_pool
 from vqar.pools import provenance as pool_provenance
-from vqar.registry import PROMPTS, check_trainable
+from vqar.registry import DATASETS, PROMPTS, check_trainable
 from vqar.splits import load_role, provenance
 from vqar.training import (
     ROOT,
@@ -57,10 +57,13 @@ def load_datasets(preset: config.SFTPreset, pool: str | None = None):
     check_trainable(preset.datasets)
     train = (load_pool(ROOT / "data", preset.datasets, preset.seed, pool)
              if pool else load_role(ROOT / "data", preset.datasets, "sft", preset.seed))
-    dev = load_role(ROOT / "data", preset.datasets, "dev", preset.seed)
     columns = ["image", "question", "answers"]
-    return (train.select_columns(columns).with_transform(to_sft_columns),
-            dev.select_columns(columns).with_transform(to_sft_columns))
+    train = train.select_columns(columns).with_transform(to_sft_columns)
+    # A dataset whose held-out images all sit in test (omnimedx) has no dev role: no dev loss.
+    if not all("dev" in DATASETS[name].subsets for name in preset.datasets):
+        return train, None
+    dev = load_role(ROOT / "data", preset.datasets, "dev", preset.seed)
+    return train, dev.select_columns(columns).with_transform(to_sft_columns)
 
 
 def build_model(preset: config.SFTPreset):
@@ -88,7 +91,8 @@ def main() -> None:
     preset = resolve_preset(config.SFT_PRESETS, args)
     train_ds, dev_ds = load_datasets(preset, args.pool)
     if args.dry_run:
-        print(f"hardware={args.hardware}; train={len(train_ds)}, dev={len(dev_ds)}")
+        print(f"hardware={args.hardware}; train={len(train_ds)}, "
+              f"dev={len(dev_ds) if dev_ds is not None else 'none'}")
         if args.pool:
             print(f"pool: {pool_provenance(ROOT / 'data', args.pool)}")
         print(f"completion: {train_ds[0]['completion']}")
@@ -116,7 +120,7 @@ def main() -> None:
         gradient_checkpointing_kwargs={"use_reentrant": False},
         optim="paged_adamw_8bit" if preset.quantize_4bit else "adamw_torch",
         logging_steps=10,
-        eval_strategy="steps",
+        eval_strategy="steps" if dev_ds is not None else "no",
         eval_steps=250,
         save_strategy="steps",
         save_steps=args.save_steps,
@@ -135,7 +139,7 @@ def main() -> None:
         "preset": config.dump(preset), "policy_model": preset.model,
         "overrides": {"hardware": args.hardware, "max_steps": args.max_steps},
         "data": provenance(ROOT / "data", preset.datasets),
-        "samples": {"train": len(train_ds), "dev": len(dev_ds)},
+        "samples": {"train": len(train_ds), "dev": len(dev_ds) if dev_ds is not None else 0},
         **({"pool": pool_provenance(ROOT / "data", args.pool)} if args.pool else {}),
     }, sft_config)
     # TRL constructs PEFT before Trainer sets its seed, so seed the adapter initialization too.
