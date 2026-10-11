@@ -199,6 +199,12 @@ def _pathvqa(sizes):
     return {f"pathvqa_{name}": subset for name, subset in data.load_pathvqa().items()}
 
 
+def _rexvqa(sizes):
+    from vqar import data
+
+    return {f"rexvqa_{name}": subset for name, subset in data.load_rexvqa().items()}
+
+
 def _prepared_ood(sizes):
     raise ValueError("Use python -m scripts.prepare_ood with pinned local source files")
 
@@ -365,6 +371,27 @@ DATASETS: dict[str, DatasetSpec] = {
             official=metrics.casefold_exact_match, normalized=metrics.exact_match,
             official_roles=frozenset(ROLES), sizes={}, materialize=_pathvqa,
             require_split=False,
+        ),
+        # Chest X-rays (2026-10-11): ReXVQA's multiple-choice questions on ReXGradient-160K
+        # studies, on the official patient-level splits. Only the first of the ten image
+        # archive parts is used (about a tenth of each split's patients); each question shows
+        # one frontal view of its study (the first PA image, else the first AP image; studies
+        # with no frontal image are dropped), 16-bit PNGs stretched to 8 bits per image. The
+        # licence forbids redistributing the data or any compilation of it: the split file,
+        # pools and per-question records of this dataset stay out of git (.gitignore).
+        DatasetSpec(
+            name="rexvqa", display_name="ReXVQA (frontal view)",
+            sources={"rajpurkarlab/ReXVQA": "b1adadb963bb16634f2e07c1c224a2e83fc8558a",
+                     "rajpurkarlab/ReXGradient-160K":
+                     "b9277dd929190931f5a8b6ae19f3e3c8aae2f1f7"},
+            subsets={"sft": "rexvqa_train", "rl": "rexvqa_train", "dev": "rexvqa_valid",
+                     "test": "rexvqa_test"},
+            official_splits=frozenset({"sft", "rl", "dev", "test"}),
+            ladder="in-domain", answer_schema="option letter A-D; references hold the letter "
+            "and the option text",
+            official=metrics.choice_letter_accuracy, normalized=metrics.choice_accuracy,
+            official_roles=frozenset(ROLES), sizes={"archive_parts": 1},
+            materialize=_rexvqa, require_split=False,
         ),
         DatasetSpec(
             name="vizwiz", display_name="VizWiz",

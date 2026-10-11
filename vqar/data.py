@@ -645,3 +645,116 @@ def load_pathvqa() -> dict[str, Dataset]:
         paths = sorted(str(path) for path in (root / "data").glob(f"{split}-*.parquet"))
         subsets[split] = _build(_pathvqa_generate, paths=paths, split=split)
     return subsets
+
+
+REXVQA = "rajpurkarlab/ReXVQA"
+REXGRADIENT = "rajpurkarlab/ReXGradient-160K"
+# Only the first of ReXGradient's ten archive parts is downloaded and extracted (the licence
+# allows only the portion a project needs). The archive is ordered by patient ID, so that part
+# holds every image of the patients whose IDs sort first, about a tenth of each split.
+REXGRADIENT_PNG = "REXGRADIENT_PNG"  # environment variable: the extracted archive's root
+REXGRADIENT_PNG_DEFAULT = "/mnt/f/VQA/raw/rexgradient/png"
+FRONTAL_VIEWS = ("PA", "AP")  # in order of preference
+
+
+def _rexvqa_question(row: dict) -> str:
+    """The question and its lettered options; the report text in the row is never shown."""
+    options = "\n".join(option.strip() for option in row["options"])
+    return f"{row['question'].strip()}\n{options}\nAnswer with the letter of the correct option."
+
+
+def _rexvqa_answers(row: dict) -> list[str] | None:
+    """The correct letter and its option text; None when no option carries that letter."""
+    letter = row["correct_answer"].strip().upper()
+    for option in row["options"]:
+        if option.strip().startswith(f"{letter}."):
+            return [letter, option.strip()[len(letter) + 1:].strip()]
+    return None
+
+
+def _frontal_images(meta: dict, root, patients: set[str]) -> dict[str, str]:
+    """Per study with an extracted image, one frontal view: the first PA image, else the first
+    AP image. Studies with only lateral or unlabeled views are left out."""
+    chosen = {}
+    for study, entry in meta.items():
+        if entry["PatientID"] not in patients:
+            continue
+        found = {}
+        for path, view in zip(entry["ImagePath"], entry["ImageViewPosition"], strict=True):
+            file = root / path.removeprefix("../")
+            if view in FRONTAL_VIEWS and view not in found and file.is_file():
+                found[view] = str(file)
+        view = next((view for view in FRONTAL_VIEWS if view in found), None)
+        if view:
+            chosen[study] = found[view]
+    return chosen
+
+
+def _cxr_rgb_png(path: str) -> bytes:
+    """A 16-bit grayscale chest X-ray as 8-bit RGB PNG, stretched between its own minimum and
+    maximum (the usual display window when no DICOM window is stored)."""
+    import io
+
+    import numpy as np
+
+    with PILImage.open(path) as image:
+        pixels = np.asarray(image, dtype=np.float32)
+    low, high = float(pixels.min()), float(pixels.max())
+    scaled = ((pixels - low) * (255.0 / max(high - low, 1.0))).round().astype(np.uint8)
+    buffer = io.BytesIO()
+    PILImage.fromarray(scaled).convert("RGB").save(buffer, "PNG")
+    return buffer.getvalue()
+
+
+def _rexvqa_generate(records: tuple[dict, ...]) -> Iterator[dict]:
+    for record in records:
+        row = {name: record[name] for name in ("dataset", "qid", "question", "answers",
+                                               "answer_type")}
+        yield {**row, "image": {"bytes": _cxr_rgb_png(record["file"]), "path": None}}
+
+
+def rexvqa_records(questions: dict, meta: dict, root, patients: set[str]) -> list[dict]:
+    """One split's questions whose study has an extracted frontal image, in question-ID order."""
+    frontal = _frontal_images(meta, root, patients)
+    records = []
+    for qid in sorted(questions):
+        row = questions[qid]
+        answers = _rexvqa_answers(row)
+        if row["study_id"] in frontal and answers is not None:
+            records.append({"dataset": "rexvqa", "qid": qid, "file": frontal[row["study_id"]],
+                            "question": _rexvqa_question(row), "answers": answers,
+                            "answer_type": row["task_name"], "patient": row["PatientID"]})
+    return records
+
+
+def load_rexvqa() -> dict[str, Dataset]:
+    """ReXVQA's multiple-choice chest X-ray questions on the official patient-level splits,
+    restricted to studies with a frontal image in the extracted archive part."""
+    import json
+    import os
+    from pathlib import Path
+
+    from huggingface_hub import hf_hub_download
+
+    def fetch(repo: str, filename: str) -> str:
+        return hf_hub_download(repo, filename, repo_type="dataset",
+                               revision=SOURCE_REVISIONS[repo])
+
+    root = Path(os.environ.get(REXGRADIENT_PNG, REXGRADIENT_PNG_DEFAULT))
+    if not (root / "deid_png").is_dir():
+        raise FileNotFoundError(f"No extracted ReXGradient images under {root}; set "
+                                f"{REXGRADIENT_PNG} to the folder holding deid_png/")
+    patients = set(os.listdir(root / "deid_png"))
+    splits, owners = {}, {}
+    for split in ("train", "valid", "test"):
+        meta = json.loads(Path(fetch(REXGRADIENT,
+                                     f"metadata/{split}_metadata_view_position.json")).read_text())
+        questions = json.loads(Path(fetch(REXVQA, f"metadata/{split}_vqa_data.json")).read_text())
+        records = rexvqa_records(questions, meta, root, patients)
+        for record in records:
+            if owners.setdefault(record["patient"], split) != split:
+                raise ValueError(f"Patient {record['patient']} is in {owners[record['patient']]}"
+                                 f" and {split}")
+        splits[split] = _build(_rexvqa_generate, records=tuple(records))
+    return splits
+

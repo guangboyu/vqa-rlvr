@@ -44,9 +44,10 @@ def test_unknown_role_is_rejected():
 def test_role_listing_follows_registry_order():
     assert datasets_with_role("test") == ["vqav2", "gqa", "clevr", "textvqa", "chartqa",
                                           "clevrcomp", "medthink", "kvasirx1", "omnimedvqa",
-                                          "slake", "pathvqa", "vizwiz", "realworldqa"]
+                                          "slake", "pathvqa", "rexvqa", "vizwiz",
+                                          "realworldqa"]
     assert datasets_with_role("sft") == ["vqav2", "gqa", "chartqa", "clevrcomp", "medthink",
-                                         "kvasirx1", "omnimedvqa", "slake", "pathvqa"]
+                                         "kvasirx1", "omnimedvqa", "slake", "pathvqa", "rexvqa"]
     assert datasets_with_role("sft", optional=False) == ["vqav2", "gqa"]
     assert datasets_with_role("dev", optional=False) == ["vqav2", "gqa", "clevr"]
 

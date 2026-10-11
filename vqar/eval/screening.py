@@ -93,6 +93,10 @@ DECLARED = {
     "slake": Declaration("image", True, "CC BY 4.0", True),
     "pathvqa": Declaration("image", True, "MIT (release); textbook and PEIR images, research "
                            "use", True),
+    # Declared 2026-10-11: official patient-level splits; the owner accepted the
+    # non-commercial agreement, which also forbids redistributing the data.
+    "rexvqa": Declaration("patient", True, "ReXGradient-160K Non-Commercial Data Access and "
+                          "Use Agreement (research use, no redistribution)", True),
 }
 
 

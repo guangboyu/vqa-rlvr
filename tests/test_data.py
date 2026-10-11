@@ -122,3 +122,64 @@ def test_re_split_keeps_every_question_of_an_image_together():
         for record in part:
             assert owners.setdefault(record["key"], name) == name
     assert _split_by_image(records, seed=0, held_out=0.1) == splits
+
+
+def test_rexvqa_rows_show_question_and_options_but_never_the_report():
+    from vqar.data import _rexvqa_answers, _rexvqa_question
+
+    row = {"question": " What device is visible? ", "correct_answer": "B",
+           "options": ["A. Endotracheal tube", "B. Right internal jugular catheter",
+                       "C. Feeding tube", "D. Chest tube"],
+           "Findings": "secret report text", "Impression": "more report text"}
+    question = _rexvqa_question(row)
+    assert question.splitlines() == ["What device is visible?", "A. Endotracheal tube",
+                                     "B. Right internal jugular catheter", "C. Feeding tube",
+                                     "D. Chest tube",
+                                     "Answer with the letter of the correct option."]
+    assert "report" not in question
+    assert _rexvqa_answers(row) == ["B", "Right internal jugular catheter"]
+    assert _rexvqa_answers({**row, "correct_answer": "E"}) is None
+
+
+def _xray(path, size=(4, 3)):
+    import numpy as np
+    from PIL import Image
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    Image.fromarray(np.arange(12, dtype=np.uint16).reshape(3, 4) * 5000, mode="I;16").save(path)
+    return path
+
+
+def test_rexvqa_keeps_one_frontal_view_per_study_and_only_extracted_patients(tmp_path):
+    import io
+
+    from PIL import Image
+
+    from vqar.data import _cxr_rgb_png, rexvqa_records
+
+    root = tmp_path / "png"
+    lateral = "../deid_png/P1/A1/studies/S1/series/x/instances/lat.png"
+    ap = "../deid_png/P1/A1/studies/S1/series/x/instances/ap.png"
+    pa = "../deid_png/P1/A1/studies/S1/series/x/instances/pa.png"
+    for relative in (lateral, ap, pa):
+        _xray(root / relative.removeprefix("../"))
+    only_lateral = "../deid_png/P2/A2/studies/S2/series/x/instances/lat.png"
+    _xray(root / only_lateral.removeprefix("../"))
+    meta = {"s1": {"PatientID": "P1", "ImagePath": [lateral, ap, pa],
+                   "ImageViewPosition": ["LATERAL", "AP", "PA"]},
+            "s2": {"PatientID": "P2", "ImagePath": [only_lateral],
+                   "ImageViewPosition": ["LATERAL"]},
+            "s3": {"PatientID": "P3", "ImagePath": [pa], "ImageViewPosition": ["PA"]}}
+    row = {"question": "q", "options": ["A. a", "B. b"], "correct_answer": "A",
+           "task_name": "Presence Assessment"}
+    questions = {"q2": {**row, "study_id": "s1", "PatientID": "P1"},
+                 "q1": {**row, "study_id": "s1", "PatientID": "P1"},
+                 "q3": {**row, "study_id": "s2", "PatientID": "P2"},
+                 "q4": {**row, "study_id": "s3", "PatientID": "P3"}}
+    records = rexvqa_records(questions, meta, root, patients={"P1", "P2"})
+    assert [r["qid"] for r in records] == ["q1", "q2"]  # P2 has no frontal view, P3 no images
+    assert records[0]["file"].endswith("pa.png") and records[0]["answers"] == ["A", "a"]
+    with Image.open(io.BytesIO(_cxr_rgb_png(records[0]["file"]))) as image:
+        assert image.mode == "RGB"
+        assert image.getextrema() == ((0, 255), (0, 255), (0, 255))
+

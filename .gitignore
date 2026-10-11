@@ -31,3 +31,8 @@ artifacts/
 !data/manifest.json
 !data/splits/
 !data/pools/
+# ReXVQA's licence forbids redistributing the data or any compilation of it: its split file
+# (per-row image hashes), pools and per-question evaluation records stay local.
+data/splits/rexvqa.json
+data/pools/*rexvqa*
+results/records/**/rexvqa-*
