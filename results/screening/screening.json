@@ -45,6 +45,18 @@
    },
    "learnable_share": 0.412,
    "parse_rate": 0.9795,
+   "short_samples": 8,
+   "short_pass_at_1": 0.65725,
+   "short_pass_at_k": 0.798,
+   "short_rl_headroom": {
+    "n": 500,
+    "delta": 14.075,
+    "low": 11.799999999999999,
+    "high": 16.5,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "short_learnable_share": 0.3,
    "questions": 500,
    "short_accuracy": 0.69,
    "reasoning_accuracy": 0.71,
@@ -98,6 +110,10 @@
     "seed": 0
    },
    "failed_gates": [],
+   "routes": {
+    "reasoning": [],
+    "short": []
+   },
    "status": "passed",
    "missing": [],
    "records": {
@@ -107,9 +123,454 @@
     "reasoning": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/chartqa-rl-dev-reasoning-9359e2b85f.json",
     "direct": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/chartqa-rl-dev-direct-abb23e0a0c.json",
     "stepwise": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/chartqa-rl-dev-stepwise-c221526c79.json",
-    "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/chartqa-rl-dev-reasoning-t1k8-bd2999d358.json"
+    "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/chartqa-rl-dev-reasoning-t1k8-bd2999d358.json",
+    "sampled_short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/chartqa-rl-dev-short-t1k8-4a6893d8dd.json"
    },
    "rank": 1
+  },
+  {
+   "model": "base2",
+   "dataset": "slake",
+   "display_name": "SLAKE (English)",
+   "role": "rl",
+   "validation_only": false,
+   "tier": "dev",
+   "pool_questions": 4919,
+   "declared": {
+    "split_unit": "image",
+    "split_separable": true,
+    "license": "CC BY 4.0",
+    "license_usable": true
+   },
+   "samples": 8,
+   "pass_at_1": 0.40225,
+   "pass_at_k": 0.65,
+   "rl_headroom": {
+    "n": 500,
+    "delta": 24.775,
+    "low": 21.95,
+    "high": 27.625,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "learnable_share": 0.488,
+   "parse_rate": 0.97275,
+   "short_samples": 8,
+   "short_pass_at_1": 0.4985,
+   "short_pass_at_k": 0.654,
+   "short_rl_headroom": {
+    "n": 500,
+    "delta": 15.55,
+    "low": 13.100000000000001,
+    "high": 18.05,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "short_learnable_share": 0.304,
+   "questions": 500,
+   "short_accuracy": 0.516,
+   "reasoning_accuracy": 0.408,
+   "direct_accuracy": 0.518,
+   "stepwise_accuracy": 0.504,
+   "reasoning_behavior": {
+    "mean_output_tokens": 136.826,
+    "truncated_fraction": 0.016,
+    "answer_tag_fraction": 0.952
+   },
+   "direct_behavior": {
+    "mean_output_tokens": 10.636,
+    "truncated_fraction": 0.008,
+    "answer_tag_fraction": 0.342
+   },
+   "stepwise_behavior": {
+    "mean_output_tokens": 49.07,
+    "truncated_fraction": 0.008,
+    "answer_tag_fraction": 0.986
+   },
+   "reasoning_payoff": {
+    "n": 500,
+    "delta": -10.8,
+    "low": -14.6,
+    "high": -7.199999999999999,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "matched_payoff": {
+    "n": 500,
+    "delta": -1.4000000000000001,
+    "low": -4.0,
+    "high": 1.2,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "image_dependence": {
+    "n": 500,
+    "delta": 29.4,
+    "low": 24.4,
+    "high": 34.4,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "wrong_image_dependence": {
+    "n": 500,
+    "delta": 20.200000000000003,
+    "low": 15.4,
+    "high": 24.8,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "failed_gates": [],
+   "routes": {
+    "reasoning": [],
+    "short": []
+   },
+   "status": "passed",
+   "missing": [],
+   "records": {
+    "short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/slake-rl-dev-short-289f5bddd5.json",
+    "black": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/slake-rl-dev-short-black-5a50db91bc.json",
+    "swapped": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/slake-rl-dev-short-swapped-7effa15f7b.json",
+    "reasoning": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/slake-rl-dev-reasoning-110ba3de7a.json",
+    "direct": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/slake-rl-dev-direct-b7f3d0e3e5.json",
+    "stepwise": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/slake-rl-dev-stepwise-8fcedb411a.json",
+    "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/slake-rl-dev-reasoning-t1k8-ea0acfa557.json",
+    "sampled_short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/slake-rl-dev-short-t1k8-294d40c67d.json"
+   },
+   "rank": 2
+  },
+  {
+   "model": "base2",
+   "dataset": "omnimedvqa",
+   "display_name": "OmniMedVQA (open access)",
+   "role": "rl",
+   "validation_only": false,
+   "tier": "dev",
+   "pool_questions": 71214,
+   "declared": {
+    "split_unit": "image",
+    "split_separable": true,
+    "license": "open-access subset; each source dataset's own license (research use)",
+    "license_usable": true
+   },
+   "samples": 8,
+   "pass_at_1": 0.66525,
+   "pass_at_k": 0.918,
+   "rl_headroom": {
+    "n": 500,
+    "delta": 25.275,
+    "low": 22.55,
+    "high": 28.000000000000004,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "learnable_share": 0.528,
+   "parse_rate": 0.96625,
+   "short_samples": 8,
+   "short_pass_at_1": 0.706,
+   "short_pass_at_k": 0.842,
+   "short_rl_headroom": {
+    "n": 500,
+    "delta": 13.600000000000001,
+    "low": 11.25,
+    "high": 16.05,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "short_learnable_share": 0.256,
+   "questions": 500,
+   "short_accuracy": 0.714,
+   "reasoning_accuracy": 0.676,
+   "direct_accuracy": 0.742,
+   "stepwise_accuracy": 0.716,
+   "reasoning_behavior": {
+    "mean_output_tokens": 137.836,
+    "truncated_fraction": 0.024,
+    "answer_tag_fraction": 0.972
+   },
+   "direct_behavior": {
+    "mean_output_tokens": 11.972,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.47
+   },
+   "stepwise_behavior": {
+    "mean_output_tokens": 34.916,
+    "truncated_fraction": 0.002,
+    "answer_tag_fraction": 0.998
+   },
+   "reasoning_payoff": {
+    "n": 500,
+    "delta": -3.8,
+    "low": -7.8,
+    "high": 0.0,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "matched_payoff": {
+    "n": 500,
+    "delta": -2.6,
+    "low": -5.604999999999995,
+    "high": 0.4,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "image_dependence": {
+    "n": 500,
+    "delta": 22.8,
+    "low": 17.2,
+    "high": 28.4,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "wrong_image_dependence": {
+    "n": 500,
+    "delta": 28.599999999999998,
+    "low": 23.799999999999997,
+    "high": 33.4,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "failed_gates": [],
+   "routes": {
+    "reasoning": [],
+    "short": []
+   },
+   "status": "passed",
+   "missing": [],
+   "records": {
+    "short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/omnimedvqa-rl-dev-short-2796998c9c.json",
+    "black": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/omnimedvqa-rl-dev-short-black-1a735404e2.json",
+    "swapped": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/omnimedvqa-rl-dev-short-swapped-0577dbf31c.json",
+    "reasoning": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/omnimedvqa-rl-dev-reasoning-ef4f8af282.json",
+    "direct": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/omnimedvqa-rl-dev-direct-83d21092c5.json",
+    "stepwise": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/omnimedvqa-rl-dev-stepwise-75117002a5.json",
+    "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/omnimedvqa-rl-dev-reasoning-t1k8-4a9d1c3bc2.json",
+    "sampled_short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/omnimedvqa-rl-dev-short-t1k8-112cda1bbd.json"
+   },
+   "rank": 3
+  },
+  {
+   "model": "base2",
+   "dataset": "vqav2",
+   "display_name": "VQAv2",
+   "role": "rl",
+   "validation_only": false,
+   "tier": "dev",
+   "pool_questions": 27553,
+   "declared": {
+    "split_unit": "image",
+    "split_separable": true,
+    "license": "annotations CC BY 4.0; COCO images, Flickr terms",
+    "license_usable": true
+   },
+   "samples": 8,
+   "pass_at_1": 0.609,
+   "pass_at_k": 0.802,
+   "rl_headroom": {
+    "n": 500,
+    "delta": 19.3,
+    "low": 16.900000000000002,
+    "high": 21.75,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "learnable_share": 0.478,
+   "parse_rate": 0.97725,
+   "short_samples": 8,
+   "short_pass_at_1": 0.68925,
+   "short_pass_at_k": 0.876,
+   "short_rl_headroom": {
+    "n": 500,
+    "delta": 18.675,
+    "low": 16.125,
+    "high": 21.25,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "short_learnable_share": 0.406,
+   "questions": 500,
+   "short_accuracy": 0.732,
+   "reasoning_accuracy": 0.604,
+   "direct_accuracy": 0.736,
+   "stepwise_accuracy": 0.66,
+   "reasoning_behavior": {
+    "mean_output_tokens": 145.012,
+    "truncated_fraction": 0.018,
+    "answer_tag_fraction": 0.958
+   },
+   "direct_behavior": {
+    "mean_output_tokens": 2.568,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.018
+   },
+   "stepwise_behavior": {
+    "mean_output_tokens": 62.208,
+    "truncated_fraction": 0.036,
+    "answer_tag_fraction": 0.384
+   },
+   "reasoning_payoff": {
+    "n": 500,
+    "delta": -12.8,
+    "low": -16.6,
+    "high": -9.2,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "matched_payoff": {
+    "n": 500,
+    "delta": -7.6,
+    "low": -10.6,
+    "high": -4.6,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "image_dependence": {
+    "n": 500,
+    "delta": 44.800000000000004,
+    "low": 39.6,
+    "high": 49.8,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "wrong_image_dependence": {
+    "n": 500,
+    "delta": 44.6,
+    "low": 39.800000000000004,
+    "high": 49.4,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "failed_gates": [],
+   "routes": {
+    "reasoning": [
+     "reasoning not worse"
+    ],
+    "short": []
+   },
+   "status": "passed",
+   "missing": [],
+   "records": {
+    "short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/vqav2-rl-dev-short-7ae050aa04.json",
+    "black": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/vqav2-rl-dev-short-black-94a65009e4.json",
+    "swapped": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/vqav2-rl-dev-short-swapped-6562358a77.json",
+    "reasoning": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/vqav2-rl-dev-reasoning-4f259e8994.json",
+    "direct": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/vqav2-rl-dev-direct-b1eaf58610.json",
+    "stepwise": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/vqav2-rl-dev-stepwise-17c618fdaa.json",
+    "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/vqav2-rl-dev-reasoning-t1k8-12d32186c8.json",
+    "sampled_short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/vqav2-rl-dev-short-t1k8-e0e52c46eb.json"
+   },
+   "rank": 4
+  },
+  {
+   "model": "base2",
+   "dataset": "gqa",
+   "display_name": "GQA",
+   "role": "rl",
+   "validation_only": false,
+   "tier": "dev",
+   "pool_questions": 27885,
+   "declared": {
+    "split_unit": "image",
+    "split_separable": true,
+    "license": "CC BY 4.0 (Visual Genome images)",
+    "license_usable": true
+   },
+   "samples": 8,
+   "pass_at_1": 0.563,
+   "pass_at_k": 0.734,
+   "rl_headroom": {
+    "n": 500,
+    "delta": 17.1,
+    "low": 14.799999999999999,
+    "high": 19.47562499999999,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "learnable_share": 0.42,
+   "parse_rate": 0.97375,
+   "short_samples": 8,
+   "short_pass_at_1": 0.663,
+   "short_pass_at_k": 0.808,
+   "short_rl_headroom": {
+    "n": 500,
+    "delta": 14.499999999999998,
+    "low": 12.275,
+    "high": 16.775000000000002,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "short_learnable_share": 0.334,
+   "questions": 500,
+   "short_accuracy": 0.696,
+   "reasoning_accuracy": 0.578,
+   "direct_accuracy": 0.688,
+   "stepwise_accuracy": 0.596,
+   "reasoning_behavior": {
+    "mean_output_tokens": 114.818,
+    "truncated_fraction": 0.006,
+    "answer_tag_fraction": 0.966
+   },
+   "direct_behavior": {
+    "mean_output_tokens": 2.702,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.062
+   },
+   "stepwise_behavior": {
+    "mean_output_tokens": 106.552,
+    "truncated_fraction": 0.03,
+    "answer_tag_fraction": 0.842
+   },
+   "reasoning_payoff": {
+    "n": 500,
+    "delta": -11.799999999999999,
+    "low": -15.4,
+    "high": -8.200000000000001,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "matched_payoff": {
+    "n": 500,
+    "delta": -9.2,
+    "low": -12.4,
+    "high": -6.0,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "image_dependence": {
+    "n": 500,
+    "delta": 35.6,
+    "low": 30.599999999999998,
+    "high": 40.6,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "wrong_image_dependence": {
+    "n": 500,
+    "delta": 37.6,
+    "low": 32.6,
+    "high": 42.4,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "failed_gates": [],
+   "routes": {
+    "reasoning": [
+     "reasoning not worse"
+    ],
+    "short": []
+   },
+   "status": "passed",
+   "missing": [],
+   "records": {
+    "short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/gqa-rl-dev-short-b8c0659c9a.json",
+    "black": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/gqa-rl-dev-short-black-e483c14f88.json",
+    "swapped": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/gqa-rl-dev-short-swapped-a46a09099d.json",
+    "reasoning": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/gqa-rl-dev-reasoning-ed0e25c5c9.json",
+    "direct": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/gqa-rl-dev-direct-9b239876ad.json",
+    "stepwise": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/gqa-rl-dev-stepwise-fa1b27e5ad.json",
+    "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/gqa-rl-dev-reasoning-t1k8-fdb19e6372.json",
+    "sampled_short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/gqa-rl-dev-short-t1k8-2a6d3861b2.json"
+   },
+   "rank": 5
   },
   {
    "model": "base2",
@@ -138,6 +599,18 @@
    },
    "learnable_share": 0.484,
    "parse_rate": 0.97225,
+   "short_samples": 8,
+   "short_pass_at_1": 0.98,
+   "short_pass_at_k": 0.992,
+   "short_rl_headroom": {
+    "n": 500,
+    "delta": 1.2,
+    "low": 0.675,
+    "high": 1.825,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "short_learnable_share": 0.044,
    "questions": 500,
    "short_accuracy": 0.98,
    "reasoning_accuracy": 0.882,
@@ -193,6 +666,12 @@
    "failed_gates": [
     "not saturated"
    ],
+   "routes": {
+    "reasoning": [],
+    "short": [
+     "learnable"
+    ]
+   },
    "status": "rejected",
    "missing": [],
    "records": {
@@ -202,7 +681,8 @@
     "reasoning": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/clevr-rl-dev-reasoning-fee9e63ea7.json",
     "direct": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/clevr-rl-dev-direct-5c6a369ad9.json",
     "stepwise": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/clevr-rl-dev-stepwise-c69048777b.json",
-    "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/clevr-rl-dev-reasoning-t1k8-ccd38fdc13.json"
+    "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/clevr-rl-dev-reasoning-t1k8-ccd38fdc13.json",
+    "sampled_short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/clevr-rl-dev-short-t1k8-af484a3124.json"
    },
    "rank": null
   },
@@ -233,6 +713,18 @@
    },
    "learnable_share": 0.62,
    "parse_rate": 0.9425,
+   "short_samples": 8,
+   "short_pass_at_1": 0.8795,
+   "short_pass_at_k": 0.938,
+   "short_rl_headroom": {
+    "n": 500,
+    "delta": 5.8500000000000005,
+    "low": 4.275,
+    "high": 7.5,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "short_learnable_share": 0.148,
    "questions": 500,
    "short_accuracy": 0.884,
    "reasoning_accuracy": 0.734,
@@ -285,10 +777,16 @@
     "resamples": 10000,
     "seed": 0
    },
-   "failed_gates": [
-    "parse rate",
-    "reasoning not worse"
-   ],
+   "failed_gates": [],
+   "routes": {
+    "reasoning": [
+     "parse rate",
+     "reasoning not worse"
+    ],
+    "short": [
+     "learnable"
+    ]
+   },
    "status": "rejected",
    "missing": [],
    "records": {
@@ -298,102 +796,124 @@
     "reasoning": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/clevrcomp-rl-dev-reasoning-7a68592f68.json",
     "direct": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/clevrcomp-rl-dev-direct-99c2ac2199.json",
     "stepwise": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/clevrcomp-rl-dev-stepwise-fa4f82d274.json",
-    "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/clevrcomp-rl-dev-reasoning-t1k8-71f0141773.json"
+    "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/clevrcomp-rl-dev-reasoning-t1k8-71f0141773.json",
+    "sampled_short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/clevrcomp-rl-dev-short-t1k8-5e198e7a21.json"
    },
    "rank": null
   },
   {
    "model": "base2",
-   "dataset": "gqa",
-   "display_name": "GQA",
+   "dataset": "kvasirx1",
+   "display_name": "Kvasir-VQA-x1 (atomic)",
    "role": "rl",
    "validation_only": false,
    "tier": "dev",
-   "pool_questions": 27885,
+   "pool_questions": 43653,
    "declared": {
     "split_unit": "image",
     "split_separable": true,
-    "license": "CC BY 4.0 (Visual Genome images)",
+    "license": "CC BY-NC 4.0 (images from HyperKvasir and Kvasir-Instrument)",
     "license_usable": true
    },
    "samples": 8,
-   "pass_at_1": 0.563,
-   "pass_at_k": 0.734,
+   "pass_at_1": 0.26,
+   "pass_at_k": 0.462,
    "rl_headroom": {
     "n": 500,
-    "delta": 17.1,
-    "low": 14.799999999999999,
-    "high": 19.47562499999999,
+    "delta": 20.200000000000003,
+    "low": 17.5,
+    "high": 23.025000000000002,
     "resamples": 10000,
     "seed": 0
    },
-   "learnable_share": 0.42,
-   "parse_rate": 0.97375,
+   "learnable_share": 0.368,
+   "parse_rate": 0.96375,
+   "short_samples": 8,
+   "short_pass_at_1": 0.2635,
+   "short_pass_at_k": 0.368,
+   "short_rl_headroom": {
+    "n": 500,
+    "delta": 10.45,
+    "low": 8.5,
+    "high": 12.475,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "short_learnable_share": 0.23,
    "questions": 500,
-   "short_accuracy": 0.696,
-   "reasoning_accuracy": 0.578,
-   "direct_accuracy": 0.688,
-   "stepwise_accuracy": 0.596,
+   "short_accuracy": 0.284,
+   "reasoning_accuracy": 0.262,
+   "direct_accuracy": 0.324,
+   "stepwise_accuracy": 0.266,
    "reasoning_behavior": {
-    "mean_output_tokens": 114.818,
-    "truncated_fraction": 0.006,
-    "answer_tag_fraction": 0.966
+    "mean_output_tokens": 223.732,
+    "truncated_fraction": 0.038,
+    "answer_tag_fraction": 0.942
    },
    "direct_behavior": {
-    "mean_output_tokens": 2.702,
-    "truncated_fraction": 0.0,
-    "answer_tag_fraction": 0.062
+    "mean_output_tokens": 13.998,
+    "truncated_fraction": 0.004,
+    "answer_tag_fraction": 0.344
    },
    "stepwise_behavior": {
-    "mean_output_tokens": 106.552,
-    "truncated_fraction": 0.03,
-    "answer_tag_fraction": 0.842
+    "mean_output_tokens": 39.382,
+    "truncated_fraction": 0.002,
+    "answer_tag_fraction": 0.982
    },
    "reasoning_payoff": {
     "n": 500,
-    "delta": -11.799999999999999,
-    "low": -15.4,
-    "high": -8.200000000000001,
+    "delta": -2.1999999999999997,
+    "low": -5.6000000000000005,
+    "high": 1.0,
     "resamples": 10000,
     "seed": 0
    },
    "matched_payoff": {
     "n": 500,
-    "delta": -9.2,
-    "low": -12.4,
-    "high": -6.0,
+    "delta": -5.800000000000001,
+    "low": -8.4,
+    "high": -3.4000000000000004,
     "resamples": 10000,
     "seed": 0
    },
    "image_dependence": {
     "n": 500,
-    "delta": 35.6,
-    "low": 30.599999999999998,
-    "high": 40.6,
+    "delta": 7.6,
+    "low": 3.2,
+    "high": 12.0,
     "resamples": 10000,
     "seed": 0
    },
    "wrong_image_dependence": {
     "n": 500,
-    "delta": 37.6,
-    "low": 32.6,
-    "high": 42.4,
+    "delta": 7.199999999999999,
+    "low": 4.0,
+    "high": 10.6,
     "resamples": 10000,
     "seed": 0
    },
    "failed_gates": [
-    "reasoning not worse"
+    "image needed"
    ],
+   "routes": {
+    "reasoning": [
+     "reasoning not worse"
+    ],
+    "short": [
+     "learnable"
+    ]
+   },
    "status": "rejected",
    "missing": [],
    "records": {
-    "short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/gqa-rl-dev-short-b8c0659c9a.json",
-    "black": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/gqa-rl-dev-short-black-e483c14f88.json",
-    "swapped": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/gqa-rl-dev-short-swapped-a46a09099d.json",
-    "reasoning": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/gqa-rl-dev-reasoning-ed0e25c5c9.json",
-    "direct": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/gqa-rl-dev-direct-9b239876ad.json",
-    "stepwise": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/gqa-rl-dev-stepwise-fa1b27e5ad.json",
-    "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/gqa-rl-dev-reasoning-t1k8-fdb19e6372.json"
+    "short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/kvasirx1-rl-dev-short-69b0cbd776.json",
+    "black": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/kvasirx1-rl-dev-short-black-9cc2f3755b.json",
+    "swapped": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/kvasirx1-rl-dev-short-swapped-cdf0ba8d0e.json",
+    "reasoning": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/kvasirx1-rl-dev-reasoning-f5120d7b9b.json",
+    "direct": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/kvasirx1-rl-dev-direct-00e5b0c821.json",
+    "stepwise": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/kvasirx1-rl-dev-stepwise-e5c506470f.json",
+    "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/kvasirx1-rl-dev-reasoning-t1k8-97a7d7fff7.json",
+    "sampled_short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/kvasirx1-rl-dev-short-t1k8-d5654d18a0.json"
    },
    "rank": null
   },
@@ -424,6 +944,18 @@
    },
    "learnable_share": 0.474,
    "parse_rate": 0.3425,
+   "short_samples": 8,
+   "short_pass_at_1": 0.37075,
+   "short_pass_at_k": 0.562,
+   "short_rl_headroom": {
+    "n": 500,
+    "delta": 19.125,
+    "low": 16.45,
+    "high": 21.87562499999999,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "short_learnable_share": 0.332,
    "questions": 500,
    "short_accuracy": 0.372,
    "reasoning_accuracy": 0.046,
@@ -493,10 +1025,15 @@
     "seed": 0
    },
    "failed_gates": [
-    "parse rate",
-    "reasoning not worse",
     "image needed"
    ],
+   "routes": {
+    "reasoning": [
+     "parse rate",
+     "reasoning not worse"
+    ],
+    "short": []
+   },
    "status": "rejected",
    "missing": [],
    "records": {
@@ -507,8 +1044,123 @@
     "direct": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/medthink-rl-dev-direct-31a1e94dc7.json",
     "stepwise": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/medthink-rl-dev-stepwise-91713158d0.json",
     "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/medthink-rl-dev-reasoning-t1k8-08b592aad0.json",
+    "sampled_short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/medthink-rl-dev-short-t1k8-79d9258304.json",
     "first": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/medthink-rl-dev-short-first-c675e0746f.json",
     "none": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/medthink-rl-dev-short-none-b09e144ec2.json"
+   },
+   "rank": null
+  },
+  {
+   "model": "base2",
+   "dataset": "pathvqa",
+   "display_name": "PathVQA",
+   "role": "rl",
+   "validation_only": false,
+   "tier": "dev",
+   "pool_questions": 19648,
+   "declared": {
+    "split_unit": "image",
+    "split_separable": true,
+    "license": "MIT (release); textbook and PEIR images, research use",
+    "license_usable": true
+   },
+   "samples": 8,
+   "pass_at_1": 0.2826552462526767,
+   "pass_at_k": 0.4582441113490364,
+   "rl_headroom": {
+    "n": 467,
+    "delta": 17.558886509635975,
+    "low": 15.149892933618844,
+    "high": 20.1017130620985,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "learnable_share": 0.3875802997858672,
+   "parse_rate": 0.94725,
+   "short_samples": 8,
+   "short_pass_at_1": 0.32494646680942185,
+   "short_pass_at_k": 0.4753747323340471,
+   "short_rl_headroom": {
+    "n": 467,
+    "delta": 15.042826552462527,
+    "low": 12.44646680942184,
+    "high": 17.71948608137045,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "short_learnable_share": 0.33832976445396146,
+   "questions": 467,
+   "short_accuracy": 0.31798715203426126,
+   "reasoning_accuracy": 0.284796573875803,
+   "direct_accuracy": 0.32012847965738755,
+   "stepwise_accuracy": 0.2987152034261242,
+   "reasoning_behavior": {
+    "mean_output_tokens": 294.004,
+    "truncated_fraction": 0.046,
+    "answer_tag_fraction": 0.928
+   },
+   "direct_behavior": {
+    "mean_output_tokens": 8.914,
+    "truncated_fraction": 0.002,
+    "answer_tag_fraction": 0.4
+   },
+   "stepwise_behavior": {
+    "mean_output_tokens": 114.38,
+    "truncated_fraction": 0.028,
+    "answer_tag_fraction": 0.966
+   },
+   "reasoning_payoff": {
+    "n": 467,
+    "delta": -3.3190578158458246,
+    "low": -6.745182012847965,
+    "high": 0.10706638115631692,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "matched_payoff": {
+    "n": 467,
+    "delta": -2.141327623126338,
+    "low": -4.817987152034261,
+    "high": 0.4282655246252677,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "image_dependence": {
+    "n": 467,
+    "delta": 9.635974304068522,
+    "low": 5.460385438972163,
+    "high": 13.81156316916488,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "wrong_image_dependence": {
+    "n": 467,
+    "delta": 8.779443254817988,
+    "low": 4.817987152034261,
+    "high": 12.84796573875803,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "failed_gates": [
+    "image needed"
+   ],
+   "routes": {
+    "reasoning": [
+     "parse rate"
+    ],
+    "short": []
+   },
+   "status": "rejected",
+   "missing": [],
+   "records": {
+    "short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/pathvqa-rl-dev-short-73513fc394.json",
+    "black": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/pathvqa-rl-dev-short-black-d5f1ede64a.json",
+    "swapped": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/pathvqa-rl-dev-short-swapped-60ad83a2df.json",
+    "reasoning": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/pathvqa-rl-dev-reasoning-9880c789d2.json",
+    "direct": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/pathvqa-rl-dev-direct-038d5c7d08.json",
+    "stepwise": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/pathvqa-rl-dev-stepwise-de3ae5653d.json",
+    "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/pathvqa-rl-dev-reasoning-t1k8-fab6b6c5db.json",
+    "sampled_short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/pathvqa-rl-dev-short-t1k8-4f5caa631d.json"
    },
    "rank": null
   },
@@ -539,6 +1191,18 @@
    },
    "learnable_share": 0.42,
    "parse_rate": 0.96375,
+   "short_samples": 8,
+   "short_pass_at_1": 0.68975,
+   "short_pass_at_k": 0.796,
+   "short_rl_headroom": {
+    "n": 500,
+    "delta": 10.625,
+    "low": 8.674999999999999,
+    "high": 12.675,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "short_learnable_share": 0.252,
    "questions": 500,
    "short_accuracy": 0.7976,
    "reasoning_accuracy": 0.6914,
@@ -592,9 +1256,14 @@
     "seed": 0
    },
    "failed_gates": [
-    "training questions",
-    "reasoning not worse"
+    "training questions"
    ],
+   "routes": {
+    "reasoning": [
+     "reasoning not worse"
+    ],
+    "short": []
+   },
    "status": "rejected",
    "missing": [],
    "records": {
@@ -604,102 +1273,8 @@
     "reasoning": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/textvqa-test-dev-reasoning-de48b16448.json",
     "direct": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/textvqa-test-dev-direct-2d82d8c8ed.json",
     "stepwise": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/textvqa-test-dev-stepwise-afaf07296f.json",
-    "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/textvqa-test-dev-reasoning-t1k8-319c52cf48.json"
-   },
-   "rank": null
-  },
-  {
-   "model": "base2",
-   "dataset": "vqav2",
-   "display_name": "VQAv2",
-   "role": "rl",
-   "validation_only": false,
-   "tier": "dev",
-   "pool_questions": 27553,
-   "declared": {
-    "split_unit": "image",
-    "split_separable": true,
-    "license": "annotations CC BY 4.0; COCO images, Flickr terms",
-    "license_usable": true
-   },
-   "samples": 8,
-   "pass_at_1": 0.609,
-   "pass_at_k": 0.802,
-   "rl_headroom": {
-    "n": 500,
-    "delta": 19.3,
-    "low": 16.900000000000002,
-    "high": 21.75,
-    "resamples": 10000,
-    "seed": 0
-   },
-   "learnable_share": 0.478,
-   "parse_rate": 0.97725,
-   "questions": 500,
-   "short_accuracy": 0.732,
-   "reasoning_accuracy": 0.604,
-   "direct_accuracy": 0.736,
-   "stepwise_accuracy": 0.66,
-   "reasoning_behavior": {
-    "mean_output_tokens": 145.012,
-    "truncated_fraction": 0.018,
-    "answer_tag_fraction": 0.958
-   },
-   "direct_behavior": {
-    "mean_output_tokens": 2.568,
-    "truncated_fraction": 0.0,
-    "answer_tag_fraction": 0.018
-   },
-   "stepwise_behavior": {
-    "mean_output_tokens": 62.208,
-    "truncated_fraction": 0.036,
-    "answer_tag_fraction": 0.384
-   },
-   "reasoning_payoff": {
-    "n": 500,
-    "delta": -12.8,
-    "low": -16.6,
-    "high": -9.2,
-    "resamples": 10000,
-    "seed": 0
-   },
-   "matched_payoff": {
-    "n": 500,
-    "delta": -7.6,
-    "low": -10.6,
-    "high": -4.6,
-    "resamples": 10000,
-    "seed": 0
-   },
-   "image_dependence": {
-    "n": 500,
-    "delta": 44.800000000000004,
-    "low": 39.6,
-    "high": 49.8,
-    "resamples": 10000,
-    "seed": 0
-   },
-   "wrong_image_dependence": {
-    "n": 500,
-    "delta": 44.6,
-    "low": 39.800000000000004,
-    "high": 49.4,
-    "resamples": 10000,
-    "seed": 0
-   },
-   "failed_gates": [
-    "reasoning not worse"
-   ],
-   "status": "rejected",
-   "missing": [],
-   "records": {
-    "short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/vqav2-rl-dev-short-7ae050aa04.json",
-    "black": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/vqav2-rl-dev-short-black-94a65009e4.json",
-    "swapped": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/vqav2-rl-dev-short-swapped-6562358a77.json",
-    "reasoning": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/vqav2-rl-dev-reasoning-4f259e8994.json",
-    "direct": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/vqav2-rl-dev-direct-b1eaf58610.json",
-    "stepwise": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/vqav2-rl-dev-stepwise-17c618fdaa.json",
-    "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/vqav2-rl-dev-reasoning-t1k8-12d32186c8.json"
+    "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/textvqa-test-dev-reasoning-t1k8-319c52cf48.json",
+    "sampled_short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/textvqa-test-dev-short-t1k8-b8add05547.json"
    },
    "rank": null
   }

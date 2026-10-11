@@ -133,6 +133,21 @@ reasoning responses end in a readable answer. Of its 30 points over chance (20% 
 options), 26 remain without any image, so RL on these questions would mostly train text
 reasoning, not visual question answering.
 
+The medical candidates (2026-10-10, Instruct 2B, with the short-answer route) split three
+ways. SLAKE and OmniMedVQA pass: the image matters (a black image costs 29 and 23 points, a
+swapped one 20 and 29), both routes give a learning signal (learnable shares of 49% and 53%
+under the reasoning prompt, 30% and 26% under the short one), and reasoning is no worse than a
+direct answer under matched format (−1.4 [−4.0, +1.2] and −2.6 [−5.6, +0.4]) while costing
+11 and 4 points against the short prompt, so short-answer RL is their natural route.
+Kvasir-VQA-x1 and PathVQA fail the image gate: images are worth 7–10 points, with lower bounds
+of 3–6. For Kvasir that is partly a floor: Instruct scores 28.4% because it does not know the
+dataset's label vocabulary ("paris iia", "z-line"), so a black image has little to take away;
+SFT on the labels first might make it screenable, which the gates here do not test. PathVQA,
+the planned negative control, fails as its documented text shortcuts predicted. Under the
+split gates VQAv2 and GQA now pass on the short-answer route, which matches what training
+showed: short-answer RL there beats Instruct by 2–3 points but not SFT, so passing the screen
+means RL can learn, not that it beats SFT.
+
 ## Held-out hygiene
 
 Split files list the exact rows of every role. Images are compared by a hash of their
