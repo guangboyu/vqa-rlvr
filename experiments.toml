@@ -118,6 +118,46 @@ label = "mix-grpo2-base"
 name = "Instruct → GRPO (VQAv2 + GQA + ChartQA)"
 model = "checkpoints/merged/mix_grpo2_base"
 
+# Medical pilots (2026-10-10): SLAKE and OmniMedVQA passed screening, so each gets one SFT epoch
+# and 300 updates of short-prompt and of reasoning GRPO from Instruct under the frozen recipe
+# (the reward uses each dataset's normalized scorer); SLAKE's short-prompt arm also ran for one
+# full epoch (1,229 updates), the exposure SFT had. Commands: runs/medical-pilot-20261010/run.sh
+# and runs/medical-epoch-20261011/run.sh (local).
+[[arms]]
+label = "slk-sft2"
+name = "SFT 2B (SLAKE)"
+model = "checkpoints/merged/slk_sft2"
+
+[[arms]]
+label = "slk-short2-base"
+name = "Instruct → short-prompt GRPO (SLAKE)"
+model = "checkpoints/merged/slk_short2_base"
+
+[[arms]]
+label = "slk-short2-base-e1"
+name = "Instruct → short-prompt GRPO (SLAKE, 1 epoch)"
+model = "checkpoints/merged/slk_short2_base_e1"
+
+[[arms]]
+label = "slk-grpo2-base"
+name = "Instruct → GRPO (SLAKE)"
+model = "checkpoints/merged/slk_grpo2_base"
+
+[[arms]]
+label = "omv-sft2"
+name = "SFT 2B (OmniMedVQA)"
+model = "checkpoints/merged/omv_sft2"
+
+[[arms]]
+label = "omv-short2-base"
+name = "Instruct → short-prompt GRPO (OmniMedVQA)"
+model = "checkpoints/merged/omv_short2_base"
+
+[[arms]]
+label = "omv-grpo2-base"
+name = "Instruct → GRPO (OmniMedVQA)"
+model = "checkpoints/merged/omv_grpo2_base"
+
 # The ChartQA pilot (Part 2, 2026-10-07): ChartQA's human questions passed the screening gate,
 # so the 2B arms train on its 7,378-question pool: one SFT epoch, then 300 GRPO updates each
 # under the frozen recipe (correctness reward = ChartQA relaxed accuracy), on the local RTX 4090.
@@ -475,33 +515,63 @@ candidates = ["mix-grpo2-base"]
 # Transfer between training data (2026-10-08): each model trained on one dataset family,
 # scored on the other's test sets, against Instruct 2B (full test roles, both prompts,
 # official scorer). `python -m scripts.paired_deltas` computes the differences.
-[transfer]
+[transfers.general]
 reference = "base2"
 datasets = ["vqav2", "gqa", "textvqa", "clevr", "chartqa"]
 
-[[transfer.rows]]
+[[transfers.general.rows]]
 arm = "cqa-grpo2-base-e1"
 trained_on = "ChartQA"
 
-[[transfer.rows]]
+[[transfers.general.rows]]
 arm = "cqa-short2-base-e1"
 trained_on = "ChartQA"
 
-[[transfer.rows]]
+[[transfers.general.rows]]
 arm = "p1-f-grpo2-base"
 trained_on = "VQAv2 + GQA"
 
-[[transfer.rows]]
+[[transfers.general.rows]]
 arm = "p1-f-short2-base"
 trained_on = "VQAv2 + GQA"
 
-[[transfer.rows]]
+[[transfers.general.rows]]
 arm = "sft2"
 trained_on = "VQAv2 + GQA"
 
-[[transfer.rows]]
+[[transfers.general.rows]]
 arm = "mix-grpo2-base"
 trained_on = "VQAv2 + GQA + ChartQA"
+
+# The medical models on each other's test sets and on PathVQA (2026-10-11), with the general
+# models for reference, against Instruct 2B.
+[transfers.medical]
+reference = "base2"
+datasets = ["slake", "omnimedvqa", "pathvqa"]
+
+[[transfers.medical.rows]]
+arm = "slk-sft2"
+trained_on = "SLAKE"
+
+[[transfers.medical.rows]]
+arm = "slk-short2-base-e1"
+trained_on = "SLAKE"
+
+[[transfers.medical.rows]]
+arm = "omv-sft2"
+trained_on = "OmniMedVQA"
+
+[[transfers.medical.rows]]
+arm = "omv-short2-base"
+trained_on = "OmniMedVQA"
+
+[[transfers.medical.rows]]
+arm = "sft2"
+trained_on = "VQAv2 + GQA"
+
+[[transfers.medical.rows]]
+arm = "cqa-grpo2-base-e1"
+trained_on = "ChartQA"
 
 # The mixture against each single-family model, fixed before it trained.
 [matrices.mixture]
@@ -514,6 +584,61 @@ candidates = ["mix-grpo2-base"]
 [[matrices.mixture.comparisons]]
 reference = "cqa-grpo2-base-e1"
 candidates = ["mix-grpo2-base"]
+
+# Medical pilots, each on one test set: the in-domain arms, and the other dataset's arms as an
+# unseen-data test (SFT against RL trained on the same questions).
+[pilots.slake]
+dataset = "slake"
+arms = ["base2", "slk-sft2", "slk-short2-base", "slk-short2-base-e1", "slk-grpo2-base",
+        "omv-sft2", "omv-short2-base"]
+
+[[pilots.slake.comparisons]]
+reference = "base2"
+candidates = ["slk-sft2", "slk-short2-base", "slk-short2-base-e1", "slk-grpo2-base",
+              "omv-sft2", "omv-short2-base"]
+
+[[pilots.slake.comparisons]]
+reference = "slk-sft2"
+candidates = ["slk-short2-base", "slk-short2-base-e1"]
+
+[[pilots.slake.comparisons]]
+reference = "omv-sft2"
+candidates = ["omv-short2-base"]
+
+[pilots.omnimedvqa]
+dataset = "omnimedvqa"
+arms = ["base2", "omv-sft2", "omv-short2-base", "omv-grpo2-base", "slk-sft2",
+        "slk-short2-base", "slk-short2-base-e1"]
+
+[[pilots.omnimedvqa.comparisons]]
+reference = "base2"
+candidates = ["omv-sft2", "omv-short2-base", "omv-grpo2-base", "slk-sft2", "slk-short2-base",
+              "slk-short2-base-e1"]
+
+[[pilots.omnimedvqa.comparisons]]
+reference = "omv-sft2"
+candidates = ["omv-short2-base"]
+
+[[pilots.omnimedvqa.comparisons]]
+reference = "slk-sft2"
+candidates = ["slk-short2-base", "slk-short2-base-e1"]
+
+[pilots.pathvqa]
+dataset = "pathvqa"
+arms = ["base2", "slk-sft2", "slk-short2-base", "slk-short2-base-e1", "omv-sft2",
+        "omv-short2-base"]
+
+[[pilots.pathvqa.comparisons]]
+reference = "base2"
+candidates = ["slk-sft2", "slk-short2-base", "slk-short2-base-e1", "omv-sft2", "omv-short2-base"]
+
+[[pilots.pathvqa.comparisons]]
+reference = "slk-sft2"
+candidates = ["slk-short2-base", "slk-short2-base-e1"]
+
+[[pilots.pathvqa.comparisons]]
+reference = "omv-sft2"
+candidates = ["omv-short2-base"]
 
 # The corrected campaign, on the history page.
 [matrices.corrected]

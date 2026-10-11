@@ -650,10 +650,11 @@ def pilot_deltas_table(arms: list[Arm], rows: list[dict], pilot: str) -> str:
     return table(["Comparison", "Prompt", "Official"], lines, 2)
 
 
-def transfer_table(arms: list[Arm], rows: list[dict], spec: dict | None, prompt: str) -> str:
+def transfer_table(arms: list[Arm], rows: list[dict], spec: dict | None, prompt: str,
+                   name: str = "general") -> str:
     """Each arm minus the reference on every listed test set under one prompt, official
     scorer, with 95% intervals over questions."""
-    rows = [row for row in rows if "transfer" in row and row["prompt"] == prompt]
+    rows = [row for row in rows if row.get("transfer_set") == name and row["prompt"] == prompt]
     if spec is None or not rows:
         return "No transfer comparison has been computed yet.\n"
     names = {arm.label: arm.name for arm in arms}
@@ -667,6 +668,13 @@ def transfer_table(arms: list[Arm], rows: list[dict], spec: dict | None, prompt:
                          if row else "—")
         lines.append([names[entry["arm"]], entry["trained_on"], *cells])
     return table(["Arm", "Trained on", *map(column, spec["datasets"])], lines, 2)
+
+
+def pilot_blocks(toml: Path, name: str, cells: dict, deltas: list[dict]) -> dict[str, str]:
+    """A single-dataset pilot's two tables: its arms on the test role, and its comparisons."""
+    arms, protocols, _ = load_pilot(toml, name)
+    return {f"{name}-pilot": pilot_table(arms, cells, protocols[0].dataset),
+            f"{name}-pilot-deltas": pilot_deltas_table(arms, deltas, name)}
 
 
 def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
@@ -689,7 +697,7 @@ def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
     mixture, _ = load_matrix(toml, "mixture")
     pilot_arms, _, _ = load_pilot(toml, "chartqa")
     declared_toml = tomllib.loads(toml.read_text())
-    transfer = declared_toml.get("transfer")
+    transfers = declared_toml.get("transfers", {})
     chartqa_headline = declared_toml["pilots"]["chartqa"].get("headline", [])
     passk = load_result(root / "results", "passk-heldout.json")
     chartqa_passk = load_result(root / "results", "passk-chartqa.json")
@@ -706,12 +714,13 @@ def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
             deltas, load_comparisons(toml, "fullpool"), ("official",))),
         "mixture-deltas": deltas_table(mixture, declared(
             deltas, load_comparisons(toml, "mixture"), ("official",))),
-        "chartqa-pilot": pilot_table(pilot_arms, cells, "chartqa"),
-        "chartqa-pilot-deltas": pilot_deltas_table(pilot_arms, deltas, "chartqa"),
         "chartqa-passk": passk_table(every_arm, chartqa_passk),
         "knobs-chartqa": knobs_table(knobs),
-        "transfer-reasoning": transfer_table(every_arm, deltas, transfer, "reasoning"),
-        "transfer-short": transfer_table(every_arm, deltas, transfer, "short"),
+        **{f"{'' if name == 'general' else name + '-'}transfer-{prompt}":
+           transfer_table(every_arm, deltas, spec, prompt, name)
+           for name, spec in transfers.items() for prompt in PROMPT_ORDER},
+        **{block: table_fn for name in declared_toml.get("pilots", {})
+           for block, table_fn in pilot_blocks(toml, name, cells, deltas).items()},
         "chartqa-passk-deltas": passk_deltas_table(every_arm, chartqa_passk),
         "passk": passk_table(every_arm, passk),
         "passk-deltas": passk_deltas_table(every_arm, passk),

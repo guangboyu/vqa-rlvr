@@ -1062,14 +1062,28 @@ with varied rewards over 1,000 updates.
 | Model | Dataset | Prompt | Prompts | Samples each | Learnable (%) | Never correct (%) | Always correct (%) |
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
 | `base2` | ChartQA (human) | reasoning | 500 | 8 | 41.2 | 11.4 | 47.4 |
+| `base2` | ChartQA (human) | short | 500 | 8 | 30.0 | 20.2 | 49.8 |
 | `base2` | CLEVR counting | reasoning | 500 | 8 | 48.4 | 0.0 | 51.6 |
+| `base2` | CLEVR counting | short | 500 | 8 | 4.4 | 0.8 | 94.8 |
 | `base2` | CLEVR compositional | reasoning | 500 | 8 | 62.0 | 5.2 | 32.8 |
+| `base2` | CLEVR compositional | short | 500 | 8 | 14.8 | 6.2 | 79.0 |
 | `base2` | GQA | reasoning | 500 | 8 | 42.0 | 26.6 | 31.4 |
+| `base2` | GQA | short | 500 | 8 | 33.4 | 19.2 | 47.4 |
 | `base2` | GQA | reasoning | 2,500 | 8 | 44.5 | 26.0 | 29.5 |
 | `base2` | GQA | short | 2,500 | 8 | 35.5 | 19.1 | 45.4 |
 | `base2` | GQA | reasoning | 5,000 | 8 | 45.0 | 24.3 | 30.7 |
+| `base2` | Kvasir-VQA-x1 (atomic) | reasoning | 500 | 8 | 36.8 | 53.8 | 9.4 |
+| `base2` | Kvasir-VQA-x1 (atomic) | short | 500 | 8 | 23.0 | 63.2 | 13.8 |
 | `base2` | MedThinkVQA | reasoning | 500 | 8 | 47.4 | 52.0 | 0.6 |
+| `base2` | MedThinkVQA | short | 500 | 8 | 33.2 | 43.8 | 23.0 |
+| `base2` | OmniMedVQA (open access) | reasoning | 500 | 8 | 52.8 | 8.2 | 39.0 |
+| `base2` | OmniMedVQA (open access) | short | 500 | 8 | 25.6 | 15.8 | 58.6 |
+| `base2` | PathVQA | reasoning | 467 | 8 | 38.8 | 54.2 | 6.6 |
+| `base2` | PathVQA | short | 467 | 8 | 33.8 | 52.5 | 12.8 |
+| `base2` | SLAKE (English) | reasoning | 500 | 8 | 48.8 | 35.0 | 16.2 |
+| `base2` | SLAKE (English) | short | 500 | 8 | 30.4 | 34.6 | 35.0 |
 | `base2` | VQAv2 | reasoning | 500 | 8 | 47.8 | 19.8 | 32.4 |
+| `base2` | VQAv2 | short | 500 | 8 | 40.6 | 12.4 | 47.0 |
 | `base2` | VQAv2 | reasoning | 2,500 | 8 | 48.9 | 21.3 | 29.8 |
 | `base2` | VQAv2 | short | 2,500 | 8 | 40.4 | 15.1 | 44.5 |
 | `base2` | VQAv2 | reasoning | 5,000 | 8 | 47.1 | 22.6 | 30.3 |
@@ -1140,3 +1154,159 @@ on VQAv2 with its responses near 140 tokens.
 | SFT 8B → short-prompt GRPO | GQA | short | 76.3 (76.3) · 2 | 76.3 (76.3) · 2 | 78.0 (78.0) · 2 | 76.3 (76.3) · 2 | 76.3 (76.3) · 2 | 76.3 (76.3) · 2 | 78.0 (78.0) · 2 | 78.0 (78.0) · 2 | 76.3 (76.3) · 2 | 78.0 (78.0) · 2 |
 | SFT 8B → short-prompt GRPO | GQA | reasoning | 52.5 (54.2) · 111 | 45.8 (45.8) · 107 | 52.5 (52.5) · 103 | 47.5 (49.2) · 110 | 52.5 (52.5) · 113 | 50.8 (50.8) · 111 | 47.5 (49.2) · 126 | 47.5 (47.5) · 119 | 45.8 (47.5) · 107 | 47.5 (47.5) · 118 |
 <!-- /report:curves -->
+
+## Medical pilots in detail
+
+Each medical pilot on its own test role, with the other dataset's models as an unseen-data
+test (official, normalized in parentheses; tokens under each prompt). SLAKE, 1,061 test
+questions:
+
+<!-- report:slake-pilot -->
+| Arm | Prompt | Accuracy | closed answers | open answers | Output tokens |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Instruct 2B | short | 49.76 (49.76) | 75.96 | 32.87 | 3 |
+| Instruct 2B | reasoning | 40.34 (40.53) | 57.69 | 29.15 | 138 |
+| SFT 2B (SLAKE) | short | 74.84 (74.84) | 82.93 | 69.61 | 3 |
+| SFT 2B (SLAKE) | reasoning | 69.18 (69.27) | 81.73 | 61.09 | 25 |
+| Instruct → short-prompt GRPO (SLAKE) | short | 60.41 (60.41) | 78.12 | 48.99 | 3 |
+| Instruct → short-prompt GRPO (SLAKE) | reasoning | 46.56 (46.65) | 62.50 | 36.28 | 128 |
+| Instruct → short-prompt GRPO (SLAKE, 1 epoch) | short | 65.60 (65.60) | 80.05 | 56.28 | 2 |
+| Instruct → short-prompt GRPO (SLAKE, 1 epoch) | reasoning | 52.78 (52.87) | 67.31 | 43.41 | 127 |
+| Instruct → GRPO (SLAKE) | short | 52.12 (52.12) | 77.64 | 35.66 | 3 |
+| Instruct → GRPO (SLAKE) | reasoning | 55.70 (56.17) | 78.37 | 41.09 | 12 |
+| SFT 2B (OmniMedVQA) | short | 42.88 (42.88) | 63.70 | 29.46 | 3 |
+| SFT 2B (OmniMedVQA) | reasoning | 38.93 (39.11) | 59.86 | 25.43 | 166 |
+| Instruct → short-prompt GRPO (OmniMedVQA) | short | 49.01 (49.01) | 75.24 | 32.09 | 3 |
+| Instruct → short-prompt GRPO (OmniMedVQA) | reasoning | 40.72 (40.72) | 57.45 | 29.92 | 139 |
+<!-- /report:slake-pilot -->
+
+<!-- report:slake-pilot-deltas -->
+| Comparison | Prompt | Official |
+| --- | --- | ---: |
+| SFT 2B (SLAKE) − Instruct 2B | short | +25.07 [+21.87, +28.18] |
+| SFT 2B (SLAKE) − Instruct 2B | reasoning | +28.84 [+25.54, +32.14] |
+| Instruct → short-prompt GRPO (SLAKE) − Instruct 2B | short | +10.65 [+8.39, +12.82] |
+| Instruct → short-prompt GRPO (SLAKE) − Instruct 2B | reasoning | +6.22 [+4.05, +8.48] |
+| Instruct → short-prompt GRPO (SLAKE, 1 epoch) − Instruct 2B | short | +15.83 [+13.10, +18.47] |
+| Instruct → short-prompt GRPO (SLAKE, 1 epoch) − Instruct 2B | reasoning | +12.44 [+9.71, +15.27] |
+| Instruct → GRPO (SLAKE) − Instruct 2B | short | +2.36 [+1.13, +3.58] |
+| Instruct → GRPO (SLAKE) − Instruct 2B | reasoning | +15.36 [+12.63, +18.10] |
+| SFT 2B (OmniMedVQA) − Instruct 2B | short | -6.88 [-9.33, -4.43] |
+| SFT 2B (OmniMedVQA) − Instruct 2B | reasoning | -1.41 [-4.05, +1.23] |
+| Instruct → short-prompt GRPO (OmniMedVQA) − Instruct 2B | short | -0.75 [-1.70, +0.19] |
+| Instruct → short-prompt GRPO (OmniMedVQA) − Instruct 2B | reasoning | +0.38 [-1.60, +2.36] |
+| Instruct → short-prompt GRPO (SLAKE) − SFT 2B (SLAKE) | short | -14.42 [-17.06, -11.69] |
+| Instruct → short-prompt GRPO (SLAKE) − SFT 2B (SLAKE) | reasoning | -22.62 [-25.64, -19.42] |
+| Instruct → short-prompt GRPO (SLAKE, 1 epoch) − SFT 2B (SLAKE) | short | -9.24 [-11.59, -6.88] |
+| Instruct → short-prompt GRPO (SLAKE, 1 epoch) − SFT 2B (SLAKE) | reasoning | -16.40 [-19.32, -13.38] |
+| Instruct → short-prompt GRPO (OmniMedVQA) − SFT 2B (OmniMedVQA) | short | +6.13 [+3.77, +8.48] |
+| Instruct → short-prompt GRPO (OmniMedVQA) − SFT 2B (OmniMedVQA) | reasoning | +1.79 [-0.85, +4.43] |
+<!-- /report:slake-pilot-deltas -->
+
+OmniMedVQA, 8,914 test questions. SFT's 99.7% shows the image-level re-split leaves test
+images too close to training ones; the official scorer accepts only the option letter, which
+Instruct often leaves out (47.2 official, 69.5 normalized):
+
+<!-- report:omnimedvqa-pilot -->
+| Arm | Prompt | Accuracy | Anatomy Identification answers | Disease Diagnosis answers | Lesion Grading answers | Modality Recognition answers | Other Biological Attributes answers | Output tokens |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Instruct 2B | short | 47.22 (69.45) | 58.24 | 37.15 | 61.16 | 79.10 | 45.16 | 3 |
+| Instruct 2B | reasoning | 64.76 (64.83) | 73.89 | 55.76 | 75.45 | 99.01 | 48.97 | 139 |
+| SFT 2B (OmniMedVQA) | short | 99.66 (99.66) | 99.76 | 99.55 | 99.55 | 100.00 | 100.00 | 2 |
+| SFT 2B (OmniMedVQA) | reasoning | 91.08 (92.60) | 91.46 | 89.98 | 92.86 | 97.48 | 85.34 | 90 |
+| Instruct → short-prompt GRPO (OmniMedVQA) | short | 78.27 (79.52) | 79.96 | 73.96 | 83.48 | 99.37 | 68.33 | 2 |
+| Instruct → short-prompt GRPO (OmniMedVQA) | reasoning | 73.92 (73.92) | 77.50 | 68.76 | 81.70 | 98.92 | 54.25 | 148 |
+| Instruct → GRPO (OmniMedVQA) | short | 44.70 (70.18) | 54.81 | 34.55 | 60.71 | 77.75 | 43.40 | 4 |
+| Instruct → GRPO (OmniMedVQA) | reasoning | 73.15 (73.15) | 78.88 | 67.04 | 71.43 | 99.28 | 61.29 | 259 |
+| SFT 2B (SLAKE) | short | 69.14 (69.16) | 82.01 | 59.05 | 74.11 | 99.28 | 70.09 | 2 |
+| SFT 2B (SLAKE) | reasoning | 53.90 (67.62) | 61.25 | 42.64 | 81.70 | 91.35 | 62.17 | 37 |
+| Instruct → short-prompt GRPO (SLAKE) | short | 60.18 (69.59) | 73.83 | 50.67 | 65.18 | 90.27 | 47.80 | 3 |
+| Instruct → short-prompt GRPO (SLAKE) | reasoning | 64.77 (64.79) | 73.77 | 55.62 | 76.34 | 98.92 | 51.91 | 88 |
+| Instruct → short-prompt GRPO (SLAKE, 1 epoch) | short | 67.99 (69.49) | 81.11 | 58.80 | 68.75 | 98.38 | 55.13 | 2 |
+| Instruct → short-prompt GRPO (SLAKE, 1 epoch) | reasoning | 66.92 (66.92) | 76.90 | 57.86 | 79.91 | 98.47 | 55.13 | 156 |
+<!-- /report:omnimedvqa-pilot -->
+
+<!-- report:omnimedvqa-pilot-deltas -->
+| Comparison | Prompt | Official |
+| --- | --- | ---: |
+| SFT 2B (OmniMedVQA) − Instruct 2B | short | +52.45 [+51.40, +53.48] |
+| SFT 2B (OmniMedVQA) − Instruct 2B | reasoning | +26.32 [+25.22, +27.42] |
+| Instruct → short-prompt GRPO (OmniMedVQA) − Instruct 2B | short | +31.05 [+30.07, +32.04] |
+| Instruct → short-prompt GRPO (OmniMedVQA) − Instruct 2B | reasoning | +9.15 [+8.31, +10.02] |
+| Instruct → GRPO (OmniMedVQA) − Instruct 2B | short | -2.51 [-2.93, -2.11] |
+| Instruct → GRPO (OmniMedVQA) − Instruct 2B | reasoning | +8.39 [+7.42, +9.39] |
+| SFT 2B (SLAKE) − Instruct 2B | short | +21.92 [+20.90, +22.95] |
+| SFT 2B (SLAKE) − Instruct 2B | reasoning | -10.86 [-11.98, -9.75] |
+| Instruct → short-prompt GRPO (SLAKE) − Instruct 2B | short | +12.96 [+12.26, +13.69] |
+| Instruct → short-prompt GRPO (SLAKE) − Instruct 2B | reasoning | +0.01 [-0.65, +0.68] |
+| Instruct → short-prompt GRPO (SLAKE, 1 epoch) − Instruct 2B | short | +20.78 [+19.90, +21.67] |
+| Instruct → short-prompt GRPO (SLAKE, 1 epoch) − Instruct 2B | reasoning | +2.15 [+1.30, +3.03] |
+| Instruct → short-prompt GRPO (OmniMedVQA) − SFT 2B (OmniMedVQA) | short | -21.39 [-22.27, -20.54] |
+| Instruct → short-prompt GRPO (OmniMedVQA) − SFT 2B (OmniMedVQA) | reasoning | -17.16 [-18.24, -16.11] |
+| Instruct → short-prompt GRPO (SLAKE) − SFT 2B (SLAKE) | short | -8.96 [-9.83, -8.09] |
+| Instruct → short-prompt GRPO (SLAKE) − SFT 2B (SLAKE) | reasoning | +10.87 [+9.78, +11.97] |
+| Instruct → short-prompt GRPO (SLAKE, 1 epoch) − SFT 2B (SLAKE) | short | -1.14 [-1.83, -0.45] |
+| Instruct → short-prompt GRPO (SLAKE, 1 epoch) − SFT 2B (SLAKE) | reasoning | +13.01 [+11.86, +14.16] |
+<!-- /report:omnimedvqa-pilot-deltas -->
+
+PathVQA, 6,719 test questions, trained on by no model (it failed the screen's image gate):
+
+<!-- report:pathvqa-pilot -->
+| Arm | Prompt | Accuracy | open answers | yes/no answers | Output tokens |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Instruct 2B | short | 33.52 (33.64) | 3.90 | 63.09 | 3 |
+| Instruct 2B | reasoning | 30.99 (31.09) | 1.22 | 60.71 | 292 |
+| SFT 2B (SLAKE) | short | 31.69 (31.81) | 4.41 | 58.92 | 3 |
+| SFT 2B (SLAKE) | reasoning | 25.69 (25.79) | 1.01 | 50.33 | 117 |
+| Instruct → short-prompt GRPO (SLAKE) | short | 32.95 (33.09) | 4.11 | 61.75 | 3 |
+| Instruct → short-prompt GRPO (SLAKE) | reasoning | 30.64 (30.72) | 1.43 | 59.82 | 301 |
+| Instruct → short-prompt GRPO (SLAKE, 1 epoch) | short | 32.52 (32.67) | 4.05 | 60.95 | 3 |
+| Instruct → short-prompt GRPO (SLAKE, 1 epoch) | reasoning | 30.15 (30.23) | 1.34 | 58.92 | 299 |
+| SFT 2B (OmniMedVQA) | short | 30.09 (30.24) | 3.13 | 57.02 | 3 |
+| SFT 2B (OmniMedVQA) | reasoning | 27.92 (28.00) | 1.13 | 54.67 | 210 |
+| Instruct → short-prompt GRPO (OmniMedVQA) | short | 33.68 (33.81) | 3.93 | 63.38 | 3 |
+| Instruct → short-prompt GRPO (OmniMedVQA) | reasoning | 31.00 (31.06) | 1.79 | 60.17 | 273 |
+<!-- /report:pathvqa-pilot -->
+
+<!-- report:pathvqa-pilot-deltas -->
+| Comparison | Prompt | Official |
+| --- | --- | ---: |
+| SFT 2B (SLAKE) − Instruct 2B | short | -1.83 [-2.83, -0.85] |
+| SFT 2B (SLAKE) − Instruct 2B | reasoning | -5.31 [-6.38, -4.23] |
+| Instruct → short-prompt GRPO (SLAKE) − Instruct 2B | short | -0.57 [-1.06, -0.09] |
+| Instruct → short-prompt GRPO (SLAKE) − Instruct 2B | reasoning | -0.34 [-1.12, +0.45] |
+| Instruct → short-prompt GRPO (SLAKE, 1 epoch) − Instruct 2B | short | -1.00 [-1.79, -0.21] |
+| Instruct → short-prompt GRPO (SLAKE, 1 epoch) − Instruct 2B | reasoning | -0.83 [-1.68, -0.01] |
+| SFT 2B (OmniMedVQA) − Instruct 2B | short | -3.42 [-4.23, -2.65] |
+| SFT 2B (OmniMedVQA) − Instruct 2B | reasoning | -3.07 [-3.99, -2.14] |
+| Instruct → short-prompt GRPO (OmniMedVQA) − Instruct 2B | short | +0.16 [-0.28, +0.61] |
+| Instruct → short-prompt GRPO (OmniMedVQA) − Instruct 2B | reasoning | +0.01 [-0.77, +0.79] |
+| Instruct → short-prompt GRPO (SLAKE) − SFT 2B (SLAKE) | short | +1.26 [+0.39, +2.16] |
+| Instruct → short-prompt GRPO (SLAKE) − SFT 2B (SLAKE) | reasoning | +4.96 [+3.91, +6.04] |
+| Instruct → short-prompt GRPO (SLAKE, 1 epoch) − SFT 2B (SLAKE) | short | +0.83 [+0.18, +1.50] |
+| Instruct → short-prompt GRPO (SLAKE, 1 epoch) − SFT 2B (SLAKE) | reasoning | +4.47 [+3.50, +5.48] |
+| Instruct → short-prompt GRPO (OmniMedVQA) − SFT 2B (OmniMedVQA) | short | +3.59 [+2.78, +4.40] |
+| Instruct → short-prompt GRPO (OmniMedVQA) − SFT 2B (OmniMedVQA) | reasoning | +3.09 [+2.17, +4.03] |
+<!-- /report:pathvqa-pilot-deltas -->
+
+Under the reasoning prompt, each model minus Instruct:
+
+<!-- report:medical-transfer-reasoning -->
+| Arm | Trained on | SLAKE (English) | OmniMedVQA (open access) | PathVQA |
+| --- | --- | ---: | ---: | ---: |
+| SFT 2B (SLAKE) | SLAKE | +28.84 [+25.54, +32.14] | -10.86 [-11.98, -9.75] | -5.31 [-6.38, -4.23] |
+| Instruct → short-prompt GRPO (SLAKE, 1 epoch) | SLAKE | +12.44 [+9.71, +15.27] | +2.15 [+1.30, +3.03] | -0.83 [-1.68, -0.01] |
+| SFT 2B (OmniMedVQA) | OmniMedVQA | -1.41 [-4.05, +1.23] | +26.32 [+25.22, +27.42] | -3.07 [-3.99, -2.14] |
+| Instruct → short-prompt GRPO (OmniMedVQA) | OmniMedVQA | +0.38 [-1.60, +2.36] | +9.15 [+8.31, +10.02] | +0.01 [-0.77, +0.79] |
+| SFT 2B | VQAv2 + GQA | +1.70 [-0.85, +4.24] | +5.53 [+4.55, +6.53] | — |
+| Instruct → GRPO (ChartQA, 1 epoch) | ChartQA | +7.16 [+4.71, +9.61] | +5.87 [+4.86, +6.88] | — |
+<!-- /report:medical-transfer-reasoning -->
+
+Reasoning does not pay on these datasets. Reasoning-prompt GRPO on SLAKE deletes the
+reasoning as it did on VQAv2 and GQA (138 → 12 tokens) and gains 15.4 points under the
+reasoning prompt, yet scores 4.7 below short-prompt GRPO's short answers. On OmniMedVQA it
+keeps 259 tokens and gains 8.4 under the reasoning prompt, still 5 points below short-prompt
+GRPO. The general models help only under the reasoning prompt: ChartQA-trained GRPO adds 7.2
+points on SLAKE and 5.9 on OmniMedVQA there, and nothing to short answers. The medical SFT
+models also lose most under the reasoning prompt off their data (SLAKE SFT: −10.9 on
+OmniMedVQA, −5.3 on PathVQA).

@@ -4,8 +4,8 @@ Where RL with a verifiable reward beats the starting model, and where it beats S
 same data. That is the bar for every result on this page: an RL arm counts as a win when it
 improves on Instruct, and ideally on SFT, on the dataset's test questions. Reasoning is one
 way to get there, not the goal. The negative controls, null results and diagnostics that
-explain the rest (reasoning deleted on VQAv2 and GQA, RL level with SFT in domain, training
-knobs that did not matter, a mixture that did not learn when to reason) are in the
+explain the rest (reasoning deleted on VQAv2 and GQA, RL level with or behind SFT in domain,
+training knobs that did not matter, a mixture that did not learn when to reason) are in the
 [supplementary results](supplement.md), with the full test matrix.
 
 Every table here is generated from the stored evaluation records by
@@ -357,3 +357,40 @@ model still leads on its own data: under the reasoning prompt the VQA-trained mo
 One model trained on both families at once did not learn when to reason: it kept chart
 reasoning for 1,750 updates, then dropped reasoning everywhere
 ([supplement](supplement.md#one-model-on-both-families)).
+
+## Medical images: RL beats the base model and keeps what SFT loses
+
+Two medical datasets passed the screen ([evaluation](evaluation.md#dataset-screening)): SLAKE
+(radiology questions, English, 4,919 training questions) and OmniMedVQA (the open-access
+multiple-choice half, re-split by image). Each got the ChartQA pilot's recipe at 2B: one SFT
+epoch, and 300 updates of short-prompt and of reasoning GRPO from Instruct, the correctness
+reward using each dataset's normalized scorer; SLAKE's short-prompt arm then ran for one full
+epoch (1,229 updates), the exposure SFT had. Every model was also scored on the other medical
+test sets and on PathVQA, which neither trained on. Short prompt, each model minus Instruct
+2B, official scorer, 95% intervals over questions (`[transfers.medical]`):
+
+<!-- report:medical-transfer-short -->
+| Arm | Trained on | SLAKE (English) | OmniMedVQA (open access) | PathVQA |
+| --- | --- | ---: | ---: | ---: |
+| SFT 2B (SLAKE) | SLAKE | +25.07 [+21.87, +28.18] | +21.92 [+20.90, +22.95] | -1.83 [-2.83, -0.85] |
+| Instruct → short-prompt GRPO (SLAKE, 1 epoch) | SLAKE | +15.83 [+13.10, +18.47] | +20.78 [+19.90, +21.67] | -1.00 [-1.79, -0.21] |
+| SFT 2B (OmniMedVQA) | OmniMedVQA | -6.88 [-9.33, -4.43] | +52.45 [+51.40, +53.48] | -3.42 [-4.23, -2.65] |
+| Instruct → short-prompt GRPO (OmniMedVQA) | OmniMedVQA | -0.75 [-1.70, +0.19] | +31.05 [+30.07, +32.04] | +0.16 [-0.28, +0.61] |
+| SFT 2B | VQAv2 + GQA | +1.13 [-0.66, +2.92] | +22.02 [+21.09, +22.94] | — |
+| Instruct → GRPO (ChartQA, 1 epoch) | ChartQA | +0.09 [-0.75, +1.04] | +16.26 [+15.49, +17.05] | — |
+<!-- /report:medical-transfer-short -->
+
+RL beats the base model in domain and holds it everywhere else; SFT wins in domain and loses
+elsewhere. On SLAKE, one epoch of short-prompt GRPO gains 15.8 points over Instruct
+([+13.1, +18.5]) and the full epoch adds 5.2 over the 300-update pilot. One SFT epoch gains
+25.1, so in domain SFT stays 9.2 points ahead ([−11.6, −6.9]). Off its training data the order
+reverses. SFT on OmniMedVQA costs 6.9 points on SLAKE and 3.4 on PathVQA, where RL trained on
+the same questions stays within 0.8 of Instruct, so RL leads SFT by 6.1 ([+3.8, +8.5]) and 3.6
+([+2.8, +4.4]). SFT on SLAKE costs 1.8 points on PathVQA and RL 1.0, a lead of 0.8 for RL
+([+0.2, +1.5]). On OmniMedVQA the official scorer counts only option letters, so its column
+mostly measures whether a model answers with the letter: under the normalized scorer no
+SLAKE-trained model differs from Instruct there by more than 0.4 points. OmniMedVQA's own
+split is too easy to measure generalization: SFT reaches 99.7% on its test images, which come
+from the same source collections as its training images. Neither dataset releases patient IDs,
+so held-out scores may run optimistic; one training seed. The pilot tables are in the
+[supplement](supplement.md#medical-pilots-in-detail).

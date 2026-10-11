@@ -145,12 +145,14 @@ def test_transfer_rows_fill_one_line_per_arm_and_stay_out_of_matrix_tables():
     arms = [Arm("base", "Base", "m"), Arm("tuned", "Tuned", "n")]
     spec = {"reference": "base", "datasets": ["vqav2", "chartqa"],
             "rows": [{"arm": "tuned", "trained_on": "ChartQA"}]}
-    row = {"transfer": "ChartQA", "reference": "base", "candidate": "tuned",
+    row = {"transfer": "ChartQA", "transfer_set": "general", "reference": "base",
+           "candidate": "tuned",
            "dataset": "vqav2", "prompt": "reasoning", "variant": "official",
            "n": 3, "delta": 15.2, "low": 14.0, "high": 16.4}
     lines = transfer_table(arms, [row], spec, "reasoning").splitlines()
     assert lines[2] == "| Tuned | ChartQA | +15.20 [+14.00, +16.40] | — |"
     assert transfer_table(arms, [row], spec, "short").startswith("No transfer comparison")
+    assert transfer_table(arms, [row], spec, "reasoning", "medical").startswith("No transfer")
     assert declared([row], [("base", "tuned")]) == []
 
 

@@ -1,0 +1,99 @@
+{
+  "schema": "run-record/1",
+  "legacy": false,
+  "model_id": "8b7662015e509ec63bc00b53e5f107a65ba83d61e9dc79cb601393c33ead83a9",
+  "protocol_id": "25764b055a869747476fadf76085105e14b54c5ca9406388a5831616d2310c10",
+  "model": {
+    "source": "checkpoints/merged/slk_short2_base_e1",
+    "label": "slk-short2-base-e1",
+    "run": null,
+    "step": null,
+    "weights": {
+      "sha256": "839d3dcfb95cd08406e3ca1008997c68b58f3e0e161e9d5b9ea7cc2cd3c03bc8",
+      "config_sha256": "e475ba87af77a77c5b0872f6b32be09a175c534ef17c688c0274fcf9b6dbd9f5"
+    }
+  },
+  "protocol": {
+    "dataset": "omnimedvqa",
+    "ladder": "in-domain",
+    "role": "test",
+    "tier": "full",
+    "question_limit": null,
+    "prompt": "reasoning",
+    "prompt_text": "{question}\nFirst think step by step inside <think> </think> tags, then write only the final answer inside <answer> </answer> tags.",
+    "max_tokens": 512,
+    "temperature": 0.0,
+    "samples": 1,
+    "image_mode": "original",
+    "max_pixels": 786432,
+    "scorers": {
+      "official": "choice_letter_accuracy/v1",
+      "normalized": "choice_accuracy/v1"
+    },
+    "extraction": "last_answer_tag_or_full_text",
+    "answer_tag_rule": "raw text contains </answer>",
+    "data": {
+      "subsets": {
+        "omnimedvqa_test": "2c19bec05aa33430"
+      },
+      "selection_sha256": "c9807593ee4c057ceb9814c25061709a1edbff8df878264e247e30b987c67743",
+      "image_groups_sha256": "bf099dd75a39b338ce68de92479799f4390edf6b055c5b2f04f940354e74851e"
+    }
+  },
+  "metrics": {
+    "n": 8914,
+    "official": {
+      "overall": 0.6691720888490016,
+      "by_answer_type": {
+        "Anatomy Identification": 0.7689530685920578,
+        "Disease Diagnosis": 0.5786265017034248,
+        "Lesion Grading": 0.7991071428571429,
+        "Modality Recognition": 0.9846846846846847,
+        "Other Biological Attributes": 0.5513196480938416
+      }
+    },
+    "normalized": {
+      "overall": 0.6691720888490016,
+      "by_answer_type": {
+        "Anatomy Identification": 0.7689530685920578,
+        "Disease Diagnosis": 0.5786265017034248,
+        "Lesion Grading": 0.7991071428571429,
+        "Modality Recognition": 0.9846846846846847,
+        "Other Biological Attributes": 0.5513196480938416
+      }
+    },
+    "mean_output_tokens": 155.51065739286517,
+    "truncated_fraction": 0.027372672201032084,
+    "answer_tag_fraction": 0.9580435270361229,
+    "empty_answer_fraction": 0.0008974646623289208,
+    "official_on_lowercased_answers": 0.6691720888490016,
+    "answers_scored_differently": 0
+  },
+  "provenance": {
+    "code_version": "d38aa0294b3c62cc1c94421771871fc7e5c9ecb0",
+    "uncommitted_changes": false,
+    "source_sha256": {
+      "vqar/eval/__init__.py": "2aa88c809409a57502d0d9b2893e14c3b5bf99d971bceefcc1ed4716ef295f81",
+      "vqar/eval/examples.py": "bfc72cc97e560db5dd6c62aa6af7ff7928b1865f7e55591873fb71745807ce97",
+      "vqar/eval/protocol.py": "d8c63fc0fab4f652cea522839054385389880708811e0b4ce8d3e94025a1dc33",
+      "vqar/eval/record.py": "6be2298f531240b01df2feecedd50af2d32a1c17f6029951ddf3f7723834b023",
+      "vqar/eval/runner.py": "f0a55a3f8fcaddc6c4154cef031a22911f5cc0cafe7a7cd436c811b2b75e8fca",
+      "vqar/inference.py": "f77143773554fbf3710e045220e2efb36d5698035a760094a9aace008bf593bf",
+      "vqar/config.py": "1b81d0bbdc2e5097014c55be1c9c941dabd55e79004ac87b9f67c647fb9269f7",
+      "vqar/data.py": "0d0fd3a7ba1d2cef79d81e04270e601ebf675a4d067bae865c305727eee00fc5",
+      "vqar/metrics.py": "8129ce92ad8b29efa942414de37235d0141e197ab2bb84f5c2f3878ef44f8978",
+      "vqar/registry.py": "7726a99ece5eb2ee9f8c93d19966aac5ca7277454847464e096f0b2607fedfbd",
+      "vqar/splits.py": "206963ba5aaa52b03482f52b268832dc1bd611613adfd2ea0fb1aac11c2eb693",
+      "vqar/ood_metrics.py": "9449e0a85c4b7ff3efcbc88264ee1e03d53689c39c2fe030a13887465fa1b226",
+      "vqar/ood.py": "d59220be09094fa5a5ffbb6e791b38ee5b3c8dca0ca381ef64a28bf0f94ccb8f",
+      "uv.lock": "8c79fab440350a15e75e9507c3b5338ecc63beb92fc12c6ef18fbe01122ac323"
+    },
+    "versions": {
+      "torch": "2.11.0+cu129",
+      "transformers": "5.13.0",
+      "vllm": "0.23.0+cu129",
+      "datasets": "5.0.0"
+    },
+    "timestamp": "2026-10-11T11:18:09+00:00"
+  }
+}
