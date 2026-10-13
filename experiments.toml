@@ -880,3 +880,56 @@ name = "image-budget"
 change = "each image kept in shape within the 0.79 MP evaluation budget, no padding (up to 768 vision tokens; 4 completions per micro-batch)"
 flags = ["--image-fit", "budget", "--batch-size", "4", "--grad-accum", "8"]
 expect = "+, about canvas-896's: same pixels on most charts, no padding tokens"
+
+# Beyond accuracy (2026-10-12), declared with the expected directions before any measurement:
+# 1. kl: forward KL from the starting model on the task's own test questions (500 questions, 8
+#    samples at T = 1, scripts.kl_to_base). Expected, after RL's Razor: RL below SFT at matched and
+#    at full exposure, and the models that moved more forget more on unseen data.
+# 2. reliance: accuracy lost with a black and with a swapped image on the task's test set.
+#    No direction expected.
+# 3. calibration: 8 (or the existing 32) samples at T = 1 per test question; the majority answer
+#    and the share of samples agreeing with it, giving its accuracy, expected calibration error and
+#    selective accuracy. Expected: RL more confident (its samples agree more, as pass@k showed);
+#    no direction expected for calibration error.
+# Every listed model of a set is measured; the set's reference is its starting model.
+[[beyond_accuracy]]
+dataset = "slake"
+prompt = "short"
+tier = "full"
+base = "base2"
+models = ["slk-sft2", "slk-short2-base-e1", "slk-short2-sft-e1"]
+
+[[beyond_accuracy]]
+dataset = "omnimedx"
+prompt = "short"
+tier = "full"
+base = "base2"
+models = ["omx-sft2-matched", "omx-short2-base", "omx-sft2", "omx-short2-sft"]
+
+[[beyond_accuracy]]
+dataset = "vqav2"
+prompt = "short"
+tier = "first-1000"
+base = "base2"
+models = ["sft4k2", "p1-f-short2-base", "sft2", "p1-f-short2-sft"]
+
+[[beyond_accuracy]]
+dataset = "chartqa"
+prompt = "short"
+tier = "full"
+base = "base2"
+models = ["cqa-sft2", "cqa-short2-base-e1"]
+
+[[beyond_accuracy]]
+dataset = "chartqa"
+prompt = "reasoning"
+tier = "full"
+base = "base2"
+models = ["cqa-grpo2-base-e1", "cqa-grpo2-sft-e1"]
+
+[[beyond_accuracy]]
+dataset = "slake"
+prompt = "short"
+tier = "full"
+base = "base8"
+models = ["slk-sft8", "slk-short8-base-e1", "slk-short8-sft-e1"]
