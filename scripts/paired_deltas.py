@@ -4,7 +4,8 @@
 
 Reads the comparisons declared in experiments.toml, pairs the two arms' records of every
 declared original-image protocol, pairs any cell evaluated under a larger image budget with
-its default-budget cell and any cell evaluated on the RL canvas with its original-image cell,
+its default-budget cell and any cell evaluated on the RL canvas or on images upscaled to the
+budget with its original-image cell,
 pairs each arm of a [transfers.<set>] with its reference on every listed test set,
 and writes results/paired-deltas.json, which the report turns into tables. Needs the
 predictions beside the records, which stay local.
@@ -49,7 +50,8 @@ def comparisons() -> list[dict]:
 
 def resolution_contrasts() -> list[dict]:
     """Each cell evaluated under a larger image budget, paired with its default-budget cell,
-    and each cell evaluated on the RL canvas, paired with its original-image cell."""
+    and each cell evaluated on the RL canvas or on upscaled images, paired with its
+    original-image cell."""
     cells = load_cells(RECORDS_DIR, DATA_DIR)
     rows = []
     for cell, record in cells.items():
@@ -62,6 +64,10 @@ def resolution_contrasts() -> list[dict]:
             kind, change = "canvas", "on the RL canvas"
             images = {"reference_max_pixels": MAX_PIXELS,
                       "canvas_size": record.protocol["canvas_size"]}
+        elif cell.image_mode == "upscaled":
+            reference = cells.get(cell._replace(image_mode="original"))
+            kind, change = "upscaled", "upscaled to the budget"
+            images = {"reference_max_pixels": MAX_PIXELS, "candidate_max_pixels": MAX_PIXELS}
         else:
             continue
         if reference is None:

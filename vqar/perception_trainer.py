@@ -21,6 +21,10 @@ from trl import GRPOTrainer
 MASK_RATIO = 0.6  # PAPO's patch masking ratio
 MERGE_GROUP = 4  # Qwen-VL patches arrive in consecutive groups of spatial_merge_size ** 2
 KL_CAP = 2.0  # nats per token
+# The multimodal inputs GRPOTrainer._compute_loss forwards besides pixel_values.
+VISION_KEYS = ("image_grid_thw", "num_images", "pixel_attention_mask", "spatial_shapes",
+               "num_tiles", "image_sizes", "token_type_ids", "mm_token_type_ids",
+               "image_position_ids")
 
 
 def mask_patches(pixel_values: torch.Tensor, ratio: float, generator: torch.Generator,
@@ -44,9 +48,12 @@ class PerceptionGRPOTrainer(GRPOTrainer):
     def _compute_loss(self, model, inputs):
         loss = super()._compute_loss(model, inputs)
         pixel_values = inputs.get("pixel_values")
-        reference = inputs.get("old_per_token_logps")
-        if self.perception_coef == 0 or pixel_values is None or reference is None:
+        if self.perception_coef == 0 or pixel_values is None:
             return loss
+        reference = inputs.get("old_per_token_logps")
+        if reference is None:
+            raise ValueError("the perception loss needs old_per_token_logps: train with vLLM "
+                             "and its importance-sampling correction on")
         prompt_ids, completion_ids = inputs["prompt_ids"], inputs["completion_ids"]
         mask = inputs["completion_mask"]
         masked_logps, _, _ = self._get_per_token_logps_and_entropies(
@@ -55,8 +62,7 @@ class PerceptionGRPOTrainer(GRPOTrainer):
             torch.cat([inputs["prompt_mask"], mask], dim=1),
             completion_ids.size(1),
             pixel_values=mask_patches(pixel_values, MASK_RATIO, self._mask_generator),
-            image_grid_thw=inputs.get("image_grid_thw"),
-            num_images=inputs.get("num_images"),
+            **{key: inputs.get(key) for key in VISION_KEYS},
         )
         per_token = (reference - masked_logps).clamp(max=KL_CAP)
         kl = (per_token * mask).sum() / mask.sum().clamp(min=1.0)

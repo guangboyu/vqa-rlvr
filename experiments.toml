@@ -933,3 +933,86 @@ prompt = "short"
 tier = "full"
 base = "base8"
 models = ["slk-sft8", "slk-short8-base-e1", "slk-short8-sft-e1"]
+
+# Vision-side options on SLAKE (2026-10-12), 2B, declared before training, one change each
+# against the recorded recipe: SFT with LoRA on the vision blocks and mergers (slk-sft2-vis) and
+# SFT on images upscaled to the pixel budget (slk-sft2-up) against slk-sft2; short-prompt GRPO
+# for one epoch on upscaled images (slk-short2-base-e1-up) and with the perception loss at 0.02
+# (slk-short2-base-e1-papo) against slk-short2-base-e1. Read on SLAKE's test set, on the unseen
+# OmniMedVQA and PathVQA test sets, and for reliance on the image (black and swapped cells).
+# Expected: upscaling and vision LoRA help SLAKE (small images, a domain the encoder saw
+# little); the perception loss raises reliance on the image; no expectation for accuracy.
+[[arms]]
+label = "slk-sft2-vis"
+name = "SFT 2B + vision LoRA (SLAKE)"
+model = "checkpoints/merged/slk_sft2_vis"
+
+[[arms]]
+label = "slk-sft2-up"
+name = "SFT 2B, upscaled images (SLAKE)"
+model = "checkpoints/merged/slk_sft2_up"
+
+[[arms]]
+label = "slk-short2-base-e1-up"
+name = "Instruct → short-prompt GRPO, upscaled images (SLAKE, 1 epoch)"
+model = "checkpoints/merged/slk_short2_base_e1_up"
+
+[[arms]]
+label = "slk-short2-base-e1-papo"
+name = "Instruct → short-prompt GRPO + perception loss (SLAKE, 1 epoch)"
+model = "checkpoints/merged/slk_short2_base_e1_papo"
+
+[pilots.slake-vision]
+dataset = "slake"
+arms = ["base2", "slk-sft2", "slk-sft2-vis", "slk-sft2-up", "slk-short2-base-e1",
+        "slk-short2-base-e1-up", "slk-short2-base-e1-papo"]
+
+[[pilots.slake-vision.comparisons]]
+reference = "slk-sft2"
+candidates = ["slk-sft2-vis", "slk-sft2-up"]
+
+[[pilots.slake-vision.comparisons]]
+reference = "slk-short2-base-e1"
+candidates = ["slk-short2-base-e1-up", "slk-short2-base-e1-papo"]
+
+# The vision-side models against Instruct 2B on SLAKE and the two unseen medical sets.
+[transfers.vision]
+# OmniMedVQA's official scorer counts only option letters; the normalized one also accepts
+# the option text, so it measures the answer's content on every medical set.
+scorer = "normalized"
+reference = "base2"
+datasets = ["slake", "omnimedvqa", "pathvqa"]
+
+[[transfers.vision.rows]]
+arm = "slk-sft2"
+trained_on = "SLAKE"
+
+[[transfers.vision.rows]]
+arm = "slk-sft2-vis"
+trained_on = "SLAKE (+ vision LoRA)"
+
+[[transfers.vision.rows]]
+arm = "slk-sft2-up"
+trained_on = "SLAKE (upscaled)"
+
+[[transfers.vision.rows]]
+arm = "slk-short2-base-e1"
+trained_on = "SLAKE"
+
+[[transfers.vision.rows]]
+arm = "slk-short2-base-e1-up"
+trained_on = "SLAKE (upscaled)"
+
+[[transfers.vision.rows]]
+arm = "slk-short2-base-e1-papo"
+trained_on = "SLAKE (+ perception loss)"
+
+# Reliance on the image, distance moved and calibration for the vision-side models; shares the
+# SLAKE KL file with the first set, so kl_to_base runs over the union of their models.
+[[beyond_accuracy]]
+dataset = "slake"
+prompt = "short"
+tier = "full"
+base = "base2"
+models = ["slk-sft2", "slk-sft2-vis", "slk-sft2-up", "slk-short2-base-e1",
+          "slk-short2-base-e1-up", "slk-short2-base-e1-papo"]

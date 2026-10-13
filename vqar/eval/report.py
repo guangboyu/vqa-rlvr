@@ -345,22 +345,26 @@ def declared(rows: list[dict], comparisons: list[tuple[str, str]],
 
 
 def image_change(row: dict) -> str:
-    """Megapixels before → after; the RL canvas is a padded square of the named side."""
+    """Megapixels before → after; the RL canvas is a padded square of the named side, and
+    upscaling resizes every image, small ones up, to the budget."""
     before = f"{row['reference_max_pixels'] / 1e6:.2f} → "
     if row["contrast"] == "canvas":
         size = row["canvas_size"]
         return before + f"{size * size / 1e6:.2f} ({size}×{size} RL canvas)"
+    if row["contrast"] == "upscaled":
+        after = row["candidate_max_pixels"] / 1e6
+        return f"≤ {row['reference_max_pixels'] / 1e6:.2f} → {after:.2f} (upscaled)"
     return before + f"{row['candidate_max_pixels'] / 1e6:.2f}"
 
 
 def resolution_table(arms: list[Arm], rows: list[dict]) -> str:
-    """The same arm under another image budget or on the RL canvas: the change, with its
-    paired interval."""
+    """The same arm under another image budget, on the RL canvas or on upscaled images: the
+    change, with its paired interval."""
     names = {arm.label: arm.name for arm in arms}
     lines = [[names.get(r["candidate"], r["candidate"]), DATASETS[r["dataset"]].display_name,
               r["prompt"], r["variant"], image_change(r),
               f"{r['delta']:+.2f} [{r['low']:+.2f}, {r['high']:+.2f}]"]
-             for r in rows if r.get("contrast") in ("max_pixels", "canvas")]
+             for r in rows if r.get("contrast") in ("max_pixels", "canvas", "upscaled")]
     if not lines:
         return "No other image budget or RL canvas has been evaluated yet.\n"
     return table(["Arm", "Dataset", "Prompt", "Scorer", "Megapixels", "Change"], lines, 4)

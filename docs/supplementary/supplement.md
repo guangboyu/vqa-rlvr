@@ -1475,3 +1475,49 @@ points. On OmniMedVQA, which the 8B SFT model was not trained on either, SFT gai
 normalized and RL 0.4: there SFT's domain knowledge transfers and RL's does not. On OmniMedVQA's
 official letter scorer the order flips (SFT −6.4, RL −1.0), because SFT on SLAKE's short labels
 makes the model answer multiple-choice questions with text instead of letters.
+
+## Vision-side options (SLAKE)
+
+Every model above trains only the language model; the vision encoder and its merger stay
+frozen, and SLAKE's images (240 to 1024 pixels square) reach the encoder at 56 to 768 vision
+tokens. Three options act on the vision side, each one change against a recorded 2B recipe,
+declared in `experiments.toml` before training (`[pilots.slake-vision]`): SFT with LoRA also
+on the vision blocks and merger (`--vision-lora`), SFT and short-prompt GRPO on images
+upscaled to the pixel budget (`--image-upscale`, `--image-fit upscale`), and short-prompt GRPO
+with a perception loss after PAPO (`--perception-coef 0.02`, `vqar/perception_trainer.py`),
+which rewards answers that change when 60% of the image's patches are masked.
+
+The arms on SLAKE's test set, and their differences from the recipe each one changes:
+
+<!-- report:slake-vision-pilot -->
+| Arm | Prompt | Accuracy | closed answers | open answers | Output tokens |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Instruct 2B | short | 49.76 (49.76) | 75.96 | 32.87 | 3 |
+| Instruct 2B | reasoning | 40.34 (40.53) | 57.69 | 29.15 | 138 |
+| SFT 2B (SLAKE) | short | 74.84 (74.84) | 82.93 | 69.61 | 3 |
+| SFT 2B (SLAKE) | reasoning | 69.18 (69.27) | 81.73 | 61.09 | 25 |
+| SFT 2B + vision LoRA (SLAKE) | short | — | — | — | — |
+| SFT 2B + vision LoRA (SLAKE) | reasoning | — | — | — | — |
+| SFT 2B, upscaled images (SLAKE) | short | — | — | — | — |
+| SFT 2B, upscaled images (SLAKE) | reasoning | — | — | — | — |
+| Instruct → short-prompt GRPO (SLAKE, 1 epoch) | short | 65.60 (65.60) | 80.05 | 56.28 | 2 |
+| Instruct → short-prompt GRPO (SLAKE, 1 epoch) | reasoning | 52.78 (52.87) | 67.31 | 43.41 | 127 |
+| Instruct → short-prompt GRPO, upscaled images (SLAKE, 1 epoch) | short | — | — | — | — |
+| Instruct → short-prompt GRPO, upscaled images (SLAKE, 1 epoch) | reasoning | — | — | — | — |
+| Instruct → short-prompt GRPO + perception loss (SLAKE, 1 epoch) | short | — | — | — | — |
+| Instruct → short-prompt GRPO + perception loss (SLAKE, 1 epoch) | reasoning | — | — | — | — |
+<!-- /report:slake-vision-pilot -->
+
+<!-- report:slake-vision-pilot-deltas -->
+No paired comparison has been computed yet.
+<!-- /report:slake-vision-pilot-deltas -->
+
+Each model against Instruct 2B on SLAKE and on the two unseen medical sets (normalized):
+
+<!-- report:vision-transfer-short -->
+No transfer comparison has been computed yet.
+<!-- /report:vision-transfer-short -->
+
+<!-- report:vision-transfer-reasoning -->
+No transfer comparison has been computed yet.
+<!-- /report:vision-transfer-reasoning -->
