@@ -358,45 +358,72 @@ One model trained on both families at once did not learn when to reason: it kept
 reasoning for 1,750 updates, then dropped reasoning everywhere
 ([supplement](supplement.md#one-model-on-both-families)).
 
-## Medical images: RL after SFT beats SFT and keeps more of what SFT loses
+## Medical images: SFT then RL is the best model, and RL forgets less
 
 Two medical datasets passed the screen ([evaluation](evaluation.md#dataset-screening)): SLAKE
-(radiology questions, English, 4,919 training questions) and OmniMedVQA (the open-access
-multiple-choice half, re-split by image). Each got the ChartQA pilot's recipe at 2B: one SFT
-epoch, and 300 updates of short-prompt and of reasoning GRPO from Instruct, the correctness
-reward using each dataset's normalized scorer; SLAKE's short-prompt arm then ran for one full
-epoch (1,229 updates), the exposure SFT had, and once more from the SLAKE SFT model (SFT →
-RL, the usual order: SFT teaches the domain's answers, RL then trains on the model's own
-samples). Every model was also scored on the other medical test sets and on PathVQA, which
-none trained on. Short prompt, each model minus Instruct
-2B, official scorer, 95% intervals over questions (`[transfers.medical]`):
+(radiology questions, English, 4,919 training questions) and OmniMedVQA (multiple choice across
+imaging types). OmniMedVQA is also split a second way, with whole source collections held out
+for testing (1,156 test questions from 17 collections across X-ray, microscopy, dermoscopy, CT
+and fundus images), because its image-level split lets SFT reach 99.7%. Each dataset got the
+same three treatments: one SFT epoch, short-prompt GRPO from Instruct, and SFT followed by the
+same GRPO; SLAKE at 2B and 8B (one epoch each, 1,229 updates of GRPO, the 8B runs on the
+cluster's RTX 6000s), the held-out collections at 2B with GRPO on the SLAKE budget and SFT both
+on exactly the questions GRPO drew and for a full epoch. The correctness reward is each
+dataset's normalized scorer. Every model was also scored on the other medical test sets and on
+PathVQA, which none trained on. Short prompt, each model minus its Instruct start, normalized
+scorer (OmniMedVQA's official scorer counts only option letters), 95% intervals over
+questions. SLAKE and the image-level OmniMedVQA split at 2B:
 
 <!-- report:medical-transfer-short -->
 | Arm | Trained on | SLAKE (English) | OmniMedVQA (open access) | PathVQA |
 | --- | --- | ---: | ---: | ---: |
-| SFT 2B (SLAKE) | SLAKE | +25.07 [+21.87, +28.18] | +21.92 [+20.90, +22.95] | -1.83 [-2.83, -0.85] |
-| Instruct → short-prompt GRPO (SLAKE, 1 epoch) | SLAKE | +15.83 [+13.10, +18.47] | +20.78 [+19.90, +21.67] | -1.00 [-1.79, -0.21] |
-| SFT → short-prompt GRPO (SLAKE, 1 epoch) | SLAKE (SFT, then RL) | +26.39 [+23.37, +29.50] | +22.35 [+21.34, +23.36] | -0.94 [-1.85, -0.04] |
-| SFT 2B (OmniMedVQA) | OmniMedVQA | -6.88 [-9.33, -4.43] | +52.45 [+51.40, +53.48] | -3.42 [-4.23, -2.65] |
-| Instruct → short-prompt GRPO (OmniMedVQA) | OmniMedVQA | -0.75 [-1.70, +0.19] | +31.05 [+30.07, +32.04] | +0.16 [-0.28, +0.61] |
-| SFT 2B | VQAv2 + GQA | +1.13 [-0.66, +2.92] | +22.02 [+21.09, +22.94] | — |
-| Instruct → GRPO (ChartQA, 1 epoch) | ChartQA | +0.09 [-0.75, +1.04] | +16.26 [+15.49, +17.05] | — |
+| SFT 2B (SLAKE) | SLAKE | +25.07 [+21.87, +28.18] | -0.29 [-0.99, +0.38] | -1.83 [-2.83, -0.85] |
+| Instruct → short-prompt GRPO (SLAKE, 1 epoch) | SLAKE | +15.83 [+13.10, +18.47] | +0.03 [-0.34, +0.40] | -0.97 [-1.76, -0.18] |
+| SFT → short-prompt GRPO (SLAKE, 1 epoch) | SLAKE (SFT, then RL) | +26.58 [+23.56, +29.69] | +0.22 [-0.45, +0.89] | -0.95 [-1.86, -0.04] |
+| SFT 2B (OmniMedVQA) | OmniMedVQA | -6.88 [-9.33, -4.43] | +30.21 [+29.23, +31.18] | -3.39 [-4.20, -2.62] |
+| Instruct → short-prompt GRPO (OmniMedVQA) | OmniMedVQA | -0.75 [-1.70, +0.19] | +10.06 [+9.38, +10.76] | +0.18 [-0.27, +0.62] |
+| SFT 2B | VQAv2 + GQA | +1.13 [-0.66, +2.92] | +1.82 [+1.31, +2.31] | — |
+| Instruct → GRPO (ChartQA, 1 epoch) | ChartQA | +0.09 [-0.75, +1.04] | +0.30 [+0.07, +0.55] | — |
 <!-- /report:medical-transfer-short -->
 
-RL after SFT gives the best SLAKE model. It scores 76.2, 1.3 points above SFT ([+0.0, +2.7];
-normalized +1.5 [+0.2, +2.9]) and 26.4 above Instruct, and it wins back half of SFT's loss on
-unseen PathVQA (+0.9 over SFT [+0.4, +1.3], level with RL from Instruct). RL alone beats the
-base model in domain and holds it everywhere else; SFT alone wins in domain and loses
-elsewhere. On SLAKE, one epoch of short-prompt GRPO gains 15.8 points over Instruct
-([+13.1, +18.5]) and the full epoch adds 5.2 over the 300-update pilot. One SFT epoch gains
-25.1, so in domain SFT stays 9.2 points ahead ([−11.6, −6.9]). Off its training data the order
-reverses. SFT on OmniMedVQA costs 6.9 points on SLAKE and 3.4 on PathVQA, where RL trained on
-the same questions stays within 0.8 of Instruct, so RL leads SFT by 6.1 ([+3.8, +8.5]) and 3.6
-([+2.8, +4.4]). SFT on SLAKE costs 1.8 points on PathVQA and RL 1.0, a lead of 0.8 for RL
-([+0.2, +1.5]). On OmniMedVQA the official scorer counts only option letters, so its column
-mostly measures whether a model answers with the letter: under the normalized scorer no
-SLAKE-trained model differs from Instruct there by more than 0.4 points. OmniMedVQA's own
-split is too easy to measure generalization: SFT reaches 99.7% on its test images, which come
-from the same source collections as its training images. Neither dataset releases patient IDs,
-so held-out scores may run optimistic; one training seed. The pilot tables are in the
-[supplement](supplement.md#medical-pilots-in-detail).
+SLAKE at 8B:
+
+<!-- report:medical8-transfer-short -->
+| Arm | Trained on | SLAKE (English) | OmniMedVQA (open access) | PathVQA |
+| --- | --- | ---: | ---: | ---: |
+| SFT 8B (SLAKE) | SLAKE | +19.13 [+16.49, +21.77] | +2.05 [+1.45, +2.68] | -0.82 [-1.47, -0.19] |
+| Instruct 8B → short-prompt GRPO (SLAKE, 1 epoch) | SLAKE | +10.27 [+8.29, +12.25] | +0.40 [+0.06, +0.74] | +0.60 [+0.25, +0.94] |
+| SFT 8B → short-prompt GRPO (SLAKE, 1 epoch) | SLAKE (SFT, then RL) | +20.17 [+17.34, +23.00] | +1.63 [+0.99, +2.27] | +0.31 [-0.40, +1.01] |
+<!-- /report:medical8-transfer-short -->
+
+OmniMedVQA with held-out collections at 2B:
+
+<!-- report:collections-transfer-short -->
+| Arm | Trained on | OmniMedVQA (held-out collections) | SLAKE (English) | PathVQA |
+| --- | --- | ---: | ---: | ---: |
+| SFT 2B on the RL questions (OmniMedVQA collections) | OmniMedVQA collections (4,916 questions) | +8.56 [+6.14, +10.99] | -3.02 [-5.47, -0.66] | -3.01 [-3.79, -2.22] |
+| Instruct → short-prompt GRPO (OmniMedVQA collections) | OmniMedVQA collections (same 4,916) | +4.50 [+2.68, +6.40] | -2.45 [-4.05, -0.85] | -1.79 [-2.62, -0.95] |
+| SFT 2B (OmniMedVQA collections) | OmniMedVQA collections (62,678) | +10.47 [+7.96, +12.98] | -6.22 [-8.67, -3.77] | -4.08 [-4.90, -3.26] |
+| SFT → short-prompt GRPO (OmniMedVQA collections) | OmniMedVQA collections (SFT, then RL) | +10.99 [+8.48, +13.41] | -6.79 [-9.24, -4.34] | -4.03 [-4.84, -3.23] |
+<!-- /report:collections-transfer-short -->
+
+SFT followed by RL is the best medical model in every setting. On SLAKE it scores 76.2 at 2B
+and 78.2 at 8B, 1.3 [+0.0, +2.7] and 1.0 [−0.3, +2.5] points above SFT; on the held-out
+collections it scores 85.6, 0.5 above SFT [+0.1, +1.0] and 11.0 above Instruct. Each margin
+over SFT is small and the 8B interval includes zero, but all three point the same way, and on
+ChartQA the same order added 13.5 points.
+
+RL alone gains less in domain, 15.8 points over Instruct on SLAKE at 2B and 10.3 at 8B, nine
+points below SFT at both sizes, but it loses less on medical data it did not train on. On
+PathVQA every SFT model scores below its Instruct start (−0.8 to −4.1 points) while RL from
+Instruct stays within 1.8 of it: RL leads SFT there by 0.8 [+0.2, +1.5] trained on SLAKE at 2B,
+1.4 [+0.8, +2.0] at 8B, and 2.3 [+1.2, +3.4] trained on the held-out-collection split, 1.2
+[+0.5, +2.0] against SFT on the same questions. SFT on OmniMedVQA costs 6.9 points on SLAKE
+where RL trained on it costs 0.8. Part of SFT's loss comes from seeing more data:
+matched to RL's questions, SFT costs 3.0 points on SLAKE and RL 2.5. How much of SFT's off-domain loss
+RL after SFT wins back varies: half on PathVQA from SLAKE at 2B, all of it at 8B, none from the
+held-out collections. The edge is about forgetting, not about learning the task better: on
+OmniMedVQA collections never trained on, SFT beats RL even with the same questions, and at 8B,
+SFT on SLAKE transfers to OmniMedVQA better than RL does
+([supplement](supplement.md#medical-pilots-in-detail)). Neither dataset releases patient IDs;
+one training seed.

@@ -100,7 +100,8 @@ def pilot_comparisons() -> list[dict]:
 
 def transfer_comparisons() -> list[dict]:
     """Each arm of every [transfers.<set>] minus its reference on every listed test set (full
-    test role, both prompts, official scorer), in and out of its training data."""
+    test role, both prompts, the set's scorer: official unless it names another), in and out of
+    its training data."""
     matrix = tomllib.loads((ROOT / "experiments.toml").read_text())
     arms = {arm["label"]: Arm(**arm) for arm in matrix["arms"]}
     rows = []
@@ -116,11 +117,12 @@ def transfer_comparisons() -> list[dict]:
                         records.get((row["arm"], protocol)))
                 if None in pair:
                     continue
-                scores = [question_scores(r.predictions_path(), "official") for r in pair]
+                variant = spec.get("scorer", "official")
+                scores = [question_scores(r.predictions_path(), variant) for r in pair]
                 rows.append({"transfer": row["trained_on"], "transfer_set": name,
                              "reference": spec["reference"], "candidate": row["arm"],
                              "dataset": protocol.dataset, "prompt": protocol.prompt,
-                             "variant": "official", **paired_bootstrap(*scores)})
+                             "variant": variant, **paired_bootstrap(*scores)})
     return rows
 
 

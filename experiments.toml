@@ -149,6 +149,50 @@ label = "slk-grpo2-base"
 name = "Instruct → GRPO (SLAKE)"
 model = "checkpoints/merged/slk_grpo2_base"
 
+# 8B (2026-10-11): the Part 1 8B recipe on SLAKE (bf16 LoRA, 96 GB profile, free cluster RTX
+# 6000s): one SFT epoch, and one epoch of short-prompt GRPO from Instruct 8B and from the SFT model.
+# Commands: runs/medical-8b-20261011/ (cluster_submit.sh, local_finish.sh).
+[[arms]]
+label = "slk-sft8"
+name = "SFT 8B (SLAKE)"
+model = "checkpoints/merged/slk_sft8"
+gpu_memory_utilization = 0.88
+
+[[arms]]
+label = "slk-short8-base-e1"
+name = "Instruct 8B → short-prompt GRPO (SLAKE, 1 epoch)"
+model = "checkpoints/merged/slk_short8_base_e1"
+gpu_memory_utilization = 0.88
+
+[[arms]]
+label = "slk-short8-sft-e1"
+name = "SFT 8B → short-prompt GRPO (SLAKE, 1 epoch)"
+model = "checkpoints/merged/slk_short8_sft_e1"
+gpu_memory_utilization = 0.88
+
+# OmniMedVQA with held-out source collections (2026-10-11): short-prompt GRPO from Instruct for the
+# SLAKE budget (1,229 updates, 4,916 questions), SFT on exactly those questions and for a full
+# epoch (62,678), and SFT -> GRPO for the same budget. Commands: runs/omnimedx-20261011/run.sh.
+[[arms]]
+label = "omx-short2-base"
+name = "Instruct → short-prompt GRPO (OmniMedVQA collections)"
+model = "checkpoints/merged/omx_short2_base"
+
+[[arms]]
+label = "omx-sft2-matched"
+name = "SFT 2B on the RL questions (OmniMedVQA collections)"
+model = "checkpoints/merged/omx_sft2_matched"
+
+[[arms]]
+label = "omx-sft2"
+name = "SFT 2B (OmniMedVQA collections)"
+model = "checkpoints/merged/omx_sft2"
+
+[[arms]]
+label = "omx-short2-sft"
+name = "SFT → short-prompt GRPO (OmniMedVQA collections)"
+model = "checkpoints/merged/omx_short2_sft"
+
 [[arms]]
 label = "omv-sft2"
 name = "SFT 2B (OmniMedVQA)"
@@ -552,6 +596,9 @@ trained_on = "VQAv2 + GQA + ChartQA"
 # The medical models on each other's test sets and on PathVQA (2026-10-11), with the general
 # models for reference, against Instruct 2B.
 [transfers.medical]
+# OmniMedVQA's official scorer counts only option letters; the normalized one also accepts
+# the option text, so it measures the answer's content on every medical set.
+scorer = "normalized"
 reference = "base2"
 datasets = ["slake", "omnimedvqa", "pathvqa"]
 
@@ -582,6 +629,50 @@ trained_on = "VQAv2 + GQA"
 [[transfers.medical.rows]]
 arm = "cqa-grpo2-base-e1"
 trained_on = "ChartQA"
+
+# The 8B SLAKE models against Instruct 8B.
+[transfers.medical8]
+# OmniMedVQA's official scorer counts only option letters; the normalized one also accepts
+# the option text, so it measures the answer's content on every medical set.
+scorer = "normalized"
+reference = "base8"
+datasets = ["slake", "omnimedvqa", "pathvqa"]
+
+[[transfers.medical8.rows]]
+arm = "slk-sft8"
+trained_on = "SLAKE"
+
+[[transfers.medical8.rows]]
+arm = "slk-short8-base-e1"
+trained_on = "SLAKE"
+
+[[transfers.medical8.rows]]
+arm = "slk-short8-sft-e1"
+trained_on = "SLAKE (SFT, then RL)"
+
+# The held-out-collection models against Instruct 2B.
+[transfers.collections]
+# OmniMedVQA's official scorer counts only option letters; the normalized one also accepts
+# the option text, so it measures the answer's content on every medical set.
+scorer = "normalized"
+reference = "base2"
+datasets = ["omnimedx", "slake", "pathvqa"]
+
+[[transfers.collections.rows]]
+arm = "omx-sft2-matched"
+trained_on = "OmniMedVQA collections (4,916 questions)"
+
+[[transfers.collections.rows]]
+arm = "omx-short2-base"
+trained_on = "OmniMedVQA collections (same 4,916)"
+
+[[transfers.collections.rows]]
+arm = "omx-sft2"
+trained_on = "OmniMedVQA collections (62,678)"
+
+[[transfers.collections.rows]]
+arm = "omx-short2-sft"
+trained_on = "OmniMedVQA collections (SFT, then RL)"
 
 # The mixture against each single-family model, fixed before it trained.
 [matrices.mixture]
@@ -650,6 +741,51 @@ candidates = ["slk-short2-base", "slk-short2-base-e1", "slk-short2-sft-e1"]
 [[pilots.pathvqa.comparisons]]
 reference = "omv-sft2"
 candidates = ["omv-short2-base"]
+
+[pilots.omnimedx]
+dataset = "omnimedx"
+arms = ["base2", "omx-sft2-matched", "omx-short2-base", "omx-sft2", "omx-short2-sft"]
+
+[[pilots.omnimedx.comparisons]]
+reference = "base2"
+candidates = ["omx-sft2-matched", "omx-short2-base", "omx-sft2", "omx-short2-sft"]
+
+[[pilots.omnimedx.comparisons]]
+reference = "omx-sft2-matched"
+candidates = ["omx-short2-base"]
+
+[[pilots.omnimedx.comparisons]]
+reference = "omx-sft2"
+candidates = ["omx-short2-base", "omx-short2-sft"]
+
+# The 8B SLAKE models on each medical test set, against Instruct 8B and the 8B SFT model.
+[pilots.slake8]
+dataset = "slake"
+arms = ["base8", "slk-sft8", "slk-short8-base-e1", "slk-short8-sft-e1"]
+
+[[pilots.slake8.comparisons]]
+reference = "base8"
+candidates = ["slk-sft8", "slk-short8-base-e1", "slk-short8-sft-e1"]
+
+[[pilots.slake8.comparisons]]
+reference = "slk-sft8"
+candidates = ["slk-short8-base-e1", "slk-short8-sft-e1"]
+
+[pilots.pathvqa8]
+dataset = "pathvqa"
+arms = ["base8", "slk-sft8", "slk-short8-base-e1", "slk-short8-sft-e1"]
+
+[[pilots.pathvqa8.comparisons]]
+reference = "slk-sft8"
+candidates = ["slk-short8-base-e1", "slk-short8-sft-e1"]
+
+[pilots.omnimedvqa8]
+dataset = "omnimedvqa"
+arms = ["base8", "slk-sft8", "slk-short8-base-e1", "slk-short8-sft-e1"]
+
+[[pilots.omnimedvqa8.comparisons]]
+reference = "slk-sft8"
+candidates = ["slk-short8-base-e1", "slk-short8-sft-e1"]
 
 # The corrected campaign, on the history page.
 [matrices.corrected]
