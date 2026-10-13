@@ -987,6 +987,7 @@ have none.
 | SFT → GRPO (Sep 13) | reasoning | black | 57.5 → 26.1 (80%) | 53.9 → 28.1 (65%) | 97.7 → 0.0 (100%) | 78.2 → 2.0 (98%) |
 | SFT → GRPO (Sep 13) | reasoning | swapped | 57.5 → 27.4 (80%) | 53.9 → 21.1 (76%) | 97.7 → 16.4 (84%) | 78.2 → 1.0 (99%) |
 | Instruct 8B | short | black | — | — | — | 83.8 → 6.3 (94%) |
+| Instruct 8B | short | swapped | — | — | — | — |
 <!-- /report:interventions -->
 
 ## What each RL run trained on
@@ -1475,6 +1476,126 @@ points. On OmniMedVQA, which the 8B SFT model was not trained on either, SFT gai
 normalized and RL 0.4: there SFT's domain knowledge transfers and RL's does not. On OmniMedVQA's
 official letter scorer the order flips (SFT −6.4, RL −1.0), because SFT on SLAKE's short labels
 makes the model answer multiple-choice questions with text instead of letters.
+
+## Beyond accuracy
+
+Three measurements, declared in `experiments.toml` (`[[beyond_accuracy]]`) with their expected
+outcomes before they ran, each on the task the models were trained on (test role; VQAv2's first
+1,000 questions) under the prompt they were trained with:
+
+- **How far training moved the model:** the forward KL from the starting model,
+  E[log π₀(y|x) − log π(y|x)] over 8 responses π₀ samples at T = 1 for each of the first 500
+  questions, summed over a response's tokens (`scripts/kl_to_base.py`; vLLM scores each trained
+  model on exactly the sampled tokens). The starting model scored against its own samples is the
+  check: 0.00–0.01 nats under the short prompt and 0.13 under the reasoning prompt, where 200-token
+  responses accumulate the small numerical differences between vLLM's sampling and scoring
+  passes. Responses whose text does not re-tokenize to the sampled tokens are left out: 0–5 of
+  4,000 under the short prompt, 66 under the reasoning prompt. Because the KL is summed over
+  tokens, it compares models within a setting, not across prompts.
+- **How much the answers depend on the image:** accuracy with a black image (questions the model
+  answers without seeing anything), its change from the starting model's, and the accuracy lost
+  with another test question's image.
+- **Whether confidence tracks accuracy:** the majority answer of the first 8 samples at T = 1,
+  with the share of samples giving it as the confidence; the expected calibration error over 10
+  equal-width bins, and the accuracy on the half and on the 80% of questions the model is most
+  sure of.
+
+`scripts/beyond_accuracy.py` writes [`results/beyond-accuracy.json`](../../results/beyond-accuracy.json);
+all accuracies use the normalized scorer, the training reward's.
+
+<!-- report:beyond-accuracy -->
+| Setting | Model | Accuracy | KL from start (nats) | Black-image accuracy | Black image, change from start | Lost, swapped image |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| SLAKE (English), short | Instruct 2B | 49.76 | 0.00 [-0.00, 0.00] | 25.07 | +0.00 [+0.00, +0.00] | +7.45 [+5.18, +9.80] |
+| SLAKE (English), short | SFT 2B (SLAKE) | 74.84 | 10.85 [10.43, 11.26] | 28.75 | +3.68 [+1.70, +5.75] | +12.91 [+10.27, +15.55] |
+| SLAKE (English), short | Instruct → short-prompt GRPO (SLAKE, 1 epoch) | 65.60 | 2.14 [1.90, 2.38] | 24.79 | -0.28 [-1.32, +0.75] | +8.48 [+6.13, +10.84] |
+| SLAKE (English), short | SFT → short-prompt GRPO (SLAKE, 1 epoch) | 76.34 | 16.60 [15.98, 17.22] | 31.57 | +6.50 [+4.52, +8.58] | +13.38 [+10.84, +16.02] |
+| OmniMedVQA (held-out collections), short | Instruct 2B | 74.57 | 0.01 [0.00, 0.01] | 43.34 | +0.00 [+0.00, +0.00] | +29.15 [+25.95, +32.36] |
+| OmniMedVQA (held-out collections), short | SFT 2B on the RL questions (OmniMedVQA collections) | 83.13 | 14.11 [13.23, 15.01] | 58.74 | +15.40 [+12.20, +18.77] | +23.88 [+21.19, +26.73] |
+| OmniMedVQA (held-out collections), short | Instruct → short-prompt GRPO (OmniMedVQA collections) | 79.07 | 0.90 [0.69, 1.12] | 46.54 | +3.20 [+0.95, +5.45] | +28.98 [+25.78, +32.27] |
+| OmniMedVQA (held-out collections), short | SFT 2B (OmniMedVQA collections) | 85.03 | 8.82 [8.24, 9.42] | 67.30 | +23.96 [+20.67, +27.34] | +19.46 [+16.87, +22.06] |
+| OmniMedVQA (held-out collections), short | SFT → short-prompt GRPO (OmniMedVQA collections) | 85.55 | 10.10 [9.42, 10.81] | 67.30 | +23.96 [+20.67, +27.34] | +20.50 [+17.91, +23.10] |
+| VQAv2, short | Instruct 2B | 76.19 | 0.00 [0.00, 0.01] | 32.75 | +0.00 [+0.00, +0.00] | +44.26 [+41.07, +47.43] |
+| VQAv2, short | SFT on the 4,000 RL questions | 77.75 | 0.14 [0.12, 0.16] | 34.64 | +1.89 [+0.58, +3.22] | +46.94 [+43.86, +49.97] |
+| VQAv2, short | Instruct → short-prompt GRPO | 76.99 | 0.23 [0.19, 0.28] | 32.78 | +0.03 [-1.05, +1.12] | +45.32 [+42.15, +48.48] |
+| VQAv2, short | SFT 2B | 78.75 | 0.20 [0.17, 0.24] | 34.53 | +1.78 [+0.37, +3.25] | +47.37 [+44.30, +50.45] |
+| VQAv2, short | SFT → short-prompt GRPO | 78.46 | 0.49 [0.40, 0.59] | 34.34 | +1.59 [+0.11, +3.08] | +47.25 [+44.17, +50.40] |
+| ChartQA (human), short | Instruct 2B | 66.24 | 0.01 [-0.00, 0.02] | 13.44 | +0.00 [+0.00, +0.00] | +53.20 [+50.24, +56.16] |
+| ChartQA (human), short | SFT 2B (ChartQA) | 68.96 | 0.39 [0.33, 0.45] | 14.40 | +0.96 [-0.08, +2.00] | +56.40 [+53.52, +59.36] |
+| ChartQA (human), short | Instruct → short-prompt GRPO (ChartQA, 1 epoch) | 67.76 | 1.02 [0.87, 1.19] | 13.92 | +0.48 [-0.40, +1.36] | +54.96 [+51.92, +57.92] |
+| ChartQA (human), reasoning | Instruct 2B | 70.40 | 0.13 [0.11, 0.16] | 5.52 | +0.00 [+0.00, +0.00] | +62.88 [+60.08, +65.76] |
+| ChartQA (human), reasoning | Instruct → GRPO (ChartQA, 1 epoch) | 80.96 | 25.35 [24.66, 26.06] | 5.52 | +0.00 [-1.28, +1.28] | +72.16 [+69.52, +74.80] |
+| ChartQA (human), reasoning | SFT → GRPO (ChartQA, 1 epoch) | 80.56 | 18.78 [18.36, 19.19] | 5.28 | -0.24 [-1.52, +1.04] | +72.40 [+69.76, +75.04] |
+| SLAKE (English), short | Instruct 8B | 58.06 | 0.00 [-0.00, 0.00] | 25.16 | +0.00 [+0.00, +0.00] | +9.71 [+7.16, +12.35] |
+| SLAKE (English), short | SFT 8B (SLAKE) | 77.19 | 8.68 [8.27, 9.09] | 35.53 | +10.37 [+8.29, +12.54] | +13.95 [+11.50, +16.40] |
+| SLAKE (English), short | Instruct 8B → short-prompt GRPO (SLAKE, 1 epoch) | 68.33 | 1.40 [1.18, 1.65] | 25.54 | +0.38 [-0.85, +1.60] | +11.03 [+8.58, +13.48] |
+| SLAKE (English), short | SFT 8B → short-prompt GRPO (SLAKE, 1 epoch) | 78.23 | 12.25 [11.69, 12.78] | 36.00 | +10.84 [+8.39, +13.29] | +12.91 [+10.46, +15.46] |
+<!-- /report:beyond-accuracy -->
+
+**RL's gains come from the image.** With a black image, RL from Instruct answers as many
+questions as Instruct in five of the six settings (changes of −0.3 to +0.5 points, every
+interval including zero) and 3.2 more on the held-out OmniMedVQA collections. SFT answers more
+without the image in every setting it was trained in: +3.7 on SLAKE and +10.4 at 8B, +15.4 on
+the held-out collections trained on the same 4,916 questions as RL (+24.0 on the full training
+set), +1.8 to +1.9 on VQAv2, and +1.0 on ChartQA, significant in all but ChartQA. At 8B, 10.4 of
+SFT's 19.1-point gain on SLAKE is still there with a black image, against 0.4 of RL's 10.3. On the
+held-out collections, which are multiple choice, SFT's black-image accuracy rises more than its
+accuracy does (+15.4 against +8.6), and the gap between the real image and a black one shrinks
+from 31.2 points to 24.4 (17.7 after SFT on the full set): much of what SFT learned there is which
+options are likely. RL after SFT keeps what SFT learned, and on SLAKE at 2B adds to it (+6.5).
+The expectation declared for this measurement named no direction.
+
+**On medical data, RL moves the model five to sixteen times less than SFT.** The forward KL from
+Instruct is 2.1 nats for RL against 10.8 for SFT on SLAKE at 2B, 1.4 against 8.7 at 8B, and 0.9
+against 14.1 for SFT on the same held-out-collection questions (8.8 for SFT on the full set),
+as expected from RL's Razor (Shenfeld et al., 2025), which finds forgetting tracks this KL, and
+consistent with RL's smaller losses on unseen medical sets. The expectation held only where SFT
+moves the model far. On VQAv2 and on short-answer ChartQA, where SFT's labels are close to what
+Instruct already says, SFT moves the model less than RL does (0.14 and 0.20 against 0.23 nats on
+VQAv2, 0.39 against 1.02 on ChartQA); the declared expectation (RL below SFT) fails there.
+Reasoning-prompt RL on ChartQA moves the model 25.4 nats; the reasoning itself changes (162-token
+responses against Instruct's 205). RL after SFT moves the model further than SFT on every set
+where both were measured, since it starts from SFT.
+
+<!-- report:calibration -->
+| Setting | Model | Majority accuracy | Mean confidence | ECE | Accuracy, top 50% | Accuracy, top 80% |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| SLAKE (English), short | Instruct 2B | 49.5 | 74.2 | 24.7 | 74.9 | 59.6 |
+| SLAKE (English), short | SFT 2B (SLAKE) | 74.3 | 76.1 | 2.2 | 97.9 | 86.6 |
+| SLAKE (English), short | Instruct → short-prompt GRPO (SLAKE, 1 epoch) | 65.7 | 89.4 | 23.7 | 85.3 | 78.3 |
+| SLAKE (English), short | SFT → short-prompt GRPO (SLAKE, 1 epoch) | 76.1 | 89.1 | 13.1 | 92.3 | 87.3 |
+| OmniMedVQA (held-out collections), short | Instruct 2B | 74.0 | 69.8 | 7.5 | 86.9 | 81.2 |
+| OmniMedVQA (held-out collections), short | SFT 2B on the RL questions (OmniMedVQA collections) | 82.3 | 88.9 | 6.7 | 95.2 | 91.4 |
+| OmniMedVQA (held-out collections), short | Instruct → short-prompt GRPO (OmniMedVQA collections) | 78.6 | 94.3 | 16.6 | 81.3 | 82.4 |
+| OmniMedVQA (held-out collections), short | SFT 2B (OmniMedVQA collections) | 84.9 | 93.4 | 8.6 | 95.5 | 95.4 |
+| OmniMedVQA (held-out collections), short | SFT → short-prompt GRPO (OmniMedVQA collections) | 84.6 | 95.6 | 11.0 | 92.4 | 93.1 |
+| VQAv2, short | Instruct 2B | 74.7 | 80.9 | 6.4 | 94.6 | 85.8 |
+| VQAv2, short | SFT on the 4,000 RL questions | 76.7 | 76.8 | 4.9 | 95.7 | 87.4 |
+| VQAv2, short | Instruct → short-prompt GRPO | 76.5 | 88.6 | 12.1 | 90.8 | 86.4 |
+| VQAv2, short | SFT 2B | 77.4 | 77.7 | 3.7 | 95.7 | 88.6 |
+| VQAv2, short | SFT → short-prompt GRPO | 78.4 | 88.0 | 10.3 | 92.3 | 86.8 |
+| ChartQA (human), short | Instruct 2B | 65.2 | 73.3 | 12.0 | 87.4 | 73.9 |
+| ChartQA (human), short | SFT 2B (ChartQA) | 68.1 | 65.3 | 6.0 | 90.1 | 76.7 |
+| ChartQA (human), short | Instruct → short-prompt GRPO (ChartQA, 1 epoch) | 68.5 | 86.5 | 18.5 | 82.1 | 76.7 |
+| ChartQA (human), reasoning | Instruct 2B | 72.1 | 76.4 | 6.2 | 89.1 | 81.1 |
+| ChartQA (human), reasoning | Instruct → GRPO (ChartQA, 1 epoch) | 82.7 | 88.4 | 8.1 | 93.1 | 89.8 |
+| ChartQA (human), reasoning | SFT → GRPO (ChartQA, 1 epoch) | 84.6 | 84.9 | 6.7 | 95.0 | 91.3 |
+| SLAKE (English), short | Instruct 8B | 58.3 | 85.5 | 27.2 | 79.2 | 70.0 |
+| SLAKE (English), short | SFT 8B (SLAKE) | 74.6 | 78.2 | 4.3 | 97.5 | 88.5 |
+| SLAKE (English), short | Instruct 8B → short-prompt GRPO (SLAKE, 1 epoch) | 68.0 | 90.2 | 22.3 | 87.9 | 80.4 |
+| SLAKE (English), short | SFT 8B → short-prompt GRPO (SLAKE, 1 epoch) | 77.7 | 88.2 | 10.5 | 95.3 | 89.3 |
+<!-- /report:calibration -->
+
+**RL is overconfident.** Short-prompt RL agrees with itself more than Instruct does in every
+setting (86.5–94.3% of samples give the majority answer, against 69.8–85.5% for Instruct), as
+expected, but its accuracy does not rise as much: its expected calibration error is 12.1 to
+23.7 points, against 2.2 to 8.6 for SFT, and on the half of the questions each model is most sure
+of, SFT is right 90.1–97.9% of the time and RL 81.3–90.8%. On SLAKE, Instruct is already
+overconfident (calibration error 24.7); SFT corrects that (2.2) and RL keeps it (23.7). RL after
+SFT sits between the two in every setting (10.3–13.1). Under the reasoning prompt on ChartQA, RL raises confidence and
+accuracy together (calibration error 8.1 against Instruct's 6.2). Agreement among samples is one
+measure of confidence; RL makes the samples agree by construction, so a confidence read from the
+model's token probabilities could rank models differently.
 
 ## Vision-side options (SLAKE)
 

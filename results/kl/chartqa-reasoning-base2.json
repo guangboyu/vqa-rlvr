@@ -1,0 +1,32 @@
+{
+ "dataset": "chartqa",
+ "prompt": "reasoning",
+ "base": "base2",
+ "questions": 500,
+ "samples": 8,
+ "temperature": 1.0,
+ "estimator": "forward KL, base samples",
+ "models": {
+  "base2": {
+   "kl": 0.13304705627432545,
+   "low": 0.11134490547456788,
+   "high": 0.15816533755345594,
+   "questions": 500,
+   "mismatched": 66
+  },
+  "cqa-grpo2-base-e1": {
+   "kl": 25.351819266427785,
+   "low": 24.662979264011906,
+   "high": 26.05568246771568,
+   "questions": 500,
+   "mismatched": 66
+  },
+  "cqa-grpo2-sft-e1": {
+   "kl": 18.77542231851668,
+   "low": 18.35975773773146,
+   "high": 19.192731171669397,
+   "questions": 500,
+   "mismatched": 66
+  }
+ }
+}

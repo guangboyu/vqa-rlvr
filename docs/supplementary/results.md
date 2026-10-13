@@ -427,3 +427,41 @@ OmniMedVQA collections never trained on, SFT beats RL even with the same questio
 SFT on SLAKE transfers to OmniMedVQA better than RL does
 ([supplement](supplement.md#medical-pilots-in-detail)). Neither dataset releases patient IDs;
 one training seed.
+
+### RL's medical gains come from the image
+
+Two measurements beyond accuracy, declared before they ran, show what the medical models
+learned: how many questions each model still answers with a black image in place of the real
+one, and how far training moved it from Instruct (forward KL on Instruct's own samples for the
+task's questions, summed over a response). Short prompt, normalized scorer, 95% intervals:
+
+<!-- report:beyond-accuracy-medical -->
+| Setting | Model | Accuracy | KL from start (nats) | Black-image accuracy | Black image, change from start | Lost, swapped image |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| SLAKE (English), short | Instruct 2B | 49.76 | 0.00 [-0.00, 0.00] | 25.07 | +0.00 [+0.00, +0.00] | +7.45 [+5.18, +9.80] |
+| SLAKE (English), short | SFT 2B (SLAKE) | 74.84 | 10.85 [10.43, 11.26] | 28.75 | +3.68 [+1.70, +5.75] | +12.91 [+10.27, +15.55] |
+| SLAKE (English), short | Instruct → short-prompt GRPO (SLAKE, 1 epoch) | 65.60 | 2.14 [1.90, 2.38] | 24.79 | -0.28 [-1.32, +0.75] | +8.48 [+6.13, +10.84] |
+| SLAKE (English), short | SFT → short-prompt GRPO (SLAKE, 1 epoch) | 76.34 | 16.60 [15.98, 17.22] | 31.57 | +6.50 [+4.52, +8.58] | +13.38 [+10.84, +16.02] |
+| OmniMedVQA (held-out collections), short | Instruct 2B | 74.57 | 0.01 [0.00, 0.01] | 43.34 | +0.00 [+0.00, +0.00] | +29.15 [+25.95, +32.36] |
+| OmniMedVQA (held-out collections), short | SFT 2B on the RL questions (OmniMedVQA collections) | 83.13 | 14.11 [13.23, 15.01] | 58.74 | +15.40 [+12.20, +18.77] | +23.88 [+21.19, +26.73] |
+| OmniMedVQA (held-out collections), short | Instruct → short-prompt GRPO (OmniMedVQA collections) | 79.07 | 0.90 [0.69, 1.12] | 46.54 | +3.20 [+0.95, +5.45] | +28.98 [+25.78, +32.27] |
+| OmniMedVQA (held-out collections), short | SFT 2B (OmniMedVQA collections) | 85.03 | 8.82 [8.24, 9.42] | 67.30 | +23.96 [+20.67, +27.34] | +19.46 [+16.87, +22.06] |
+| OmniMedVQA (held-out collections), short | SFT → short-prompt GRPO (OmniMedVQA collections) | 85.55 | 10.10 [9.42, 10.81] | 67.30 | +23.96 [+20.67, +27.34] | +20.50 [+17.91, +23.10] |
+| SLAKE (English), short | Instruct 8B | 58.06 | 0.00 [-0.00, 0.00] | 25.16 | +0.00 [+0.00, +0.00] | +9.71 [+7.16, +12.35] |
+| SLAKE (English), short | SFT 8B (SLAKE) | 77.19 | 8.68 [8.27, 9.09] | 35.53 | +10.37 [+8.29, +12.54] | +13.95 [+11.50, +16.40] |
+| SLAKE (English), short | Instruct 8B → short-prompt GRPO (SLAKE, 1 epoch) | 68.33 | 1.40 [1.18, 1.65] | 25.54 | +0.38 [-0.85, +1.60] | +11.03 [+8.58, +13.48] |
+| SLAKE (English), short | SFT 8B → short-prompt GRPO (SLAKE, 1 epoch) | 78.23 | 12.25 [11.69, 12.78] | 36.00 | +10.84 [+8.39, +13.29] | +12.91 [+10.46, +15.46] |
+<!-- /report:beyond-accuracy-medical -->
+
+RL's gains need the image. With a black image, RL from Instruct answers as many questions as
+Instruct on SLAKE at both sizes (−0.3 and +0.4 points, intervals including zero) and 3.2 more
+on the held-out collections. SFT answers 3.7 more on SLAKE at 2B, 10.4 more at 8B, and 15.4
+more on the held-out collections trained on the same questions as RL: at 8B, 10.4 of SFT's
+19.1-point gain on SLAKE is still there without the image, against 0.4 of RL's 10.3. On the
+same data, RL also moves the model five to sixteen times less than SFT: 2.1 against 10.8 nats on
+SLAKE at 2B, 1.4 against 8.7 at 8B, 0.9 against 14.1 on the held-out collections. RL's Razor
+(Shenfeld et al., 2025) finds that forgetting tracks this distance, and it matches what the
+tables above show: RL loses less than SFT on the medical sets it did not train on. The same
+black-image pattern holds on VQAv2 and ChartQA; the full measurements, including where RL
+does not move the model less and where it is less well calibrated than SFT, are in the
+[supplement](supplement.md#beyond-accuracy).

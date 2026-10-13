@@ -1,0 +1,46 @@
+{
+ "dataset": "vqav2",
+ "prompt": "short",
+ "base": "base2",
+ "questions": 500,
+ "samples": 8,
+ "temperature": 1.0,
+ "estimator": "forward KL, base samples",
+ "models": {
+  "base2": {
+   "kl": 0.0034295932650558144,
+   "low": 0.0010040423235519712,
+   "high": 0.0059888298995296055,
+   "questions": 500,
+   "mismatched": 1
+  },
+  "sft4k2": {
+   "kl": 0.13715367167139686,
+   "low": 0.1175103806495622,
+   "high": 0.15782668641815314,
+   "questions": 500,
+   "mismatched": 1
+  },
+  "p1-f-short2-base": {
+   "kl": 0.23072074300298148,
+   "low": 0.18738330676206555,
+   "high": 0.27846946926206745,
+   "questions": 500,
+   "mismatched": 1
+  },
+  "sft2": {
+   "kl": 0.20334777775685814,
+   "low": 0.170050794736537,
+   "high": 0.24061145323462585,
+   "questions": 500,
+   "mismatched": 1
+  },
+  "p1-f-short2-sft": {
+   "kl": 0.4918614228858033,
+   "low": 0.4022265455562748,
+   "high": 0.5909588567746057,
+   "questions": 500,
+   "mismatched": 1
+  }
+ }
+}

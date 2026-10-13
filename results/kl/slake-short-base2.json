@@ -1,0 +1,39 @@
+{
+ "dataset": "slake",
+ "prompt": "short",
+ "base": "base2",
+ "questions": 500,
+ "samples": 8,
+ "temperature": 1.0,
+ "estimator": "forward KL, base samples",
+ "models": {
+  "base2": {
+   "kl": 0.0015321068470617067,
+   "low": -0.0003585082335880543,
+   "high": 0.0034176141018320474,
+   "questions": 500,
+   "mismatched": 0
+  },
+  "slk-sft2": {
+   "kl": 10.847223559334184,
+   "low": 10.428287995208457,
+   "high": 11.259874951542335,
+   "questions": 500,
+   "mismatched": 0
+  },
+  "slk-short2-base-e1": {
+   "kl": 2.1359735928474675,
+   "low": 1.9006537853719088,
+   "high": 2.380043408044428,
+   "questions": 500,
+   "mismatched": 0
+  },
+  "slk-short2-sft-e1": {
+   "kl": 16.59797769660012,
+   "low": 15.97648257635479,
+   "high": 17.21811264040055,
+   "questions": 500,
+   "mismatched": 0
+  }
+ }
+}

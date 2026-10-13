@@ -88,6 +88,16 @@ on medical data it did not train on: every SFT model drops 0.8–4.1 points on P
 stays within 1.8, a lead of 0.8–2.3 points. One seed; no patient-level split is available
 ([results](docs/supplementary/results.md#medical-images-sft-then-rl-is-the-best-model-and-rl-forgets-less)).
 
+**7. RL's gains need the image, and on medical data RL moves the model far less than SFT.**
+With a black image in place of the real one, RL from Instruct answers as many questions as
+Instruct in five of six training settings (−0.3 to +0.5 points, intervals including zero) and
+3.2 more in the sixth; SFT answers 1.0 to 24.0 more, significantly in four of its five. At 8B,
+10.4 of SFT's 19.1-point gain on SLAKE survives a black image, against 0.4 of RL's 10.3. On
+medical data the forward KL from Instruct is five to sixteen times smaller for RL than for SFT
+(2.1 against 10.8 nats on SLAKE, 0.9 against 14.1 on the held-out collections with the same
+questions), in line with RL's smaller losses on unseen medical sets. Declared before running
+([results](docs/supplementary/results.md#rls-medical-gains-come-from-the-image)).
+
 Differences below about 0.5 points under the reasoning prompt are within the run-to-run
 noise of greedy vLLM decoding (three repeats of Instruct 2B span 0.4 points) and are not
 claimed.
@@ -128,6 +138,13 @@ diagnostics, in the [supplementary results](docs/supplementary/supplement.md):
   trained on, SFT on the same 4,916 questions leads GRPO by 4.1 points; OmniMedVQA's image-level
   split is too easy to measure anything (SFT 99.7%)
   ([medical pilots](docs/supplementary/supplement.md#medical-pilots-in-detail)).
+- **RL is overconfident, and it moves the model less than SFT only on medical data.** After
+  short-prompt RL, 86.5–94.3% of 8 samples at T = 1 give the majority answer, and the expected
+  calibration error is 12.1–23.7 points against SFT's 2.2–8.6; on the half of the questions
+  each is most sure of, SFT is right 90.1–97.9% of the time and RL 81.3–90.8%. On VQAv2 and
+  short-answer ChartQA, SFT's labels are close to what Instruct already says and SFT moves the
+  model less than RL (0.14–0.20 against 0.23 nats, 0.39 against 1.02)
+  ([beyond accuracy](docs/supplementary/supplement.md#beyond-accuracy)).
 - **Rejected at screening.** CLEVR compositional (nearly saturated; reasoning costs it 5.6
   points), MedThinkVQA (answered from the case text at 2B and 8B), and Kvasir-VQA-x1, PathVQA
   and ReXVQA (images change the answers by under 10 points; a black chest X-ray leaves

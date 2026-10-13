@@ -28,3 +28,19 @@ def test_selective_accuracy_keeps_the_most_confident_share():
     pairs = [(1.0, 1.0), (0.9, 1.0), (0.6, 0.0), (0.5, 0.0)]
     assert selective_accuracy(pairs, 0.5) == 1.0
     assert selective_accuracy(pairs, 1.0) == 0.5
+
+
+def test_the_report_shows_each_model_once_and_skips_rows_without_calibration():
+    from vqar.eval.matrix import Arm
+    from vqar.eval.report import beyond_accuracy_table, calibration_table
+
+    gain = {"delta": 20.0, "low": 18.0, "high": 22.0}
+    row = {"model": "a", "accuracy": 60.0, "kl": {"kl": 1.5, "low": 1.2, "high": 1.8},
+           "black_accuracy": 40.0, "black_gain": gain, "swapped_drop": None,
+           "calibration": None}
+    spec = {"dataset": "slake", "prompt": "short", "tier": "full", "rows": [row]}
+    beyond = {"sets": [spec, {**spec, "rows": [row, {"model": "b", "missing": True}]}]}
+    shown = beyond_accuracy_table([Arm("a", "Model A", "m")], beyond)
+    assert shown.count("Model A") == 1
+    assert "1.50 [1.20, 1.80]" in shown and "+20.00 [+18.00, +22.00]" in shown
+    assert "Model A" not in calibration_table([Arm("a", "Model A", "m")], beyond)

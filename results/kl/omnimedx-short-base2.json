@@ -1,0 +1,46 @@
+{
+ "dataset": "omnimedx",
+ "prompt": "short",
+ "base": "base2",
+ "questions": 500,
+ "samples": 8,
+ "temperature": 1.0,
+ "estimator": "forward KL, base samples",
+ "models": {
+  "base2": {
+   "kl": 0.0058224115574825475,
+   "low": 0.0033134226325911664,
+   "high": 0.008373209922603929,
+   "questions": 500,
+   "mismatched": 0
+  },
+  "omx-sft2-matched": {
+   "kl": 14.110323754203812,
+   "low": 13.232009668077035,
+   "high": 15.006729618523499,
+   "questions": 500,
+   "mismatched": 0
+  },
+  "omx-short2-base": {
+   "kl": 0.8971661544718559,
+   "low": 0.6860472254775366,
+   "high": 1.1240780814141949,
+   "questions": 500,
+   "mismatched": 0
+  },
+  "omx-sft2": {
+   "kl": 8.823116336935284,
+   "low": 8.238031204963901,
+   "high": 9.418851702257117,
+   "questions": 500,
+   "mismatched": 0
+  },
+  "omx-short2-sft": {
+   "kl": 10.099963436812699,
+   "low": 9.417633982217694,
+   "high": 10.810017495411937,
+   "questions": 500,
+   "mismatched": 0
+  }
+ }
+}

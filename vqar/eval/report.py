@@ -587,6 +587,64 @@ def ood_deltas_table(arms: list[Arm], ood: dict | None) -> str:
     return table(["Comparison", *(DATASETS[d].display_name for d in datasets)], rows, 1)
 
 
+def beyond_rows(arms: list[Arm], beyond: dict, fields,
+                datasets: tuple[str, ...] | None = None) -> list[list[str]]:
+    """One row per measured model of every declared set (of the given datasets), once each:
+    its setting, its name, and `fields`."""
+    names = {arm.label: arm.name for arm in arms}
+    rows, seen = [], set()
+    for spec in beyond["sets"]:
+        if datasets is not None and spec["dataset"] not in datasets:
+            continue
+        setting = f"{DATASETS[spec['dataset']].display_name}, {spec['prompt']}"
+        for row in spec["rows"]:
+            key = (spec["dataset"], spec["prompt"], spec["tier"], row["model"])
+            if row.get("missing") or key in seen or (cells := fields(row)) is None:
+                continue
+            seen.add(key)
+            rows.append([setting, names.get(row["model"], row["model"]), *cells])
+    return rows
+
+
+def beyond_accuracy_table(arms: list[Arm], beyond: dict | None,
+                          datasets: tuple[str, ...] | None = None) -> str:
+    """Accuracy, the forward KL from the starting model on the task's questions, accuracy with a
+    black image and its change from the starting model's, and the accuracy lost with a swapped
+    image, original − swapped (normalized scorer, 95% intervals)."""
+    if beyond is None:
+        return "The beyond-accuracy measurements have not been computed yet.\n"
+
+    def fields(row):
+        kl, black = row["kl"], row.get("black_accuracy")
+        return [f"{row['accuracy']:.2f}",
+                "—" if kl is None else f"{kl['kl']:.2f} [{kl['low']:.2f}, {kl['high']:.2f}]",
+                "—" if black is None else f"{black:.2f}",
+                *("—" if row.get(key) is None else interval(row[key])
+                  for key in ("black_gain", "swapped_drop"))]
+
+    return table(["Setting", "Model", "Accuracy", "KL from start (nats)", "Black-image accuracy",
+                  "Black image, change from start", "Lost, swapped image"],
+                 beyond_rows(arms, beyond, fields, datasets), 2)
+
+
+def calibration_table(arms: list[Arm], beyond: dict | None) -> str:
+    """The majority answer of 8 samples at T = 1: its accuracy, its share of the samples as
+    confidence, the expected calibration error, and accuracy on the most confident half."""
+    if beyond is None:
+        return "The beyond-accuracy measurements have not been computed yet.\n"
+
+    def fields(row):
+        c = row["calibration"]
+        if c is None:
+            return None
+        return [f"{c[key]:.1f}" for key in ("majority_accuracy", "mean_confidence",
+                                            "calibration_error", "selective_50",
+                                            "selective_80")]
+
+    return table(["Setting", "Model", "Majority accuracy", "Mean confidence", "ECE",
+                  "Accuracy, top 50%", "Accuracy, top 80%"], beyond_rows(arms, beyond, fields), 2)
+
+
 def pilot_table(arms: list[Arm], cells: dict, dataset: str) -> str:
     """A pilot's arms on its full test role: official (normalized) accuracy, each answer
     type's official accuracy, and mean output tokens, per prompt."""
@@ -711,6 +769,7 @@ def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
     judge = load_result(root / "results", "judge-final.json")
     chartqa_judge = load_result(root / "results", "judge-chartqa.json")
     ood = load_result(root / "results", "ood.json")
+    beyond = load_result(root / "results", "beyond-accuracy.json")
     blocks = {
         "matched": matrix_table(matched, cells),
         "matched-deltas": deltas_table(matched, declared(
@@ -737,6 +796,10 @@ def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
         "ood-headline": ood_headline_table(every_arm, cells, ood),
         "chartqa-judge": judge_table(pilot_arms, chartqa_judge),
         "chartqa-judge-deltas": judge_deltas_table(pilot_arms, chartqa_judge),
+        "beyond-accuracy": beyond_accuracy_table(every_arm, beyond),
+        "beyond-accuracy-medical": beyond_accuracy_table(every_arm, beyond,
+                                                         ("slake", "omnimedx")),
+        "calibration": calibration_table(every_arm, beyond),
         "ood": ood_table(every_arm, ood),
         "ood-deltas": ood_deltas_table(every_arm, ood),
         "matrix": matrix_table(arms, cells),

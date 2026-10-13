@@ -1,0 +1,102 @@
+{
+  "schema": "run-record/1",
+  "legacy": false,
+  "model_id": "efd94c30f01ecca88ec10bee7490fef9e51f5bd4b5d35039b3029fcb58333eb3",
+  "protocol_id": "0e8b1a52e50d680a8e22bd0c7752738b90a196b90132ec54be16b59406d2d7e6",
+  "model": {
+    "source": "checkpoints/merged/cqa_short2_base_e1",
+    "label": "cqa-short2-base-e1",
+    "run": null,
+    "step": null,
+    "weights": {
+      "sha256": "d2566b9b5694b145ff5d2421206a23e9bd6f734113dc204936fd5c57e59227b9",
+      "config_sha256": "e475ba87af77a77c5b0872f6b32be09a175c534ef17c688c0274fcf9b6dbd9f5"
+    }
+  },
+  "protocol": {
+    "dataset": "chartqa",
+    "ladder": "in-domain",
+    "role": "test",
+    "tier": "full",
+    "question_limit": null,
+    "prompt": "short",
+    "prompt_text": "{question}\nAnswer the question using a single word or phrase.",
+    "max_tokens": 64,
+    "temperature": 0.0,
+    "samples": 1,
+    "image_mode": "swapped",
+    "max_pixels": 786432,
+    "scorers": {
+      "official": "chartqa_relaxed_accuracy/v1",
+      "normalized": "chartqa_normalized_accuracy/v1"
+    },
+    "extraction": "last_answer_tag_or_full_text",
+    "answer_tag_rule": "raw text contains </answer>",
+    "data": {
+      "subsets": {
+        "chartqa_test": "6c21517e4781534a"
+      },
+      "selection_sha256": "3320ea70c2b134585fed7dd6f2fdc92cf22470e7b754a987e51464ce5256edd5",
+      "image_groups_sha256": "d1466ca9230969898700640c590631477460d25c75e099a492a73d8244dc789a",
+      "donors_sha256": "f6e31e1189bd7bda5f2dae321b8186a816daa40a667d2d64a308f16bbf01d3b6"
+    }
+  },
+  "metrics": {
+    "n": 1250,
+    "official": {
+      "overall": 0.128,
+      "by_answer_type": {
+        "number": 0.12574850299401197,
+        "text": 0.13253012048192772
+      }
+    },
+    "normalized": {
+      "overall": 0.128,
+      "by_answer_type": {
+        "number": 0.12574850299401197,
+        "text": 0.13253012048192772
+      }
+    },
+    "mean_output_tokens": 3.956,
+    "truncated_fraction": 0.0024,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.128,
+    "answers_scored_differently": 0,
+    "paired_with_original": {
+      "n": 1250,
+      "original": {
+        "official": 0.6752,
+        "normalized": 0.6776
+      },
+      "normalized_answer_changed_fraction": 0.9176
+    }
+  },
+  "provenance": {
+    "code_version": "77ff2a6d53950fd668bb5d26b2949b1e68498d7d",
+    "uncommitted_changes": true,
+    "source_sha256": {
+      "vqar/eval/__init__.py": "2aa88c809409a57502d0d9b2893e14c3b5bf99d971bceefcc1ed4716ef295f81",
+      "vqar/eval/examples.py": "34e53468b64e5d7d23913dbdc2d37d39c22e4e6501abc882297b7fc7a13385dd",
+      "vqar/eval/protocol.py": "358305c53f73b9229696fdc9434ac5139fe3452f5491a45e2d9820209d3790bc",
+      "vqar/eval/record.py": "6be2298f531240b01df2feecedd50af2d32a1c17f6029951ddf3f7723834b023",
+      "vqar/eval/runner.py": "f0a55a3f8fcaddc6c4154cef031a22911f5cc0cafe7a7cd436c811b2b75e8fca",
+      "vqar/inference.py": "f77143773554fbf3710e045220e2efb36d5698035a760094a9aace008bf593bf",
+      "vqar/config.py": "4e4427af33c121e742a2597442a0b0f44811d10f92999b48466ff6aebc1a9161",
+      "vqar/data.py": "02cde2a6a1b9b69e9baf776056d1fcaacd328b2da05d6971cf1951ae82c2801e",
+      "vqar/metrics.py": "8129ce92ad8b29efa942414de37235d0141e197ab2bb84f5c2f3878ef44f8978",
+      "vqar/registry.py": "d5f5230c8504b94bfe2f7fcbd58ccc16e409cff543c634671c5ec8351dbba9af",
+      "vqar/splits.py": "206963ba5aaa52b03482f52b268832dc1bd611613adfd2ea0fb1aac11c2eb693",
+      "vqar/ood_metrics.py": "9449e0a85c4b7ff3efcbc88264ee1e03d53689c39c2fe030a13887465fa1b226",
+      "vqar/ood.py": "d59220be09094fa5a5ffbb6e791b38ee5b3c8dca0ca381ef64a28bf0f94ccb8f",
+      "uv.lock": "8c79fab440350a15e75e9507c3b5338ecc63beb92fc12c6ef18fbe01122ac323"
+    },
+    "versions": {
+      "torch": "2.11.0+cu129",
+      "transformers": "5.13.0",
+      "vllm": "0.23.0+cu129",
+      "datasets": "5.0.0"
+    },
+    "timestamp": "2026-10-13T04:46:53+00:00"
+  }
+}

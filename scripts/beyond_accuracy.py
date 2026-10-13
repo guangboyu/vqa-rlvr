@@ -6,7 +6,9 @@ confidence tracks its accuracy. Reads the records and KL files the declared sets
 Per [[beyond_accuracy]] set in experiments.toml and per model (its starting model included):
 - accuracy: the greedy original-image cell, normalized scorer (the training reward's scorer);
 - kl: forward KL from the starting model on the task's questions (scripts.kl_to_base);
-- reliance: accuracy lost with a black and with a swapped image, paired 95% intervals;
+- reliance: accuracy with a black image and its change from the starting model's, and the
+  accuracy lost with a black and with a swapped image (original − changed), paired 95%
+  intervals;
 - calibration, from the first 8 samples at temperature 1 of each question: the majority answer
   (normalized text) and the share of samples that give it as the confidence; the majority
   answer's accuracy, the expected calibration error over 10 equal-width bins, and the accuracy
@@ -90,8 +92,10 @@ def calibration(record: RunRecord) -> dict:
             "selective_80": 100 * selective_accuracy(pairs, 0.8)}
 
 
-def reliance(original: RunRecord, changed: RunRecord | None) -> dict | None:
-    if changed is None:
+def reliance(original: RunRecord | None, changed: RunRecord | None) -> dict | None:
+    """original − changed with a paired interval: the accuracy lost to a changed image, or,
+    given two black-image cells, how much more one model answers without the image."""
+    if original is None or changed is None:
         return None
     return paired_bootstrap(question_scores(changed.predictions_path(), VARIANT),
                             question_scores(original.predictions_path(), VARIANT))
@@ -106,6 +110,8 @@ def kl(spec: dict, label: str) -> dict | None:
 
 def measure_set(spec: dict, records: list[RunRecord]) -> dict:
     rows = []
+    start_black = find(records, spec["base"], spec["dataset"], spec["prompt"], spec["tier"],
+                       image_mode="black")
     for label in [spec["base"], *spec["models"]]:
         args = (records, label, spec["dataset"], spec["prompt"], spec["tier"])
         original = find(*args)
@@ -113,12 +119,15 @@ def measure_set(spec: dict, records: list[RunRecord]) -> dict:
             rows.append({"model": label, "missing": True})
             continue
         sampled = find(*args, sampled=True)
+        black = find(*args, image_mode="black")
         rows.append({
             "model": label,
             "accuracy": 100 * original.metrics[VARIANT]["overall"],
             "output_tokens": original.metrics["mean_output_tokens"],
             "kl": kl(spec, label),
-            "black_drop": reliance(original, find(*args, image_mode="black")),
+            "black_accuracy": 100 * black.metrics[VARIANT]["overall"] if black else None,
+            "black_gain": reliance(black, start_black),
+            "black_drop": reliance(original, black),
             "swapped_drop": reliance(original, find(*args, image_mode="swapped")),
             "calibration": calibration(sampled) if sampled else None,
         })

@@ -1,0 +1,107 @@
+{
+  "schema": "run-record/1",
+  "legacy": false,
+  "model_id": "999f68139169be5782512159f90d58b23a50cdc366946178709baedaa14bf5f0",
+  "protocol_id": "26d33a7c6dd3c613560dd078aefe64a856576a8e2767f916bb0cd6f97089cbc5",
+  "model": {
+    "source": "checkpoints/merged/omx_short2_base",
+    "label": "omx-short2-base",
+    "run": null,
+    "step": null,
+    "weights": {
+      "sha256": "b2b196f1fb8374d594e1f47d8372bd4aefeb922ae56733c3fa0409e24e0a153b",
+      "config_sha256": "e475ba87af77a77c5b0872f6b32be09a175c534ef17c688c0274fcf9b6dbd9f5"
+    }
+  },
+  "protocol": {
+    "dataset": "omnimedx",
+    "ladder": "in-domain",
+    "role": "test",
+    "tier": "full",
+    "question_limit": null,
+    "prompt": "short",
+    "prompt_text": "{question}\nAnswer the question using a single word or phrase.",
+    "max_tokens": 64,
+    "temperature": 0.0,
+    "samples": 1,
+    "image_mode": "black",
+    "max_pixels": 786432,
+    "scorers": {
+      "official": "choice_letter_accuracy/v1",
+      "normalized": "choice_accuracy/v1"
+    },
+    "extraction": "last_answer_tag_or_full_text",
+    "answer_tag_rule": "raw text contains </answer>",
+    "data": {
+      "subsets": {
+        "omnimedx_test": "e2452c3a2fec2c03"
+      },
+      "selection_sha256": "5f90dd60088f5c67fe40ce713f014baa27092fc4affe47e5efc8a6429d091569",
+      "image_groups_sha256": "88b22df68b4ec24aa784e9033c329f3133ac7cc7e29f2eaa73d070703635bf4f"
+    }
+  },
+  "metrics": {
+    "n": 1156,
+    "official": {
+      "overall": 0.014705882352941176,
+      "by_answer_type": {
+        "Anatomy Identification": 0.0,
+        "Disease Diagnosis": 0.01658374792703151,
+        "Lesion Grading": 0.06382978723404255,
+        "Modality Recognition": 0.018404907975460124,
+        "Other Biological Attributes": 0.023809523809523808
+      }
+    },
+    "normalized": {
+      "overall": 0.46539792387543255,
+      "by_answer_type": {
+        "Anatomy Identification": 0.4119601328903654,
+        "Disease Diagnosis": 0.5091210613598673,
+        "Lesion Grading": 0.2978723404255319,
+        "Modality Recognition": 0.4539877300613497,
+        "Other Biological Attributes": 0.4523809523809524
+      }
+    },
+    "mean_output_tokens": 6.869377162629758,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.014705882352941176,
+    "answers_scored_differently": 521,
+    "paired_with_original": {
+      "n": 1156,
+      "original": {
+        "official": 0.00865051903114187,
+        "normalized": 0.7906574394463668
+      },
+      "normalized_answer_changed_fraction": 0.49048442906574397
+    }
+  },
+  "provenance": {
+    "code_version": "c052fd184a8a431dd4274728c893ae7711ad241f",
+    "uncommitted_changes": false,
+    "source_sha256": {
+      "vqar/eval/__init__.py": "2aa88c809409a57502d0d9b2893e14c3b5bf99d971bceefcc1ed4716ef295f81",
+      "vqar/eval/examples.py": "bfc72cc97e560db5dd6c62aa6af7ff7928b1865f7e55591873fb71745807ce97",
+      "vqar/eval/protocol.py": "d8c63fc0fab4f652cea522839054385389880708811e0b4ce8d3e94025a1dc33",
+      "vqar/eval/record.py": "6be2298f531240b01df2feecedd50af2d32a1c17f6029951ddf3f7723834b023",
+      "vqar/eval/runner.py": "f0a55a3f8fcaddc6c4154cef031a22911f5cc0cafe7a7cd436c811b2b75e8fca",
+      "vqar/inference.py": "f77143773554fbf3710e045220e2efb36d5698035a760094a9aace008bf593bf",
+      "vqar/config.py": "1b81d0bbdc2e5097014c55be1c9c941dabd55e79004ac87b9f67c647fb9269f7",
+      "vqar/data.py": "c8292de774c3d1c8a2f75feb58f25a657011a37e08ae8f1d1f97f170cfa7ac1d",
+      "vqar/metrics.py": "8129ce92ad8b29efa942414de37235d0141e197ab2bb84f5c2f3878ef44f8978",
+      "vqar/registry.py": "d5f5230c8504b94bfe2f7fcbd58ccc16e409cff543c634671c5ec8351dbba9af",
+      "vqar/splits.py": "206963ba5aaa52b03482f52b268832dc1bd611613adfd2ea0fb1aac11c2eb693",
+      "vqar/ood_metrics.py": "9449e0a85c4b7ff3efcbc88264ee1e03d53689c39c2fe030a13887465fa1b226",
+      "vqar/ood.py": "d59220be09094fa5a5ffbb6e791b38ee5b3c8dca0ca381ef64a28bf0f94ccb8f",
+      "uv.lock": "8c79fab440350a15e75e9507c3b5338ecc63beb92fc12c6ef18fbe01122ac323"
+    },
+    "versions": {
+      "torch": "2.11.0+cu129",
+      "transformers": "5.13.0",
+      "vllm": "0.23.0+cu129",
+      "datasets": "5.0.0"
+    },
+    "timestamp": "2026-10-13T03:42:09+00:00"
+  }
+}
