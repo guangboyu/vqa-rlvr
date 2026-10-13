@@ -161,7 +161,8 @@ def test_vision_lora_adds_the_vision_blocks_and_mergers_to_the_lora_targets():
                  "model.visual.deepstack_merger_list.0.linear_fc1",
                  "model.language_model.layers.5.self_attn.q_proj"):
         assert re.fullmatch(pattern, name), name
-    for name in ("model.language_model.layers.5.self_attn.rotary", "lm_head"):
+    for name in ("model.language_model.layers.5.self_attn.rotary", "lm_head",
+                 "model.visual.patch_embed.proj"):
         assert not re.fullmatch(pattern, name)
     assert config.dump(preset)["vision_lora"] is True
     assert "vision_lora" not in config.dump(plain)

@@ -99,7 +99,9 @@ def lora_targets(preset):
         return list(preset.lora_targets)
     language = "|".join(preset.lora_targets)
     vision = "|".join(VISION_LORA_TARGETS)
-    return rf"(.*\.language_model\..*\.({language}))|(.*\.visual\..*\.({vision}))"
+    # The patch embedding (visual.patch_embed.proj, a Conv3d) stays frozen.
+    blocks = r"(blocks|merger|deepstack_merger_list)"
+    return rf"(.*\.language_model\..*\.({language}))|(.*\.visual\.{blocks}(\..*)?\.({vision}))"
 
 
 def lora_config(preset):
