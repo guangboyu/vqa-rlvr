@@ -722,7 +722,8 @@ evaluated on the 608×608 canvas RL trains on appears here too, paired with its
 original-image cell. On that canvas the four corrected-campaign 2B arms change VQAv2 and
 GQA by at most 1 point, including both GRPO arms that trained on it, while TextVQA loses 5
 to 7 points for every arm: text needs pixels, and the evaluation budget does not hide a
-gain that RL learned at its training resolution.
+gain that RL learned at its training resolution. SLAKE cells evaluated on images upscaled to
+the budget belong to the [vision-side options](#vision-side-options-slake).
 
 <!-- report:resolution -->
 | Arm | Dataset | Prompt | Scorer | Megapixels | Change |
@@ -735,6 +736,10 @@ gain that RL learned at its training resolution.
 | Instruct 2B | GQA | reasoning | normalized | 0.79 → 0.37 (608×608 RL canvas) | +0.16 [-0.47, +0.79] |
 | Instruct 2B | GQA | short | official | 0.79 → 0.37 (608×608 RL canvas) | +0.02 [-0.42, +0.46] |
 | Instruct 2B | GQA | short | normalized | 0.79 → 0.37 (608×608 RL canvas) | +0.01 [-0.43, +0.45] |
+| Instruct 2B | SLAKE (English) | reasoning | official | ≤ 0.79 → 0.79 (upscaled) | +1.23 [-0.85, +3.20] |
+| Instruct 2B | SLAKE (English) | reasoning | normalized | ≤ 0.79 → 0.79 (upscaled) | +1.13 [-0.85, +3.11] |
+| Instruct 2B | SLAKE (English) | short | official | ≤ 0.79 → 0.79 (upscaled) | +0.47 [-0.75, +1.70] |
+| Instruct 2B | SLAKE (English) | short | normalized | ≤ 0.79 → 0.79 (upscaled) | +0.47 [-0.75, +1.70] |
 | Instruct 2B | TextVQA | reasoning | official | 0.79 → 0.37 (608×608 RL canvas) | -5.64 [-6.78, -4.51] |
 | Instruct 2B | TextVQA | reasoning | normalized | 0.79 → 0.37 (608×608 RL canvas) | -5.65 [-6.78, -4.52] |
 | Instruct 2B | TextVQA | reasoning | official | 0.79 → 16.78 | -0.65 [-1.34, +0.05] |
@@ -795,6 +800,22 @@ gain that RL learned at its training resolution.
 | SFT 2B | VQAv2 | reasoning | normalized | 0.79 → 0.37 (608×608 RL canvas) | +0.08 [-0.71, +0.87] |
 | SFT 2B | VQAv2 | short | official | 0.79 → 0.37 (608×608 RL canvas) | -0.03 [-0.55, +0.50] |
 | SFT 2B | VQAv2 | short | normalized | 0.79 → 0.37 (608×608 RL canvas) | -0.03 [-0.55, +0.50] |
+| SFT 2B (SLAKE) | SLAKE (English) | reasoning | official | ≤ 0.79 → 0.79 (upscaled) | -0.66 [-1.98, +0.66] |
+| SFT 2B (SLAKE) | SLAKE (English) | reasoning | normalized | ≤ 0.79 → 0.79 (upscaled) | -0.75 [-2.07, +0.57] |
+| SFT 2B (SLAKE) | SLAKE (English) | short | official | ≤ 0.79 → 0.79 (upscaled) | -0.38 [-1.70, +0.94] |
+| SFT 2B (SLAKE) | SLAKE (English) | short | normalized | ≤ 0.79 → 0.79 (upscaled) | -0.38 [-1.70, +0.94] |
+| SFT 2B, upscaled images (SLAKE) | SLAKE (English) | reasoning | official | ≤ 0.79 → 0.79 (upscaled) | -0.85 [-2.26, +0.57] |
+| SFT 2B, upscaled images (SLAKE) | SLAKE (English) | reasoning | normalized | ≤ 0.79 → 0.79 (upscaled) | -0.85 [-2.26, +0.57] |
+| SFT 2B, upscaled images (SLAKE) | SLAKE (English) | short | official | ≤ 0.79 → 0.79 (upscaled) | +1.13 [-0.09, +2.36] |
+| SFT 2B, upscaled images (SLAKE) | SLAKE (English) | short | normalized | ≤ 0.79 → 0.79 (upscaled) | +1.13 [-0.09, +2.36] |
+| Instruct → short-prompt GRPO (SLAKE, 1 epoch) | SLAKE (English) | reasoning | official | ≤ 0.79 → 0.79 (upscaled) | +0.94 [-1.13, +3.02] |
+| Instruct → short-prompt GRPO (SLAKE, 1 epoch) | SLAKE (English) | reasoning | normalized | ≤ 0.79 → 0.79 (upscaled) | +0.85 [-1.23, +2.92] |
+| Instruct → short-prompt GRPO (SLAKE, 1 epoch) | SLAKE (English) | short | official | ≤ 0.79 → 0.79 (upscaled) | +1.13 [-0.09, +2.36] |
+| Instruct → short-prompt GRPO (SLAKE, 1 epoch) | SLAKE (English) | short | normalized | ≤ 0.79 → 0.79 (upscaled) | +1.13 [-0.09, +2.36] |
+| Instruct → short-prompt GRPO, upscaled images (SLAKE, 1 epoch) | SLAKE (English) | reasoning | official | ≤ 0.79 → 0.79 (upscaled) | +2.64 [+0.57, +4.71] |
+| Instruct → short-prompt GRPO, upscaled images (SLAKE, 1 epoch) | SLAKE (English) | reasoning | normalized | ≤ 0.79 → 0.79 (upscaled) | +2.54 [+0.47, +4.62] |
+| Instruct → short-prompt GRPO, upscaled images (SLAKE, 1 epoch) | SLAKE (English) | short | official | ≤ 0.79 → 0.79 (upscaled) | -0.09 [-1.23, +1.04] |
+| Instruct → short-prompt GRPO, upscaled images (SLAKE, 1 epoch) | SLAKE (English) | short | normalized | ≤ 0.79 → 0.79 (upscaled) | +0.00 [-1.13, +1.13] |
 <!-- /report:resolution -->
 
 ## Error analysis
@@ -1530,6 +1551,10 @@ all accuracies use the normalized scorer, the training reward's.
 | SLAKE (English), short | SFT 8B (SLAKE) | 77.19 | 8.68 [8.27, 9.09] | 35.53 | +10.37 [+8.29, +12.54] | +13.95 [+11.50, +16.40] |
 | SLAKE (English), short | Instruct 8B → short-prompt GRPO (SLAKE, 1 epoch) | 68.33 | 1.40 [1.18, 1.65] | 25.54 | +0.38 [-0.85, +1.60] | +11.03 [+8.58, +13.48] |
 | SLAKE (English), short | SFT 8B → short-prompt GRPO (SLAKE, 1 epoch) | 78.23 | 12.25 [11.69, 12.78] | 36.00 | +10.84 [+8.39, +13.29] | +12.91 [+10.46, +15.46] |
+| SLAKE (English), short | SFT 2B + vision LoRA (SLAKE) | 75.12 | 11.18 [10.76, 11.60] | 28.28 | +3.20 [+1.13, +5.28] | +13.20 [+10.56, +15.83] |
+| SLAKE (English), short | SFT 2B, upscaled images (SLAKE) | 74.08 | 10.77 [10.36, 11.18] | 30.35 | +5.28 [+3.30, +7.35] | +11.50 [+8.95, +14.14] |
+| SLAKE (English), short | Instruct → short-prompt GRPO, upscaled images (SLAKE, 1 epoch) | 66.07 | 2.68 [2.42, 2.96] | 26.20 | +1.13 [-0.09, +2.36] | +9.33 [+6.97, +11.69] |
+| SLAKE (English), short | Instruct → short-prompt GRPO + perception loss (SLAKE, 1 epoch) | 56.27 | 8.32 [7.69, 9.00] | 3.68 | -21.39 [-23.94, -18.94] | +8.58 [+6.22, +10.93] |
 <!-- /report:beyond-accuracy -->
 
 **RL's gains come from the image.** With a black image, RL from Instruct answers as many
@@ -1584,6 +1609,10 @@ where both were measured, since it starts from SFT.
 | SLAKE (English), short | SFT 8B (SLAKE) | 74.6 | 78.2 | 4.3 | 97.5 | 88.5 |
 | SLAKE (English), short | Instruct 8B → short-prompt GRPO (SLAKE, 1 epoch) | 68.0 | 90.2 | 22.3 | 87.9 | 80.4 |
 | SLAKE (English), short | SFT 8B → short-prompt GRPO (SLAKE, 1 epoch) | 77.7 | 88.2 | 10.5 | 95.3 | 89.3 |
+| SLAKE (English), short | SFT 2B + vision LoRA (SLAKE) | 74.6 | 77.0 | 3.4 | 97.9 | 86.7 |
+| SLAKE (English), short | SFT 2B, upscaled images (SLAKE) | 73.6 | 76.2 | 2.6 | 97.2 | 86.0 |
+| SLAKE (English), short | Instruct → short-prompt GRPO, upscaled images (SLAKE, 1 epoch) | 66.0 | 89.6 | 23.6 | 84.3 | 77.9 |
+| SLAKE (English), short | Instruct → short-prompt GRPO + perception loss (SLAKE, 1 epoch) | 56.5 | 82.5 | 26.0 | 81.3 | 68.8 |
 <!-- /report:calibration -->
 
 **RL is overconfident.** Short-prompt RL agrees with itself more than Instruct does in every
@@ -1608,7 +1637,10 @@ upscaled to the pixel budget (`--image-upscale`, `--image-fit upscale`), and sho
 with a perception loss after PAPO (`--perception-coef 0.02`, `vqar/perception_trainer.py`),
 which rewards answers that change when 60% of the image's patches are masked.
 
-The arms on SLAKE's test set, and their differences from the recipe each one changes:
+Expected, as declared: upscaling and vision LoRA help SLAKE (small images, a domain the
+encoder saw little), and the perception loss makes answers depend more on the image. None of the
+three improves SLAKE. The arms on its test set, and their differences from the recipe each one
+changes (official scorer, 95% intervals over questions):
 
 <!-- report:slake-vision-pilot -->
 | Arm | Prompt | Accuracy | closed answers | open answers | Output tokens |
@@ -1617,28 +1649,87 @@ The arms on SLAKE's test set, and their differences from the recipe each one cha
 | Instruct 2B | reasoning | 40.34 (40.53) | 57.69 | 29.15 | 138 |
 | SFT 2B (SLAKE) | short | 74.84 (74.84) | 82.93 | 69.61 | 3 |
 | SFT 2B (SLAKE) | reasoning | 69.18 (69.27) | 81.73 | 61.09 | 25 |
-| SFT 2B + vision LoRA (SLAKE) | short | — | — | — | — |
-| SFT 2B + vision LoRA (SLAKE) | reasoning | — | — | — | — |
-| SFT 2B, upscaled images (SLAKE) | short | — | — | — | — |
-| SFT 2B, upscaled images (SLAKE) | reasoning | — | — | — | — |
+| SFT 2B + vision LoRA (SLAKE) | short | 75.12 (75.12) | 83.17 | 69.92 | 3 |
+| SFT 2B + vision LoRA (SLAKE) | reasoning | 66.07 (66.07) | 80.53 | 56.74 | 46 |
+| SFT 2B, upscaled images (SLAKE) | short | 74.08 (74.08) | 81.97 | 68.99 | 3 |
+| SFT 2B, upscaled images (SLAKE) | reasoning | 69.65 (69.75) | 82.21 | 61.55 | 21 |
 | Instruct → short-prompt GRPO (SLAKE, 1 epoch) | short | 65.60 (65.60) | 80.05 | 56.28 | 2 |
 | Instruct → short-prompt GRPO (SLAKE, 1 epoch) | reasoning | 52.78 (52.87) | 67.31 | 43.41 | 127 |
-| Instruct → short-prompt GRPO, upscaled images (SLAKE, 1 epoch) | short | — | — | — | — |
-| Instruct → short-prompt GRPO, upscaled images (SLAKE, 1 epoch) | reasoning | — | — | — | — |
-| Instruct → short-prompt GRPO + perception loss (SLAKE, 1 epoch) | short | — | — | — | — |
-| Instruct → short-prompt GRPO + perception loss (SLAKE, 1 epoch) | reasoning | — | — | — | — |
+| Instruct → short-prompt GRPO, upscaled images (SLAKE, 1 epoch) | short | 65.98 (66.07) | 81.25 | 56.12 | 2 |
+| Instruct → short-prompt GRPO, upscaled images (SLAKE, 1 epoch) | reasoning | 49.58 (49.67) | 62.50 | 41.24 | 153 |
+| Instruct → short-prompt GRPO + perception loss (SLAKE, 1 epoch) | short | 55.98 (56.27) | 73.80 | 44.50 | 5 |
+| Instruct → short-prompt GRPO + perception loss (SLAKE, 1 epoch) | reasoning | 35.16 (35.34) | 43.99 | 29.46 | 121 |
 <!-- /report:slake-vision-pilot -->
 
 <!-- report:slake-vision-pilot-deltas -->
-No paired comparison has been computed yet.
+| Comparison | Prompt | Official |
+| --- | --- | ---: |
+| SFT 2B + vision LoRA (SLAKE) − SFT 2B (SLAKE) | short | +0.28 [-0.85, +1.32] |
+| SFT 2B + vision LoRA (SLAKE) − SFT 2B (SLAKE) | reasoning | -3.11 [-5.00, -1.23] |
+| SFT 2B, upscaled images (SLAKE) − SFT 2B (SLAKE) | short | -0.75 [-1.89, +0.28] |
+| SFT 2B, upscaled images (SLAKE) − SFT 2B (SLAKE) | reasoning | +0.47 [-0.75, +1.79] |
+| Instruct → short-prompt GRPO, upscaled images (SLAKE, 1 epoch) − Instruct → short-prompt GRPO (SLAKE, 1 epoch) | short | +0.38 [-1.32, +2.07] |
+| Instruct → short-prompt GRPO, upscaled images (SLAKE, 1 epoch) − Instruct → short-prompt GRPO (SLAKE, 1 epoch) | reasoning | -3.20 [-5.56, -0.85] |
+| Instruct → short-prompt GRPO + perception loss (SLAKE, 1 epoch) − Instruct → short-prompt GRPO (SLAKE, 1 epoch) | short | -9.61 [-11.97, -7.26] |
+| Instruct → short-prompt GRPO + perception loss (SLAKE, 1 epoch) − Instruct → short-prompt GRPO (SLAKE, 1 epoch) | reasoning | -17.62 [-20.64, -14.61] |
 <!-- /report:slake-vision-pilot-deltas -->
 
 Each model against Instruct 2B on SLAKE and on the two unseen medical sets (normalized):
 
 <!-- report:vision-transfer-short -->
-No transfer comparison has been computed yet.
+| Arm | Trained on | SLAKE (English) | OmniMedVQA (open access) | PathVQA |
+| --- | --- | ---: | ---: | ---: |
+| SFT 2B (SLAKE) | SLAKE | +25.07 [+21.87, +28.18] | -0.29 [-0.99, +0.38] | -1.83 [-2.83, -0.85] |
+| SFT 2B + vision LoRA (SLAKE) | SLAKE (+ vision LoRA) | +25.35 [+22.15, +28.56] | +0.79 [+0.10, +1.48] | -2.34 [-3.33, -1.32] |
+| SFT 2B, upscaled images (SLAKE) | SLAKE (upscaled) | +24.32 [+21.11, +27.43] | -0.08 [-0.79, +0.61] | -2.51 [-3.56, -1.46] |
+| Instruct → short-prompt GRPO (SLAKE, 1 epoch) | SLAKE | +15.83 [+13.10, +18.47] | +0.03 [-0.34, +0.40] | -0.97 [-1.76, -0.18] |
+| Instruct → short-prompt GRPO, upscaled images (SLAKE, 1 epoch) | SLAKE (upscaled) | +16.31 [+13.67, +18.94] | +0.13 [-0.21, +0.47] | -0.57 [-1.15, -0.00] |
+| Instruct → short-prompt GRPO + perception loss (SLAKE, 1 epoch) | SLAKE (+ perception loss) | +6.50 [+3.49, +9.52] | -2.21 [-2.96, -1.47] | -9.29 [-10.37, -8.17] |
 <!-- /report:vision-transfer-short -->
 
 <!-- report:vision-transfer-reasoning -->
-No transfer comparison has been computed yet.
+| Arm | Trained on | SLAKE (English) | OmniMedVQA (open access) | PathVQA |
+| --- | --- | ---: | ---: | ---: |
+| SFT 2B (SLAKE) | SLAKE | +28.75 [+25.45, +32.05] | +2.79 [+1.82, +3.80] | -5.31 [-6.38, -4.23] |
+| SFT 2B + vision LoRA (SLAKE) | SLAKE (+ vision LoRA) | +25.54 [+22.15, +28.84] | -2.89 [-3.86, -1.87] | -9.19 [-10.26, -8.12] |
+| SFT 2B, upscaled images (SLAKE) | SLAKE (upscaled) | +29.22 [+25.92, +32.42] | +1.82 [+0.88, +2.78] | -6.69 [-7.81, -5.60] |
+| Instruct → short-prompt GRPO (SLAKE, 1 epoch) | SLAKE | +12.35 [+9.71, +15.08] | +2.09 [+1.23, +2.97] | -0.86 [-1.71, -0.03] |
+| Instruct → short-prompt GRPO, upscaled images (SLAKE, 1 epoch) | SLAKE (upscaled) | +9.14 [+6.41, +11.88] | +3.16 [+2.24, +4.11] | +0.54 [-0.27, +1.34] |
+| Instruct → short-prompt GRPO + perception loss (SLAKE, 1 epoch) | SLAKE (+ perception loss) | -5.18 [-8.39, -2.07] | -19.62 [-20.75, -18.47] | -22.52 [-23.62, -21.42] |
 <!-- /report:vision-transfer-reasoning -->
+
+**Upscaling.** Training on images upscaled to the pixel budget changes short-prompt SLAKE by
+−0.8 points for SFT and +0.4 for GRPO, both intervals including zero, and costs GRPO 3.2 points
+under the reasoning prompt. Upscaling only at test time does not help either: Instruct, SFT and
+GRPO move by −0.4 to +1.1 points (the resolution table), and the upscaled GRPO model gains 2.6
+under the reasoning prompt when tested on the upscaled images it trained on, which recovers its
+own loss and no more. 79% of SLAKE's test questions come with images 512 pixels square or
+larger (256 to 768 vision tokens); the answers do not seem limited by resolution. Upscaled
+GRPO took 8.3 A30-hours for its epoch; the recipe takes 2.0 hours on the RTX 4090.
+
+**Vision LoRA.** LoRA on the vision blocks and mergers leaves short-prompt SLAKE where SFT has
+it (+0.3 [−0.9, +1.3]) and costs 3.1 points under the reasoning prompt. Off SLAKE it moves
+OmniMedVQA up by 1.1 points over SFT under the short prompt and down by 5.7 under the
+reasoning prompt, and costs PathVQA 0.5 and 3.9 more than SFT: adapting the encoder to SLAKE
+narrows the model rather than sharpening its view.
+
+**Perception loss.** At the weight PAPO uses (0.02), GRPO with the perception loss ends 9.6
+points below plain GRPO on SLAKE under the short prompt and 17.6 under the reasoning prompt,
+and falls 9.3 points below Instruct on PathVQA (normalized). Its training log shows how: the masked-image KL it maximizes
+rose from 0.15 to 0.84 nats per token, and from about update 700 the responses grew from 2.6 to
+13 tokens while the training reward fell from 0.6–0.7 to 0.45–0.6. The model found the
+cheapest way to make its answer depend on the image: say the image is missing. With a black
+image it now answers 3.7% of SLAKE correctly (Instruct 25.1%), replying "I can't see the image,
+so I can't answer this question. Please upload a clear image again." or "Cannot be determined,
+the image is missing." to most questions; with another question's image it answers as before
+(8.6 points lost, against 8.5 for plain GRPO), and on real images "cannot be identified"
+became one of its five most common answers (40 of 1,061). It learned to detect a missing image,
+not to use the image more, and it moved four times as far from Instruct as plain GRPO (KL 8.3
+against 2.1 nats). Our KL is estimated on the sampled tokens of 2-token answers, where PAPO
+trained on long reasoning; a smaller weight, PAPO's entropy regularization, or a cap tied to
+the answer length are the untested remedies.
+
+One seed per arm; the reliance, distance and calibration of each model are in the
+[beyond-accuracy](#beyond-accuracy) tables. Compute: 16.9 cluster GPU-hours (one free RTX 6000
+for the vision-LoRA SFT, free A30s for the rest) and 1.9 on the local RTX 4090 for the smoke
+test and every evaluation.

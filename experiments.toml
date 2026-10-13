@@ -1010,6 +1010,7 @@ trained_on = "SLAKE (+ perception loss)"
 # Reliance on the image, distance moved and calibration for the vision-side models; shares the
 # SLAKE KL file with the first set, so kl_to_base runs over the union of their models.
 [[beyond_accuracy]]
+group = "vision"
 dataset = "slake"
 prompt = "short"
 tier = "full"

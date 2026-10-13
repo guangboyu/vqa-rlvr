@@ -34,6 +34,34 @@
    "high": 17.21811264040055,
    "questions": 500,
    "mismatched": 0
+  },
+  "slk-sft2-vis": {
+   "kl": 11.182919385991045,
+   "low": 10.764368322282438,
+   "high": 11.596116408948223,
+   "questions": 500,
+   "mismatched": 0
+  },
+  "slk-sft2-up": {
+   "kl": 10.77418446853212,
+   "low": 10.361888842037587,
+   "high": 11.180570701064662,
+   "questions": 500,
+   "mismatched": 0
+  },
+  "slk-short2-base-e1-up": {
+   "kl": 2.684783406533685,
+   "low": 2.418263946265449,
+   "high": 2.9632052618201494,
+   "questions": 500,
+   "mismatched": 0
+  },
+  "slk-short2-base-e1-papo": {
+   "kl": 8.3230361386592,
+   "low": 7.694948361733788,
+   "high": 9.003212170029942,
+   "questions": 500,
+   "mismatched": 0
   }
  }
 }

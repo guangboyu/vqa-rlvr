@@ -1,0 +1,102 @@
+{
+  "schema": "run-record/1",
+  "legacy": false,
+  "model_id": "bb37928b68b158f112a69e42584a2672ee0d3624b4d434cc6cb26b91bade0135",
+  "protocol_id": "6b917ec73caccdaed58924941690934c66553e0f2772156123e6876481d8484b",
+  "model": {
+    "source": "checkpoints/merged/slk_sft2_vis",
+    "label": "slk-sft2-vis",
+    "run": null,
+    "step": null,
+    "weights": {
+      "sha256": "a6d32cb4256fd8760b20752c8994b337dcc891312b1587728b5841317bf30361",
+      "config_sha256": "e475ba87af77a77c5b0872f6b32be09a175c534ef17c688c0274fcf9b6dbd9f5"
+    }
+  },
+  "protocol": {
+    "dataset": "slake",
+    "ladder": "in-domain",
+    "role": "test",
+    "tier": "full",
+    "question_limit": null,
+    "prompt": "short",
+    "prompt_text": "{question}\nAnswer the question using a single word or phrase.",
+    "max_tokens": 64,
+    "temperature": 0.0,
+    "samples": 1,
+    "image_mode": "swapped",
+    "max_pixels": 786432,
+    "scorers": {
+      "official": "casefold_exact_match/v1",
+      "normalized": "exact_match/v1"
+    },
+    "extraction": "last_answer_tag_or_full_text",
+    "answer_tag_rule": "raw text contains </answer>",
+    "data": {
+      "subsets": {
+        "slake_test": "ad96d6be1d5112bf"
+      },
+      "selection_sha256": "e36f60d00cec3b85b5cdf363fa0138258443e1e2f65697e5b661fe7fd99d5d85",
+      "image_groups_sha256": "20f51b221f704a1f08e7060140ac55f083b33bdbca9f759d9ff29d9cd7fb1f6e",
+      "donors_sha256": "71dd02d82682f800d2ed63691e9dbd08e55423b6134efa5facd1c09e0b46a694"
+    }
+  },
+  "metrics": {
+    "n": 1061,
+    "official": {
+      "overall": 0.6192271442035815,
+      "by_answer_type": {
+        "closed": 0.6971153846153846,
+        "open": 0.5689922480620155
+      }
+    },
+    "normalized": {
+      "overall": 0.6192271442035815,
+      "by_answer_type": {
+        "closed": 0.6971153846153846,
+        "open": 0.5689922480620155
+      }
+    },
+    "mean_output_tokens": 2.986804901036758,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.6192271442035815,
+    "answers_scored_differently": 0,
+    "paired_with_original": {
+      "n": 1061,
+      "original": {
+        "official": 0.7511781338360037,
+        "normalized": 0.7511781338360037
+      },
+      "normalized_answer_changed_fraction": 0.293119698397738
+    }
+  },
+  "provenance": {
+    "code_version": "9c96218b4875ab20b5d659f2e873631f806b473a",
+    "uncommitted_changes": false,
+    "source_sha256": {
+      "vqar/eval/__init__.py": "2aa88c809409a57502d0d9b2893e14c3b5bf99d971bceefcc1ed4716ef295f81",
+      "vqar/eval/examples.py": "34e53468b64e5d7d23913dbdc2d37d39c22e4e6501abc882297b7fc7a13385dd",
+      "vqar/eval/protocol.py": "358305c53f73b9229696fdc9434ac5139fe3452f5491a45e2d9820209d3790bc",
+      "vqar/eval/record.py": "6be2298f531240b01df2feecedd50af2d32a1c17f6029951ddf3f7723834b023",
+      "vqar/eval/runner.py": "f0a55a3f8fcaddc6c4154cef031a22911f5cc0cafe7a7cd436c811b2b75e8fca",
+      "vqar/inference.py": "f77143773554fbf3710e045220e2efb36d5698035a760094a9aace008bf593bf",
+      "vqar/config.py": "4e4427af33c121e742a2597442a0b0f44811d10f92999b48466ff6aebc1a9161",
+      "vqar/data.py": "02cde2a6a1b9b69e9baf776056d1fcaacd328b2da05d6971cf1951ae82c2801e",
+      "vqar/metrics.py": "8129ce92ad8b29efa942414de37235d0141e197ab2bb84f5c2f3878ef44f8978",
+      "vqar/registry.py": "d5f5230c8504b94bfe2f7fcbd58ccc16e409cff543c634671c5ec8351dbba9af",
+      "vqar/splits.py": "206963ba5aaa52b03482f52b268832dc1bd611613adfd2ea0fb1aac11c2eb693",
+      "vqar/ood_metrics.py": "9449e0a85c4b7ff3efcbc88264ee1e03d53689c39c2fe030a13887465fa1b226",
+      "vqar/ood.py": "d59220be09094fa5a5ffbb6e791b38ee5b3c8dca0ca381ef64a28bf0f94ccb8f",
+      "uv.lock": "8c79fab440350a15e75e9507c3b5338ecc63beb92fc12c6ef18fbe01122ac323"
+    },
+    "versions": {
+      "torch": "2.11.0+cu129",
+      "transformers": "5.13.0",
+      "vllm": "0.23.0+cu129",
+      "datasets": "5.0.0"
+    },
+    "timestamp": "2026-10-13T06:08:01+00:00"
+  }
+}

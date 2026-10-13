@@ -589,12 +589,12 @@ def ood_deltas_table(arms: list[Arm], ood: dict | None) -> str:
 
 def beyond_rows(arms: list[Arm], beyond: dict, fields,
                 datasets: tuple[str, ...] | None = None) -> list[list[str]]:
-    """One row per measured model of every declared set (of the given datasets), once each:
-    its setting, its name, and `fields`."""
+    """One row per measured model of every declared set, once each: its setting, its name, and
+    `fields`. Given datasets, only the main sets on them (no named group such as "vision")."""
     names = {arm.label: arm.name for arm in arms}
     rows, seen = [], set()
     for spec in beyond["sets"]:
-        if datasets is not None and spec["dataset"] not in datasets:
+        if datasets is not None and (spec["dataset"] not in datasets or "group" in spec):
             continue
         setting = f"{DATASETS[spec['dataset']].display_name}, {spec['prompt']}"
         for row in spec["rows"]:

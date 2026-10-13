@@ -145,6 +145,12 @@ diagnostics, in the [supplementary results](docs/supplementary/supplement.md):
   short-answer ChartQA, SFT's labels are close to what Instruct already says and SFT moves the
   model less than RL (0.14–0.20 against 0.23 nats, 0.39 against 1.02)
   ([beyond accuracy](docs/supplementary/supplement.md#beyond-accuracy)).
+- **Vision-side options did not help on SLAKE.** At 2B, LoRA on the vision encoder and
+  training on images upscaled to the pixel budget leave short-prompt SLAKE within 0.8 points
+  of their recipes (intervals including zero) and cost up to 3.2 under the reasoning prompt. A
+  perception loss after PAPO, which rewards answers that change when the image is masked, made
+  GRPO reply that the image is missing: 3.7% right with a black image, 9.6 points below plain
+  GRPO on real ones ([vision side](docs/supplementary/supplement.md#vision-side-options-slake)).
 - **Rejected at screening.** CLEVR compositional (nearly saturated; reasoning costs it 5.6
   points), MedThinkVQA (answered from the case text at 2B and 8B), and Kvasir-VQA-x1, PathVQA
   and ReXVQA (images change the answers by under 10 points; a black chest X-ray leaves

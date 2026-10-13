@@ -1189,6 +1189,7 @@
    ]
   },
   {
+   "group": "vision",
    "dataset": "slake",
    "prompt": "short",
    "tier": "full",
@@ -1297,11 +1298,95 @@
     },
     {
      "model": "slk-sft2-vis",
-     "missing": true
+     "accuracy": 75.11781338360038,
+     "output_tokens": 2.9886899151743638,
+     "kl": {
+      "kl": 11.182919385991045,
+      "low": 10.764368322282438,
+      "high": 11.596116408948223,
+      "questions": 500,
+      "mismatched": 0
+     },
+     "black_accuracy": 28.275212064090482,
+     "black_gain": {
+      "n": 1061,
+      "delta": 3.2045240339302548,
+      "low": 1.1310084825636193,
+      "high": 5.27803958529689,
+      "resamples": 10000,
+      "seed": 0
+     },
+     "black_drop": {
+      "n": 1061,
+      "delta": 46.842601319509896,
+      "low": 43.44957587181904,
+      "high": 50.235626767200756,
+      "resamples": 10000,
+      "seed": 0
+     },
+     "swapped_drop": {
+      "n": 1061,
+      "delta": 13.195098963242224,
+      "low": 10.55607917059378,
+      "high": 15.83411875589067,
+      "resamples": 10000,
+      "seed": 0
+     },
+     "calibration": {
+      "samples": 8,
+      "questions": 1061,
+      "majority_accuracy": 74.64655984919887,
+      "mean_confidence": 77.00282752120641,
+      "calibration_error": 3.4165881244109326,
+      "selective_50": 97.9245283018868,
+      "selective_80": 86.6902237926973
+     }
     },
     {
      "model": "slk-sft2-up",
-     "missing": true
+     "accuracy": 74.08105560791705,
+     "output_tokens": 2.9010367577756835,
+     "kl": {
+      "kl": 10.77418446853212,
+      "low": 10.361888842037587,
+      "high": 11.180570701064662,
+      "questions": 500,
+      "mismatched": 0
+     },
+     "black_accuracy": 30.348727615457115,
+     "black_gain": {
+      "n": 1061,
+      "delta": 5.27803958529689,
+      "low": 3.298774740810556,
+      "high": 7.351555136663525,
+      "resamples": 10000,
+      "seed": 0
+     },
+     "black_drop": {
+      "n": 1061,
+      "delta": 43.73232799245994,
+      "low": 40.24505183788879,
+      "high": 47.3138548539114,
+      "resamples": 10000,
+      "seed": 0
+     },
+     "swapped_drop": {
+      "n": 1061,
+      "delta": 11.498586239396795,
+      "low": 8.953817153628654,
+      "high": 14.137606032045241,
+      "resamples": 10000,
+      "seed": 0
+     },
+     "calibration": {
+      "samples": 8,
+      "questions": 1061,
+      "majority_accuracy": 73.60980207351555,
+      "mean_confidence": 76.1899151743638,
+      "calibration_error": 2.580113100848255,
+      "selective_50": 97.16981132075472,
+      "selective_80": 85.98351001177856
+     }
     },
     {
      "model": "slk-short2-base-e1",
@@ -1351,11 +1436,95 @@
     },
     {
      "model": "slk-short2-base-e1-up",
-     "missing": true
+     "accuracy": 66.06974552309143,
+     "output_tokens": 2.4250706880301602,
+     "kl": {
+      "kl": 2.684783406533685,
+      "low": 2.418263946265449,
+      "high": 2.9632052618201494,
+      "questions": 500,
+      "mismatched": 0
+     },
+     "black_accuracy": 26.201696512723842,
+     "black_gain": {
+      "n": 1061,
+      "delta": 1.1310084825636193,
+      "low": -0.0942507068803016,
+      "high": 2.35626767200754,
+      "resamples": 10000,
+      "seed": 0
+     },
+     "black_drop": {
+      "n": 1061,
+      "delta": 39.86804901036758,
+      "low": 36.380772855796415,
+      "high": 43.44957587181904,
+      "resamples": 10000,
+      "seed": 0
+     },
+     "swapped_drop": {
+      "n": 1061,
+      "delta": 9.330819981149858,
+      "low": 6.974552309142319,
+      "high": 11.687087653157398,
+      "resamples": 10000,
+      "seed": 0
+     },
+     "calibration": {
+      "samples": 8,
+      "questions": 1061,
+      "majority_accuracy": 65.97549481621112,
+      "mean_confidence": 89.5617342130066,
+      "calibration_error": 23.586239396795474,
+      "selective_50": 84.33962264150944,
+      "selective_80": 77.85630153121319
+     }
     },
     {
      "model": "slk-short2-base-e1-papo",
-     "missing": true
+     "accuracy": 56.26767200754006,
+     "output_tokens": 5.2007540056550425,
+     "kl": {
+      "kl": 8.3230361386592,
+      "low": 7.694948361733788,
+      "high": 9.003212170029942,
+      "questions": 500,
+      "mismatched": 0
+     },
+     "black_accuracy": 3.6757775683317626,
+     "black_gain": {
+      "n": 1061,
+      "delta": -21.394910461828466,
+      "low": -23.939679547596608,
+      "high": -18.944392082940624,
+      "resamples": 10000,
+      "seed": 0
+     },
+     "black_drop": {
+      "n": 1061,
+      "delta": 52.591894439208296,
+      "low": 49.481621112158344,
+      "high": 55.60791705937794,
+      "resamples": 10000,
+      "seed": 0
+     },
+     "swapped_drop": {
+      "n": 1061,
+      "delta": 8.576814326107446,
+      "low": 6.2205466540999055,
+      "high": 10.933081998114986,
+      "resamples": 10000,
+      "seed": 0
+     },
+     "calibration": {
+      "samples": 8,
+      "questions": 1061,
+      "majority_accuracy": 56.45617342130066,
+      "mean_confidence": 82.50471253534401,
+      "calibration_error": 26.048539114043358,
+      "selective_50": 81.32075471698114,
+      "selective_80": 68.78680800942286
+     }
     }
    ]
   }
