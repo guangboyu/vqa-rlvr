@@ -12,7 +12,7 @@ from itertools import islice
 from pathlib import Path
 
 from vqar import config
-from vqar.data import cap_pixels, to_uniform_canvas
+from vqar.data import cap_pixels, to_uniform_canvas, upscale_to_budget
 from vqar.pools import RefillStream, load_pool
 from vqar.registry import PROMPTS, check_trainable
 from vqar.training import ROOT
@@ -25,6 +25,8 @@ def fit_rl_image(image, image_fit: str = "canvas", canvas_size: int = config.RL_
     budget with its shape kept. Either way vLLM and the trainer get the same PIL image."""
     if image_fit == "budget":
         return cap_pixels(image.convert("RGB"))
+    if image_fit == "upscale":
+        return upscale_to_budget(image)
     return to_uniform_canvas(image, canvas_size)
 
 

@@ -89,12 +89,26 @@ def nf4_quantization():
     )
 
 
+VISION_LORA_TARGETS = ("qkv", "proj", "linear_fc1", "linear_fc2")  # Qwen3-VL vision blocks, mergers
+
+
+def lora_targets(preset):
+    """The language model's attention and MLP; with `vision_lora`, also the vision blocks and
+    the mergers into the language model, as one pattern over full module names."""
+    if not getattr(preset, "vision_lora", False):
+        return list(preset.lora_targets)
+    language = "|".join(preset.lora_targets)
+    vision = "|".join(VISION_LORA_TARGETS)
+    return rf"(.*\.language_model\..*\.({language}))|(.*\.visual\..*\.({vision}))"
+
+
 def lora_config(preset):
-    """LoRA on the language model's attention and MLP; the vision tower stays frozen."""
+    """LoRA on the language model's attention and MLP; the vision tower stays frozen unless
+    the preset adapts it too."""
     from peft import LoraConfig
 
     kwargs = dict(r=preset.lora_r, lora_alpha=preset.lora_alpha,
-                  target_modules=list(preset.lora_targets), task_type="CAUSAL_LM")
+                  target_modules=lora_targets(preset), task_type="CAUSAL_LM")
     if hasattr(preset, "lora_dropout"):  # only the SFT recipe sets dropout
         kwargs["lora_dropout"] = preset.lora_dropout
     return LoraConfig(**kwargs)

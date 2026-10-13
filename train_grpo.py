@@ -81,9 +81,14 @@ def main() -> None:
     parser.add_argument("--canvas-size", type=int, default=None,
                         help="side of the square canvas RL images are fitted onto (default 608; "
                         "larger keeps chart text legible and costs vision tokens)")
-    parser.add_argument("--image-fit", choices=("canvas", "budget"), default=None,
-                        help="pad RL images onto the square canvas (default), or keep each "
-                        "image's shape within the evaluation pixel budget (up to 768 tokens)")
+    parser.add_argument("--image-fit", choices=("canvas", "budget", "upscale"), default=None,
+                        help="pad RL images onto the square canvas (default), keep each "
+                        "image's shape within the evaluation pixel budget (up to 768 tokens), "
+                        "or resize every image to that budget, small ones up")
+    parser.add_argument("--perception-coef", type=float, default=None,
+                        help="weight of a loss that rewards answers depending on the image: the "
+                        "KL between the policy on the real and on a patch-masked image "
+                        "(PAPO-style; default 0: off)")
     parser.add_argument("--epsilon-high", type=float, default=None,
                         help="upper clip of the policy ratio (DAPO clip-higher uses 0.28)")
     parser.add_argument("--rollout-prompt", choices=sorted(PROMPTS), default=None,
@@ -146,11 +151,18 @@ def main() -> None:
         rollout_func=make_chat_rollout(serve_adapter=preset.rollout_lora),
     )
     with rollout_engine(preset.rollout_lora):
+        if refill and preset.perception_coef:
+            raise SystemExit("--refill-rounds and --perception-coef do not combine yet")
         if refill:
             from vqar.refill_trainer import RefillGRPOTrainer
 
             trainer = RefillGRPOTrainer(**trainer_args, refill=refill,
                                         refill_rounds=preset.refill_rounds)
+        elif preset.perception_coef:
+            from vqar.perception_trainer import PerceptionGRPOTrainer
+
+            trainer = PerceptionGRPOTrainer(**trainer_args,
+                                            perception_coef=preset.perception_coef)
         else:
             trainer = GRPOTrainer(**trainer_args)
     completed = run_training(trainer, output, args.run_dir, log_draws=True)

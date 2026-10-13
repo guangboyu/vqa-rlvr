@@ -53,7 +53,11 @@ class SFTPreset:
     lora_r: int = 16
     lora_alpha: int = 32
     lora_dropout: float = 0.05
-    # LM attention + MLP only; the vision tower stays frozen.
+    # LM attention + MLP only; the vision tower stays frozen unless vision_lora also adapts
+    # the vision blocks and the mergers into the language model (vqar.training.lora_config).
+    vision_lora: bool = False
+    # Resize every training image to the pixel budget, small ones up (vqar.data.upscale_to_budget).
+    image_upscale: bool = False
     lora_targets: tuple[str, ...] = (
         "q_proj",
         "k_proj",
@@ -130,8 +134,11 @@ class GRPOPreset:
     # Side of the square canvas RL images are fitted onto (vqar.data.to_uniform_canvas).
     canvas_size: int = RL_IMAGE_SIZE
     # "canvas" pads RL images onto that square; "budget" keeps each image's shape within
-    # MAX_PIXELS, as SFT data and evaluation show it (vqar.rl.fit_rl_image).
+    # MAX_PIXELS, as SFT data and evaluation show it; "upscale" resizes every image to MAX_PIXELS
+    # (vqar.rl.fit_rl_image).
     image_fit: str = "canvas"
+    # Weight of the perception loss (vqar.perception_trainer): 0 keeps plain GRPO.
+    perception_coef: float = 0.0
     lora_r: int = 16
     lora_alpha: int = 32
     lora_targets: tuple[str, ...] = (
@@ -302,7 +309,8 @@ OPD_PRESETS: dict[str, OPDPreset] = {
 # not written, so earlier run configs and the auto-resume check against them stay the same.
 OPT_IN_FIELDS = {"refill_rounds": 0, "rollout_lora": False, "vllm_sleep": True,
                  "loss_type": "dapo", "scale_rewards": "group", "num_iterations": 1,
-                 "epsilon_high": 0.2, "canvas_size": RL_IMAGE_SIZE, "image_fit": "canvas"}
+                 "epsilon_high": 0.2, "canvas_size": RL_IMAGE_SIZE, "image_fit": "canvas",
+                 "perception_coef": 0.0, "vision_lora": False, "image_upscale": False}
 RECIPE_KNOBS = ("loss_type", "scale_rewards", "num_iterations", "epsilon_high")
 
 

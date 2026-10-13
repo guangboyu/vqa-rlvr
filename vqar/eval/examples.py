@@ -9,7 +9,7 @@ from pathlib import Path
 from datasets import Image, Sequence
 from PIL import Image as PILImage
 
-from vqar.data import to_uniform_canvas
+from vqar.data import to_uniform_canvas, upscale_to_budget
 from vqar.eval.protocol import Protocol
 from vqar.registry import DATASETS, TRAINING_ROLES
 from vqar.splits import SEED, load_role, read_split
@@ -117,6 +117,12 @@ def canvas_like(image: bytes) -> bytes:
     return png_bytes(to_uniform_canvas(Image().decode_example({"bytes": image, "path": None})))
 
 
+def upscaled_like(image: bytes) -> bytes:
+    """The image resized to the evaluation pixel budget with its aspect kept, small ones up, as
+    training with --image-fit upscale shows it; PNG-encoded."""
+    return png_bytes(upscale_to_budget(Image().decode_example({"bytes": image, "path": None})))
+
+
 def shown_images(example: Example, donor: Example, image_mode: str) -> list[bytes]:
     if image_mode == "first":
         return example.images[:1]
@@ -126,4 +132,6 @@ def shown_images(example: Example, donor: Example, image_mode: str) -> list[byte
         return [black_like(image) for image in example.images]
     if image_mode == "canvas":
         return [canvas_like(image) for image in example.images]
+    if image_mode == "upscaled":
+        return [upscaled_like(image) for image in example.images]
     return donor.images

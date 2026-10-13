@@ -10,9 +10,10 @@ Usage:
 """
 
 import argparse
+from functools import partial
 
 from vqar import config
-from vqar.data import cap_pixels
+from vqar.data import cap_pixels, upscale_to_budget
 from vqar.pools import load_pool
 from vqar.pools import provenance as pool_provenance
 from vqar.registry import DATASETS, PROMPTS, check_trainable
@@ -32,7 +33,7 @@ from vqar.training import (
 )
 
 
-def to_sft_columns(batch: dict) -> dict:
+def to_sft_columns(batch: dict, upscale: bool = False) -> dict:
     """Map unified examples to TRL's VLM prompt-completion contract.
 
     Prompt-completion (not messages) on purpose: TRL masks the entire prompt —
@@ -48,7 +49,8 @@ def to_sft_columns(batch: dict) -> dict:
         "completion": [
             [{"role": "assistant", "content": answers[0]}] for answers in batch["answers"]
         ],
-        "image": [cap_pixels(img) for img in batch["image"]],
+        "image": [upscale_to_budget(img) if upscale else cap_pixels(img)
+                  for img in batch["image"]],
     }
 
 
@@ -58,12 +60,13 @@ def load_datasets(preset: config.SFTPreset, pool: str | None = None):
     train = (load_pool(ROOT / "data", preset.datasets, preset.seed, pool)
              if pool else load_role(ROOT / "data", preset.datasets, "sft", preset.seed))
     columns = ["image", "question", "answers"]
-    train = train.select_columns(columns).with_transform(to_sft_columns)
+    transform = partial(to_sft_columns, upscale=getattr(preset, "image_upscale", False))
+    train = train.select_columns(columns).with_transform(transform)
     # A dataset whose held-out images all sit in test (omnimedx) has no dev role: no dev loss.
     if not all("dev" in DATASETS[name].subsets for name in preset.datasets):
         return train, None
     dev = load_role(ROOT / "data", preset.datasets, "dev", preset.seed)
-    return train, dev.select_columns(columns).with_transform(to_sft_columns)
+    return train, dev.select_columns(columns).with_transform(transform)
 
 
 def build_model(preset: config.SFTPreset):
@@ -86,6 +89,11 @@ def main() -> None:
                         help="supervise the exact questions in a declared RL pool")
     parser.add_argument("--datasets", nargs="+", default=None,
                         help="train on these datasets' sft roles (default: the preset's)")
+    parser.add_argument("--vision-lora", action="store_true", default=None,
+                        help="also adapt the vision blocks and the mergers (default: the "
+                        "vision tower stays frozen)")
+    parser.add_argument("--image-upscale", action="store_true", default=None,
+                        help="resize every training image to the pixel budget, small ones up")
     args = parse_arguments(parser)
 
     preset = resolve_preset(config.SFT_PRESETS, args)

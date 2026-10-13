@@ -64,6 +64,18 @@ def cap_pixels(image: PILImage.Image, max_pixels: int = MAX_PIXELS) -> PILImage.
     return image.resize((max(1, int(w * scale)), max(1, int(h * scale))), PILImage.LANCZOS)
 
 
+def upscale_to_budget(image: PILImage.Image, max_pixels: int = MAX_PIXELS) -> PILImage.Image:
+    """Resize to the pixel budget with the aspect kept, up or down: small medical images (a
+    224x224 MRI slice is 49 vision tokens) give the vision encoder more patches to read."""
+    image = image.convert("RGB")
+    w, h = image.size
+    scale = (max_pixels / (w * h)) ** 0.5
+    if abs(scale - 1) < 1e-3:
+        return image
+    size = (max(1, int(w * scale)), max(1, int(h * scale)))
+    return image.resize(size, PILImage.BICUBIC if scale > 1 else PILImage.LANCZOS)
+
+
 def to_uniform_canvas(image: PILImage.Image, size: int = RL_IMAGE_SIZE) -> PILImage.Image:
     """Resize to fit (aspect preserved) and center on a black square of side `size`.
 

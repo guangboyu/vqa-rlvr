@@ -11,7 +11,7 @@ from vqar.registry import DATASETS, PROMPTS, TRAINING_ROLES
 
 # canvas shows the image as RL training does (vqar.data.to_uniform_canvas); first keeps only
 # the first image of a multi-image question, none shows no image at all.
-IMAGE_MODES = ("original", "black", "swapped", "canvas", "first", "none")
+IMAGE_MODES = ("original", "black", "swapped", "canvas", "first", "none", "upscaled")
 # Interventions change what the image shows; they pair with the original-image cell.
 INTERVENTIONS = ("black", "swapped", "first", "none")
 # Training roles are read only by the learnability pre-check and the screening battery.

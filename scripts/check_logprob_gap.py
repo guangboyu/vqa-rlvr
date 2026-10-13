@@ -449,7 +449,7 @@ def main():
                         help="questions per generation batch (default: as in training, "
                         "batch size x accumulation / group size)")
     parser.add_argument("--max-completion-length", type=int, default=None)
-    parser.add_argument("--image-fit", choices=("canvas", "budget"), default=None,
+    parser.add_argument("--image-fit", choices=("canvas", "budget", "upscale"), default=None,
                         help="RL image geometry, as train_grpo.py --image-fit")
     parser.add_argument("--gpu-memory-utilization", type=float, default=0.35)
     parser.add_argument("--seed", type=int, default=0, help="vLLM engine seed (TRL: rank 0)")

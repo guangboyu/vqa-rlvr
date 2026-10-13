@@ -142,3 +142,37 @@ def test_the_budget_image_fit_keeps_the_shape_within_the_evaluation_budget():
     width, height = fitted[1].size
     assert width * height <= config.MAX_PIXELS and abs(width / height - 2) < 0.01
     assert fitted[1].mode == "RGB"
+
+
+def test_vision_lora_adds_the_vision_blocks_and_mergers_to_the_lora_targets():
+    import re
+    from argparse import Namespace
+
+    from vqar import config
+    from vqar.training import lora_targets, resolve_preset
+
+    plain = config.SFT_PRESETS["sft_2b"]
+    assert lora_targets(plain) == list(plain.lora_targets)
+    preset = resolve_preset(config.SFT_PRESETS, Namespace(preset="sft_2b", hardware="24gb",
+                                                          vision_lora=True))
+    pattern = lora_targets(preset)
+    for name in ("model.visual.blocks.3.attn.qkv", "model.visual.blocks.3.attn.proj",
+                 "model.visual.merger.linear_fc2",
+                 "model.visual.deepstack_merger_list.0.linear_fc1",
+                 "model.language_model.layers.5.self_attn.q_proj"):
+        assert re.fullmatch(pattern, name), name
+    for name in ("model.language_model.layers.5.self_attn.rotary", "lm_head"):
+        assert not re.fullmatch(pattern, name)
+    assert config.dump(preset)["vision_lora"] is True
+    assert "vision_lora" not in config.dump(plain)
+
+
+def test_the_upscale_fit_resizes_small_images_up_to_the_budget():
+    from PIL import Image
+
+    from vqar import config
+    from vqar.rl import fit_rl_image
+
+    small = fit_rl_image(Image.new("RGB", (224, 224)), "upscale")
+    assert small.size[0] == small.size[1] and abs(small.size[0] ** 2 - config.MAX_PIXELS) < 2 * 887
+
