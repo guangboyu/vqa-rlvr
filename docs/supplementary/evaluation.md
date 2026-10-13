@@ -161,6 +161,17 @@ fails: 73.8% with it, and a black or swapped image costs 8.4 [+4.6, +12.2] and 6
 points, short of the 10-point gate; neither route qualifies either (reasoning is worse than a
 direct answer, and only 17% of questions give short-answer RL a learning signal).
 
+OmniMedVQA's image-level split turned out too easy to measure generalization (SFT reaches 99.7%
+on its test images, which come from the same source collections as its training images), so it
+is also split by source collection (`omnimedx`, 2026-10-11): 17 whole collections across X-ray,
+microscopy, dermoscopy, CT and fundus images are held out for testing, drawn round-robin over
+modalities with seed 0. RadImageNet (64% of the questions) stays in training, and collections
+that share images (exact decoded-pixel matches and resized copies, found by hashing) move
+together. Every open-access image already has a role in the image-level split and no held-out
+image may enter a training pool, so the test role keeps the 1,156 questions both splits hold
+out, and there is no dev role. It passes the screen on both routes (black image −20.0, swapped
+−28.2, learnable shares 54% and 26%).
+
 ## Held-out hygiene
 
 Split files list the exact rows of every role. Images are compared by a hash of their
