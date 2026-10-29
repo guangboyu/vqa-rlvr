@@ -100,6 +100,9 @@ DECLARED = {
     # non-commercial agreement, which also forbids redistributing the data.
     "rexvqa": Declaration("patient", True, "ReXGradient-160K Non-Commercial Data Access and "
                           "Use Agreement (research use, no redistribution)", True),
+    # Declared 2026-10-29: benchmark patients held out from training, dev by training patient.
+    "deeptumor": Declaration("patient", True, "annotations CC BY 4.0; CT data from AbdomenAtlas "
+                             "3.0 Mini, CC BY-NC-SA 4.0 (non-commercial)", True),
 }
 
 

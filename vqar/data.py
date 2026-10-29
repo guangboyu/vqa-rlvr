@@ -17,6 +17,7 @@ after materialization; its training views hold dev/evaluation images out while
 allowing SFT training examples to be reused in RL.
 """
 
+import re
 from collections.abc import Iterator
 
 from datasets import Dataset, Features, Image, Sequence, Value, load_dataset
@@ -850,3 +851,109 @@ def load_rexvqa() -> dict[str, Dataset]:
         splits[split] = _build(_rexvqa_generate, records=tuple(records))
     return splits
 
+
+
+# DeepTumorVQA v2 (2026-10-29): multiple-choice questions on abdominal CT, read from a local
+# download of the pinned Hugging Face revision (question files and the 2D montages only).
+DEEPTUMOR = "tumor-vqa/DeepTumorVQA_2.0"
+DEEPTUMOR_ROOT = "DEEPTUMORVQA_ROOT"  # environment variable: the downloaded dataset folder
+DEEPTUMOR_ROOT_DEFAULT = "/mnt/f/VQA/raw/deeptumorvqa"
+_DEEPTUMOR_OPTION = re.compile(r"(?:^|(?<=\s))([A-F]):\s")
+
+
+def deeptumor_question(mc_question: str) -> tuple[str, list[str]] | None:
+    """The question with one lettered option per line, and the option texts in letter order,
+    from the released form 'stem A: x B: y C: z'; None when the letters do not run A, B, ..."""
+    parts = _DEEPTUMOR_OPTION.split(mc_question.strip())
+    stem, letters, texts = parts[0].strip(), parts[1::2], [t.strip() for t in parts[2::2]]
+    if len(letters) < 2 or letters != list("ABCDEF"[:len(letters)]) or not all(texts):
+        return None
+    options = "\n".join(f"{letter}. {text}" for letter, text in zip(letters, texts, strict=True))
+    return f"{stem}\n{options}\nAnswer with the letter of the correct option.", texts
+
+
+def deeptumor_record(qid: str, patient: str, mc_question: str, correct: str, answer: str,
+                     answer_type: str, file: str) -> dict | None:
+    """One question, or None when it has several correct letters, its options do not parse, or
+    the released answer is not the text of the correct option."""
+    parsed = deeptumor_question(mc_question)
+    letter = correct.strip().upper()
+    if parsed is None or len(letter) != 1:
+        return None
+    question, texts = parsed
+    index = ord(letter) - ord("A")
+    if not 0 <= index < len(texts) or texts[index] != answer.strip():
+        return None
+    return {"dataset": "deeptumor", "qid": qid, "patient": patient, "file": file,
+            "question": question, "answers": [letter, texts[index]], "answer_type": answer_type}
+
+
+def deeptumor_dev_patient(patient: str, percent: int, seed: int) -> bool:
+    """A stable, seeded share of training patients held out as dev."""
+    import hashlib
+
+    return int(hashlib.sha256(f"{seed}:{patient}".encode()).hexdigest(), 16) % 100 < percent
+
+
+def _deeptumor_generate(records: tuple[dict, ...]) -> Iterator[dict]:
+    from functools import lru_cache
+    from pathlib import Path
+
+    @lru_cache(maxsize=1024)
+    def image(file: str) -> bytes:
+        return _rgb_png(Path(file).read_bytes())
+
+    for record in records:
+        row = {name: record[name] for name in ("dataset", "qid", "question", "answers",
+                                               "answer_type")}
+        yield {**row, "image": {"bytes": image(record["file"]), "path": None}}
+
+
+def load_deeptumor(train_size: int, dev_size: int, dev_percent: int,
+                   seed: int) -> dict[str, Dataset]:
+    """The benchmark's test questions (all but four that offer a single option), a seeded sample
+    of the training questions, and a dev sample from held-out training patients. Every
+    question shows its scan's whole-volume montage (five axial slices), the only 2D view
+    released for training scans. Training patients that also appear in the benchmark are
+    dropped, and the released validation pool is not used (it reuses benchmark patients)."""
+    import csv
+    import json
+    import os
+    import random
+    from pathlib import Path
+
+    root = Path(os.environ.get(DEEPTUMOR_ROOT, DEEPTUMOR_ROOT_DEFAULT))
+    if not (root / "train" / "images_2d" / "whole").is_dir():
+        raise FileNotFoundError(f"No DeepTumorVQA download under {root}; set {DEEPTUMOR_ROOT}")
+    test = []
+    for line in (root / "benchmark" / "test_qa.jsonl").read_text().splitlines():
+        row = json.loads(line)
+        test.append(deeptumor_record(
+            row["qid"], row["image_id"], row["mc_question"], row["correct_option"], row["answer"],
+            row["question_type"],
+            str(root / "benchmark" / "images_2d" / "whole" / f"{row['image_id']}.png")))
+    if test.count(None) > len(test) // 100:
+        raise ValueError(f"{test.count(None)} benchmark questions do not parse")
+    test = [record for record in test if record is not None]
+    test_patients = {record["patient"] for record in test}
+    train, dev = [], []
+    with open(root / "train" / "train_qa.csv", newline="") as handle:
+        for row in csv.DictReader(handle):
+            patient = row["Image ID"]
+            if patient in test_patients:
+                continue
+            record = deeptumor_record(
+                f"train_{int(row['Question ID']):06d}", patient, row["multiple-choice question"],
+                row["correct option"], row["answer"], row["question type"],
+                str(root / "train" / "images_2d" / "whole" / f"{patient}.png"))
+            if record is not None:
+                (dev if deeptumor_dev_patient(patient, dev_percent, seed) else train).append(record)
+    rng = random.Random(seed)
+    picked = {"train": rng.sample(train, train_size), "dev": rng.sample(dev, dev_size)}
+    splits = {"test": test}
+    for name, records in picked.items():
+        # Grouped by scan so each montage is encoded once; question order does not matter in
+        # a pool, and dev keeps this order.
+        splits[name] = sorted(records, key=lambda r: (r["patient"], r["qid"]))
+    return {name: _build(_deeptumor_generate, records=tuple(records))
+            for name, records in splits.items()}

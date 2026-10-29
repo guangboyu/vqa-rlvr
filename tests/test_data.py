@@ -203,3 +203,37 @@ def test_rexvqa_keeps_one_frontal_view_per_study_and_only_extracted_patients(tmp
         assert image.mode == "RGB"
         assert image.getextrema() == ((0, 255), (0, 255), (0, 255))
 
+
+
+def test_deeptumor_options_go_one_per_line_and_answers_hold_letter_and_text():
+    from vqar.data import deeptumor_record
+
+    record = deeptumor_record("q1", "BDMAP_1", "How large is the liver, expressed as a volume? "
+                              "A: 1293.7 B: 1154.4 C: 1436.0 D: 986.6", "A", "1293.7",
+                              "measurement", "scan.png")
+    assert record["question"].splitlines() == [
+        "How large is the liver, expressed as a volume?", "A. 1293.7", "B. 1154.4", "C. 1436.0",
+        "D. 986.6", "Answer with the letter of the correct option."]
+    assert record["answers"] == ["A", "1293.7"]
+    assert record["patient"] == "BDMAP_1"
+
+
+def test_deeptumor_drops_multi_answer_single_option_and_mismatched_rows():
+    from vqar.data import deeptumor_record
+
+    question = "Which organs have lesions? A: liver B: kidney C: pancreas"
+    assert deeptumor_record("q", "p", question, "A,B", "liver", "recognition", "f") is None
+    assert deeptumor_record("q", "p", "HU difference? A: 1.5", "A", "1.5", "measurement",
+                            "f") is None
+    assert deeptumor_record("q", "p", question, "B", "liver", "recognition", "f") is None
+    assert deeptumor_record("q", "p", question, "D", "liver", "recognition", "f") is None
+
+
+def test_deeptumor_dev_patients_are_a_stable_seeded_share():
+    from vqar.data import deeptumor_dev_patient
+
+    patients = [f"BDMAP_{i:08d}" for i in range(4000)]
+    chosen = [p for p in patients if deeptumor_dev_patient(p, 3, seed=0)]
+    assert 80 < len(chosen) < 160
+    assert chosen == [p for p in patients if deeptumor_dev_patient(p, 3, seed=0)]
+    assert chosen != [p for p in patients if deeptumor_dev_patient(p, 3, seed=1)]

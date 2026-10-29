@@ -215,6 +215,14 @@ def _rexvqa(sizes):
     return {f"rexvqa_{name}": subset for name, subset in data.load_rexvqa().items()}
 
 
+def _deeptumor(sizes):
+    from vqar import data
+
+    splits = data.load_deeptumor(sizes["train"], sizes["dev"], sizes["dev_patient_percent"],
+                                 sizes["seed"])
+    return {f"deeptumor_{name}": subset for name, subset in splits.items()}
+
+
 def _prepared_ood(sizes):
     raise ValueError("Use python -m scripts.prepare_ood with pinned local source files")
 
@@ -422,6 +430,27 @@ DATASETS: dict[str, DatasetSpec] = {
             official=metrics.choice_letter_accuracy, normalized=metrics.choice_accuracy,
             official_roles=frozenset(ROLES), sizes={"archive_parts": 1},
             materialize=_rexvqa, require_split=False, public_records=False,
+        ),
+        # Abdominal CT (2026-10-29): DeepTumorVQA v2's multiple-choice questions (two to four
+        # options; recognition, measurement, visual and medical reasoning). The released 2D
+        # input for a training scan is one montage of five axial slices across the volume, so
+        # every question here, test included, shows that whole-volume montage. Test is the
+        # benchmark (991 patients); training draws 40,000 questions from the 428,050 released
+        # ones after dropping the 68 benchmark patients that recur in training, questions with
+        # several correct letters or a single option, and a 3% share of training patients that
+        # becomes dev. Annotations CC BY 4.0; CT data from AbdomenAtlas 3.0 Mini, CC BY-NC-SA.
+        DatasetSpec(
+            name="deeptumor", display_name="DeepTumorVQA (whole-volume montage)",
+            sources={"tumor-vqa/DeepTumorVQA_2.0": "a8b9db5133fda02567476dcb49498ec51f6aed37"},
+            subsets={"sft": "deeptumor_train", "rl": "deeptumor_train", "dev": "deeptumor_dev",
+                     "test": "deeptumor_test"},
+            official_splits=frozenset({"test"}),
+            ladder="in-domain", answer_schema="option letter A-D (two to four options); "
+            "references hold the letter and the option text",
+            official=metrics.choice_letter_accuracy, normalized=metrics.choice_accuracy,
+            official_roles=frozenset(ROLES),
+            sizes={"train": 40_000, "dev": 500, "dev_patient_percent": 3, "seed": 0},
+            materialize=_deeptumor, require_split=False,
         ),
         DatasetSpec(
             name="vizwiz", display_name="VizWiz",
