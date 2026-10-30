@@ -861,31 +861,44 @@ DEEPTUMOR_ROOT_DEFAULT = "/mnt/f/VQA/raw/deeptumorvqa"
 _DEEPTUMOR_OPTION = re.compile(r"(?:^|(?<=\s))([A-F]):\s")
 
 
-def deeptumor_question(mc_question: str) -> tuple[str, list[str]] | None:
-    """The question with one lettered option per line, and the option texts in letter order,
-    from the released form 'stem A: x B: y C: z'; None when the letters do not run A, B, ..."""
+def _deeptumor_parts(mc_question: str) -> tuple[str, list[str]] | None:
+    """The stem and the option texts in letter order, from the released form
+    'stem A: x B: y C: z'; None when the letters do not run A, B, ..."""
     parts = _DEEPTUMOR_OPTION.split(mc_question.strip())
     stem, letters, texts = parts[0].strip(), parts[1::2], [t.strip() for t in parts[2::2]]
     if len(letters) < 2 or letters != list("ABCDEF"[:len(letters)]) or not all(texts):
         return None
-    options = "\n".join(f"{letter}. {text}" for letter, text in zip(letters, texts, strict=True))
-    return f"{stem}\n{options}\nAnswer with the letter of the correct option.", texts
+    return stem, texts
+
+
+def _deeptumor_prompt(stem: str, texts: list[str]) -> str:
+    options = "\n".join(f"{chr(ord('A') + i)}. {text}" for i, text in enumerate(texts))
+    return f"{stem}\n{options}\nAnswer with the letter of the correct option."
+
+
+def deeptumor_question(mc_question: str) -> tuple[str, list[str]] | None:
+    """The question with one lettered option per line, and the option texts in letter order;
+    None when the released options do not parse."""
+    parts = _deeptumor_parts(mc_question)
+    return None if parts is None else (_deeptumor_prompt(*parts), parts[1])
 
 
 def deeptumor_record(qid: str, patient: str, mc_question: str, correct: str, answer: str,
-                     answer_type: str, file: str) -> dict | None:
+                     answer_type: str, file: str, subtype: str = "") -> dict | None:
     """One question, or None when it has several correct letters, its options do not parse, or
     the released answer is not the text of the correct option."""
-    parsed = deeptumor_question(mc_question)
+    parts = _deeptumor_parts(mc_question)
     letter = correct.strip().upper()
-    if parsed is None or len(letter) != 1:
+    if parts is None or len(letter) != 1:
         return None
-    question, texts = parsed
+    stem, texts = parts
     index = ord(letter) - ord("A")
     if not 0 <= index < len(texts) or texts[index] != answer.strip():
         return None
     return {"dataset": "deeptumor", "qid": qid, "patient": patient, "file": file,
-            "question": question, "answers": [letter, texts[index]], "answer_type": answer_type}
+            "question": _deeptumor_prompt(stem, texts), "answers": [letter, texts[index]],
+            "answer_type": answer_type, "subtype": subtype, "stem": stem, "options": texts,
+            "correct": index}
 
 
 def deeptumor_dev_patient(patient: str, percent: int, seed: int) -> bool:
@@ -956,4 +969,170 @@ def load_deeptumor(train_size: int, dev_size: int, dev_percent: int,
         # a pool, and dev keeps this order.
         splits[name] = sorted(records, key=lambda r: (r["patient"], r["qid"]))
     return {name: _build(_deeptumor_generate, records=tuple(records))
+            for name, records in splits.items()}
+
+
+# DeepTumorVQA with its option shortcuts removed (2026-10-30). The released distractors for a
+# continuous value are drawn from [0.7, 1.3] times the true value, so the true value is the
+# second or third smallest of four options 88% of the time, and binary and categorical answers
+# follow the patients' prevalence (85% "No" for colon lesions). Here every continuous value
+# gets a ladder of options with the true value at a uniformly random rank, counts a window of
+# consecutive integers, every option list is shuffled, and each subtype with discrete answers
+# keeps equally many questions per answer.
+DEEPTUMOR_SIGNED = frozenset({"organ HU measurement", "tumor organ HU difference"})
+DEEPTUMOR_PERCENT = frozenset({"tumor burden percentage"})
+
+
+def _is_number(text: str) -> bool:
+    try:
+        float(text)
+    except ValueError:
+        return False
+    return True
+
+
+def deeptumor_continuous(record: dict) -> bool:
+    """A question whose options are measured values (not counts)."""
+    return "count" not in record["subtype"] and all(map(_is_number, record["options"]))
+
+
+def deeptumor_ladder(truth: str, k: int, subtype: str, rng) -> list[str] | None:
+    """k options around a true value, in ascending order with the truth at a uniformly random
+    rank; the spacing is drawn per question and does not depend on that rank, so the option set
+    does not reveal it. Counts get k consecutive integers. None when some rank would leave the
+    value's range (a negative volume, a percentage over 100), or the values collide."""
+    value = float(truth)
+    if "count" in subtype:
+        if value != int(value):
+            return None
+        start = rng.randrange(max(0, int(value) - k + 1), int(value) + 1)
+        return [str(v) for v in range(start, start + k)]
+    rank = rng.randrange(k)
+    signed = subtype in DEEPTUMOR_SIGNED or value <= 0
+    if signed:  # HU values: additive steps of 5-15 HU, as the released options use
+        step = rng.uniform(5, 15)
+        values = [value + step * (i - rank) for i in range(k)]
+    else:  # positive quantities: geometric steps of 8-15%
+        step = rng.uniform(0.08, 0.15)
+        values = [value * (1 + step) ** (i - rank) for i in range(k)]
+    if (subtype in DEEPTUMOR_PERCENT and max(values) > 100) or (not signed and min(values) <= 0):
+        return None
+    decimals = len(truth.split(".")[1]) if "." in truth else 0
+    for places in (decimals, decimals + 1, decimals + 2):  # one format for every option
+        texts = [f"{v:.{places}f}" for v in values]
+        texts[rank] = f"{value:.{places}f}"
+        if len(set(texts)) == k:
+            return texts
+    return None
+
+
+def deeptumor_debias(record: dict, seed: int) -> dict | None:
+    """The question with regenerated numeric options and a shuffled option order (seeded per
+    question); None when no ladder fits its true value."""
+    import random
+
+    rng = random.Random(f"{seed}:{record['qid']}")
+    options, truth = list(record["options"]), record["options"][record["correct"]]
+    if all(map(_is_number, options)):
+        options = deeptumor_ladder(truth, len(options), record["subtype"], rng)
+        if options is None:
+            return None
+        truth = next(text for text in options if float(text) == float(truth))
+    rng.shuffle(options)
+    index = options.index(truth)
+    return {**record, "dataset": "deeptumorx", "options": options, "correct": index,
+            "question": _deeptumor_prompt(record["stem"], options),
+            "answers": [chr(ord("A") + index), truth]}
+
+
+def deeptumor_balance(records: list[dict], min_per_answer: int, seed: int) -> list[dict]:
+    """Within each subtype with discrete answers (binary, categorical, counts), the same number
+    of questions per answer: answers with fewer than `min_per_answer` questions are dropped and
+    the others sampled down to the rarest remaining one. Continuous-value questions pass."""
+    import random
+    from collections import defaultdict
+
+    groups, kept = defaultdict(lambda: defaultdict(list)), []
+    for record in records:
+        if deeptumor_continuous(record):
+            kept.append(record)
+        else:
+            groups[record["subtype"]][record["answers"][1]].append(record)
+    rng = random.Random(seed)
+    for subtype in sorted(groups):
+        answers = {a: rs for a, rs in groups[subtype].items() if len(rs) >= min_per_answer}
+        if len(answers) < 2:
+            continue
+        size = min(len(rs) for rs in answers.values())
+        for answer in sorted(answers):
+            kept.extend(rng.sample(sorted(answers[answer], key=lambda r: r["qid"]), size))
+    return sorted(kept, key=lambda r: r["qid"])
+
+
+def _deeptumor_gray_generate(records: tuple[dict, ...]) -> Iterator[dict]:
+    """Rows with the released grayscale PNG bytes as they are (a third of the size of RGB)."""
+    from functools import lru_cache
+    from pathlib import Path
+
+    @lru_cache(maxsize=1024)
+    def image(file: str) -> bytes:
+        return Path(file).read_bytes()
+
+    for record in records:
+        row = {name: record[name] for name in ("dataset", "qid", "question", "answers",
+                                               "answer_type")}
+        yield {**row, "image": {"bytes": image(record["file"]), "path": None}}
+
+
+def load_deeptumorx(train_size: int, dev_size: int, dev_percent: int, seed: int,
+                    min_test: int, min_train: int) -> dict[str, Dataset]:
+    """DeepTumorVQA's questions with the option shortcuts removed: the same patients, roles and
+    whole-volume montages as load_deeptumor, after deeptumor_debias on every question and
+    deeptumor_balance within each role (test at `min_test` questions per answer, training and
+    dev at `min_train`)."""
+    import csv
+    import json
+    import os
+    import random
+    from pathlib import Path
+
+    root = Path(os.environ.get(DEEPTUMOR_ROOT, DEEPTUMOR_ROOT_DEFAULT))
+    if not (root / "train" / "images_2d" / "whole").is_dir():
+        raise FileNotFoundError(f"No DeepTumorVQA download under {root}; set {DEEPTUMOR_ROOT}")
+
+    def debiased(record):
+        return None if record is None else deeptumor_debias(record, seed)
+
+    test = []
+    for line in (root / "benchmark" / "test_qa.jsonl").read_text().splitlines():
+        row = json.loads(line)
+        test.append(debiased(deeptumor_record(
+            row["qid"], row["image_id"], row["mc_question"], row["correct_option"], row["answer"],
+            row["question_type"],
+            str(root / "benchmark" / "images_2d" / "whole" / f"{row['image_id']}.png"),
+            row["question_subtype"])))
+    test_patients = {json.loads(line)["image_id"] for line in
+                     (root / "benchmark" / "test_qa.jsonl").read_text().splitlines()}
+    test = deeptumor_balance([r for r in test if r is not None], min_test, seed)
+    train, dev = [], []
+    with open(root / "train" / "train_qa.csv", newline="") as handle:
+        for row in csv.DictReader(handle):
+            patient = row["Image ID"]
+            if patient in test_patients:
+                continue
+            record = debiased(deeptumor_record(
+                f"train_{int(row['Question ID']):06d}", patient, row["multiple-choice question"],
+                row["correct option"], row["answer"], row["question type"],
+                str(root / "train" / "images_2d" / "whole" / f"{patient}.png"),
+                row["question subtype"]))
+            if record is not None:
+                (dev if deeptumor_dev_patient(patient, dev_percent, seed) else train).append(record)
+    train = deeptumor_balance(train, min_train, seed)
+    dev = deeptumor_balance(dev, min_test, seed)
+    rng = random.Random(seed)
+    splits = {"test": test, "train": rng.sample(train, min(train_size, len(train))),
+              "dev": rng.sample(dev, min(dev_size, len(dev)))}
+    splits = {name: sorted(records, key=lambda r: (r["patient"], r["qid"]))
+              for name, records in splits.items()}
+    return {name: _build(_deeptumor_gray_generate, records=tuple(records))
             for name, records in splits.items()}

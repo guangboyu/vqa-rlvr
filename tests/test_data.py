@@ -237,3 +237,71 @@ def test_deeptumor_dev_patients_are_a_stable_seeded_share():
     assert 80 < len(chosen) < 160
     assert chosen == [p for p in patients if deeptumor_dev_patient(p, 3, seed=0)]
     assert chosen != [p for p in patients if deeptumor_dev_patient(p, 3, seed=1)]
+
+
+def test_deeptumor_ladder_puts_the_truth_at_every_rank_with_one_format():
+    import random
+    from collections import Counter
+
+    from vqar.data import deeptumor_ladder
+
+    ranks = Counter()
+    for seed in range(400):
+        options = deeptumor_ladder("1293.7", 4, "organ volume measurement", random.Random(seed))
+        assert len(set(options)) == 4 and all(len(o.split(".")[1]) == 1 for o in options)
+        values = [float(o) for o in options]
+        assert values == sorted(values)
+        ranks[values.index(1293.7)] += 1
+    assert set(ranks) == {0, 1, 2, 3} and min(ranks.values()) > 70
+    counts = deeptumor_ladder("1", 4, "lesion counting", random.Random(0))
+    assert counts in (["0", "1", "2", "3"], ["1", "2", "3", "4"])
+
+
+def test_deeptumor_ladder_refuses_values_out_of_range_and_signed_values_go_additive():
+    import random
+
+    from vqar.data import deeptumor_ladder
+
+    ladders = [deeptumor_ladder("99.5", 4, "tumor burden percentage", random.Random(s))
+               for s in range(50)]
+    assert any(ladder is None for ladder in ladders)  # ranks below the top would pass 100
+    assert all(max(map(float, ladder)) <= 100 for ladder in ladders if ladder)
+    signed = deeptumor_ladder("-4.2", 4, "tumor organ HU difference", random.Random(3))
+    values = [float(v) for v in signed]
+    gaps = {round(b - a, 1) for a, b in zip(values, values[1:], strict=False)}
+    assert len(gaps) <= 2 and 4.5 <= min(gaps) <= 15.5  # one HU step, up to rounding
+
+
+def test_deeptumor_debias_shuffles_and_keeps_the_answer_consistent():
+    from vqar.data import deeptumor_debias, deeptumor_record
+
+    record = deeptumor_record("q7", "p", "Clustering? A: Highly clustered B: Somewhat clustered "
+                              "C: Widely distributed", "A", "Highly clustered",
+                              "visual reasoning", "f", "liver lesion clustering")
+    out = deeptumor_debias(record, seed=0)
+    letter, text = out["answers"]
+    assert sorted(out["options"]) == sorted(record["options"]) and text == "Highly clustered"
+    assert out["options"][ord(letter) - ord("A")] == text
+    assert f"{letter}. {text}" in out["question"]
+    assert out == deeptumor_debias(record, seed=0)
+
+
+def test_deeptumor_balance_equalizes_discrete_answers_and_passes_continuous_values():
+    from collections import Counter
+
+    from vqar.data import deeptumor_balance
+
+    def rec(qid, subtype, answer, options):
+        return {"qid": qid, "subtype": subtype, "answers": ["A", answer], "options": options}
+
+    records = ([rec(f"y{i}", "colon lesion existence", "Yes", ["Yes", "No"]) for i in range(30)]
+               + [rec(f"n{i}", "colon lesion existence", "No", ["No", "Yes"]) for i in range(170)]
+               + [rec(f"r{i}", "rare grade", "Rare", ["Rare", "Common"]) for i in range(3)]
+               + [rec(f"c{i}", "rare grade", "Common", ["Common", "Rare"]) for i in range(40)]
+               + [rec(f"v{i}", "organ volume measurement", str(100 + i), ["1", "2", "3", "4"])
+                  for i in range(25)])
+    kept = deeptumor_balance(records, min_per_answer=10, seed=0)
+    by = Counter((r["subtype"], r["answers"][1]) for r in kept)
+    assert by[("colon lesion existence", "Yes")] == by[("colon lesion existence", "No")] == 30
+    assert not any(subtype == "rare grade" for subtype, _ in by)  # one answer left: dropped
+    assert sum(1 for r in kept if r["subtype"] == "organ volume measurement") == 25

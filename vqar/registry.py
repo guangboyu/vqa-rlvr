@@ -223,6 +223,15 @@ def _deeptumor(sizes):
     return {f"deeptumor_{name}": subset for name, subset in splits.items()}
 
 
+def _deeptumorx(sizes):
+    from vqar import data
+
+    splits = data.load_deeptumorx(sizes["train"], sizes["dev"], sizes["dev_patient_percent"],
+                                  sizes["seed"], sizes["min_test_per_answer"],
+                                  sizes["min_train_per_answer"])
+    return {f"deeptumorx_{name}": subset for name, subset in splits.items()}
+
+
 def _prepared_ood(sizes):
     raise ValueError("Use python -m scripts.prepare_ood with pinned local source files")
 
@@ -451,6 +460,26 @@ DATASETS: dict[str, DatasetSpec] = {
             official_roles=frozenset(ROLES),
             sizes={"train": 40_000, "dev": 500, "dev_patient_percent": 3, "seed": 0},
             materialize=_deeptumor, require_split=False,
+        ),
+        # The same questions with their option shortcuts removed (2026-10-30; vqar.data
+        # deeptumor_debias, deeptumor_balance): continuous values get options with the true value
+        # at a uniformly random rank, counts a window of consecutive integers, every option list
+        # is shuffled, and each subtype with discrete answers keeps equally many questions per
+        # answer (answers with fewer than 10 test or 50 training questions dropped). Test keeps
+        # 6,607 of the benchmark's questions; the montages are stored as released (grayscale).
+        DatasetSpec(
+            name="deeptumorx", display_name="DeepTumorVQA (debiased options)",
+            sources={"tumor-vqa/DeepTumorVQA_2.0": "a8b9db5133fda02567476dcb49498ec51f6aed37"},
+            subsets={"sft": "deeptumorx_train", "rl": "deeptumorx_train",
+                     "dev": "deeptumorx_dev", "test": "deeptumorx_test"},
+            official_splits=frozenset(),
+            ladder="in-domain", answer_schema="option letter A-D (two to four options); "
+            "references hold the letter and the option text",
+            official=metrics.choice_letter_accuracy, normalized=metrics.choice_accuracy,
+            official_roles=frozenset(ROLES),
+            sizes={"train": 40_000, "dev": 500, "dev_patient_percent": 3, "seed": 0,
+                   "min_test_per_answer": 10, "min_train_per_answer": 50},
+            materialize=_deeptumorx, require_split=False,
         ),
         DatasetSpec(
             name="vizwiz", display_name="VizWiz",
