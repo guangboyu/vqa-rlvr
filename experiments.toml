@@ -1025,3 +1025,10 @@ models = ["slk-sft2", "slk-sft2-vis", "slk-sft2-up", "slk-short2-base-e1",
 label = "dtv-probe-sft2"
 name = "SFT 2B probe (DeepTumorVQA, 8,000 questions)"
 model = "checkpoints/merged/dtv_probe_sft2"
+
+# Debiased DeepTumorVQA probe (2026-10-30), declared in runs/deeptumorx-20261030/run.sh before it
+# ran: SFT 2B for 250 updates on the debiased training questions.
+[[arms]]
+label = "dtvx-probe-sft2"
+name = "SFT 2B probe (debiased DeepTumorVQA, 8,000 questions)"
+model = "checkpoints/merged/dtvx_probe_sft2"
