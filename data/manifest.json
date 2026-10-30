@@ -54,6 +54,14 @@
       "dev": 500,
       "dev_patient_percent": 3,
       "seed": 0
+    },
+    "deeptumorx": {
+      "train": 40000,
+      "dev": 500,
+      "dev_patient_percent": 3,
+      "seed": 0,
+      "min_test_per_answer": 10,
+      "min_train_per_answer": 50
     }
   },
   "subsets": {
@@ -656,6 +664,78 @@
         "xai-org/RealworldQA": "17e7f75e092e47169732462ea3cdfebe911105dd"
       },
       "qids_sha": "c617e3eb2bed15732eb322854a4a213dede08eabb52b01d08422a3bd8d1991a6"
+    },
+    "deeptumorx_test": {
+      "n": 6607,
+      "source_revisions": {
+        "HuggingFaceM4/the_cauldron": "847a98a779b1652d65111daf20c972dfcd333605",
+        "lmms-lab/VQAv2": "32665d35052eb4a6d4414851c3c829a72754915a",
+        "lmms-lab/GQA": "a6e72d6e1b912da88af8b2f9eba05d5ea8ec2dd8",
+        "leonardPKU/clevr_cogen_a_train": "d5a8da66aa97c9c19ebe4075b7c7f777fef850a6",
+        "lmms-lab/textvqa": "9c0699cd19768ac5ab97568f6b3cbac4c0062884",
+        "HuggingFaceM4/ChartQA": "b605b6e08b57faf4359aeb2fe6a3ca595f99b6c5",
+        "bio-nlp-umass/MedThinkVQA": "5555b80e167c4796efab92fe709fb05914077dc0",
+        "SimulaMet/Kvasir-VQA-x1": "61e41148c3214bc5140ad0ab4c28520a512e2a73",
+        "foreverbeliever/OmniMedVQA": "1ba51c28fc0773bdf7efb8396e5bcfd4227e22da",
+        "BoKelvin/SLAKE": "a9083ce6c34ac3ffb17671a605962924d8a8f9e9",
+        "flaviagiammarino/path-vqa": "1685832883334b5bb5beaf4e4b333fdeecaa4ad9",
+        "rajpurkarlab/ReXVQA": "b1adadb963bb16634f2e07c1c224a2e83fc8558a",
+        "rajpurkarlab/ReXGradient-160K": "b9277dd929190931f5a8b6ae19f3e3c8aae2f1f7",
+        "tumor-vqa/DeepTumorVQA_2.0": "a8b9db5133fda02567476dcb49498ec51f6aed37",
+        "https://vizwiz.cs.colorado.edu/VizWiz_all_answers/VQA_test.json": "fa113f0e90230ab4690bb41c4d74e40f7087cc7c192dd8363fa4d6bad339b7aa",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/images/test.zip": "4d03f8c21823a3e4d1f501b1234e7380eb7cf2429ff0eb0281741ff1cc44f22a",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/vqa_data/API.zip": "76de4354ca2fbc57dd2369b579dc9bb5684e41d6a135b36b324a5ba25b7b9ca2",
+        "xai-org/RealworldQA": "17e7f75e092e47169732462ea3cdfebe911105dd"
+      },
+      "qids_sha": "d74cc7112061fc9d1ec231d22cfa80059b7d9b53de87d8cd4f8a787d90a522ac"
+    },
+    "deeptumorx_train": {
+      "n": 40000,
+      "source_revisions": {
+        "HuggingFaceM4/the_cauldron": "847a98a779b1652d65111daf20c972dfcd333605",
+        "lmms-lab/VQAv2": "32665d35052eb4a6d4414851c3c829a72754915a",
+        "lmms-lab/GQA": "a6e72d6e1b912da88af8b2f9eba05d5ea8ec2dd8",
+        "leonardPKU/clevr_cogen_a_train": "d5a8da66aa97c9c19ebe4075b7c7f777fef850a6",
+        "lmms-lab/textvqa": "9c0699cd19768ac5ab97568f6b3cbac4c0062884",
+        "HuggingFaceM4/ChartQA": "b605b6e08b57faf4359aeb2fe6a3ca595f99b6c5",
+        "bio-nlp-umass/MedThinkVQA": "5555b80e167c4796efab92fe709fb05914077dc0",
+        "SimulaMet/Kvasir-VQA-x1": "61e41148c3214bc5140ad0ab4c28520a512e2a73",
+        "foreverbeliever/OmniMedVQA": "1ba51c28fc0773bdf7efb8396e5bcfd4227e22da",
+        "BoKelvin/SLAKE": "a9083ce6c34ac3ffb17671a605962924d8a8f9e9",
+        "flaviagiammarino/path-vqa": "1685832883334b5bb5beaf4e4b333fdeecaa4ad9",
+        "rajpurkarlab/ReXVQA": "b1adadb963bb16634f2e07c1c224a2e83fc8558a",
+        "rajpurkarlab/ReXGradient-160K": "b9277dd929190931f5a8b6ae19f3e3c8aae2f1f7",
+        "tumor-vqa/DeepTumorVQA_2.0": "a8b9db5133fda02567476dcb49498ec51f6aed37",
+        "https://vizwiz.cs.colorado.edu/VizWiz_all_answers/VQA_test.json": "fa113f0e90230ab4690bb41c4d74e40f7087cc7c192dd8363fa4d6bad339b7aa",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/images/test.zip": "4d03f8c21823a3e4d1f501b1234e7380eb7cf2429ff0eb0281741ff1cc44f22a",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/vqa_data/API.zip": "76de4354ca2fbc57dd2369b579dc9bb5684e41d6a135b36b324a5ba25b7b9ca2",
+        "xai-org/RealworldQA": "17e7f75e092e47169732462ea3cdfebe911105dd"
+      },
+      "qids_sha": "db672e2c92c2393ba745495739a9db59b196df010a281caa2fe81a1ba88b5184"
+    },
+    "deeptumorx_dev": {
+      "n": 500,
+      "source_revisions": {
+        "HuggingFaceM4/the_cauldron": "847a98a779b1652d65111daf20c972dfcd333605",
+        "lmms-lab/VQAv2": "32665d35052eb4a6d4414851c3c829a72754915a",
+        "lmms-lab/GQA": "a6e72d6e1b912da88af8b2f9eba05d5ea8ec2dd8",
+        "leonardPKU/clevr_cogen_a_train": "d5a8da66aa97c9c19ebe4075b7c7f777fef850a6",
+        "lmms-lab/textvqa": "9c0699cd19768ac5ab97568f6b3cbac4c0062884",
+        "HuggingFaceM4/ChartQA": "b605b6e08b57faf4359aeb2fe6a3ca595f99b6c5",
+        "bio-nlp-umass/MedThinkVQA": "5555b80e167c4796efab92fe709fb05914077dc0",
+        "SimulaMet/Kvasir-VQA-x1": "61e41148c3214bc5140ad0ab4c28520a512e2a73",
+        "foreverbeliever/OmniMedVQA": "1ba51c28fc0773bdf7efb8396e5bcfd4227e22da",
+        "BoKelvin/SLAKE": "a9083ce6c34ac3ffb17671a605962924d8a8f9e9",
+        "flaviagiammarino/path-vqa": "1685832883334b5bb5beaf4e4b333fdeecaa4ad9",
+        "rajpurkarlab/ReXVQA": "b1adadb963bb16634f2e07c1c224a2e83fc8558a",
+        "rajpurkarlab/ReXGradient-160K": "b9277dd929190931f5a8b6ae19f3e3c8aae2f1f7",
+        "tumor-vqa/DeepTumorVQA_2.0": "a8b9db5133fda02567476dcb49498ec51f6aed37",
+        "https://vizwiz.cs.colorado.edu/VizWiz_all_answers/VQA_test.json": "fa113f0e90230ab4690bb41c4d74e40f7087cc7c192dd8363fa4d6bad339b7aa",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/images/test.zip": "4d03f8c21823a3e4d1f501b1234e7380eb7cf2429ff0eb0281741ff1cc44f22a",
+        "https://vizwiz.cs.colorado.edu/VizWiz_final/vqa_data/API.zip": "76de4354ca2fbc57dd2369b579dc9bb5684e41d6a135b36b324a5ba25b7b9ca2",
+        "xai-org/RealworldQA": "17e7f75e092e47169732462ea3cdfebe911105dd"
+      },
+      "qids_sha": "27c6c00431c7e9f602cbbdb57ae7d9b342f70208b233a417c77caf6bfa83e70c"
     }
   }
 }

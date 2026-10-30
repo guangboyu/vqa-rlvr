@@ -155,7 +155,8 @@ diagnostics, in the [supplementary results](docs/supplementary/supplement.md):
   points), MedThinkVQA (answered from the case text at 2B and 8B), Kvasir-VQA-x1, PathVQA
   and ReXVQA (images change the answers by under 10 points; a black chest X-ray leaves
   ReXVQA's accuracy unchanged), and DeepTumorVQA (SFT lifts its CT benchmark from 35.0% to
-  61.4% and still scores 59.0% with a black image: the answer options carry the answer)
+  61.4% and still scores 59.0% with a black image: the answer options carry the answer; with
+  debiased options a 2B model learns only lesion existence from the whole-volume montage)
   ([screening](docs/supplementary/evaluation.md#dataset-screening)).
 
 ## What was trained

@@ -187,13 +187,31 @@ the dataset's authors report for fine-tuned Qwen3-VL-4B, and a black montage cos
 points [+1.7, +3.2] (3.0 [−1.0, +7.0] on dev), under the declared 10-point bar: 96% of what it
 learned does not need the image. By question type, the image is worth 7.6 points on recognition
 (lesion existence) and 0.2 to 2.4 on visual reasoning, measurement and medical reasoning. The
-options carry the shortcut. A text-only rule learned from the training file
+options carry the shortcut. The released distractors for a continuous value are drawn from
+0.7 to 1.3 times the true value, so on four-option measurement questions the true value is the
+second or third smallest in 88% of them, and discrete answers follow the patients' prevalence
+(85% "No" on colon lesion existence). A text-only rule learned from the training file
 (`python -m scripts.option_priors`, [result](../../results/screening/deeptumor-option-prior.json))
-answers a numeric question with the rank its subtype's correct value most often takes among
-the sorted options, and any other question with its subtype's most common letter: it scores
-46.6% on the benchmark (measurement 49.6% against 25% chance), and on four-option measurement
-questions the correct value is the second or third smallest in 88% of them. RL on these
-questions would mostly train option priors.
+answers a numeric question with the rank its subtype's correct value most often takes, and any
+other question with the option most often correct in training: it scores 60.7% on the
+benchmark, close to the probe and to the authors' fine-tuned models. RL on these questions
+would mostly train option priors.
+
+A debiased version (`deeptumorx`, 2026-10-30) removes both shortcuts: every continuous value
+gets a ladder of options with the true value at a uniformly random rank and a spacing drawn per
+question, counts get a window of consecutive integers, every option list is shuffled, and each
+subtype with discrete answers keeps equally many questions per answer (answers with fewer than
+10 test or 50 training questions dropped), leaving 6,607 test questions. The same text-only rule
+then scores 35.2% against 33.7% chance
+([result](../../results/screening/deeptumorx-option-prior.json)). Declared before the run: the
+debiased set is worth training on if a probe trained on it beats Instruct by 5 points and a
+black montage costs that probe 10. Neither holds. Instruct 2B scores 34.6% with or without the
+image; the probe trained on the released options falls from 61.4% to 36.0%; a probe trained on
+8,000 debiased questions reaches 36.7% (+2.2 [+0.7, +3.6] over Instruct) and loses 2.3 points
+[+1.3, +3.5] with a black montage. Its only visual skill is lesion existence (recognition 60.7%
+against 51.3% with a black montage, chance 50%); measurement stays at chance (24.7% against
+25.0%). At 2B, nine axial slices of about 300 pixels do not carry volumes, counts or
+attenuation.
 
 ## Held-out hygiene
 
