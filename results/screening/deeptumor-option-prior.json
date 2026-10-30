@@ -1,0 +1,36 @@
+{
+ "source": "tumor-vqa/DeepTumorVQA_2.0 a8b9db5133fda02567476dcb49498ec51f6aed37",
+ "benchmark": {
+  "visual reasoning": {
+   "questions": 4045,
+   "prior_accuracy": 49.74,
+   "chance": 32.14
+  },
+  "all": {
+   "questions": 9996,
+   "prior_accuracy": 46.57,
+   "chance": 34.53
+  },
+  "recognition": {
+   "questions": 2023,
+   "prior_accuracy": 50.02,
+   "chance": 50.0
+  },
+  "measurement": {
+   "questions": 2023,
+   "prior_accuracy": 49.63,
+   "chance": 25.0
+  },
+  "medical reasoning": {
+   "questions": 1905,
+   "prior_accuracy": 32.91,
+   "chance": 33.31
+  }
+ },
+ "measurement_four_options_correct_rank_share": {
+  "1": 6.8,
+  "2": 47.6,
+  "3": 40.7,
+  "4": 4.9
+ }
+}

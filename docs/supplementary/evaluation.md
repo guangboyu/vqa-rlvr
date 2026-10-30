@@ -172,6 +172,29 @@ image may enter a training pool, so the test role keeps the 1,156 questions both
 out, and there is no dev role. It passes the screen on both routes (black image −20.0, swapped
 −28.2, learnable shares 54% and 26%).
 
+DeepTumorVQA v2 (abdominal CT, 2026-10-29) is rejected, by the base model's screen and by a
+probe declared before it ran. Its questions are multiple choice with two to four options
+(chance 34.5%), and the 2D input released for training scans is one montage of nine axial
+slices from pelvis to chest, so every question here shows that whole-volume montage. Test is
+the benchmark (9,996 questions on 991 patients after four single-option questions); training
+draws 40,000 of the 428,050 released questions after dropping the 68 benchmark patients that
+recur in the training file, and 3% of training patients form a 500-question dev role. Instruct
+2B answers at chance (35.0% on the benchmark; 39.4% on the screened training questions), and a
+black montage costs it nothing (−1.6 [−6.0, +2.8]), so the image gate fails; at chance that
+gate says little, which is why the probe was added. SFT on 8,000 training questions (250
+updates) lifts the benchmark from 35.0% to 61.4% (+26.5 [+25.2, +27.8]), close to the 64.6%
+the dataset's authors report for fine-tuned Qwen3-VL-4B, and a black montage costs it 2.5
+points [+1.7, +3.2] (3.0 [−1.0, +7.0] on dev), under the declared 10-point bar: 96% of what it
+learned does not need the image. By question type, the image is worth 7.6 points on recognition
+(lesion existence) and 0.2 to 2.4 on visual reasoning, measurement and medical reasoning. The
+options carry the shortcut. A text-only rule learned from the training file
+(`python -m scripts.option_priors`, [result](../../results/screening/deeptumor-option-prior.json))
+answers a numeric question with the rank its subtype's correct value most often takes among
+the sorted options, and any other question with its subtype's most common letter: it scores
+46.6% on the benchmark (measurement 49.6% against 25% chance), and on four-option measurement
+questions the correct value is the second or third smallest in 88% of them. RL on these
+questions would mostly train option priors.
+
 ## Held-out hygiene
 
 Split files list the exact rows of every role. Images are compared by a hash of their

@@ -1089,6 +1089,8 @@ with varied rewards over 1,000 updates.
 | `base2` | CLEVR counting | short | 500 | 8 | 4.4 | 0.8 | 94.8 |
 | `base2` | CLEVR compositional | reasoning | 500 | 8 | 62.0 | 5.2 | 32.8 |
 | `base2` | CLEVR compositional | short | 500 | 8 | 14.8 | 6.2 | 79.0 |
+| `base2` | DeepTumorVQA (whole-volume montage) | reasoning | 500 | 8 | 55.6 | 29.6 | 14.8 |
+| `base2` | DeepTumorVQA (whole-volume montage) | short | 500 | 8 | 61.6 | 23.6 | 14.8 |
 | `base2` | GQA | reasoning | 500 | 8 | 42.0 | 26.6 | 31.4 |
 | `base2` | GQA | short | 500 | 8 | 33.4 | 19.2 | 47.4 |
 | `base2` | GQA | reasoning | 2,500 | 8 | 44.5 | 26.0 | 29.5 |

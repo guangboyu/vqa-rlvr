@@ -1017,3 +1017,11 @@ tier = "full"
 base = "base2"
 models = ["slk-sft2", "slk-sft2-vis", "slk-sft2-up", "slk-short2-base-e1",
           "slk-short2-base-e1-up", "slk-short2-base-e1-papo"]
+
+# DeepTumorVQA probe (2026-10-29), declared in runs/deeptumor-20261029/run.sh before it ran:
+# SFT 2B for 250 updates (8,000 training questions), scored with original and black montages
+# to test whether what SFT learns there needs the image.
+[[arms]]
+label = "dtv-probe-sft2"
+name = "SFT 2B probe (DeepTumorVQA, 8,000 questions)"
+model = "checkpoints/merged/dtv_probe_sft2"

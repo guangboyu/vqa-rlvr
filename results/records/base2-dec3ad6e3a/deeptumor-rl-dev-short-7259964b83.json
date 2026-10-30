@@ -1,0 +1,97 @@
+{
+  "schema": "run-record/1",
+  "legacy": false,
+  "model_id": "dec3ad6e3a1c306cd9a470b55b5f1859b34d784e64366f39c36ddea3ae7b9187",
+  "protocol_id": "7259964b83bada5432108c3a77b90073748a3457fba1d2ff9e5f778405c7f88d",
+  "model": {
+    "source": "Qwen/Qwen3-VL-2B-Instruct",
+    "label": "base2",
+    "run": null,
+    "step": null,
+    "weights": {
+      "hub": "Qwen/Qwen3-VL-2B-Instruct",
+      "revision": "89644892e4d85e24eaac8bacfd4f463576704203"
+    }
+  },
+  "protocol": {
+    "dataset": "deeptumor",
+    "ladder": "in-domain",
+    "role": "rl",
+    "tier": "dev",
+    "question_limit": 500,
+    "prompt": "short",
+    "prompt_text": "{question}\nAnswer the question using a single word or phrase.",
+    "max_tokens": 64,
+    "temperature": 0.0,
+    "samples": 1,
+    "image_mode": "original",
+    "max_pixels": 786432,
+    "scorers": {
+      "official": "choice_letter_accuracy/v1",
+      "normalized": "choice_accuracy/v1"
+    },
+    "extraction": "last_answer_tag_or_full_text",
+    "answer_tag_rule": "raw text contains </answer>",
+    "data": {
+      "subsets": {
+        "deeptumor_train": "adaf05e3f6f9630e"
+      },
+      "selection_sha256": "c9120a7b88c433a710f5f208484dac3f5e943e168e7983510cf2814a4d8ba337",
+      "image_groups_sha256": "6c1ee1f56c1a83787a982bae6725ec0887f1423f60a85ff564de87f64c03c3c4"
+    }
+  },
+  "metrics": {
+    "n": 500,
+    "official": {
+      "overall": 0.13,
+      "by_answer_type": {
+        "measurement": 0.15384615384615385,
+        "medical reasoning": 0.0,
+        "recognition": 0.18461538461538463,
+        "visual reasoning": 0.10305343511450382
+      }
+    },
+    "normalized": {
+      "overall": 0.394,
+      "by_answer_type": {
+        "measurement": 0.21978021978021978,
+        "medical reasoning": 0.17647058823529413,
+        "recognition": 0.5461538461538461,
+        "visual reasoning": 0.3931297709923664
+      }
+    },
+    "mean_output_tokens": 4.93,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.13,
+    "answers_scored_differently": 132
+  },
+  "provenance": {
+    "code_version": "8d270349484239d76f0ec992c46ba635fabd68cb",
+    "uncommitted_changes": true,
+    "source_sha256": {
+      "vqar/eval/__init__.py": "2aa88c809409a57502d0d9b2893e14c3b5bf99d971bceefcc1ed4716ef295f81",
+      "vqar/eval/examples.py": "34e53468b64e5d7d23913dbdc2d37d39c22e4e6501abc882297b7fc7a13385dd",
+      "vqar/eval/protocol.py": "358305c53f73b9229696fdc9434ac5139fe3452f5491a45e2d9820209d3790bc",
+      "vqar/eval/record.py": "6be2298f531240b01df2feecedd50af2d32a1c17f6029951ddf3f7723834b023",
+      "vqar/eval/runner.py": "f0a55a3f8fcaddc6c4154cef031a22911f5cc0cafe7a7cd436c811b2b75e8fca",
+      "vqar/inference.py": "f77143773554fbf3710e045220e2efb36d5698035a760094a9aace008bf593bf",
+      "vqar/config.py": "4e4427af33c121e742a2597442a0b0f44811d10f92999b48466ff6aebc1a9161",
+      "vqar/data.py": "e670f9751a4eeb2d01abb3f89d5d964ca9218f69265b2015b798f78e09d68844",
+      "vqar/metrics.py": "8129ce92ad8b29efa942414de37235d0141e197ab2bb84f5c2f3878ef44f8978",
+      "vqar/registry.py": "b4c720032d1d1cdb138e1c657f5492f7207db4fbd609844903f6c16e7247030c",
+      "vqar/splits.py": "206963ba5aaa52b03482f52b268832dc1bd611613adfd2ea0fb1aac11c2eb693",
+      "vqar/ood_metrics.py": "9449e0a85c4b7ff3efcbc88264ee1e03d53689c39c2fe030a13887465fa1b226",
+      "vqar/ood.py": "d59220be09094fa5a5ffbb6e791b38ee5b3c8dca0ca381ef64a28bf0f94ccb8f",
+      "uv.lock": "8c79fab440350a15e75e9507c3b5338ecc63beb92fc12c6ef18fbe01122ac323"
+    },
+    "versions": {
+      "torch": "2.11.0+cu129",
+      "transformers": "5.13.0",
+      "vllm": "0.23.0+cu129",
+      "datasets": "5.0.0"
+    },
+    "timestamp": "2026-10-30T00:27:34+00:00"
+  }
+}

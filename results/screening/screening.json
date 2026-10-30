@@ -913,6 +913,120 @@
   },
   {
    "model": "base2",
+   "dataset": "deeptumor",
+   "display_name": "DeepTumorVQA (whole-volume montage)",
+   "role": "rl",
+   "validation_only": false,
+   "tier": "dev",
+   "pool_questions": 40000,
+   "declared": {
+    "split_unit": "patient",
+    "split_separable": true,
+    "license": "annotations CC BY 4.0; CT data from AbdomenAtlas 3.0 Mini, CC BY-NC-SA 4.0 (non-commercial)",
+    "license_usable": true
+   },
+   "samples": 8,
+   "pass_at_1": 0.37075,
+   "pass_at_k": 0.704,
+   "rl_headroom": {
+    "n": 500,
+    "delta": 33.324999999999996,
+    "low": 30.15,
+    "high": 36.449999999999996,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "learnable_share": 0.556,
+   "parse_rate": 0.81975,
+   "short_samples": 8,
+   "short_pass_at_1": 0.392,
+   "short_pass_at_k": 0.764,
+   "short_rl_headroom": {
+    "n": 500,
+    "delta": 37.2,
+    "low": 34.075,
+    "high": 40.275,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "short_learnable_share": 0.616,
+   "questions": 500,
+   "short_accuracy": 0.394,
+   "reasoning_accuracy": 0.35,
+   "direct_accuracy": 0.396,
+   "stepwise_accuracy": 0.42,
+   "reasoning_behavior": {
+    "mean_output_tokens": 176.398,
+    "truncated_fraction": 0.19,
+    "answer_tag_fraction": 0.81
+   },
+   "direct_behavior": {
+    "mean_output_tokens": 15.366,
+    "truncated_fraction": 0.002,
+    "answer_tag_fraction": 0.778
+   },
+   "stepwise_behavior": {
+    "mean_output_tokens": 9.154,
+    "truncated_fraction": 0.002,
+    "answer_tag_fraction": 0.998
+   },
+   "reasoning_payoff": {
+    "n": 500,
+    "delta": -4.3999999999999995,
+    "low": -9.2,
+    "high": 0.4,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "matched_payoff": {
+    "n": 500,
+    "delta": 2.4,
+    "low": -1.0,
+    "high": 5.800000000000001,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "image_dependence": {
+    "n": 500,
+    "delta": -1.6,
+    "low": -6.0,
+    "high": 2.8000000000000003,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "wrong_image_dependence": {
+    "n": 500,
+    "delta": 0.2,
+    "low": -3.2,
+    "high": 3.5999999999999996,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "failed_gates": [
+    "image needed"
+   ],
+   "routes": {
+    "reasoning": [
+     "parse rate"
+    ],
+    "short": []
+   },
+   "status": "rejected",
+   "missing": [],
+   "records": {
+    "short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/deeptumor-rl-dev-short-7259964b83.json",
+    "black": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/deeptumor-rl-dev-short-black-6bd908fc88.json",
+    "swapped": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/deeptumor-rl-dev-short-swapped-e2f37b41e4.json",
+    "reasoning": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/deeptumor-rl-dev-reasoning-90cf52a3c0.json",
+    "direct": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/deeptumor-rl-dev-direct-4b9b3cfde8.json",
+    "stepwise": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/deeptumor-rl-dev-stepwise-84d00e0dbc.json",
+    "sampled": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/deeptumor-rl-dev-reasoning-t1k8-e1495392df.json",
+    "sampled_short": "/home/guangbo/codes/VQA/results/records/base2-dec3ad6e3a/deeptumor-rl-dev-short-t1k8-9d679527d1.json"
+   },
+   "rank": null
+  },
+  {
+   "model": "base2",
    "dataset": "kvasirx1",
    "display_name": "Kvasir-VQA-x1 (atomic)",
    "role": "rl",

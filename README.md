@@ -152,9 +152,10 @@ diagnostics, in the [supplementary results](docs/supplementary/supplement.md):
   GRPO reply that the image is missing: 3.7% right with a black image, 9.6 points below plain
   GRPO on real ones ([vision side](docs/supplementary/supplement.md#vision-side-options-slake)).
 - **Rejected at screening.** CLEVR compositional (nearly saturated; reasoning costs it 5.6
-  points), MedThinkVQA (answered from the case text at 2B and 8B), and Kvasir-VQA-x1, PathVQA
+  points), MedThinkVQA (answered from the case text at 2B and 8B), Kvasir-VQA-x1, PathVQA
   and ReXVQA (images change the answers by under 10 points; a black chest X-ray leaves
-  ReXVQA's accuracy unchanged)
+  ReXVQA's accuracy unchanged), and DeepTumorVQA (SFT lifts its CT benchmark from 35.0% to
+  61.4% and still scores 59.0% with a black image: the answer options carry the answer)
   ([screening](docs/supplementary/evaluation.md#dataset-screening)).
 
 ## What was trained
