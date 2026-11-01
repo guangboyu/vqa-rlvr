@@ -232,6 +232,30 @@ def _deeptumorx(sizes):
     return {f"deeptumorx_{name}": subset for name, subset in splits.items()}
 
 
+def _deeptumorv(sizes):
+    from vqar import data
+
+    splits = data.load_deeptumorx(sizes["train"], sizes["dev"], sizes["dev_patient_percent"],
+                                  sizes["seed"], sizes["min_test_per_answer"],
+                                  sizes["min_train_per_answer"], view="grid")
+    return {f"deeptumorv_{name}": subset for name, subset in splits.items()}
+
+
+def _deeptumorff(sizes):
+    from vqar import data
+
+    splits = data.load_deeptumorff(sizes["train"], sizes["dev"], sizes["dev_patient_percent"],
+                                   sizes["seed"])
+    return {f"deeptumorff_{name}": subset for name, subset in splits.items()}
+
+
+def _m3dvqa(sizes):
+    from vqar import data
+
+    splits = data.load_m3dvqa(sizes["train"], sizes["dev"], sizes["seed"])
+    return {f"m3dvqa_{name}": subset for name, subset in splits.items()}
+
+
 def _prepared_ood(sizes):
     raise ValueError("Use python -m scripts.prepare_ood with pinned local source files")
 
@@ -480,6 +504,53 @@ DATASETS: dict[str, DatasetSpec] = {
             sizes={"train": 40_000, "dev": 500, "dev_patient_percent": 3, "seed": 0,
                    "min_test_per_answer": 10, "min_train_per_answer": 50},
             materialize=_deeptumorx, require_split=False,
+        ),
+        # The debiased questions with the volume as 32 slices of the CT video (2026-11-01):
+        # identical questions to deeptumorx, a 4 x 8 grid of 256-pixel axial slices as the image
+        # (2,048 vision tokens; train and evaluate with a 2,097,152-pixel budget).
+        DatasetSpec(
+            name="deeptumorv", display_name="DeepTumorVQA (debiased, 32-slice grid)",
+            sources={"tumor-vqa/DeepTumorVQA_2.0": "a8b9db5133fda02567476dcb49498ec51f6aed37"},
+            subsets={"sft": "deeptumorv_train", "rl": "deeptumorv_train",
+                     "dev": "deeptumorv_dev", "test": "deeptumorv_test"},
+            official_splits=frozenset(),
+            ladder="in-domain", answer_schema="option letter A-D (two to four options); "
+            "references hold the letter and the option text",
+            official=metrics.choice_letter_accuracy, normalized=metrics.choice_accuracy,
+            official_roles=frozenset(ROLES),
+            sizes={"train": 40_000, "dev": 500, "dev_patient_percent": 3, "seed": 0,
+                   "min_test_per_answer": 10, "min_train_per_answer": 50},
+            materialize=_deeptumorv, require_split=False,
+        ),
+        # DeepTumorVQA in free form (2026-11-01): the released questions without options and
+        # their answers, on deeptumor's patients, roles and montages. Numbers are scored by mean
+        # relative accuracy and text by exact match, as the dataset's authors score free form.
+        DatasetSpec(
+            name="deeptumorff", display_name="DeepTumorVQA (free form)",
+            sources={"tumor-vqa/DeepTumorVQA_2.0": "a8b9db5133fda02567476dcb49498ec51f6aed37"},
+            subsets={"sft": "deeptumorff_train", "rl": "deeptumorff_train",
+                     "dev": "deeptumorff_dev", "test": "deeptumorff_test"},
+            official_splits=frozenset({"test"}),
+            ladder="in-domain", answer_schema="a number (volumes, HU, counts, sizes) or a short "
+            "label; one reference",
+            official=metrics.mean_relative_accuracy, normalized=metrics.mean_relative_accuracy,
+            official_roles=frozenset(ROLES),
+            sizes={"train": 40_000, "dev": 500, "dev_patient_percent": 3, "seed": 0},
+            materialize=_deeptumorff, require_split=False,
+        ),
+        # M3D-VQA questions only (2026-11-01): what its questions and options give away without
+        # the volume. Every question shows a black image (vqar.data.load_m3dvqa).
+        DatasetSpec(
+            name="m3dvqa", display_name="M3D-VQA (questions only, black image)",
+            sources={"GoodBaiBai88/M3D-VQA": "25e34a768946fa5e11ebf4dda613d1d509bd9e91"},
+            subsets={"sft": "m3dvqa_train", "rl": "m3dvqa_train", "dev": "m3dvqa_dev",
+                     "test": "m3dvqa_test"},
+            official_splits=frozenset({"sft", "rl", "dev", "test"}),
+            ladder="in-domain", answer_schema="option letter A-D; references hold the letter "
+            "and the option text",
+            official=metrics.choice_letter_accuracy, normalized=metrics.choice_accuracy,
+            official_roles=frozenset(ROLES), sizes={"train": 40_000, "dev": 500, "seed": 0},
+            materialize=_m3dvqa, require_split=False,
         ),
         DatasetSpec(
             name="vizwiz", display_name="VizWiz",

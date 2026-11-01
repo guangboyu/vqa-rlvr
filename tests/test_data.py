@@ -305,3 +305,24 @@ def test_deeptumor_balance_equalizes_discrete_answers_and_passes_continuous_valu
     assert by[("colon lesion existence", "Yes")] == by[("colon lesion existence", "No")] == 30
     assert not any(subtype == "rare grade" for subtype, _ in by)  # one answer left: dropped
     assert sum(1 for r in kept if r["subtype"] == "organ volume measurement") == 25
+
+
+def test_m3dvqa_rows_keep_four_options_and_black_images_differ_by_volume():
+    import io
+
+    from PIL import Image
+
+    from vqar.data import _tagged_black_png, m3dvqa_record
+
+    row = {"Image Path": "v/1.npy", "Question Type": "1", "Question": "Which plane?",
+           "Choice A": "Axial", "Choice B": "Sagittal", "Choice C": "Coronal",
+           "Choice D": "Oblique", "Answer": "Axial", "Answer Choice": "A"}
+    record = m3dvqa_record("test_000001", row)
+    assert record["answers"] == ["A", "Axial"] and record["answer_type"] == "plane"
+    assert record["question"].splitlines()[1:5] == ["A. Axial", "B. Sagittal", "C. Coronal",
+                                                     "D. Oblique"]
+    assert m3dvqa_record("q", {**row, "Answer": "Coronal"}) is None
+    first, second = _tagged_black_png("v/1.npy"), _tagged_black_png("v/2.npy")
+    assert first != second and first == _tagged_black_png("v/1.npy")
+    with Image.open(io.BytesIO(first)) as image:
+        assert sum(1 for p in image.getdata() if p) <= 2  # black but for the two tag pixels

@@ -177,3 +177,26 @@ def test_the_upscale_fit_resizes_small_images_up_to_the_budget():
     small = fit_rl_image(Image.new("RGB", (224, 224)), "upscale")
     assert small.size[0] == small.size[1] and abs(small.size[0] ** 2 - config.MAX_PIXELS) < 2 * 887
 
+
+
+def test_blind_sft_images_are_black_and_keep_the_size_within_the_budget():
+    from PIL import Image
+
+    from train_sft import fit_sft_image
+
+    image = Image.new("RGB", (2000, 1000), (90, 90, 90))
+    capped = fit_sft_image(image, max_pixels=500_000)
+    assert capped.size[0] * capped.size[1] <= 500_000 and capped.getextrema()[0] == (90, 90)
+    blind = fit_sft_image(image, blind=True, max_pixels=500_000)
+    assert blind.size == capped.size and blind.getextrema() == ((0, 0), (0, 0), (0, 0))
+
+
+def test_rollout_context_grows_with_the_pixel_budget():
+    from dataclasses import replace
+
+    from vqar import config
+    from vqar.rl import rollout_context
+
+    preset = config.GRPO_PRESETS["grpo_2b_main"]
+    assert rollout_context(preset) == 2048
+    assert rollout_context(replace(preset, max_pixels=2_097_152)) == 2048 + 1024

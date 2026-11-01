@@ -84,3 +84,13 @@ class TestFormat:
         bad = f"{'Reasoning about the scene here. ' * 5}<answer>3</answer><answer>4</answer>"
         assert format_reward(prompts=None, completions=[completion(bad)]) == [0.0]
 
+
+
+def test_official_correctness_needs_the_option_letter_on_multiple_choice():
+    from vqar.rewards import correctness_reward, official_correctness_reward
+
+    kwargs = dict(prompts=[None, None], answers=[["B", "kidney"], ["B", "kidney"]],
+                  dataset=["deeptumorx", "deeptumorx"], rollout_prompt=["short", "short"])
+    completions = ["B", "kidney"]
+    assert correctness_reward(completions=completions, **kwargs) == [1.0, 1.0]
+    assert official_correctness_reward(completions=completions, **kwargs) == [1.0, 0.0]

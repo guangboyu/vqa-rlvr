@@ -58,6 +58,10 @@ class SFTPreset:
     vision_lora: bool = False
     # Resize every training image to the pixel budget, small ones up (vqar.data.upscale_to_budget).
     image_upscale: bool = False
+    # Train on a black image of each image's size: what the labels teach without the image.
+    blind_images: bool = False
+    # The pixel budget training images are capped to; larger for many-slice inputs.
+    max_pixels: int = MAX_PIXELS
     lora_targets: tuple[str, ...] = (
         "q_proj",
         "k_proj",
@@ -139,6 +143,8 @@ class GRPOPreset:
     image_fit: str = "canvas"
     # Weight of the perception loss (vqar.perception_trainer): 0 keeps plain GRPO.
     perception_coef: float = 0.0
+    # The pixel budget of the "budget" image fit; larger for many-slice inputs.
+    max_pixels: int = MAX_PIXELS
     lora_r: int = 16
     lora_alpha: int = 32
     lora_targets: tuple[str, ...] = (
@@ -310,7 +316,8 @@ OPD_PRESETS: dict[str, OPDPreset] = {
 OPT_IN_FIELDS = {"refill_rounds": 0, "rollout_lora": False, "vllm_sleep": True,
                  "loss_type": "dapo", "scale_rewards": "group", "num_iterations": 1,
                  "epsilon_high": 0.2, "canvas_size": RL_IMAGE_SIZE, "image_fit": "canvas",
-                 "perception_coef": 0.0, "vision_lora": False, "image_upscale": False}
+                 "perception_coef": 0.0, "vision_lora": False, "image_upscale": False,
+                 "blind_images": False, "max_pixels": MAX_PIXELS}
 RECIPE_KNOBS = ("loss_type", "scale_rewards", "num_iterations", "epsilon_high")
 
 

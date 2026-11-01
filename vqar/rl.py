@@ -20,18 +20,28 @@ from vqar.training import ROOT
 ROLLOUT_TEMPERATURE = 1.0
 
 
-def fit_rl_image(image, image_fit: str = "canvas", canvas_size: int = config.RL_IMAGE_SIZE):
-    """A rollout image: centered on the square canvas, or shrunk into the evaluation pixel
-    budget with its shape kept. Either way vLLM and the trainer get the same PIL image."""
+def rollout_context(preset) -> int:
+    """vLLM's context for rollouts: 2,048 tokens (about 850 image tokens, the prompt and the
+    completion), or room for a larger image budget's vision tokens plus 1,024."""
+    max_pixels = getattr(preset, "max_pixels", config.MAX_PIXELS)
+    if max_pixels <= config.MAX_PIXELS:
+        return 2048
+    return max_pixels // config.PIXELS_PER_TOKEN + 1024
+
+
+def fit_rl_image(image, image_fit: str = "canvas", canvas_size: int = config.RL_IMAGE_SIZE,
+                 max_pixels: int = config.MAX_PIXELS):
+    """A rollout image: centered on the square canvas, or shrunk into the pixel budget with its
+    shape kept. Either way vLLM and the trainer get the same PIL image."""
     if image_fit == "budget":
-        return cap_pixels(image.convert("RGB"))
+        return cap_pixels(image.convert("RGB"), max_pixels)
     if image_fit == "upscale":
         return upscale_to_budget(image)
     return to_uniform_canvas(image, canvas_size)
 
 
 def to_grpo_columns(batch: dict, template: str, canvas_size: int = config.RL_IMAGE_SIZE,
-                    image_fit: str = "canvas") -> dict:
+                    image_fit: str = "canvas", max_pixels: int = config.MAX_PIXELS) -> dict:
     """GRPO rows: conversational `prompt` + `image`; question/answers/dataset and the
     rollout template ride along as extra columns that TRL forwards to every reward."""
     return {
@@ -39,7 +49,8 @@ def to_grpo_columns(batch: dict, template: str, canvas_size: int = config.RL_IMA
             [{"role": "user", "content": PROMPTS[template].text.format(question=q)}]
             for q in batch["question"]
         ],
-        "image": [fit_rl_image(img, image_fit, canvas_size) for img in batch["image"]],
+        "image": [fit_rl_image(img, image_fit, canvas_size, max_pixels)
+                  for img in batch["image"]],
         "question": batch["question"],
         "answers": batch["answers"],
         "dataset": batch["dataset"],
@@ -57,7 +68,8 @@ def load_rl_dataset(preset, data_dir: Path | None = None):
     return columns.with_transform(partial(
         to_grpo_columns, template=preset.rollout_prompt,
         canvas_size=getattr(preset, "canvas_size", config.RL_IMAGE_SIZE),
-        image_fit=getattr(preset, "image_fit", "canvas")))
+        image_fit=getattr(preset, "image_fit", "canvas"),
+        max_pixels=getattr(preset, "max_pixels", config.MAX_PIXELS)))
 
 
 def build_rewards(names: tuple[str, ...]):
@@ -244,7 +256,7 @@ def grpo_config(preset, output_dir: Path, run_name: str, model_init_kwargs: dict
         vllm_mode="colocate",
         vllm_enable_sleep_mode=getattr(preset, "vllm_sleep", True),
         vllm_gpu_memory_utilization=preset.vllm_gpu_memory_utilization,
-        vllm_max_model_length=2048,  # ~850 image tokens + prompt + completion
+        vllm_max_model_length=rollout_context(preset),
         bf16=True,
         gradient_checkpointing=True,
         gradient_checkpointing_kwargs={"use_reentrant": False},

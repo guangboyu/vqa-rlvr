@@ -213,3 +213,14 @@ def test_casefold_exact_match_keeps_punctuation_and_rejects_blanks():
     assert metrics.casefold_exact_match(" Left  Lung ", ["left lung"]) == 1.0
     assert metrics.casefold_exact_match("left lung.", ["left lung"]) == 0.0
     assert metrics.casefold_exact_match(" ", [""]) == 0.0
+
+
+def test_mean_relative_accuracy_counts_thresholds_and_matches_text():
+    from vqar.metrics import mean_relative_accuracy as mra
+
+    assert mra("1293.7", ["1293.7"]) == 1.0
+    assert mra("About 1,100 cc", ["1000"]) == 0.8  # 10% error clears thresholds 0.50-0.85
+    assert mra("the liver is large", ["1000"]) == 0.0
+    assert mra("0", ["0"]) == 1.0 and mra("1", ["0"]) == 0.0
+    assert mra("-12.0", ["-10"]) == 0.6  # 20% error
+    assert mra("Yes", ["yes"]) == 1.0 and mra("No", ["yes"]) == 0.0

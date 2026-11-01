@@ -105,6 +105,12 @@ DECLARED = {
                              "3.0 Mini, CC BY-NC-SA 4.0 (non-commercial)", True),
     "deeptumorx": Declaration("patient", True, "annotations CC BY 4.0; CT data from "
                               "AbdomenAtlas 3.0 Mini, CC BY-NC-SA 4.0 (non-commercial)", True),
+    "deeptumorff": Declaration("patient", True, "annotations CC BY 4.0; CT data from "
+                               "AbdomenAtlas 3.0 Mini, CC BY-NC-SA 4.0 (non-commercial)", True),
+    "deeptumorv": Declaration("patient", True, "annotations CC BY 4.0; CT data from "
+                              "AbdomenAtlas 3.0 Mini, CC BY-NC-SA 4.0 (non-commercial)", True),
+    "m3dvqa": Declaration("volume", True, "Apache-2.0 (questions generated from Radiopaedia "
+                          "reports)", True),
 }
 
 

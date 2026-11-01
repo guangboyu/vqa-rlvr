@@ -1084,12 +1084,55 @@ def _deeptumor_gray_generate(records: tuple[dict, ...]) -> Iterator[dict]:
         yield {**row, "image": {"bytes": image(record["file"]), "path": None}}
 
 
+# The volume as many slices (2026-11-01): DeepTumorVQA's CT video holds 150 axial slices of
+# 300 x 300 pixels; 32 of them, evenly spaced, tiled 4 x 8 at 256 pixels (2,048 vision tokens),
+# against the montage's nine. The video is already lossy, so the grid is stored as JPEG.
+DEEPTUMOR_GRID = (4, 8)
+DEEPTUMOR_TILE = 256
+
+
+def deeptumor_volume_grid(video: str, grid: tuple[int, int] = DEEPTUMOR_GRID,
+                          tile: int = DEEPTUMOR_TILE) -> bytes:
+    """Evenly spaced axial slices of a CT video tiled row by row, as grayscale JPEG bytes."""
+    import io
+
+    import cv2
+    import numpy as np
+
+    capture, frames = cv2.VideoCapture(video), []
+    while True:
+        ok, frame = capture.read()
+        if not ok:
+            break
+        frames.append(frame[:, :, 0])
+    capture.release()
+    if not frames:
+        raise ValueError(f"No frames in {video}")
+    rows, columns = grid
+    picks = np.linspace(0, len(frames) - 1, rows * columns).round().astype(int)
+    tiles = [cv2.resize(frames[i], (tile, tile), interpolation=cv2.INTER_AREA) for i in picks]
+    image = np.vstack([np.hstack(tiles[r * columns:(r + 1) * columns]) for r in range(rows)])
+    buffer = io.BytesIO()
+    PILImage.fromarray(image, mode="L").save(buffer, "JPEG", quality=95)
+    return buffer.getvalue()
+
+
+def _deeptumor_grid_generate(records: tuple[dict, ...]) -> Iterator[dict]:
+    from functools import lru_cache
+
+    image = lru_cache(maxsize=1024)(deeptumor_volume_grid)
+    for record in records:
+        row = {name: record[name] for name in ("dataset", "qid", "question", "answers",
+                                               "answer_type")}
+        yield {**row, "image": {"bytes": image(record["file"]), "path": None}}
+
+
 def load_deeptumorx(train_size: int, dev_size: int, dev_percent: int, seed: int,
-                    min_test: int, min_train: int) -> dict[str, Dataset]:
+                    min_test: int, min_train: int, view: str = "montage") -> dict[str, Dataset]:
     """DeepTumorVQA's questions with the option shortcuts removed: the same patients, roles and
     whole-volume montages as load_deeptumor, after deeptumor_debias on every question and
     deeptumor_balance within each role (test at `min_test` questions per answer, training and
-    dev at `min_train`)."""
+    dev at `min_train`). `view="grid"` shows each scan as 32 slices of its CT video instead."""
     import csv
     import json
     import os
@@ -1101,15 +1144,24 @@ def load_deeptumorx(train_size: int, dev_size: int, dev_percent: int, seed: int,
         raise FileNotFoundError(f"No DeepTumorVQA download under {root}; set {DEEPTUMOR_ROOT}")
 
     def debiased(record):
-        return None if record is None else deeptumor_debias(record, seed)
+        if record is None:
+            return None
+        found = deeptumor_debias(record, seed)
+        return None if found is None else {**found, "dataset": dataset}
+
+    def scan(role: str, patient: str) -> str:
+        if view == "grid":
+            return str(root / role / "videos" / "whole" / f"{patient}.mp4")
+        return str(root / role / "images_2d" / "whole" / f"{patient}.png")
+
+    dataset = {"montage": "deeptumorx", "grid": "deeptumorv"}[view]
 
     test = []
     for line in (root / "benchmark" / "test_qa.jsonl").read_text().splitlines():
         row = json.loads(line)
         test.append(debiased(deeptumor_record(
             row["qid"], row["image_id"], row["mc_question"], row["correct_option"], row["answer"],
-            row["question_type"],
-            str(root / "benchmark" / "images_2d" / "whole" / f"{row['image_id']}.png"),
+            row["question_type"], scan("benchmark", row["image_id"]),
             row["question_subtype"])))
     test_patients = {json.loads(line)["image_id"] for line in
                      (root / "benchmark" / "test_qa.jsonl").read_text().splitlines()}
@@ -1123,8 +1175,7 @@ def load_deeptumorx(train_size: int, dev_size: int, dev_percent: int, seed: int,
             record = debiased(deeptumor_record(
                 f"train_{int(row['Question ID']):06d}", patient, row["multiple-choice question"],
                 row["correct option"], row["answer"], row["question type"],
-                str(root / "train" / "images_2d" / "whole" / f"{patient}.png"),
-                row["question subtype"]))
+                scan("train", patient), row["question subtype"]))
             if record is not None:
                 (dev if deeptumor_dev_patient(patient, dev_percent, seed) else train).append(record)
     train = deeptumor_balance(train, min_train, seed)
@@ -1134,5 +1185,125 @@ def load_deeptumorx(train_size: int, dev_size: int, dev_percent: int, seed: int,
               "dev": rng.sample(dev, min(dev_size, len(dev)))}
     splits = {name: sorted(records, key=lambda r: (r["patient"], r["qid"]))
               for name, records in splits.items()}
+    generate = _deeptumor_grid_generate if view == "grid" else _deeptumor_gray_generate
+    return {name: _build(generate, records=tuple(records)) for name, records in splits.items()}
+
+
+def load_deeptumorff(train_size: int, dev_size: int, dev_percent: int,
+                     seed: int) -> dict[str, Dataset]:
+    """DeepTumorVQA's questions in free form: the released question without options and its
+    answer, on the patients, roles and whole-volume montages of load_deeptumor (every benchmark
+    question kept; training rows with one correct option)."""
+    import csv
+    import json
+    import os
+    import random
+    from pathlib import Path
+
+    root = Path(os.environ.get(DEEPTUMOR_ROOT, DEEPTUMOR_ROOT_DEFAULT))
+    if not (root / "train" / "images_2d" / "whole").is_dir():
+        raise FileNotFoundError(f"No DeepTumorVQA download under {root}; set {DEEPTUMOR_ROOT}")
+
+    def record(qid, patient, question, answer, answer_type, file):
+        return {"dataset": "deeptumorff", "qid": qid, "patient": patient, "file": file,
+                "question": question.strip(), "answers": [answer.strip()],
+                "answer_type": answer_type}
+
+    test = []
+    for line in (root / "benchmark" / "test_qa.jsonl").read_text().splitlines():
+        row = json.loads(line)
+        test.append(record(row["qid"], row["image_id"], row["question"], str(row["answer"]),
+                           row["question_type"],
+                           str(root / "benchmark" / "images_2d" / "whole" /
+                               f"{row['image_id']}.png")))
+    test_patients = {r["patient"] for r in test}
+    train, dev = [], []
+    with open(root / "train" / "train_qa.csv", newline="") as handle:
+        for row in csv.DictReader(handle):
+            patient = row["Image ID"]
+            if (patient in test_patients or len(row["correct option"].strip()) != 1
+                    or not row["answer"].strip()):
+                continue
+            item = record(f"train_{int(row['Question ID']):06d}", patient, row["question"],
+                          row["answer"], row["question type"],
+                          str(root / "train" / "images_2d" / "whole" / f"{patient}.png"))
+            (dev if deeptumor_dev_patient(patient, dev_percent, seed) else train).append(item)
+    rng = random.Random(seed)
+    splits = {"test": test, "train": rng.sample(train, train_size),
+              "dev": rng.sample(dev, dev_size)}
+    splits = {name: sorted(records, key=lambda r: (r["patient"], r["qid"]))
+              for name, records in splits.items()}
     return {name: _build(_deeptumor_gray_generate, records=tuple(records))
+            for name, records in splits.items()}
+
+
+# M3D-VQA (2026-11-01), questions only: its multiple-choice questions on CT and MRI volumes
+# (from Radiopaedia reports), each shown with a black image, to measure what the questions and
+# options give away without the volume. A black image cannot tell volumes apart, so each one
+# carries a one-pixel tag (two bytes of a hash of the volume path) that lets the held-out
+# check keep test volumes out of training; the tag says nothing about the answer.
+M3DVQA = "GoodBaiBai88/M3D-VQA"
+M3DVQA_ROOT = "M3DVQA_ROOT"  # environment variable: the folder holding the M3D-VQA csv files
+M3DVQA_ROOT_DEFAULT = "/mnt/f/VQA/raw/m3dvqa"
+M3DVQA_TYPES = {"1": "plane", "2": "phase", "3": "organ", "4": "abnormality", "5": "location"}
+M3DVQA_SIDE = 256
+
+
+def m3dvqa_record(qid: str, row: dict) -> dict | None:
+    """One question with its four lettered options; None when the answer letter or text does
+    not match an option."""
+    letters = "ABCD"
+    texts = [row[f"Choice {letter}"].strip() for letter in letters]
+    letter = row["Answer Choice"].strip().upper()
+    if letter not in letters or not all(texts) or texts[letters.index(letter)] != \
+            row["Answer"].strip():
+        return None
+    return {"dataset": "m3dvqa", "qid": qid, "volume": row["Image Path"],
+            "question": _deeptumor_prompt(row["Question"].strip(), texts),
+            "answers": [letter, texts[letters.index(letter)]],
+            "answer_type": M3DVQA_TYPES.get(row["Question Type"], row["Question Type"]),
+            "subtype": M3DVQA_TYPES.get(row["Question Type"], row["Question Type"]),
+            "options": texts, "correct": letters.index(letter)}
+
+
+def _tagged_black_png(volume: str) -> bytes:
+    import hashlib
+    import io
+
+    tag = hashlib.sha256(volume.encode()).digest()
+    image = PILImage.new("L", (M3DVQA_SIDE, M3DVQA_SIDE))
+    image.putpixel((0, 0), 1 + tag[0] % 255)
+    image.putpixel((1, 0), 1 + tag[1] % 255)
+    buffer = io.BytesIO()
+    image.save(buffer, "PNG")
+    return buffer.getvalue()
+
+
+def _m3dvqa_generate(records: tuple[dict, ...]) -> Iterator[dict]:
+    for record in records:
+        row = {name: record[name] for name in ("dataset", "qid", "question", "answers",
+                                               "answer_type")}
+        yield {**row, "image": {"bytes": _tagged_black_png(record["volume"]), "path": None}}
+
+
+def load_m3dvqa(train_size: int, dev_size: int, seed: int) -> dict[str, Dataset]:
+    """M3D-VQA's released splits (volumes do not overlap): all test questions, seeded samples
+    of the training and validation questions."""
+    import csv
+    import os
+    import random
+    from pathlib import Path
+
+    root = Path(os.environ.get(M3DVQA_ROOT, M3DVQA_ROOT_DEFAULT))
+
+    def read(split):
+        with open(root / f"M3D_VQA_{split}.csv", newline="") as handle:
+            records = [m3dvqa_record(f"{split}_{i:06d}", row)
+                       for i, row in enumerate(csv.DictReader(handle))]
+        return [r for r in records if r is not None]
+
+    rng = random.Random(seed)
+    splits = {"test": read("test"), "train": rng.sample(read("train"), train_size),
+              "dev": rng.sample(read("val"), dev_size)}
+    return {name: _build(_m3dvqa_generate, records=tuple(sorted(records, key=lambda r: r["qid"])))
             for name, records in splits.items()}

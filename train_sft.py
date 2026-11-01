@@ -33,7 +33,17 @@ from vqar.training import (
 )
 
 
-def to_sft_columns(batch: dict, upscale: bool = False) -> dict:
+def fit_sft_image(image, upscale: bool = False, blind: bool = False,
+                  max_pixels: int = config.MAX_PIXELS):
+    """The training image within the budget (or resized to it), or a black image its size."""
+    from PIL import Image
+
+    image = upscale_to_budget(image, max_pixels) if upscale else cap_pixels(image, max_pixels)
+    return Image.new("RGB", image.size) if blind else image
+
+
+def to_sft_columns(batch: dict, upscale: bool = False, blind: bool = False,
+                   max_pixels: int = config.MAX_PIXELS) -> dict:
     """Map unified examples to TRL's VLM prompt-completion contract.
 
     Prompt-completion (not messages) on purpose: TRL masks the entire prompt —
@@ -49,8 +59,7 @@ def to_sft_columns(batch: dict, upscale: bool = False) -> dict:
         "completion": [
             [{"role": "assistant", "content": answers[0]}] for answers in batch["answers"]
         ],
-        "image": [upscale_to_budget(img) if upscale else cap_pixels(img)
-                  for img in batch["image"]],
+        "image": [fit_sft_image(img, upscale, blind, max_pixels) for img in batch["image"]],
     }
 
 
@@ -60,7 +69,9 @@ def load_datasets(preset: config.SFTPreset, pool: str | None = None):
     train = (load_pool(ROOT / "data", preset.datasets, preset.seed, pool)
              if pool else load_role(ROOT / "data", preset.datasets, "sft", preset.seed))
     columns = ["image", "question", "answers"]
-    transform = partial(to_sft_columns, upscale=getattr(preset, "image_upscale", False))
+    transform = partial(to_sft_columns, upscale=getattr(preset, "image_upscale", False),
+                        blind=getattr(preset, "blind_images", False),
+                        max_pixels=getattr(preset, "max_pixels", config.MAX_PIXELS))
     train = train.select_columns(columns).with_transform(transform)
     # A dataset whose held-out images all sit in test (omnimedx) has no dev role: no dev loss.
     if not all("dev" in DATASETS[name].subsets for name in preset.datasets):
@@ -94,6 +105,12 @@ def main() -> None:
                         "vision tower stays frozen)")
     parser.add_argument("--image-upscale", action="store_true", default=None,
                         help="resize every training image to the pixel budget, small ones up")
+    parser.add_argument("--blind-images", action="store_true", default=None,
+                        help="train on black images of each image's size (a no-image control)")
+    parser.add_argument("--max-pixels", type=int, default=None,
+                        help="pixel budget of the training images (default: the project's)")
+    parser.add_argument("--max-length", type=int, default=None,
+                        help="token budget per training example (raise it with --max-pixels)")
     args = parse_arguments(parser)
 
     preset = resolve_preset(config.SFT_PRESETS, args)

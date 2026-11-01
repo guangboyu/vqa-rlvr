@@ -271,3 +271,29 @@ def normalized_label_set_match(prediction: str, gt_answers: list[str]) -> float:
         return {normalize_answer(part) for part in parts if normalize_answer(part)}
 
     return float(any(values(prediction) == values(answer) for answer in gt_answers))
+
+
+# DeepTumorVQA free-form answers (2026-11-01): numbers scored by mean relative accuracy, as
+# the dataset's authors score them (their Appendix ab, after VSI-Bench), text by exact match.
+_SIGNED_DECIMAL = re.compile(r"-?\d+(?:\.\d+)?")
+MRA_THRESHOLDS = tuple(round(0.5 + 0.05 * i, 2) for i in range(10))
+
+
+def mean_relative_accuracy(prediction: str, gt_answers: list[str]) -> float:
+    """A numeric reference scores the share of thresholds t in 0.50, 0.55, ..., 0.95 with
+    |prediction − reference| / |reference| < 1 − t, reading the prediction's first signed
+    decimal (none scores 0; a zero reference needs a zero). A text reference needs a normalized
+    exact match."""
+    reference = gt_answers[0].strip()
+    try:
+        expected = float(reference)
+    except ValueError:
+        return float(normalize_answer(prediction) == normalize_answer(reference))
+    found = _SIGNED_DECIMAL.search(prediction.replace(",", ""))
+    if found is None:
+        return 0.0
+    predicted = float(found.group())
+    if expected == 0:
+        return float(predicted == 0)
+    error = abs(predicted - expected) / abs(expected)
+    return sum(error < 1 - t for t in MRA_THRESHOLDS) / len(MRA_THRESHOLDS)

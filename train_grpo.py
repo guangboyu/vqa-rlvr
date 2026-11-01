@@ -85,6 +85,8 @@ def main() -> None:
                         help="pad RL images onto the square canvas (default), keep each "
                         "image's shape within the evaluation pixel budget (up to 768 tokens), "
                         "or resize every image to that budget, small ones up")
+    parser.add_argument("--max-pixels", type=int, default=None,
+                        help="pixel budget of the 'budget' image fit (default: the project's)")
     parser.add_argument("--perception-coef", type=float, default=None,
                         help="weight of a loss that rewards answers depending on the image: the "
                         "KL between the policy on the real and on a patch-masked image "

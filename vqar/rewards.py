@@ -36,6 +36,19 @@ def correctness_reward(prompts, completions, answers, dataset, rollout_prompt,
     return out
 
 
+def official_correctness_reward(prompts, completions, answers, dataset, rollout_prompt,
+                                **kwargs) -> list[float]:
+    """The dataset's official score of the answer: for multiple choice, the option letter alone,
+    so the policy cannot drift to writing out option text (which the normalized scorer also
+    accepts)."""
+    out = []
+    for completion, golds, ds, template in zip(completions, answers, dataset, rollout_prompt,
+                                               strict=True):
+        pred = reward_answer(_text(completion), PROMPTS[template].answer_rule)
+        out.append(0.0 if pred is None else score(ds, pred, golds, "official"))
+    return out
+
+
 def list_aware_correctness_reward(prompts, completions, answers, dataset, rollout_prompt,
                                   **kwargs) -> list[float]:
     """correctness_reward, except ChartQA answers also count with Unicode dashes and with
@@ -75,5 +88,6 @@ def format_reward(prompts, completions, **kwargs) -> list[float]:
 REWARDS = {
     "correctness": correctness_reward,
     "correctness_lists": list_aware_correctness_reward,
+    "correctness_official": official_correctness_reward,
     "format": format_reward,
 }
