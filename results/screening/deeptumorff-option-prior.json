@@ -1,0 +1,26 @@
+{
+ "dataset": "deeptumorff",
+ "source": "tumor-vqa/DeepTumorVQA_2.0 a8b9db5133fda02567476dcb49498ec51f6aed37",
+ "benchmark": {
+  "visual reasoning": {
+   "questions": 4049,
+   "prior_score": 51.83
+  },
+  "all": {
+   "questions": 10000,
+   "prior_score": 57.43
+  },
+  "recognition": {
+   "questions": 2023,
+   "prior_score": 69.85
+  },
+  "measurement": {
+   "questions": 2023,
+   "prior_score": 48.36
+  },
+  "medical reasoning": {
+   "questions": 1905,
+   "prior_score": 65.77
+  }
+ }
+}

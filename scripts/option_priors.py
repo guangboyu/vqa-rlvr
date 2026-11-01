@@ -1,16 +1,20 @@
-"""How far DeepTumorVQA's answer options go without the image: a text-only baseline.
+"""How far the questions and answer options go without the image: text-only baselines.
 
-    python -m scripts.option_priors              # released options
-    python -m scripts.option_priors --debiased   # the deeptumorx questions
+    python -m scripts.option_priors                       # DeepTumorVQA, released options
+    python -m scripts.option_priors --dataset deeptumorx  # its debiased questions
+    python -m scripts.option_priors --dataset m3dvqa      # M3D-VQA
+    python -m scripts.option_priors --dataset deeptumorff # DeepTumorVQA in free form
 
-Writes results/screening/<dataset>-option-prior.json. From the training questions (benchmark
-patients excluded), per question subtype: the letter most often correct, the answer most often
-correct, and, for questions whose options are all numbers, the rank the correct value most
-often takes among the sorted options (per option count). On the test questions, a numeric
-question is answered with its subtype's most common rank, any other with the option that was
-correct most often in training (its subtype's most common letter when no option was). Also
-reported: chance (one over the option count), the most-common-letter rule alone, and the rank
-distribution of the correct value on four-option measurement questions.
+Writes results/screening/<dataset>-option-prior.json. Multiple choice: from the training
+questions (benchmark patients excluded), per question subtype, the letter most often correct,
+the answer most often correct, and, for questions whose options are all numbers, the rank the
+correct value most often takes among the sorted options (per option count). On the test
+questions, a numeric question is answered with its subtype's most common rank, any other with
+the option that was correct most often in training (its subtype's most common letter when no
+option was). Also reported: chance (one over the option count), the most-common-letter rule
+alone, and the rank distribution of the correct value on four-option measurement questions.
+Free form: per subtype and organ, the median training answer for numbers (scored by mean
+relative accuracy) and the most common training answer for text (exact match).
 """
 
 import argparse
@@ -19,16 +23,22 @@ import json
 import os
 from collections import Counter, defaultdict
 from pathlib import Path
+from statistics import median
 
 from vqar.data import (
     DEEPTUMOR_ROOT,
     DEEPTUMOR_ROOT_DEFAULT,
+    M3DVQA,
+    M3DVQA_ROOT,
+    M3DVQA_ROOT_DEFAULT,
     deeptumor_balance,
     deeptumor_debias,
     deeptumor_dev_patient,
     deeptumor_record,
+    m3dvqa_record,
 )
 from vqar.eval.report import ROOT
+from vqar.metrics import mean_relative_accuracy
 from vqar.registry import DATASETS
 
 OUTPUT_DIR = ROOT / "results" / "screening"
@@ -78,13 +88,69 @@ def questions(root: Path, debiased: bool) -> tuple[list[dict], list[dict]]:
     return train, test
 
 
+def m3d_questions() -> tuple[list[dict], list[dict]]:
+    root = Path(os.environ.get(M3DVQA_ROOT, M3DVQA_ROOT_DEFAULT))
+
+    def read(split):
+        with open(root / f"M3D_VQA_{split}.csv", newline="") as handle:
+            records = [m3dvqa_record(f"{split}_{i}", row)
+                       for i, row in enumerate(csv.DictReader(handle))]
+        return [r for r in records if r is not None]
+
+    return read("train"), read("test")
+
+
+def freeform_report() -> dict:
+    """Median (numbers) or most common (text) training answer per subtype and organ."""
+    root = Path(os.environ.get(DEEPTUMOR_ROOT, DEEPTUMOR_ROOT_DEFAULT))
+    rows = [json.loads(line) for line in
+            (root / "benchmark" / "test_qa.jsonl").read_text().splitlines()]
+    test_patients = {row["image_id"] for row in rows}
+    seen = defaultdict(list)
+    with open(root / "train" / "train_qa.csv", newline="") as handle:
+        for row in csv.DictReader(handle):
+            if row["Image ID"] not in test_patients and row["answer"].strip():
+                seen[(row["question subtype"], row["organ"])].append(row["answer"].strip())
+
+    def guess(subtype, organ):
+        answers = seen.get((subtype, organ)) or [a for (s, _), v in seen.items() if s == subtype
+                                                 for a in v]
+        if not answers:
+            return ""
+        try:
+            return f"{median(float(a) for a in answers):g}"
+        except ValueError:
+            return Counter(answers).most_common(1)[0][0]
+
+    by_type = defaultdict(lambda: {"questions": 0, "score": 0.0})
+    for row in rows:
+        value = mean_relative_accuracy(guess(row["question_subtype"], row["organ"]),
+                                       [str(row["answer"])])
+        for key in (row["question_type"], "all"):
+            by_type[key]["questions"] += 1
+            by_type[key]["score"] += value
+    return {"dataset": "deeptumorff",
+            "source": "tumor-vqa/DeepTumorVQA_2.0 a8b9db5133fda02567476dcb49498ec51f6aed37",
+            "benchmark": {key: {"questions": v["questions"],
+                                "prior_score": round(100 * v["score"] / v["questions"], 2)}
+                          for key, v in by_type.items()}}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--debiased", action="store_true")
+    parser.add_argument("--dataset", default="deeptumor",
+                        choices=("deeptumor", "deeptumorx", "m3dvqa", "deeptumorff"))
     args = parser.parse_args()
+    if args.dataset == "deeptumorff":
+        report = freeform_report()
+        (OUTPUT_DIR / "deeptumorff-option-prior.json").write_text(
+            json.dumps(report, indent=1) + "\n")
+        print(json.dumps(report, indent=1))
+        return
     root = Path(os.environ.get(DEEPTUMOR_ROOT, DEEPTUMOR_ROOT_DEFAULT))
-    train, test = questions(root, args.debiased)
+    train, test = (m3d_questions() if args.dataset == "m3dvqa"
+                   else questions(root, args.dataset == "deeptumorx"))
     letters, answers, ranks = defaultdict(Counter), defaultdict(Counter), defaultdict(Counter)
     for record in train:
         subtype = record["subtype"]
@@ -118,9 +184,10 @@ def main():
                      "chance": round(100 * v["chance"] / v["questions"], 2)}
                for key, v in by_type.items()}
     total = sum(measurement.values())
-    dataset = "deeptumorx" if args.debiased else "deeptumor"
-    report = {"dataset": dataset,
-              "source": "tumor-vqa/DeepTumorVQA_2.0 a8b9db5133fda02567476dcb49498ec51f6aed37",
+    dataset = args.dataset
+    source = (f"{M3DVQA} 25e34a768946fa5e11ebf4dda613d1d509bd9e91" if dataset == "m3dvqa"
+              else "tumor-vqa/DeepTumorVQA_2.0 a8b9db5133fda02567476dcb49498ec51f6aed37")
+    report = {"dataset": dataset, "source": source,
               "training_questions": len(train), "benchmark": summary,
               "measurement_four_options_correct_rank_share": {
                   str(rank): round(100 * count / total, 1)

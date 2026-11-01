@@ -1,0 +1,44 @@
+{
+ "dataset": "m3dvqa",
+ "source": "GoodBaiBai88/M3D-VQA 25e34a768946fa5e11ebf4dda613d1d509bd9e91",
+ "training_questions": 481897,
+ "benchmark": {
+  "abnormality": {
+   "questions": 4830,
+   "prior_accuracy": 27.68,
+   "letter_prior_accuracy": 46.58,
+   "chance": 25.0
+  },
+  "all": {
+   "questions": 13790,
+   "prior_accuracy": 38.95,
+   "letter_prior_accuracy": 50.64,
+   "chance": 25.0
+  },
+  "organ": {
+   "questions": 2000,
+   "prior_accuracy": 21.4,
+   "letter_prior_accuracy": 53.2,
+   "chance": 25.0
+  },
+  "plane": {
+   "questions": 2000,
+   "prior_accuracy": 89.1,
+   "letter_prior_accuracy": 78.35,
+   "chance": 25.0
+  },
+  "location": {
+   "questions": 2960,
+   "prior_accuracy": 28.85,
+   "letter_prior_accuracy": 41.52,
+   "chance": 25.0
+  },
+  "phase": {
+   "questions": 2000,
+   "prior_accuracy": 48.5,
+   "letter_prior_accuracy": 43.65,
+   "chance": 25.0
+  }
+ },
+ "measurement_four_options_correct_rank_share": {}
+}
