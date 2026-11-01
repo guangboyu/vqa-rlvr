@@ -1032,3 +1032,41 @@ model = "checkpoints/merged/dtv_probe_sft2"
 label = "dtvx-probe-sft2"
 name = "SFT 2B probe (debiased DeepTumorVQA, 8,000 questions)"
 model = "checkpoints/merged/dtvx_probe_sft2"
+
+# Shortcut audit and volume input (2026-11-01), declared before any of these trained.
+# (1) Free form: does what SFT learns on DeepTumorVQA need the image once the options are gone?
+# SFT 2B for one epoch of 40,000 free-form training questions, once with the montages and once
+# with black images (--blind-images); both scored on the 10,000 free-form test questions with
+# original and black montages (mean relative accuracy for numbers, exact match for text). The
+# text-only rule already scores 57.4% (scripts.option_priors --dataset deeptumorff); expected:
+# the blind model lands within 5 points of the sighted one, near the authors' 63.4%.
+# (2) M3D-VQA, questions only: SFT 2B for one epoch of 40,000 training questions, every one with a
+# black image, scored on its 13,790 test questions. Published sighted closed-ended accuracy is
+# 75.8% (M3D-LaMed); the most common letter per question type alone scores 50.6%. Expected: the
+# blind model reaches at least 65%.
+# (3) Volume grid: SFT 2B for 250 updates (8,000 debiased training questions) on 32-slice grids
+# (deeptumorv, 2,097,152-pixel budget), against the montage probe (dtvx-probe-sft2, 36.7%).
+# (4) RL against SFT, on the grid if its probe beats the montage probe by at least 3 points on the
+# debiased test, else on the montage: GRPO 2B from Instruct and from that view's SFT probe, 2,000
+# updates each (8,000 training questions, the probe's exposure), short-answer rollouts, rewarded
+# by the option letter alone (correctness_official); scored on the debiased test with original
+# and black images. RL counts as better if GRPO minus SFT has a 95% interval above zero.
+[[arms]]
+label = "dtff-sft2"
+name = "SFT 2B (DeepTumorVQA free form)"
+model = "checkpoints/merged/dtff_sft2"
+
+[[arms]]
+label = "dtff-blind-sft2"
+name = "SFT 2B on black images (DeepTumorVQA free form)"
+model = "checkpoints/merged/dtff_blind_sft2"
+
+[[arms]]
+label = "m3d-blind-sft2"
+name = "SFT 2B on black images (M3D-VQA questions)"
+model = "checkpoints/merged/m3d_blind_sft2"
+
+[[arms]]
+label = "dtvv-probe-sft2"
+name = "SFT 2B probe (debiased DeepTumorVQA, 32-slice grid)"
+model = "checkpoints/merged/dtvv_probe_sft2"
