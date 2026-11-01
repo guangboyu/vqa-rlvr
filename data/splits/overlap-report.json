@@ -1,9 +1,12 @@
 {
   "version": "split-files-v1",
-  "held_out_images": 50567,
-  "training_images": 141331,
+  "held_out_images": 54098,
+  "training_images": 173882,
   "training_images_shared_across_subsets": {
-    "deeptumor_train & deeptumorx_train": 7562,
+    "deeptumor_train & deeptumorff_train": 210,
+    "deeptumor_train & deeptumorff_train & deeptumorx_train": 7415,
+    "deeptumor_train & deeptumorx_train": 147,
+    "deeptumorff_train & deeptumorx_train": 132,
     "gqa_rl & gqa_sft": 1,
     "gqa_rl & vqav2_rl": 4,
     "gqa_rl & vqav2_sft": 12,
