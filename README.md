@@ -1,317 +1,113 @@
-# What RL adds to a vision-language model's answers
+# What RL adds to a vision-language model
 
-A hands-on study of when reinforcement learning with a verifiable reward improves a
-vision-language model beyond its starting point and beyond supervised fine-tuning. Qwen3-VL
-at 2B and 8B is trained with short-answer SFT, GRPO with a correctness reward, and on-policy
-distillation, then scored on fixed test questions under two prompt templates, a short answer
-and step-by-step reasoning, with the dataset authors' evaluator and a normalized matcher, and
-at milestones with an LLM judge audited by an image-aware model. **RL beats both the base model
-and SFT where the data rewards what it optimizes: on ChartQA, where reasoning pays, it keeps
-the reasoning and adds 10.4 points (5.5 under the audited judge); after SFT it gives the best
-medical model; and on data it was not trained on it loses less than SFT, by one to two points on
-general and medical images.** On short-answer VQAv2 and GQA it deletes the reasoning and only
-matches SFT, and on medical data SFT alone beats it in domain; those results are reported as a
-supplement. The same evaluation harness, applied to two 3D CT benchmarks, finds that most of
-their published accuracy is reachable without the scan.
+When does reinforcement learning with a verifiable reward improve a vision-language model
+beyond supervised fine-tuning on the same data? This repository trains Qwen3-VL at 2B and 8B
+with SFT, with GRPO and a 0/1 correctness reward, and with SFT followed by GRPO, on photo,
+chart and medical questions, and scores every model through one evaluation harness.
 
-**Report:** [What reinforcement learning adds to a vision-language model](https://guangboyu.github.io/vqa-rlvr/report/)
-sets out the findings, figures and the nine-layer evaluation harness on one page; it is
-rebuilt from the saved evaluation records with `python -m scripts.report_page`.
+**Report:** [guangboyu.github.io/vqa-rlvr/report](https://guangboyu.github.io/vqa-rlvr/report/)
+has the findings, figures and evaluation harness on one page.
 
-The 2B pipeline runs on one 24 GB GPU; separate 80/96 GB profiles run the 8B recipes. The
-recorded demo runs without a GPU.
+## Results at a glance
 
-## Main results
+Accuracy (%) on fixed test sets, best in each row in bold. Instruct is the released Qwen3-VL
+Instruct model; the other columns were trained on each row's own training data, except the
+unseen rows, which test models trained elsewhere.
 
-An RL arm counts as a win when it beats Instruct, and ideally SFT, on the test questions.
-Official accuracy (%), greedy decoding, one training seed per arm. On ChartQA's 1,250
-human-written test questions (2B), with the audited judge's score beside the reasoning prompt:
+<!-- report:overview -->
+| Test set | Prompt | Instruct | SFT | GRPO | SFT → GRPO |
+| --- | --- | ---: | ---: | ---: | ---: |
+| ChartQA | reasoning | 69.7 | 66.2 | **80.1** | 79.8 |
+| ChartQA | reasoning, audited judge | 77.2 | 69.8 | **82.6** | 82.0 |
+| SLAKE, 2B | short | 49.8 | 74.8 | 65.6 | **76.2** |
+| SLAKE, 8B | short | 58.1 | 77.2 | 68.3 | **78.2** |
+| OmniMedVQA, held-out collections | short, normalized scorer | 74.6 | 85.0 | 79.1 | **85.6** |
+| PathVQA, unseen (SLAKE 2B models) | short | **33.5** | 31.7 | 32.5 | 32.6 |
+| TextVQA, unseen (VQAv2 + GQA models) | short | 80.5 | 80.1 | **81.0** | 80.9 |
+| VizWiz, unseen (VQAv2 + GQA models) | short | 42.5 | 42.5 | **43.6** | 43.0 |
+<!-- /report:overview -->
 
-<!-- report:chartqa-headline -->
-| Arm | Short | Reasoning | Reasoning, audited judge | Reasoning tokens |
+RL helps most where reasoning helps. On ChartQA, GRPO keeps its step-by-step reasoning and
+gains 10.4 points, about ten points above every short-answer model, while its pass@32 stays
+level with Instruct's. On medical images SFT teaches the domain's answers, and GRPO started
+from SFT is the best model in every setting. On data that no model trained on, GRPO keeps a
+lead of about one to two points over SFT.
+
+RL's gains depend on the image. With a black image in place of the real one, GRPO answers no
+more questions than Instruct in five of six settings, while SFT answers up to 24 points more.
+On medical data GRPO also moves the model five to sixteen times less than SFT, measured by
+forward KL from Instruct.
+
+RL does not help everywhere. On short-answer photo questions (VQAv2, GQA) it drops the
+reasoning and only matches SFT; on medical data, SFT beats GRPO started from Instruct; and RL
+is overconfident, with a calibration error of 12 to 24 points against SFT's 2 to 9. These
+results and the full test matrix are in the [supplement](docs/supplementary/supplement.md).
+
+## Do 3D CT benchmarks need the scan?
+
+The same harness measures how much of two 3D CT benchmarks can be answered without looking.
+Accuracy (%) of 2B models trained with SFT; "without the image" means black images at test
+time (and in training, except for DeepTumorVQA multiple choice):
+
+| Benchmark | Text-only rule | Without the image | With the image | Published fine-tuned model |
 | --- | ---: | ---: | ---: | ---: |
-| Instruct 2B | 65.84 | 69.68 | 77.17 | 205 |
-| SFT 2B (ChartQA) | 68.80 | 66.24 | 69.83 | 76 |
-| Instruct → short-prompt GRPO (ChartQA, 1 epoch) | 67.52 | 75.60 | 79.57 | 177 |
-| Instruct → GRPO (ChartQA, 1 epoch) | 66.72 | 80.08 | 82.62 | 162 |
-| SFT → GRPO (ChartQA, 1 epoch) | 69.68 | 79.76 | 81.98 | 197 |
-<!-- /report:chartqa-headline -->
+| DeepTumorVQA v2, multiple choice | 60.7 | 59.0 | 61.4 | 64.6 |
+| DeepTumorVQA v2, free form | 57.4 | 57.6 | 60.3 | 63.4 |
+| M3D-VQA, mean over question types | — | 70.2 | — | 75.8 |
 
-**1. Where reasoning pays, RL beats both the base model and SFT, and more data keeps paying.**
-ChartQA's human-written questions are the dataset where reasoning helped in screening (numeric
-answers, +5.6 points). One epoch of GRPO with the reasoning prompt keeps the reasoning (162
-tokens) and raises accuracy from 69.7 to 80.1 (+10.4, interval [+8.2, +12.6]); the audited
-judge keeps half of that (+5.5, interval [+3.5, +7.4]), because many of Instruct's misses are
-right answers in the wrong form ("20%" for 20). Both reasoning-trained arms end about ten
-points above the best short-answer arm, SFT included, and the full epoch adds 3.7 points over a
-300-update pilot. One seed, one dataset
-([results](docs/supplementary/results.md#chartqa-rl-where-reasoning-pays)).
+DeepTumorVQA's answer options and answer frequencies give most answers away, and M3D-VQA's
+correct option is A in nearly half of its questions. A debiased DeepTumorVQA, built here,
+brings the text-only rule down to chance (35.2% against 33.7%). On it, GRPO and SFT reach
+the same accuracy, and the one thing a 2B model learns from 2D views of the scan is whether
+a lesion is present ([details](docs/supplementary/supplement.md#shortcut-audit-of-3d-ct-benchmarks)).
 
-**2. Trained with reasoning, RL sharpens without narrowing.** Sampled 32 times per question,
-reasoning-trained GRPO gains 13.3 points at pass@1 over Instruct and stays level at pass@32
-(+0.5, interval [−0.7, +1.7]); short-prompt GRPO on the same data falls 9.0 points behind at
-pass@32 ([results](docs/supplementary/results.md#chartqa-rl-where-reasoning-pays)).
+## Quick start
 
-Out of domain, at 2B with the short prompt (TextVQA official accuracy, VizWiz with the
-authors' evaluator; neither dataset was trained on):
-
-<!-- report:ood-headline -->
-| Arm (2B, short prompt) | TextVQA | VizWiz |
-| --- | ---: | ---: |
-| Instruct 2B | 80.53 | 42.50 |
-| SFT 2B | 80.08 | 42.53 |
-| Instruct → short-prompt GRPO | 81.01 | 43.58 |
-| SFT → short-prompt GRPO | 80.89 | 43.01 |
-| SFT on the 4,000 RL questions | 80.12 | 42.39 |
-<!-- /report:ood-headline -->
-
-**3. Out of domain, RL keeps an edge over SFT.** Short-prompt GRPO beats one SFT epoch by 0.9
-points on TextVQA (interval [+0.2, +1.6]) and by 1.0 on VizWiz ([+0.5, +1.6]). SFT on exactly
-the 4,000 questions RL drew does not close the gap (RL leads it by 0.9 and 1.2), and the
-audited judge keeps it on TextVQA (+0.8, [+0.2, +1.5]). About one point at 2B with one seed; at
-8B the TextVQA difference is not significant
-([results](docs/supplementary/results.md#out-of-domain-rl-keeps-an-edge-over-sft)).
-
-**4. A reasoning habit learned on charts carries over to photos.** Trained only on ChartQA and
-scored on photo questions under the reasoning prompt, GRPO keeps a shorter chain of reasoning
-(66–83 tokens against Instruct's 107–148) and gains 15.2 points on VQAv2 and 15.9 on GQA,
-while short-prompt accuracy moves by at most 0.6 points on any dataset
-([results](docs/supplementary/results.md#transfer-between-training-data)).
-
-**5. RL after SFT keeps the SFT ceiling and repairs what SFT broke.** GRPO from the SFT model
-keeps short-prompt accuracy within 0.5 points of SFT on VQAv2 and GQA at both sizes and adds
-up to 0.8 on TextVQA. At 8B, where SFT cost 10.8 points of short-prompt CLEVR counting, GRPO
-with the reasoning prompt wins back 8.2 of them
-([full matrix](docs/supplementary/supplement.md#prompt-template--scorer-variant)).
-
-**6. On medical images, SFT then RL is the best model, and RL forgets less.** Of six medical
-candidates, SLAKE and OmniMedVQA passed the screen. SFT followed by short-prompt GRPO is the best
-model in all three settings tested: SLAKE at 2B and 8B (76.2 and 78.2, 1.3 and 1.0 points above
-SFT) and OmniMedVQA with whole source collections held out for testing (+0.5 over SFT). The
-margins are small; the 8B interval includes zero. GRPO alone gains less in domain but loses less
-on medical data it did not train on: every SFT model drops 0.8–4.1 points on PathVQA while GRPO
-stays within 1.8, a lead of 0.8–2.3 points. One seed; no patient-level split is available
-([results](docs/supplementary/results.md#medical-images-sft-then-rl-is-the-best-model-and-rl-forgets-less)).
-
-**7. RL's gains need the image, and on medical data RL moves the model far less than SFT.**
-With a black image in place of the real one, RL from Instruct answers as many questions as
-Instruct in five of six training settings (−0.3 to +0.5 points, intervals including zero) and
-3.2 more in the sixth; SFT answers 1.0 to 24.0 more, significantly in four of its five. At 8B,
-10.4 of SFT's 19.1-point gain on SLAKE survives a black image, against 0.4 of RL's 10.3. On
-medical data the forward KL from Instruct is five to sixteen times smaller for RL than for SFT
-(2.1 against 10.8 nats on SLAKE, 0.9 against 14.1 on the held-out collections with the same
-questions), in line with RL's smaller losses on unseen medical sets. Declared before running
-([results](docs/supplementary/results.md#rls-medical-gains-come-from-the-image)).
-
-Differences below about 0.5 points under the reasoning prompt are within the run-to-run
-noise of greedy vLLM decoding (three repeats of Instruct 2B span 0.4 points) and are not
-claimed.
-
-## Shortcut audit of 3D CT benchmarks
-
-The harness's text-only and black-image checks, pointed at two 3D CT benchmarks, ask how much
-of their published accuracy is reachable without looking. 2B models, one epoch, accuracy (%):
-
-| Benchmark (test questions) | Text-only rule | Trained without the image | Same recipe with the image | Published fine-tuned |
-| --- | ---: | ---: | ---: | ---: |
-| DeepTumorVQA v2, multiple choice (9,996) | 60.7 | 59.0 | 61.4 | 64.6 |
-| DeepTumorVQA v2, free form (10,000) | 57.4 | 57.6 | 60.3 | 63.4 |
-| M3D-VQA, multiple choice (13,790) | 50.6 | 68.7 (mean of types 70.2) | — | 75.8 (mean of types) |
-
-DeepTumorVQA's options place the true value second or third smallest of four 88% of the time,
-and its yes/no answers follow the patients' prevalence; M3D-VQA's correct option is A in 47.5%
-of test questions. A debiased DeepTumorVQA (`deeptumorx`: true value at a uniformly random
-rank, shuffled options, balanced answers; 6,607 test questions) brings the text-only rule to
-35.2% against 33.7% chance. On it, every 2B model's one visual skill is lesion existence
-(57–61% on its balanced yes/no questions, 50–51% with a black image), and GRPO matches SFT: 36.4% from Instruct and
-37.5% after SFT, against 36.7% for SFT (−0.3 [−1.6, +1.0] and +0.7 [−0.4, +1.8]). Thirty-two
-slices of the CT video score no better than the nine-slice montage (36.6%)
-([shortcut audit](docs/supplementary/supplement.md#shortcut-audit-of-3d-ct-benchmarks)).
-
-## Next steps
-
-- **RL on the image-grounded CT questions.** Lesion existence is the one skill a 2B model
-  learns from 2D views of the debiased benchmark; GRPO against SFT on it alone tests whether
-  RL adds visual skill when the image is what pays.
-- **Volumetric perception as tools.** Measurement and reasoning questions need the volume: a
-  3D foundation model or slice-level visual features that locate and measure organs and
-  lesions, returned to the language model as evidence, evaluated on the debiased benchmark.
-- **A second domain where reasoning pays** (diagrams, geometry, documents) through the same
-  screen, and the chart result at 8B.
-- **Calibrated RL**, rewarding abstention when unsure, and **learning when to reason** with
-  rollout prompts conditioned on the question type.
-
-## Negative and null results
-
-Reported in full, with the complete test matrix of every general-domain arm and the per-run
-diagnostics, in the [supplementary results](docs/supplementary/supplement.md):
-
-- **On VQAv2 and GQA, RL deletes the reasoning, and most of its exact-match gain is answer
-  form.** Under the reasoning prompt, GRPO adds 23.2 points on 2B VQAv2 by cutting responses
-  from 148 tokens to 8; the audited judge leaves 4.4 of them (interval [+3.5, +5.4]), and the
-  reasoning prompt still costs Instruct 3.8 points. A 0.2 format reward keeps 8B reasoning near
-  130 tokens and scores 9.7 points below correctness-only GRPO on VQAv2
-  ([judge](docs/supplementary/supplement.md#exact-match-misses-rescored-by-an-llm-judge)).
-- **In domain, short-answer RL only matches SFT.** 1,000 updates add 0.8 and 0.9 points on
-  VQAv2 and GQA, against 2.0 and 2.9 for one SFT epoch; one epoch of the whole 55,438-question
-  pool reaches SFT's level and no further
-  ([full pool](docs/supplementary/supplement.md#short-prompt-rl-on-the-full-pool)).
-- **On VQA, RL narrows what the model can sample.** Short-prompt GRPO raises held-out pass@1
-  by 2.4–3.0 points and lowers pass@32 by 1.9–7.6 (4.6–10.8 after the full pool); one SFT epoch
-  does the reverse
-  ([pass@k](docs/supplementary/supplement.md#held-out-passk-before-and-after-rl)).
-- **Training knobs did not move results.** A filtered pool, dynamic sampling, 4× the batch and
-  3× the learning rate stay within 0.35 points on VQA; eight ChartQA knobs (loss aggregation,
-  KL, reward scaling, response cap, list-aware reward, canvas size, image geometry) read 0 at
-  300 updates. The change that mattered was for correctness: rollouts from LoRA-merged weights
-  lag the trained policy (up to 0.2 nats per token), and serving the adapter unmerged brings
-  the gap under 0.01 ([recipe](docs/supplementary/supplement.md#recipe-experiments),
-  [knobs](docs/supplementary/supplement.md#training-knobs-chartqa)).
-- **One model on both dataset families does not learn when to reason.** Trained on VQA and
-  ChartQA together, it keeps chart reasoning for 1,750 updates, then collapses to 10-token
-  answers everywhere and ends 14.2 points below the ChartQA-trained model on ChartQA
-  ([mixture](docs/supplementary/supplement.md#one-model-on-both-families)).
-- **On medical images, SFT beats RL from the base model in domain and on unseen
-  collections.** On SLAKE one SFT epoch leads one epoch of short-prompt GRPO from Instruct by
-  9.2 points at 2B and 8.9 at 8B (RL after SFT closes the gap); on OmniMedVQA collections never
-  trained on, SFT on the same 4,916 questions leads GRPO by 4.1 points; OmniMedVQA's image-level
-  split is too easy to measure anything (SFT 99.7%)
-  ([medical pilots](docs/supplementary/supplement.md#medical-pilots-in-detail)).
-- **RL is overconfident, and it moves the model less than SFT only on medical data.** After
-  short-prompt RL, 86.5–94.3% of 8 samples at T = 1 give the majority answer, and the expected
-  calibration error is 12.1–23.7 points against SFT's 2.2–8.6; on the half of the questions
-  each is most sure of, SFT is right 90.1–97.9% of the time and RL 81.3–90.8%. On VQAv2 and
-  short-answer ChartQA, SFT's labels are close to what Instruct already says and SFT moves the
-  model less than RL (0.14–0.20 against 0.23 nats, 0.39 against 1.02)
-  ([beyond accuracy](docs/supplementary/supplement.md#beyond-accuracy)).
-- **Vision-side options did not help on SLAKE.** At 2B, LoRA on the vision encoder and
-  training on images upscaled to the pixel budget leave short-prompt SLAKE within 0.8 points
-  of their recipes (intervals including zero) and cost up to 3.2 under the reasoning prompt. A
-  perception loss after PAPO, which rewards answers that change when the image is masked, made
-  GRPO reply that the image is missing: 3.7% right with a black image, 9.6 points below plain
-  GRPO on real ones ([vision side](docs/supplementary/supplement.md#vision-side-options-slake)).
-- **Rejected at screening.** CLEVR compositional (nearly saturated; reasoning costs it 5.6
-  points), MedThinkVQA (answered from the case text at 2B and 8B), Kvasir-VQA-x1, PathVQA
-  and ReXVQA (images change the answers by under 10 points; a black chest X-ray leaves
-  ReXVQA's accuracy unchanged), and DeepTumorVQA (its answer options carry the answer; see the
-  shortcut audit above) ([screening](docs/supplementary/evaluation.md#dataset-screening)).
-
-## What was trained
-
-| Arm | Supervision |
-|---|---|
-| SFT | one epoch on 39,458 VQAv2 and GQA short answers |
-| Instruct → GRPO, SFT → GRPO | 1,000 GRPO updates under the reasoning prompt, correctness reward: the tagged answer, scored by the normalized matcher |
-| Instruct → short-prompt GRPO, SFT → short-prompt GRPO | the same 1,000 updates under the short prompt, rewarding the whole answer (64-token budget) |
-| Instruct → gold-conditioned OPD (2B) | 1,000 updates of token-level feedback from the frozen Instruct model, shown the reference answer |
-
-Every RL arm draws its questions in the same seeded order from a 55,438-question pool,
-four questions and eight sampled responses per update, learning rate 1e-5, no KL penalty.
-Rollouts come from vLLM serving the current LoRA adapter unmerged, so the sampled policy is
-the trained one. SFT → GRPO adds the SFT epoch on top, so it measures the value of SFT
-before the same RL. The recipe was frozen after one-change experiments against a fixed
-baseline ([results](docs/supplementary/supplement.md#recipe-experiments)). No dev or test image
-appears in any training pool; the split files in `data/splits/` list every row and
-`check_data` verifies it. The [method](docs/supplementary/method.md) has the full recipe and
-the commands that reproduce each arm.
-
-## Evaluation
-
-| Dataset | Test questions | Official scorer |
-|---|---:|---|
-| VQAv2 | 5,000 | VQA ten-annotator accuracy with its answer processing |
-| GQA | 12,578 | exact answer match |
-| CLEVR counting | 3,000 | exact count |
-| TextVQA (far-OOD) | 5,000 (all of validation) | MMF/EvalAI answer processing, ten-annotator accuracy |
-| VizWiz (far-OOD) | 8,000 | the authors' ten-annotator evaluator |
-| ChartQA (human-written) | 1,250 | relaxed accuracy (5% tolerance on numbers) |
-| SLAKE (English) | 1,061 | case-insensitive exact match |
-| OmniMedVQA, held-out collections | 1,156 | option letter (normalized: letter or option text) |
-| PathVQA | 2,240 | case-insensitive exact match |
-| DeepTumorVQA v2 (released / debiased / free form) | 9,996 / 6,607 / 10,000 | option letter; free form: mean relative accuracy for numbers, exact match for text |
-| M3D-VQA (closed-ended) | 13,790 | option letter |
-
-These are fixed subsets materialized by this repository, not benchmark-server
-submissions; GQA's consistency and grounding metrics are outside an accuracy score. The
-official scorers reproduce the authors' evaluator code on 626,074 saved predictions from
-89 runs with no per-question mismatch ([validation](docs/supplementary/validation.md)).
-The [evaluation](docs/supplementary/evaluation.md) page describes the harness in the terms
-public harnesses use and lists where it departs from their practice. Run side by side with
-lmms-eval on the same model, the scorers agree exactly and GQA matches within 0.09 points;
-the 1.15-point TextVQA gap comes from lmms-eval capitalizing each question.
-
-The scorer matters under the reasoning prompt. The authors' evaluators compare some
-answers case-sensitively (VQAv2 when all annotators agree, GQA always), and for Instruct
-2B lowercasing the answers closes nearly all of the official-to-normalized gap: 9.6 of 9.6
-points on VQAv2 and 14.7 of 15.8 on GQA. Both numbers are always reported side by side.
-
-`evaluate.py` runs one model under a declared protocol (dataset, role, tier, prompt,
-decoding, image mode) and writes a record with both scorer variants and every prediction.
-A cell that already has a record is skipped, and an interrupted one resumes. Every table
-in this repository, and the dashboard, is generated from those records:
+Python 3.12 and [uv](https://docs.astral.sh/uv/); the lockfile pins CUDA 12.9 builds of
+PyTorch and vLLM. The 2B pipeline runs on one 24 GB GPU.
 
 ```bash
-uv run --frozen python -m scripts.report
+uv sync --frozen
+uv run --frozen python prepare_data.py           # pinned sources, fixed subsets (about 13 GB)
+uv run --frozen python -m scripts.check_data     # fails if a test image is in a training pool
+uv run --frozen python evaluate.py --model Qwen/Qwen3-VL-2B-Instruct --label base2 \
+  --tier smoke --prompts short reasoning
+uv run --frozen python train_grpo.py --preset grpo_2b_main --hardware 24gb \
+  --max-steps 2 --save-steps 1 --run-dir runs/grpo-smoke --no-wandb
 ```
 
-## Try it
+The [tutorial](docs/tutorial.md) goes through data, evaluation, SFT and GRPO with the
+expected output of each step, and [method](docs/supplementary/method.md) has the command
+behind every model in the tables. All tables are generated from the saved evaluation records
+by `python -m scripts.report`, and a test fails if a committed table drifts from them.
 
-Browse recorded examples and the results dashboard, no GPU needed:
+## Demo
+
+A local app shows recorded answers and the results without a GPU, and compares the 2B
+models side by side on a 24 GB GPU ([demo notes](demo/README.md)):
 
 ```bash
 uv sync --frozen --group demo
-cd demo/frontend && npm ci && npm run build && cd ../..
-uv run --frozen uvicorn demo.backend.app:app --host 127.0.0.1 --port 8000
+(cd demo/frontend && npm ci && npm run build)
+uv run --frozen uvicorn demo.backend.app:app --port 8000
 ```
 
-Open `http://127.0.0.1:8000`. The [demo notes](demo/README.md) cover live inference with
-the three 2B models on a 24 GB GPU.
+![Recorded examples in the demo](demo/assets/gallery.png)
 
-![Recorded VQA examples](demo/assets/gallery.png)
+## Documentation
 
-The [tutorial](docs/tutorial.md) runs the 2B pipeline on one 24 GB GPU: data, split check,
-evaluation, the learnability pre-check, two-step SFT and GRPO runs with their dev-tier
-learning curves, and the tables. The [hardware notes](docs/supplementary/hardware.md)
-cover the 80/96 GB profiles, resumption, and measured memory; [monitoring](docs/supplementary/monitoring.md)
-covers what to watch while an RL run trains and how to plot it.
+- [Results](docs/supplementary/results.md) and [supplement](docs/supplementary/supplement.md): every table, with paired 95% intervals, including the negative results.
+- [Evaluation](docs/supplementary/evaluation.md) and [validation](docs/supplementary/validation.md): the harness, the dataset screen, and how the scorers were checked against the authors' code.
+- [Hardware](docs/supplementary/hardware.md) and [monitoring](docs/supplementary/monitoring.md): GPU profiles, memory, resuming, and what to watch while RL trains.
+- [History](docs/supplementary/history.md): the July 2026 version of this repository had a defective VQAv2 reward and 47 test images in its training pools; this page records both, the corrections, and the status of every earlier claim.
 
-## History and corrections
+## Next steps
 
-The first campaign, in July 2026, trained GRPO with a VQAv2 reward that paid nothing on
-single-reference training questions, and its training pools shared 47 images with the
-VQAv2 test subset. The corrected campaign of September 13 fixed both, with 300-update RL
-runs sampled from merged weights; the final rerun above replaced it under the frozen recipe.
-The [history](docs/supplementary/history.md) keeps both earlier campaigns as labeled
-history, the full erratum for the reward defect, and a ledger of every published claim with
-its status: replicated, qualified, not replicated, retracted, or open.
-
-The adapters published in July come from those runs. All four were trained on the July
-pools, and the two GRPO adapters also carry the reward defect:
-
-| Adapter | Download |
-|---|---|
-| 2B SFT | [vqa-rlvr-sft-2b](https://huggingface.co/omnifish123/vqa-rlvr-sft-2b) |
-| 8B SFT | [vqa-rlvr-sft-8b](https://huggingface.co/omnifish123/vqa-rlvr-sft-8b) |
-| 2B GRPO from Instruct | [vqa-rlvr-grpo-2b-main-base](https://huggingface.co/omnifish123/vqa-rlvr-grpo-2b-main-base) |
-| 2B SFT then GRPO | [vqa-rlvr-grpo-2b-main-sft](https://huggingface.co/omnifish123/vqa-rlvr-grpo-2b-main-sft) |
-
-## Repository map
-
-- `train_sft.py`, `train_grpo.py`, `train_opd.py`: training entry points on shared
-  plumbing in `vqar/training.py` and `vqar/rl.py`; presets and hardware profiles in
-  `vqar/config.py`.
-- `vqar/registry.py`: datasets, their roles and scorers, and prompt templates, registered
-  once.
-- `vqar/eval/`: the evaluation harness, records, the experiment matrix, and the report
-  builder.
-- `evaluate.py`, `scripts/`: evaluation, data checks, the learnability pre-check,
-  reports, and the gallery.
-- `data/splits/`, `experiments.toml`, `results/records/`: the split files, the declared
-  arms and protocols, and the evaluation records behind every table.
-- `demo/`: recorded examples, the results dashboard, and optional live comparison.
-- `tests/`: CPU tests; GitHub Actions runs them without PyTorch.
+RL restricted to the CT questions that need the image (lesion presence); 3D perception tools
+that return measurements to the language model; a second domain where reasoning pays; and
+calibrated RL that is rewarded for abstaining when unsure.
 
 ## Acknowledgments
 
-Built with Qwen, Hugging Face Transformers, TRL, PEFT, and vLLM. Dataset and model
-licenses apply to their respective assets. See [LICENSE](LICENSE) for this code.
+Built with Qwen, Hugging Face Transformers, TRL, PEFT and vLLM. Dataset and model licenses
+apply to their assets; the code is under the [Apache 2.0 license](LICENSE).

@@ -532,8 +532,6 @@ candidates = ["sft4k2"]
 dataset = "chartqa"
 arms = ["base2", "cqa-sft2", "cqa-grpo2-base", "cqa-short2-base", "cqa-grpo2-sft",
         "cqa-grpo2-base-e1", "cqa-short2-base-e1", "cqa-grpo2-sft-e1", "mix-grpo2-base"]
-# The final arms, as the README's ChartQA table shows them.
-headline = ["base2", "cqa-sft2", "cqa-short2-base-e1", "cqa-grpo2-base-e1", "cqa-grpo2-sft-e1"]
 
 [[pilots.chartqa.comparisons]]
 reference = "base2"

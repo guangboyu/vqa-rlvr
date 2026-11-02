@@ -198,6 +198,16 @@ saved predictions.
 | `zero_shot_8b_reasoning` | reasoning | 62.95 (68.17) | 46.79 (52.35) | 96.80 (96.80) | 75.65 (75.65) |
 <!-- /report:history -->
 
+The adapters published on the Hugging Face Hub in July come from these runs. All four were
+trained on the July pools, and the two GRPO adapters also carry the reward defect:
+
+| Adapter | Download |
+|---|---|
+| 2B SFT | [vqa-rlvr-sft-2b](https://huggingface.co/omnifish123/vqa-rlvr-sft-2b) |
+| 8B SFT | [vqa-rlvr-sft-8b](https://huggingface.co/omnifish123/vqa-rlvr-sft-8b) |
+| 2B GRPO from Instruct | [vqa-rlvr-grpo-2b-main-base](https://huggingface.co/omnifish123/vqa-rlvr-grpo-2b-main-base) |
+| 2B SFT then GRPO | [vqa-rlvr-grpo-2b-main-sft](https://huggingface.co/omnifish123/vqa-rlvr-grpo-2b-main-sft) |
+
 ## Claims ledger
 
 Every claim the project published, with its status after the final rerun. "July README" is

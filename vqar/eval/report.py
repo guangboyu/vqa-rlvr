@@ -667,40 +667,47 @@ def pilot_table(arms: list[Arm], cells: dict, dataset: str) -> str:
                   "Output tokens"], rows, 2)
 
 
-def chartqa_headline_table(arms: list[Arm], cells: dict, judge: dict | None,
-                           labels: list[str]) -> str:
-    """The README's ChartQA table: official accuracy under both prompts, the audited judge's
-    reasoning-prompt score, and reasoning-prompt length, for the final arms."""
-    by_label = {arm.label: arm for arm in arms}
-    audited = {(c["arm"], c["prompt"]): c.get("audited") for c in judge["cells"]} if judge else {}
-    rows = []
-    for label in labels:
-        short, reasoning = (full_cell(cells, by_label[label], "chartqa", prompt)
-                            for prompt in PROMPT_ORDER)
-        judged = audited.get((label, "reasoning"))
-        rows.append([by_label[label].name,
-                     percent(short.metrics["official"]["overall"]) if short else "—",
-                     percent(reasoning.metrics["official"]["overall"]) if reasoning else "—",
-                     "—" if judged is None else f"{judged:.2f}",
-                     f"{reasoning.metrics['mean_output_tokens']:.0f}" if reasoning else "—"])
-    return table(["Arm", "Short", "Reasoning", "Reasoning, audited judge", "Reasoning tokens"],
-                 rows, 1)
+# The README overview: (test set, setting, dataset, prompt, scorer, and the arms trained for it
+# in the order Instruct, SFT, GRPO, SFT → GRPO).
+OVERVIEW_ROWS = (
+    ("ChartQA", "reasoning", "chartqa", "reasoning", "official",
+     ("base2", "cqa-sft2", "cqa-grpo2-base-e1", "cqa-grpo2-sft-e1")),
+    ("SLAKE, 2B", "short", "slake", "short", "official",
+     ("base2", "slk-sft2", "slk-short2-base-e1", "slk-short2-sft-e1")),
+    ("SLAKE, 8B", "short", "slake", "short", "official",
+     ("base8", "slk-sft8", "slk-short8-base-e1", "slk-short8-sft-e1")),
+    ("OmniMedVQA, held-out collections", "short, normalized scorer", "omnimedx", "short",
+     "normalized", ("base2", "omx-sft2", "omx-short2-base", "omx-short2-sft")),
+    ("PathVQA, unseen (SLAKE 2B models)", "short", "pathvqa", "short", "official",
+     ("base2", "slk-sft2", "slk-short2-base-e1", "slk-short2-sft-e1")),
+    ("TextVQA, unseen (VQAv2 + GQA models)", "short", "textvqa", "short", "official",
+     ("base2", "sft2", "p1-f-short2-base", "p1-f-short2-sft")),
+)
 
 
-def ood_headline_table(arms: list[Arm], cells: dict, ood: dict | None) -> str:
-    """The README's out-of-domain table: short-prompt TextVQA (official) and VizWiz (the
-    authors' evaluator) for the arms evaluated on VizWiz."""
-    if ood is None:
-        return "The extra OOD sets have not been evaluated yet.\n"
-    vizwiz = {c["arm"]: c["score"] for c in ood["cells"] if c["dataset"] == "vizwiz"}
-    rows = []
-    for arm in arms:
-        if arm.label not in vizwiz:
-            continue
-        textvqa = full_cell(cells, arm, "textvqa", "short")
-        rows.append([arm.name, percent(textvqa.metrics["official"]["overall"]) if textvqa else "—",
-                     f"{vizwiz[arm.label]:.2f}"])
-    return table(["Arm (2B, short prompt)", "TextVQA", "VizWiz"], rows, 1)
+def overview_table(cells: dict, chartqa_judge: dict | None, ood: dict | None) -> str:
+    """The README's results at a glance: Instruct and its three trained versions per test set,
+    best in bold; the audited judge's ChartQA score and VizWiz from their result files."""
+    def cell(arm, dataset, prompt, variant):
+        record = cells.get(Cell(arm, dataset, "test", "full", prompt, "original", None))
+        return None if record is None else 100 * record.metrics[variant]["overall"]
+
+    rows = [(name, setting, [cell(arm, dataset, prompt, variant) for arm in arms])
+            for name, setting, dataset, prompt, variant, arms in OVERVIEW_ROWS]
+    if chartqa_judge:
+        audited = {(c["arm"], c["prompt"]): c.get("audited") for c in chartqa_judge["cells"]}
+        rows.insert(1, ("ChartQA", "reasoning, audited judge",
+                        [audited.get((arm, "reasoning")) for arm in OVERVIEW_ROWS[0][5]]))
+    if ood:
+        vizwiz = {c["arm"]: c["score"] for c in ood["cells"] if c["dataset"] == "vizwiz"}
+        rows.append(("VizWiz, unseen (VQAv2 + GQA models)", "short",
+                     [vizwiz.get(arm) for arm in OVERVIEW_ROWS[-1][5]]))
+    lines = []
+    for label, setting, values in rows:
+        best = max(v for v in values if v is not None)
+        lines.append([label, setting, *("—" if v is None else f"**{v:.1f}**" if v == best
+                                        else f"{v:.1f}" for v in values)])
+    return table(["Test set", "Prompt", "Instruct", "SFT", "GRPO", "SFT → GRPO"], lines, 2)
 
 
 def pilot_deltas_table(arms: list[Arm], rows: list[dict], pilot: str) -> str:
@@ -762,7 +769,6 @@ def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
     pilot_arms, _, _ = load_pilot(toml, "chartqa")
     declared_toml = tomllib.loads(toml.read_text())
     transfers = declared_toml.get("transfers", {})
-    chartqa_headline = declared_toml["pilots"]["chartqa"].get("headline", [])
     passk = load_result(root / "results", "passk-heldout.json")
     chartqa_passk = load_result(root / "results", "passk-chartqa.json")
     knobs = load_result(root / "results", "knobs-chartqa.json")
@@ -791,9 +797,7 @@ def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
         "passk-deltas": passk_deltas_table(every_arm, passk),
         "judge": judge_table(arms, judge),
         "judge-deltas": judge_deltas_table(arms, judge),
-        "chartqa-headline": chartqa_headline_table(pilot_arms, cells, chartqa_judge,
-                                                   chartqa_headline),
-        "ood-headline": ood_headline_table(every_arm, cells, ood),
+        "overview": overview_table(cells, chartqa_judge, ood),
         "chartqa-judge": judge_table(pilot_arms, chartqa_judge),
         "chartqa-judge-deltas": judge_deltas_table(pilot_arms, chartqa_judge),
         "beyond-accuracy": beyond_accuracy_table(every_arm, beyond),
