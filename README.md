@@ -151,6 +151,12 @@ diagnostics, in the [supplementary results](docs/supplementary/supplement.md):
   perception loss after PAPO, which rewards answers that change when the image is masked, made
   GRPO reply that the image is missing: 3.7% right with a black image, 9.6 points below plain
   GRPO on real ones ([vision side](docs/supplementary/supplement.md#vision-side-options-slake)).
+- **3D CT benchmarks carry shortcuts that hide what models see.** On DeepTumorVQA a rule over
+  the answer options scores 60.7% against 64.6% for the authors' fine-tuned 4B model, and in
+  free form SFT on black images reaches 57.6% against 60.3% with the scans; on M3D-VQA, SFT on
+  black images scores 68.7% against the published 75.8%. With the shortcuts removed, a 2B model
+  learns only lesion existence from 2D views of the scan, and GRPO matches SFT (−0.3 [−1.6, +1.0])
+  ([shortcut audit](docs/supplementary/supplement.md#shortcut-audit-of-3d-ct-benchmarks)).
 - **Rejected at screening.** CLEVR compositional (nearly saturated; reasoning costs it 5.6
   points), MedThinkVQA (answered from the case text at 2B and 8B), Kvasir-VQA-x1, PathVQA
   and ReXVQA (images change the answers by under 10 points; a black chest X-ray leaves
