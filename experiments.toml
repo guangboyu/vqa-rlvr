@@ -1070,3 +1070,16 @@ model = "checkpoints/merged/m3d_blind_sft2"
 label = "dtvv-probe-sft2"
 name = "SFT 2B probe (debiased DeepTumorVQA, 32-slice grid)"
 model = "checkpoints/merged/dtvv_probe_sft2"
+
+# RL against SFT (2026-11-01): the grid probe scored 36.6% against the montage probe's 36.7% on the
+# debiased test, short of the declared 3-point margin, so both GRPO runs train on the montage
+# (deeptumorx); the SFT arm is the montage probe (dtvx-probe-sft2, same 8,000-question exposure).
+[[arms]]
+label = "dtvx-grpo2-base"
+name = "Instruct → GRPO (debiased DeepTumorVQA, 2,000 updates)"
+model = "checkpoints/merged/dtvx_grpo2_base"
+
+[[arms]]
+label = "dtvx-grpo2-sft"
+name = "SFT → GRPO (debiased DeepTumorVQA, 2,000 updates)"
+model = "checkpoints/merged/dtvx_grpo2_sft"
