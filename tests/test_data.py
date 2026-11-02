@@ -166,7 +166,7 @@ def _xray(path, size=(4, 3)):
     from PIL import Image
 
     path.parent.mkdir(parents=True, exist_ok=True)
-    Image.fromarray(np.arange(12, dtype=np.uint16).reshape(3, 4) * 5000, mode="I;16").save(path)
+    Image.fromarray(np.arange(12, dtype=np.uint16).reshape(3, 4) * 5000).save(path)
     return path
 
 
@@ -325,4 +325,4 @@ def test_m3dvqa_rows_keep_four_options_and_black_images_differ_by_volume():
     first, second = _tagged_black_png("v/1.npy"), _tagged_black_png("v/2.npy")
     assert first != second and first == _tagged_black_png("v/1.npy")
     with Image.open(io.BytesIO(first)) as image:
-        assert sum(1 for p in image.getdata() if p) <= 2  # black but for the two tag pixels
+        assert sum(1 for p in image.tobytes() if p) <= 2  # black but for the two tag pixels

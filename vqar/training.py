@@ -269,6 +269,14 @@ def evaluate_checkpoints_next(output: Path) -> None:
     os.execv(sys.executable, [sys.executable, str(script), str(output)])
 
 
+def installed_version(name: str) -> str | None:
+    """A package's installed version; None where it is absent (CPU-only test runs)."""
+    try:
+        return importlib.metadata.version(name)
+    except importlib.metadata.PackageNotFoundError:
+        return None
+
+
 def write_run_config(output_dir: Path, record: dict, training_args) -> None:
     """Save resolved settings before training; reject an incompatible auto-resume."""
     root = ROOT
@@ -298,7 +306,7 @@ def write_run_config(output_dir: Path, record: dict, training_args) -> None:
         or None
     )
     record["versions"] = {
-        name: importlib.metadata.version(name)
+        name: installed_version(name)
         for name in ("torch", "transformers", "trl", "peft", "vllm", "datasets")
     }
     output_dir.mkdir(parents=True, exist_ok=True)

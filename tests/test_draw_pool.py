@@ -154,8 +154,8 @@ def test_a_resume_cannot_change_the_selected_questions(campaign, tmp_path):
 
 def test_sft_adapter_initialization_uses_the_declared_seed(tmp_path, monkeypatch):
     """Exercise the actual TRL/PEFT constructor before Trainer seeds its own RNG."""
-    import torch
-    import trl
+    torch = pytest.importorskip("torch")  # the GPU stack is absent from the CPU checks
+    trl = pytest.importorskip("trl")
     from datasets import Dataset
     from tokenizers import Tokenizer
     from tokenizers.models import WordLevel
