@@ -11,7 +11,12 @@ the reasoning and adds 10.4 points (5.5 under the audited judge); after SFT it g
 medical model; and on data it was not trained on it loses less than SFT, by one to two points on
 general and medical images.** On short-answer VQAv2 and GQA it deletes the reasoning and only
 matches SFT, and on medical data SFT alone beats it in domain; those results are reported as a
-supplement.
+supplement. The same evaluation harness, applied to two 3D CT benchmarks, finds that most of
+their published accuracy is reachable without the scan.
+
+**Report:** [What reinforcement learning adds to a vision-language model](https://guangboyu.github.io/vqa-rlvr/report/)
+sets out the findings, figures and the nine-layer evaluation harness on one page; it is
+rebuilt from the saved evaluation records with `python -m scripts.report_page`.
 
 The 2B pipeline runs on one 24 GB GPU; separate 80/96 GB profiles run the 8B recipes. The
 recorded demo runs without a GPU.
@@ -102,9 +107,43 @@ Differences below about 0.5 points under the reasoning prompt are within the run
 noise of greedy vLLM decoding (three repeats of Instruct 2B span 0.4 points) and are not
 claimed.
 
+## Shortcut audit of 3D CT benchmarks
+
+The harness's text-only and black-image checks, pointed at two 3D CT benchmarks, ask how much
+of their published accuracy is reachable without looking. 2B models, one epoch, accuracy (%):
+
+| Benchmark (test questions) | Text-only rule | Trained without the image | Same recipe with the image | Published fine-tuned |
+| --- | ---: | ---: | ---: | ---: |
+| DeepTumorVQA v2, multiple choice (9,996) | 60.7 | 59.0 | 61.4 | 64.6 |
+| DeepTumorVQA v2, free form (10,000) | 57.4 | 57.6 | 60.3 | 63.4 |
+| M3D-VQA, multiple choice (13,790) | 50.6 | 68.7 (mean of types 70.2) | — | 75.8 (mean of types) |
+
+DeepTumorVQA's options place the true value second or third smallest of four 88% of the time,
+and its yes/no answers follow the patients' prevalence; M3D-VQA's correct option is A in 47.5%
+of test questions. A debiased DeepTumorVQA (`deeptumorx`: true value at a uniformly random
+rank, shuffled options, balanced answers; 6,607 test questions) brings the text-only rule to
+35.2% against 33.7% chance. On it, every 2B model's one visual skill is lesion existence
+(57–61% on its balanced yes/no questions, 50–51% with a black image), and GRPO matches SFT: 36.4% from Instruct and
+37.5% after SFT, against 36.7% for SFT (−0.3 [−1.6, +1.0] and +0.7 [−0.4, +1.8]). Thirty-two
+slices of the CT video score no better than the nine-slice montage (36.6%)
+([shortcut audit](docs/supplementary/supplement.md#shortcut-audit-of-3d-ct-benchmarks)).
+
+## Next steps
+
+- **RL on the image-grounded CT questions.** Lesion existence is the one skill a 2B model
+  learns from 2D views of the debiased benchmark; GRPO against SFT on it alone tests whether
+  RL adds visual skill when the image is what pays.
+- **Volumetric perception as tools.** Measurement and reasoning questions need the volume: a
+  3D foundation model or slice-level visual features that locate and measure organs and
+  lesions, returned to the language model as evidence, evaluated on the debiased benchmark.
+- **A second domain where reasoning pays** (diagrams, geometry, documents) through the same
+  screen, and the chart result at 8B.
+- **Calibrated RL**, rewarding abstention when unsure, and **learning when to reason** with
+  rollout prompts conditioned on the question type.
+
 ## Negative and null results
 
-Reported in full, with the complete test matrix of every Part 1 arm and the per-run
+Reported in full, with the complete test matrix of every general-domain arm and the per-run
 diagnostics, in the [supplementary results](docs/supplementary/supplement.md):
 
 - **On VQAv2 and GQA, RL deletes the reasoning, and most of its exact-match gain is answer
@@ -151,19 +190,11 @@ diagnostics, in the [supplementary results](docs/supplementary/supplement.md):
   perception loss after PAPO, which rewards answers that change when the image is masked, made
   GRPO reply that the image is missing: 3.7% right with a black image, 9.6 points below plain
   GRPO on real ones ([vision side](docs/supplementary/supplement.md#vision-side-options-slake)).
-- **3D CT benchmarks carry shortcuts that hide what models see.** On DeepTumorVQA a rule over
-  the answer options scores 60.7% against 64.6% for the authors' fine-tuned 4B model, and in
-  free form SFT on black images reaches 57.6% against 60.3% with the scans; on M3D-VQA, SFT on
-  black images scores 68.7% against the published 75.8%. With the shortcuts removed, a 2B model
-  learns only lesion existence from 2D views of the scan, and GRPO matches SFT (−0.3 [−1.6, +1.0])
-  ([shortcut audit](docs/supplementary/supplement.md#shortcut-audit-of-3d-ct-benchmarks)).
 - **Rejected at screening.** CLEVR compositional (nearly saturated; reasoning costs it 5.6
   points), MedThinkVQA (answered from the case text at 2B and 8B), Kvasir-VQA-x1, PathVQA
   and ReXVQA (images change the answers by under 10 points; a black chest X-ray leaves
-  ReXVQA's accuracy unchanged), and DeepTumorVQA (SFT lifts its CT benchmark from 35.0% to
-  61.4% and still scores 59.0% with a black image: the answer options carry the answer; with
-  debiased options a 2B model learns only lesion existence from the whole-volume montage)
-  ([screening](docs/supplementary/evaluation.md#dataset-screening)).
+  ReXVQA's accuracy unchanged), and DeepTumorVQA (its answer options carry the answer; see the
+  shortcut audit above) ([screening](docs/supplementary/evaluation.md#dataset-screening)).
 
 ## What was trained
 
@@ -192,6 +223,13 @@ the commands that reproduce each arm.
 | GQA | 12,578 | exact answer match |
 | CLEVR counting | 3,000 | exact count |
 | TextVQA (far-OOD) | 5,000 (all of validation) | MMF/EvalAI answer processing, ten-annotator accuracy |
+| VizWiz (far-OOD) | 8,000 | the authors' ten-annotator evaluator |
+| ChartQA (human-written) | 1,250 | relaxed accuracy (5% tolerance on numbers) |
+| SLAKE (English) | 1,061 | case-insensitive exact match |
+| OmniMedVQA, held-out collections | 1,156 | option letter (normalized: letter or option text) |
+| PathVQA | 2,240 | case-insensitive exact match |
+| DeepTumorVQA v2 (released / debiased / free form) | 9,996 / 6,607 / 10,000 | option letter; free form: mean relative accuracy for numbers, exact match for text |
+| M3D-VQA (closed-ended) | 13,790 | option letter |
 
 These are fixed subsets materialized by this repository, not benchmark-server
 submissions; GQA's consistency and grounding metrics are outside an accuracy score. The

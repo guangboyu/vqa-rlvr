@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>What RL Adds to VQA</title>
+<meta name="description" content="When reinforcement learning with verifiable rewards improves Qwen3-VL beyond its starting point and beyond supervised fine-tuning, and what 3D CT benchmarks measure without the image.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap">
+<style>
+/* A single 42rem reading column on white; figures and tables widen to 60rem. Hairline rules,
+   booktabs tables, one serif for text and a quiet sans for figures. The four method colors
+   are the only saturated ink. */
+:root {
+  --bg: #ffffff;
+  --ink: #1c1d20;
+  --ink-2: #4a4c52;
+  --ink-3: #7a7d85;
+  --rule: #e6e6e3;
+  --strong: #1c1d20;
+  --wash: #f6f6f4;
+  --accent: #23466f;
+  --c-base: #3d424c;
+  --c-sft: #c4622d;
+  --c-grpo: #2c64a8;
+  --c-sftgrpo: #2f8a6b;
+  --serif: "Newsreader", "Source Serif 4", Georgia, serif;
+  --sans: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --read: 42rem;
+  --wide: 60rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141517; --ink: #e9e9e6; --ink-2: #b8b9bd; --ink-3: #8b8d93; --rule: #2b2d31;
+    --strong: #e9e9e6; --wash: #1b1c1f; --accent: #8fb1dc; --c-base: #b3b8c2;
+    --c-sft: #d9773f; --c-grpo: #5b93d6; --c-sftgrpo: #46a885; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141517; --ink: #e9e9e6; --ink-2: #b8b9bd; --ink-3: #8b8d93; --rule: #2b2d31;
+  --strong: #e9e9e6; --wash: #1b1c1f; --accent: #8fb1dc; --c-base: #b3b8c2;
+  --c-sft: #d9773f; --c-grpo: #5b93d6; --c-sftgrpo: #46a885; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--serif); font-size: 18.5px;
+  line-height: 1.62; margin: 0; font-optical-sizing: auto;
+  padding-left: max(18px, env(safe-area-inset-left, 0px));
+  padding-right: max(18px, env(safe-area-inset-right, 0px));
+}
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+a:hover { border-bottom-color: var(--accent); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg);
+  font-family: var(--sans); font-size: 12.5px; color: var(--ink-3);
+  margin-left: calc(-1 * max(18px, env(safe-area-inset-left, 0px)));
+  margin-right: calc(-1 * max(18px, env(safe-area-inset-right, 0px)));
+  padding-left: max(18px, env(safe-area-inset-left, 0px));
+  padding-right: max(18px, env(safe-area-inset-right, 0px));
+  border-bottom: 1px solid var(--rule); }
+.bar-in { max-width: var(--wide); margin: 0 auto; display: flex; align-items: center; gap: 22px; min-height: 42px; }
+.bar nav { display: flex; gap: 18px; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.bar a { color: var(--ink-3); border: 0; white-space: nowrap; }
+.bar a:hover { color: var(--ink); }
+.bar button { font: inherit; color: var(--ink-2); background: none; border: 0; padding: 0; cursor: pointer; letter-spacing: 0.02em; }
+.bar button:hover { color: var(--ink); }
+
+main { padding-block: 0 80px; }
+header.paper, section { max-width: var(--read); margin: 0 auto; }
+header.paper { padding-block: 72px 24px; }
+.kicker { font-family: var(--sans); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
+h1 { font-weight: 500; font-size: clamp(34px, 5vw, 48px); line-height: 1.08; letter-spacing: -0.015em; margin: 16px 0 20px; text-wrap: balance; }
+.byline { font-family: var(--sans); font-size: 14px; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 4px 20px; }
+.byline .who { color: var(--ink); font-weight: 500; }
+
+.abstract { margin: 40px 0 0; padding-top: 22px; border-top: 1px solid var(--strong); font-size: 17.5px; line-height: 1.6; }
+.abstract .label, .label { font-family: var(--sans); font-size: 11.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); display: block; margin-bottom: 8px; }
+
+section { padding-block: 56px 0; }
+h2 { font-weight: 500; font-size: 28px; line-height: 1.2; margin: 0 0 18px; text-wrap: balance; letter-spacing: -0.005em; }
+h2 .num, h3 .num { font-family: var(--sans); font-weight: 400; color: var(--ink-3); font-size: 0.55em; letter-spacing: 0.08em; margin-right: 12px; vertical-align: 0.2em; }
+h3 { font-weight: 500; font-size: 21px; line-height: 1.3; margin: 38px 0 10px; text-wrap: balance; }
+p { margin: 0 0 16px; hyphens: auto; }
+.small { font-size: 16px; color: var(--ink-2); }
+ul, ol { padding-left: 1.2em; margin: 0 0 16px; }
+li { margin-bottom: 8px; }
+
+.highlights { margin: 8px 0 0; border-top: 1px solid var(--strong); }
+.hl { display: grid; grid-template-columns: 11.5rem minmax(0, 1fr); gap: 4px 28px; padding: 18px 0; border-bottom: 1px solid var(--rule); align-items: baseline; }
+.hl .fig { font-family: var(--sans); font-variant-numeric: tabular-nums; font-size: 24px; font-weight: 500; letter-spacing: -0.01em; white-space: nowrap; }
+.hl .fig .to { color: var(--ink-3); font-weight: 400; padding: 0 3px; }
+.hl .fig .unit { display: block; font-size: 12px; font-weight: 400; color: var(--ink-3); letter-spacing: 0; margin-top: 2px; white-space: normal; }
+.hl p { margin: 0; font-size: 17px; }
+
+.wide { width: min(var(--wide), calc(100vw - 2 * max(18px, env(safe-area-inset-left, 0px)) - 16px)); position: relative; left: 50%; transform: translateX(-50%); }
+figure { margin: 34px 0; }
+figcaption { font-family: var(--sans); font-size: 13px; line-height: 1.55; color: var(--ink-2); margin-top: 12px; max-width: 46rem; }
+figcaption b { color: var(--ink); font-weight: 600; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 20px; font-family: var(--sans); font-size: 12.5px; color: var(--ink-2); margin-bottom: 12px; }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.sw { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.sw.base { border: 1.8px solid var(--c-base); background: var(--bg); }
+.sw.sft { background: var(--c-sft); } .sw.grpo { background: var(--c-grpo); } .sw.sftgrpo { background: var(--c-sftgrpo); }
+.sw.dia { width: 9px; height: 9px; border-radius: 0; transform: rotate(45deg); border: 1.5px solid var(--ink-2); background: var(--bg); }
+.sw.sq { border-radius: 0; border: 1.5px solid var(--ink-2); background: var(--bg); }
+.sw.ring { border: 1.8px solid var(--ink); background: var(--bg); }
+.sw.dot { background: var(--ink); }
+.sw.pub { width: 9px; height: 9px; border-radius: 0; transform: rotate(45deg); background: var(--accent); }
+
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { font-family: var(--sans); fill: var(--ink-2); font-size: 12px; }
+svg .tick { fill: var(--ink-3); font-size: 11px; font-variant-numeric: tabular-nums; }
+svg .rowlabel { fill: var(--ink); font-size: 12.5px; }
+svg .val { fill: var(--ink); font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; }
+svg .val.muted { fill: var(--ink-2); font-weight: 400; }
+svg .tok, svg .axislabel { fill: var(--ink-3); font-size: 11.5px; }
+svg .paneltitle { fill: var(--ink); font-size: 12.5px; font-weight: 500; }
+svg .endlabel { font-size: 11.5px; fill: var(--ink-2); font-variant-numeric: tabular-nums; }
+svg .grid { stroke: var(--rule); stroke-width: 1; }
+svg .axis { stroke: var(--rule); stroke-width: 1.5; }
+svg .link { stroke: var(--ink-3); stroke-width: 1.2; opacity: 0.5; }
+svg .mk { stroke: var(--bg); stroke-width: 2; }
+svg .mk.base { fill: var(--bg); stroke: var(--c-base); stroke-width: 1.8; }
+svg .mk.sft { fill: var(--c-sft); } svg .mk.grpo { fill: var(--c-grpo); } svg .mk.sftgrpo { fill: var(--c-sftgrpo); }
+svg .mk-aud { fill: var(--bg); stroke-width: 1.6; }
+svg .mk-aud.base { stroke: var(--c-base); } svg .mk-aud.sft { stroke: var(--c-sft); }
+svg .mk-aud.grpo { stroke: var(--c-grpo); } svg .mk-aud.sftgrpo { stroke: var(--c-sftgrpo); }
+svg .ln { fill: none; stroke-width: 1.8; }
+svg .ln.base { stroke: var(--c-base); } svg .ln.sft { stroke: var(--c-sft); }
+svg .ln.grpo { stroke: var(--c-grpo); } svg .ln.sftgrpo { stroke: var(--c-sftgrpo); }
+svg .mk-rule { fill: var(--bg); stroke: var(--ink-2); stroke-width: 1.5; }
+svg .mk-blind { fill: var(--bg); stroke: var(--ink); stroke-width: 1.8; }
+svg .mk-sighted { fill: var(--ink); }
+svg .mk-pub { fill: var(--accent); }
+.panels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
+svg.strip { width: 180px; height: 26px; display: inline-block; vertical-align: middle; }
+
+.tbl { overflow-x: auto; }
+.tbl + p { margin-top: 14px; }
+code { font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace; font-size: 0.82em; color: var(--ink); }
+table { border-collapse: collapse; width: 100%; font-family: var(--sans); font-size: 13.5px; font-variant-numeric: tabular-nums; border-top: 1.5px solid var(--strong); border-bottom: 1.5px solid var(--strong); }
+th { text-align: left; font-weight: 500; color: var(--ink-2); font-size: 12px; border-bottom: 1px solid var(--strong); padding: 9px 12px 7px 0; vertical-align: bottom; }
+td { padding: 8px 12px 8px 0; vertical-align: top; border-bottom: 1px solid var(--rule); }
+tr:last-child td { border-bottom: 0; }
+tr.total td { border-top: 1px solid var(--strong); }
+th.n, td.n { text-align: right; white-space: nowrap; }
+td.best b { font-weight: 600; color: var(--ink); }
+td.grp { color: var(--ink-3); font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
+td .sub, .sub { display: block; color: var(--ink-3); font-size: 12px; }
+.sub-n { color: var(--ink-3); font-size: 11.5px; }
+td.stripcell { white-space: nowrap; padding-left: 8px; }
+.range { color: var(--ink-3); font-size: 11px; margin-left: 4px; vertical-align: middle; }
+.ci { color: var(--ink-3); font-size: 0.9em; }
+.pos { color: var(--ink); font-weight: 600; } .neg { color: var(--ink-3); }
+.tag { font-size: 12px; color: var(--ink-3); } .tag.ok { color: var(--ink); font-weight: 500; }
+
+.harness { margin: 28px 0 10px; border-top: 1.5px solid var(--strong); }
+.band { font-family: var(--sans); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); padding: 16px 0 6px; }
+.layer { display: grid; grid-template-columns: 2.4rem minmax(0, 1fr) 11.5rem; gap: 4px 18px; padding: 14px 0; border-top: 1px solid var(--rule); align-items: baseline; }
+.layer .idx { font-family: var(--sans); font-size: 12.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.layer .what { min-width: 0; }
+.layer .what b { font-weight: 600; font-size: 17px; }
+.layer .what .q { font-style: italic; color: var(--ink-2); font-size: 16px; margin-left: 6px; }
+.layer .what p { font-size: 16px; color: var(--ink-2); margin: 4px 0 0; }
+.layer .fig { font-family: var(--sans); text-align: right; }
+.layer .fig .v { font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; display: block; line-height: 1.1; letter-spacing: -0.01em; }
+.layer .fig .u { font-size: 12px; color: var(--ink-3); line-height: 1.35; display: block; margin-top: 3px; }
+
+.ref .item { display: grid; grid-template-columns: 2.6rem minmax(0, 1fr); gap: 2px 14px; padding: 14px 0; border-top: 1px solid var(--rule); }
+.ref .item .id { font-family: var(--sans); color: var(--ink-3); font-size: 12.5px; padding-top: 4px; }
+.ref .item b { font-weight: 600; font-size: 17px; }
+.ref .item p { margin: 4px 0 0; font-size: 16px; color: var(--ink-2); }
+dl.gloss { display: grid; grid-template-columns: 10.5rem minmax(0, 1fr); gap: 8px 20px; font-size: 16px; }
+dl.gloss dt { font-family: var(--sans); font-weight: 500; font-size: 14px; padding-top: 2px; }
+dl.gloss dd { margin: 0; color: var(--ink-2); }
+footer { max-width: var(--read); margin: 64px auto 0; font-family: var(--sans); font-size: 12.5px; color: var(--ink-3); border-top: 1px solid var(--rule); padding-block: 16px; }
+
+#tip { position: fixed; z-index: 20; pointer-events: none; background: var(--ink); color: var(--bg); font-family: var(--sans); font-size: 12px; padding: 5px 8px; border-radius: 3px; max-width: 260px; }
+.counter { display: none; }
+body.present { font-size: 21px; }
+body.present header.paper, body.present section { max-width: 50rem; min-height: calc(100vh - 44px); padding-block: 64px 40px; }
+body.present .bar nav { visibility: hidden; }
+body.present .counter { display: block; position: fixed; z-index: 6; font-family: var(--sans); font-size: 12px; color: var(--ink-3); right: calc(18px + env(safe-area-inset-right, 0px)); bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+
+@media (max-width: 720px) {
+  body { font-size: 17px; }
+  .hl { grid-template-columns: minmax(0, 1fr); }
+  .panels { grid-template-columns: minmax(0, 1fr); }
+  .layer { grid-template-columns: 2rem minmax(0, 1fr); }
+  .layer .fig { grid-column: 2; text-align: left; }
+  .layer .fig .v { display: inline; margin-right: 6px; }
+  .layer .fig .u { display: inline; }
+  dl.gloss { grid-template-columns: minmax(0, 1fr); }
+  .bar nav { display: none; }
+  .wide { width: 100%; left: 0; transform: none; }
+  figure { overflow-x: auto; }
+  figure > svg { min-width: 600px; }
+}
+</style>
+</head>
+<body>
+<div class="bar"><div class="bar-in">
+  <nav aria-label="Contents">
+    <a href="#abstract">Abstract</a><a href="#method">Method</a><a href="#evaluation">Evaluation</a>
+    <a href="#results">Results</a><a href="#audit">3D CT audit</a><a href="#discussion">Discussion</a>
+    <a href="#future">Future work</a><a href="#appendix">Appendix</a>
+  </nav>
+  <button id="present" type="button" aria-pressed="false">Present</button>
+</div></div>
+<div class="counter" id="counter"></div>
+
+<main>
+<header class="paper slide" id="top">
+  <div class="kicker">Technical report · {{date}}</div>
+  <h1>What reinforcement learning adds to a vision-language model</h1>
+  <div class="byline"><span class="who">Guangbo Yu</span><span>Qwen3-VL 2B and 8B</span><span><a href="https://github.com/guangboyu/vqa-rlvr">Code and records</a></span></div>
+
+  <div class="abstract" id="abstract">
+    <span class="label">Abstract</span>
+    Reinforcement learning with verifiable rewards (RLVR) has become a standard step after supervised fine-tuning (SFT) for language models, but for vision-language models it is not clear when it adds anything beyond SFT on the same data. We post-train Qwen3-VL at 2B and 8B with SFT, with GRPO and a 0/1 correctness reward, and with SFT followed by GRPO, and score every model on fixed test sets under a short-answer and a step-by-step prompt, through an evaluation harness that separates real gains from answer format, coverage from sharpening, and image use from answer priors. On chart questions, where reasoning pays, GRPO keeps its reasoning and raises accuracy from {{cq.base.r}}% to {{cq.grpo.r}}% ({{cq.base.aud}}% to {{cq.grpo.aud}}% under an audited judge), about ten points above every short-answer model. On medical images, GRPO after SFT is the best model in all three settings tested. RL's gains need the image: with a black image in its place, RL answers no more questions than the base model in five of six settings, it moves the model five to sixteen times less than SFT on medical data, and on data it never saw it keeps a lead of 0.8 to 2.3 points over SFT. Applied to two 3D CT benchmarks, the same harness finds that most of their published accuracy is reachable without the scan; with those shortcuts removed, RL and SFT reach the same accuracy.
+  </div>
+</header>
+
+<section class="slide" id="highlights">
+  <h2>Highlights</h2>
+  <div class="highlights">
+    <div class="hl"><div class="fig">{{cq.base.r}}<span class="to">→</span>{{cq.grpo.r}}<span class="unit">ChartQA, reasoning prompt, 2B</span></div><p><b>Where reasoning pays, RL keeps it and beats SFT by about ten points.</b> SFT on the same chart questions reaches {{cq.sft.s}}% at best; under an audited judge GRPO goes from {{cq.base.aud}}% to {{cq.grpo.aud}}%.</p></div>
+    <div class="hl"><div class="fig">{{med.slk2.sft}}<span class="to">→</span>{{med.slk2.sftgrpo}}<span class="unit">SLAKE, SFT → SFT then GRPO</span></div><p><b>After SFT, RL gives the best medical model in every setting.</b> At 8B {{med.slk8.sft}}% → {{med.slk8.sftgrpo}}%; on OmniMedVQA collections never seen in training {{med.omx.sft}}% → {{med.omx.sftgrpo}}%.</p></div>
+    <div class="hl"><div class="fig">{{ba.slk8.base.black}}<span class="to">→</span>{{ba.slk8.grpo.black}}<span class="unit">SLAKE 8B, black image, base → GRPO</span></div><p><b>RL's gains need the image.</b> SFT answers {{ba.slk8.sft.black}}% of the same questions without the image, and moves the model {{kl.slk8.sft}} nats from where it started against GRPO's {{kl.slk8.grpo}}.</p></div>
+    <div class="hl"><div class="fig">{{tv.grpo}}<span class="to">vs</span>{{tv.sft}}<span class="unit">TextVQA, never trained on, GRPO vs SFT</span></div><p><b>On unseen data RL keeps an edge over SFT,</b> on VizWiz ({{vw.grpo}}% vs {{vw.sft}}%) and on PathVQA after medical training as well.</p></div>
+    <div class="hl"><div class="fig">{{au.ff.blind}}<span class="to">vs</span>{{au.ff.sft}}<span class="unit">DeepTumorVQA free form, no image vs image</span></div><p><b>3D CT benchmarks can be answered without the scan.</b> A model trained on black images comes within {{au.ff.gap.v}} points of one trained on the scans; on M3D-VQA it averages {{au.m3d.blind.mean}}% over the five question types, against {{au.m3d.pub}}% for a published 3D model.</p></div>
+  </div>
+
+  <figure class="wide">
+    <div class="legend"><span><i class="sw base"></i>Base</span><span><i class="sw sft"></i>SFT</span><span><i class="sw grpo"></i>GRPO</span><span><i class="sw sftgrpo"></i>SFT → GRPO</span></div>
+    <div class="tbl"><table>
+      <thead><tr><th></th><th>Test set</th><th class="n">Base</th><th class="n">SFT</th><th class="n">GRPO</th><th class="n">SFT → GRPO</th><th>On the row's scale</th></tr></thead>
+      <tbody>{{OVERVIEW_ROWS}}</tbody>
+    </table></div>
+    <figcaption><b>Figure 1. Results at a glance.</b> Accuracy (%), best value in each row in bold. Base is the released Qwen3-VL Instruct model. GRPO is trained with the prompt the row is scored under (step-by-step reasoning for ChartQA, short answers elsewhere); medical and unseen rows use models trained on SLAKE, OmniMedVQA or VQAv2 + GQA as named. OmniMedVQA uses the normalized scorer, every other row the dataset authors' scorer.</figcaption>
+  </figure>
+</section>
+
+<section class="slide" id="introduction">
+  <h2><span class="num">1</span>Introduction</h2>
+  <p>Reinforcement learning with a verifiable reward trains a model on its own samples and pays it only when a program confirms the answer. For language models this is the step that turns a fine-tuned model into a reasoning one. Vision-language models answer a different kind of question: most visual questions are answered by looking rather than deriving, and a reward that checks only the final answer can just as well teach a model to stop thinking. Whether RL adds anything beyond supervised fine-tuning on the same images therefore depends on the data, and the comparisons that would settle it are rarely run under one recipe, one evaluation and matched training data.</p>
+  <p>We run those comparisons. Qwen3-VL at 2B and 8B is trained with SFT, with GRPO and a 0/1 correctness reward, and with SFT followed by GRPO, on photo questions (VQAv2, GQA), chart questions (ChartQA) and medical images (SLAKE, OmniMedVQA). A dataset enters training only after a screen confirms that its image matters and that RL will receive a learning signal, and every model is scored by an evaluation harness built to tell real gains from answer format and image use from answer priors. The same harness, pointed at two 3D CT benchmarks, shows how much of their published accuracy is reachable without the image.</p>
+  <p>The contributions are:</p>
+  <ul>
+    <li><b>Where reasoning pays, RL keeps it and wins:</b> {{cq.base.r}}% → {{cq.grpo.r}}% on ChartQA, {{cq.overshort}} points above the best short-answer model, with sampling coverage at pass@32 kept.</li>
+    <li><b>RL after SFT gives the best medical model</b> in all three settings tested at 2B and 8B, and RL alone loses less than SFT on medical data it never saw.</li>
+    <li><b>RL's gains are grounded in the image,</b> while SFT also learns answers it can give without looking; on medical data RL changes the model five to sixteen times less.</li>
+    <li><b>An audit of two 3D CT benchmarks:</b> text-only rules and models trained on black images reach most of the published accuracy, a debiased version removes the shortcuts, and on it RL matches SFT.</li>
+    <li><b>A nine-layer evaluation harness</b> (Section 3) that every number in this report passes through.</li>
+  </ul>
+</section>
+
+<section class="slide" id="method">
+  <h2><span class="num">2</span>Method</h2>
+  <h3><span class="num">2.1</span>Models and training</h3>
+  <p>All models start from Qwen3-VL-2B-Instruct or Qwen3-VL-8B-Instruct and train LoRA adapters of rank 16 on the language model's attention and MLP layers in bf16; the vision encoder stays frozen. Three training methods are compared on the same training questions.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Method</th><th>Signal</th><th>Recipe</th></tr></thead>
+    <tbody>
+      <tr><td><b>SFT</b></td><td>Reference short answers, loss on answer tokens</td><td>One epoch; learning rate 1e-4 (2B), 5e-5 (8B)</td></tr>
+      <tr><td><b>GRPO</b></td><td>1 if the tagged answer matches the reference after normalization, else 0</td><td>4 questions × 8 samples per update at temperature 1; group-relative advantages; token-level loss; no KL term; learning rate 1e-5 decaying to 0; rollouts under a step-by-step or a short-answer prompt</td></tr>
+      <tr><td><b>SFT → GRPO</b></td><td>Both, in sequence</td><td>GRPO started from the SFT model, same updates</td></tr>
+    </tbody>
+  </table></div>
+  <p class="small">Rollouts come from vLLM serving the trained adapter unmerged, so the sampler is exactly the policy being trained; merging into bf16 weights rounds small updates away and made the sampler lag the policy by up to 0.2 nats per token. An importance-sampling correction capped at 3 absorbs the remaining difference. One RL epoch draws each training question once, the exposure SFT has.</p>
+
+  <h3><span class="num">2.2</span>Data</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Domain</th><th>Training data</th><th>Test data</th></tr></thead>
+    <tbody>
+      <tr><td>Photos</td><td>VQAv2 + GQA: 39,458 SFT questions; RL draws 4,000 (1,000 updates) from a 55,438-question pool</td><td>VQAv2 5,000; GQA 12,578; CLEVR counting 3,000</td></tr>
+      <tr><td>Charts</td><td>ChartQA human-written questions: 7,376 (one epoch, 1,844 updates)</td><td>ChartQA 1,250</td></tr>
+      <tr><td>Medical</td><td>SLAKE (English), one epoch (1,229 RL updates); OmniMedVQA with 17 source collections held out for testing: 62,678 SFT questions, RL draws 4,916</td><td>SLAKE 1,061; OmniMedVQA held-out collections 1,156</td></tr>
+      <tr><td>Never trained on</td><td>None</td><td>TextVQA 5,000; VizWiz 8,000; PathVQA {{h.pathvqa}}</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3><span class="num">2.3</span>Choosing data where RL can learn</h3>
+  <p>Each candidate dataset passes a screen on 500 training questions with the 2B base model before any training. Its gates were written before the candidates ran: replacing the image with a black or a swapped one must cost at least 10 points, at least 25% of questions must be learnable (some but not all of 8 samples correct, so GRPO receives a gradient), answers must be parseable, and accuracy must not already sit at the ceiling. Whether reasoning helps is measured with the same tagged final answer in both prompts, so the difference isolates the reasoning from the answer format. ChartQA, SLAKE and OmniMedVQA passed beside the photo baseline; the full screen is in Appendix A10.</p>
+</section>
+
+<section class="slide" id="evaluation">
+  <h2><span class="num">3</span>Evaluation harness</h2>
+  <p>Nine layers, each answering one question about a result, and each with its own measured number. Every difference reported here passes through all of them.</p>
+  <div class="harness wide" role="list">
+    <div class="band">Inputs</div>
+    <div class="layer" role="listitem"><span class="idx">L1</span><div class="what"><b>Data integrity</b><span class="q">Did the model see the test images?</span><p>Every dev and test image is checked against every training pool by a hash of its decoded pixels and dimensions, since the same image can carry different IDs in different sources.</p></div><div class="fig"><span class="v">0</span><span class="u">test images in training</span></div></div>
+    <div class="layer" role="listitem"><span class="idx">L2</span><div class="what"><b>Fixed test sets</b><span class="q">Is every model asked the same questions?</span><p>Frozen, hashed test subsets; each model and protocol writes one record with per-question predictions, so every comparison is paired.</p></div><div class="fig"><span class="v">{{h.questions}}</span><span class="u">questions in {{h.sets}} test sets</span></div></div>
+    <div class="layer" role="listitem"><span class="idx">L3</span><div class="what"><b>Two prompts</b><span class="q">Is a gain reasoning, or answer form?</span><p>Every model is scored with a short-answer prompt and a step-by-step prompt, so a reasoning gain can be told apart from a shortened answer.</p></div><div class="fig"><span class="v">2</span><span class="u">prompts per model</span></div></div>
+    <div class="band">Scoring</div>
+    <div class="layer" role="listitem"><span class="idx">L4</span><div class="what"><b>Official scorers</b><span class="q">Do the numbers match the benchmark?</span><p>Re-implementations of each dataset authors' evaluator, checked against the authors' code, beside a normalized matcher that also defines the training reward.</p></div><div class="fig"><span class="v">626,074</span><span class="u">predictions match the authors' code</span></div></div>
+    <div class="layer" role="listitem"><span class="idx">L5</span><div class="what"><b>LLM judge with an image-aware audit</b><span class="q">Are exact-match misses really wrong?</span><p>Every answer exact match marks wrong goes to an LLM judge; a stronger model shown the image audits a stratified sample, and each acceptance is discounted by its stratum's confirmation rate.</p></div><div class="fig"><span class="v">54,060</span><span class="u">misses judged, 800 audited</span></div></div>
+    <div class="band">Statistics and behavior</div>
+    <div class="layer" role="listitem"><span class="idx">L6</span><div class="what"><b>Paired statistics</b><span class="q">Is a difference larger than noise?</span><p>Paired bootstrap over the same test questions for every comparison. Three identical greedy runs span 0.4 points, the smallest difference claimed.</p></div><div class="fig"><span class="v">10,000</span><span class="u">resamples, 0.4-point floor</span></div></div>
+    <div class="layer" role="listitem"><span class="idx">L7</span><div class="what"><b>Sampling coverage</b><span class="q">Does RL add answers or sharpen existing ones?</span><p>pass@k from 32 samples per question at temperature 1, with the unbiased estimator, on held-out test questions.</p></div><div class="fig"><span class="v">32</span><span class="u">samples per question</span></div></div>
+    <div class="layer" role="listitem"><span class="idx">L8</span><div class="what"><b>Image interventions</b><span class="q">Does the answer come from the image?</span><p>Each model is rescored with a black image and with another question's image; accuracy with a black image counts what a model answers without looking.</p></div><div class="fig"><span class="v">3</span><span class="u">image conditions</span></div></div>
+    <div class="layer" role="listitem"><span class="idx">L9</span><div class="what"><b>Beyond accuracy</b><span class="q">How far did training move the model?</span><p>Forward KL from the starting model on its own samples; calibration of the majority answer of 8 samples.</p></div><div class="fig"><span class="v">500 × 8</span><span class="u">questions × samples per model</span></div></div>
+  </div>
+  <p class="small">Every table is regenerated from {{h.records}} saved evaluation records, and a test fails when a published table drifts from the records it summarizes. The judge and the audit cost $6.21 in API calls.</p>
+</section>
+
+<section class="slide" id="results">
+  <h2><span class="num">4</span>Results</h2>
+
+  <h3><span class="num">4.1</span>Where reasoning pays, RL keeps it and beats SFT by ten points</h3>
+  <p>ChartQA's human-written questions are the dataset where the screen found reasoning helpful: numeric questions gain 5.6 points from it. Trained with step-by-step rollouts for one epoch, GRPO keeps its reasoning ({{cq.base.tok}} → {{cq.grpo.tok}} tokens) and raises accuracy from {{cq.base.r}}% to {{cq.grpo.r}}% ({{cq.gain.ci}} points). SFT on the same questions reaches {{cq.sft.r}}% under the reasoning prompt and {{cq.sft.s}}% with short answers, so the reasoning-trained model ends {{cq.overshort}} points above the best short-answer model. Started from SFT, GRPO regrows the reasoning SFT had shortened ({{cq.sft.tok}} → {{cq.sftgrpo.tok}} tokens) and adds {{cq.sftgrpo.gain}} points over SFT.</p>
+  <p>The audited judge keeps half of the gain, {{cq.base.aud}}% → {{cq.grpo.aud}}% ({{cq.audgain.ci}}), because many of the base model's misses are right answers in the wrong form, such as "20%" for a label of 20. Under the audit the reasoning-trained model still leads the best short-answer model by {{cq.overshort.aud}} points.</p>
+  <figure class="wide">
+    <div class="legend"><span><i class="sw base"></i>Base</span><span><i class="sw sft"></i>SFT</span><span><i class="sw grpo"></i>GRPO</span><span><i class="sw sftgrpo"></i>SFT → GRPO</span><span><i class="sw dia"></i>Audited judge</span></div>
+    {{CHARTQA_FIG}}
+    <figcaption><b>Figure 2. ChartQA, 2B.</b> Accuracy under the reasoning prompt on the 1,250 human-written test questions. Filled marks: official relaxed accuracy; diamonds: audited LLM judge; right, mean response length. One epoch of training for every model.</figcaption>
+  </figure>
+  <p>Trained with reasoning, RL sharpens without narrowing. Sampled 32 times per question, GRPO raises pass@1 from {{pk.base.r.1}}% to {{pk.grpo.1}}% and ends level with the base model at pass@32 ({{pk.base.r.32}}% → {{pk.grpo.32}}%). With short-answer rollouts on the same data, GRPO gains at pass@1 ({{pk.base.s.1}}% → {{pk.short.1}}%) but loses coverage at pass@32 ({{pk.base.s.32}}% → {{pk.short.32}}%).</p>
+  <figure class="wide">
+    {{PASSK_FIG}}
+    <figcaption><b>Figure 3. Coverage on ChartQA.</b> pass@k (%) on all 1,250 test questions, 32 samples at temperature 1, official scorer, k on a log scale. Left: models trained with reasoning, scored under the reasoning prompt. Right: short-answer models, scored with short answers.</figcaption>
+  </figure>
+
+  <h3><span class="num">4.2</span>After SFT, RL gives the best medical model</h3>
+  <p>GRPO started from the SFT model is the best model on SLAKE at 2B ({{med.slk2.sft}}% → {{med.slk2.sftgrpo}}%) and 8B ({{med.slk8.sft}}% → {{med.slk8.sftgrpo}}%) and on OmniMedVQA collections never seen in training ({{med.omx.sft}}% → {{med.omx.sftgrpo}}%). SFT teaches the domain's answers; RL then sharpens them on the model's own samples. GRPO alone gains less in domain but loses less on PathVQA, a medical set no model trained on: every SFT model falls below its base model there, while GRPO stays within 1.8 points of it.</p>
+  <figure class="wide">
+    <div class="tbl"><table>
+      <thead><tr><th>Trained and tested on</th><th class="n">Base</th><th class="n">SFT</th><th class="n">GRPO</th><th class="n">SFT → GRPO</th><th class="n">SFT → GRPO<br>minus SFT</th><th class="n">PathVQA<br>Base · SFT · GRPO · SFT → GRPO</th><th class="n">PathVQA<br>GRPO minus SFT</th></tr></thead>
+      <tbody>{{MEDICAL_ROWS}}</tbody>
+    </table></div>
+    <figcaption><b>Table 1. Medical images.</b> Short-answer accuracy (%) on each training set's own test questions and on PathVQA, which no model trained on. Differences in points with paired 95% intervals. SLAKE and PathVQA use the official scorer; OmniMedVQA the normalized scorer, which credits the option text as well as its letter.</figcaption>
+  </figure>
+
+  <h3><span class="num">4.3</span>RL's gains come from the image</h3>
+  <p>Replacing each image with a black one shows what a model answers without looking. RL from the base model answers as many questions blind as the base model in five of six settings (changes of −0.3 to +0.5 points, every interval including zero) and 3.2 more on the held-out OmniMedVQA collections. SFT answers more without the image in every setting it trained in, up to 15.4 points on the held-out collections with the same training questions as RL. At 8B, 10.4 of SFT's 19.1-point gain on SLAKE survives a black image, against 0.4 of RL's 10.3. RL improves the answers that depend on the image; SFT also learns which answers are likely for a question.</p>
+  <figure class="wide">
+    <div class="legend"><span><i class="sw base"></i>Base</span><span><i class="sw sft"></i>SFT</span><span><i class="sw grpo"></i>GRPO</span></div>
+    {{BLACK_FIG}}
+    <figcaption><b>Figure 4. Accuracy with a black image.</b> Short-answer prompt, normalized scorer; right, the change from the base model in points. SFT on OmniMedVQA and VQAv2 is trained on the same questions GRPO drew. Every GRPO change except OmniMedVQA's has a 95% interval that includes zero.</figcaption>
+  </figure>
+  <p>On medical data RL also moves the model far less. The forward KL from the base model, measured on the base model's own samples for the task's questions, is five to sixteen times smaller for GRPO than for SFT. RL's Razor (Shenfeld et al., 2025) finds that forgetting tracks this distance, and the medical results agree: GRPO, which moves least, loses less than SFT on PathVQA in every setting.</p>
+  <div class="tbl"><table style="max-width: 30rem">
+    <thead><tr><th>Setting</th><th class="n">SFT (nats)</th><th class="n">GRPO (nats)</th><th class="n">SFT / GRPO</th></tr></thead>
+    <tbody>{{KL_ROWS}}</tbody>
+  </table></div>
+  <p class="small" style="margin-top: 10px">Forward KL summed over each response, 8 samples on 500 test questions. On photos and short-answer charts, where SFT's labels are close to what the base model already says, both distances are small and SFT's is the smaller (Appendix A9).</p>
+
+  <h3><span class="num">4.4</span>On data it never trained on, RL keeps an edge over SFT</h3>
+  <p>Trained on VQAv2 and GQA with short answers, GRPO scores {{tv.grpo}}% on TextVQA against SFT's {{tv.sft}}% ({{tv.rl_sft}}) and {{vw.grpo}}% on VizWiz against {{vw.sft}}% ({{vw.rl_sft}}). SFT trained on exactly the 4,000 questions GRPO drew does not close the gap ({{tv.sft4k}}% on TextVQA, {{vw.sft4k}}% on VizWiz), so the edge is not a matter of how many questions each method saw. On medical data the same holds for PathVQA, where GRPO leads SFT by 0.8 to 2.3 points across the three training settings (Table 1).</p>
+
+  <h3><span class="num">4.5</span>A reasoning habit learned on charts carries over to photos</h3>
+  <p>The ChartQA-trained GRPO model, scored on photo questions it never trained on, keeps a shorter chain of reasoning and gains 15 to 16 points on VQAv2 and GQA under the reasoning prompt (6 on TextVQA), while its short-answer accuracy moves by at most 0.3 points. What RL teaches here is a response habit, and the habit transfers across domains.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Test set</th><th class="n">Base, reasoning</th><th class="n">ChartQA-trained GRPO</th><th class="n">Difference</th><th class="n">Short answers, base → GRPO</th></tr></thead>
+    <tbody>{{TRANSFER_ROWS}}</tbody>
+  </table></div>
+</section>
+
+<section class="slide" id="audit">
+  <h2><span class="num">5</span>Do 3D CT benchmarks need the scan?</h2>
+  <p>Benchmarks for 3D medical vision-language models report steady gains from fine-tuning. The same harness asks how much of that accuracy is reachable without looking: a text-only rule that sees the question and options, a model trained and tested on black images, and the same recipe with the image. Two widely used CT benchmarks are measured: DeepTumorVQA v2 (abdominal CT, multiple choice and free form, 2D views of each scan) and M3D-VQA (CT and MRI, multiple choice, questions only).</p>
+  <figure class="wide">
+    <div class="legend"><span><i class="sw sq"></i>Text-only rule</span><span><i class="sw ring"></i>Trained without the image</span><span><i class="sw dot"></i>Same recipe with the image</span><span><i class="sw pub"></i>Published fine-tuned model</span></div>
+    {{AUDIT_FIG}}
+    <figcaption><b>Figure 5. Accuracy without the image.</b> 2B models trained on 40,000 questions for one epoch (8,000 for DeepTumorVQA multiple choice, scored there with black images). Published: Qwen3-VL-4B fine-tuned on DeepTumorVQA's training split (multiple choice and free form); M3D-LaMed on M3D-VQA (mean of five question types). Free form is scored as the benchmark's authors score it: mean relative accuracy for numbers, exact match for text.</figcaption>
+  </figure>
+  <p>On DeepTumorVQA the shortcut lives in the answer options and the answer frequencies. Distractors for a measured value are drawn from 0.7 to 1.3 times the true value, so the true value is the second or third smallest of four options 88% of the time, and binary and categorical answers follow the patients' prevalence (85% "No" for colon lesions). A rule that uses only these patterns scores {{au.mc.rule}}% against {{au.mc.chance}}% chance. Free form removes the options but not the frequencies: the median training answer per question type and organ scores {{au.ff.rule}}%, a model trained on black images {{au.ff.blind}}%, and the same recipe with the scans {{au.ff.sft}}% ({{au.ff.gap}} points for the image, almost all of it on lesion existence).</p>
+  <p>M3D-VQA's shortcut is position and phrasing: option A is correct in 47.5% of its test questions, and the most common letter per question type alone scores {{au.m3d.rule}}%. Trained on black images, a 2B model comes within 2.3 points of the published 3D model on the three clinical question types (organ, abnormality, location).</p>
+  <div class="tbl"><table style="max-width: 34rem">
+    <thead><tr><th>M3D-VQA question type</th><th class="n">2B, no image</th><th class="n">M3D-LaMed, with the volume</th><th class="n">Difference</th></tr></thead>
+    <tbody>{{M3D_ROWS}}</tbody>
+  </table></div>
+  <p class="small" style="margin-top: 10px">Closed-ended accuracy (%) on the 13,790-question test set; M3D-LaMed from its paper. Only plane and phase, which describe how the scan was acquired, clearly need the image.</p>
+
+  <h3><span class="num">5.1</span>A debiased DeepTumorVQA, and RL on it</h3>
+  <p>A debiased version removes both shortcuts: every measured value gets options with the true value at a uniformly random rank and a spacing that does not reveal it, counts get a window of consecutive integers, every option list is shuffled, and each discrete question type keeps equally many questions per answer. On the remaining 6,607 test questions the text-only rule falls to {{au.x.rule}}% against {{au.x.chance}}% chance, and a model trained on the original options falls from {{au.mc.sft}}% to {{au.x.old}}%.</p>
+  <div class="tbl"><table style="max-width: 36rem">
+    <thead><tr><th>Debiased DeepTumorVQA, 2B</th><th class="n">With the image</th><th class="n">Black image</th><th class="n">Lesion existence</th></tr></thead>
+    <tbody>
+      <tr><td>SFT, 8,000 questions</td><td class="n">{{au.x.sft}}</td><td class="n">{{au.x.sft.black}}</td><td class="n">{{au.x.sft.recog}} <span class="sub-n">({{au.x.sft.recog.black}} blind)</span></td></tr>
+      <tr><td>GRPO from the base model, 2,000 updates</td><td class="n">{{au.x.grpo}}</td><td class="n">{{au.x.grpo.black}}</td><td class="n">{{au.x.grpo.recog}} <span class="sub-n">({{au.x.grpo.recog.black}} blind)</span></td></tr>
+      <tr><td>SFT → GRPO, 2,000 updates</td><td class="n">{{au.x.sftgrpo}}</td><td class="n">{{au.x.sftgrpo.black}}</td><td class="n">{{au.x.sftgrpo.recog}} <span class="sub-n">({{au.x.sftgrpo.recog.black}} blind)</span></td></tr>
+      <tr><td>SFT on 32 slices of the CT video</td><td class="n">{{au.v.sft}}</td><td class="n">{{au.v.sft.black}}</td><td class="n">—</td></tr>
+    </tbody>
+  </table></div>
+  <p class="small" style="margin-top: 10px">Accuracy (%) on 6,607 test questions, option letter scored; chance {{au.x.chance}}%. Every model sees each training question once. GRPO is rewarded only for the correct option letter. Lesion existence: balanced yes/no questions, chance 50%.</p>
+  <p>Without the shortcuts, little is left for a 2B model to learn from 2D views of the scan. GRPO matches SFT ({{au.x.grpo_sft}} from the base model, {{au.x.sftgrpo_sft}} after SFT), every model's one visual skill is lesion existence, measurement stays at chance, and 32 slices of the CT video do no better than nine. The benchmark's measurement and reasoning questions call for inputs that carry the volume, such as 3D encoders or tools that measure it.</p>
+</section>
+
+<section class="slide" id="discussion">
+  <h2><span class="num">6</span>Discussion</h2>
+  <p><b>The reward prices what it can verify.</b> A 0/1 correctness reward keeps whatever raises the chance of a correct final answer. On charts, reasoning does, and RL keeps and refines it; on photo questions answered by looking, it does not, and the same recipe shortens responses to a few tokens (Appendix A1). The choice of data decides what RL learns, which is why datasets enter training here only after a screen measures the reasoning payoff under matched answer format.</p>
+  <p><b>RL is a conservative fine-tuner.</b> Its gains need the image, it moves the model little where SFT moves it far, and it loses less on unseen data. SFT is the stronger teacher of a new domain's answers, including answers that follow from the question alone. The two combine well: SFT first, then RL, gives the best medical model in every setting tested.</p>
+  <p><b>A benchmark has to need the image before it can measure looking.</b> When options and answer frequencies carry the answer, fine-tuning gains say little about vision, and RL rewarded on those questions mostly learns the shortcut. Checking text-only and black-image baselines before training is cheap, and the debiasing recipe here applies to any benchmark whose questions are generated from masks or templates.</p>
+</section>
+
+<section class="slide" id="future">
+  <h2><span class="num">7</span>Future work</h2>
+  <ol>
+    <li><b>RL on the image-grounded question types.</b> Lesion existence is the one skill a 2B model learns from 2D views of the debiased CT questions; RL against SFT restricted to it is a clean test of whether RL adds visual skill when the image is what pays.</li>
+    <li><b>Volumetric perception as tools.</b> Measurement and reasoning questions call for the volume: a 3D foundation model or slice-level visual features that locate organs and lesions, returned to the language model as evidence it can inspect rather than as answers, evaluated on the debiased benchmark where shortcuts no longer score.</li>
+    <li><b>A second domain where reasoning pays,</b> such as diagrams, geometry or documents, through the same screen, and the chart result at 8B.</li>
+    <li><b>Calibrated RL.</b> RL raises a model's agreement with itself faster than its accuracy (Appendix A5); rewarding abstention when unsure targets this directly.</li>
+    <li><b>Learning when to reason.</b> One model trained on photos and charts together lost its reasoning everywhere (Appendix A6); rollout prompts conditioned on the question type are the next design to test.</li>
+  </ol>
+</section>
+
+<section class="slide ref" id="appendix">
+  <h2><span class="num">A</span>Negative and null results</h2>
+  <p>Results that set the limits of the findings above, each with its numbers. They use the same recipe, data and evaluation.</p>
+  <div class="item"><span class="id">A1</span><div><b>On photo questions RL deletes the reasoning, and most of its exact-match gain is answer form.</b><p>VQAv2, 2B, reasoning prompt: {{ph.vqav2.base.r}}% ({{ph.vqav2.base.tok}} tokens) → {{ph.vqav2.grpor.r}}% ({{ph.vqav2.grpor.tok}} tokens) after GRPO, against {{ph.vqav2.base.s}}% for the base model with short answers. Under the audited judge: {{ph.vqav2.base.r.aud}}% → {{ph.vqav2.grpor.r.aud}}%.</p></div></div>
+  <div class="item"><span class="id">A2</span><div><b>In domain, short-answer RL reaches SFT's level and no further.</b><p>2B short answers, VQAv2 / GQA: base {{ph.vqav2.base.s}} / {{ph.gqa.base.s}}, GRPO with 4,000 questions {{ph.vqav2.grpo.s}} / {{ph.gqa.grpo.s}}, GRPO on all 55,438 questions {{ph.vqav2.pool.s}} / {{ph.gqa.pool.s}}, SFT {{ph.vqav2.sft.s}} / {{ph.gqa.sft.s}}.</p></div></div>
+  <div class="item"><span class="id">A3</span><div><b>On photo questions RL narrows what the model can sample.</b><p>pass@32 with short answers, VQAv2 / GQA: base {{hk.base.vqav2.32}} / {{hk.base.gqa.32}}, GRPO {{hk.grpo.vqav2.32}} / {{hk.grpo.gqa.32}} (full pool {{hk.pool.vqav2.32}} / {{hk.pool.gqa.32}}), SFT {{hk.sft.vqav2.32}} / {{hk.sft.gqa.32}}, while GRPO leads at pass@1 ({{hk.base.vqav2.1}} → {{hk.grpo.vqav2.1}} on VQAv2).</p></div></div>
+  <div class="item"><span class="id">A4</span><div><b>On medical images, SFT beats RL from the base model in domain.</b><p>SLAKE: SFT {{med.slk2.sft}} vs GRPO {{med.slk2.grpo}} (2B), {{med.slk8.sft}} vs {{med.slk8.grpo}} (8B). Held-out OmniMedVQA collections, same 4,916 training questions: SFT {{med.omx.sftm}} vs GRPO {{med.omx.grpo}}.</p></div></div>
+  <div class="item"><span class="id">A5</span><div><b>RL is overconfident.</b><p>On SLAKE at 2B, GRPO's majority answer is shared by {{cal.slk2.grpo.conf}}% of its samples while it is right {{cal.slk2.grpo.acc}}% of the time. Expected calibration error in short-answer settings: GRPO 12.1–23.7 points, SFT 2.2–8.6 (SLAKE {{cal.slk2.grpo}} vs {{cal.slk2.sft}}; base model {{cal.slk2.base}}).</p></div></div>
+  <div class="item"><span class="id">A6</span><div><b>One model trained on photos and charts does not learn when to reason.</b><p>After 1,750 updates of chart reasoning it collapsed to {{ph.cq.mix.tok}}-token answers everywhere and ends at {{ph.cq.mix.r}}% on ChartQA against {{cq.grpo.r}}% for the chart-trained model; the photo-trained model scores {{ph.cq.vqa.r}}% there ({{ph.cq.vqa.tok}} tokens).</p></div></div>
+  <div class="item"><span class="id">A7</span><div><b>Training settings did not move results.</b><p>On photos, a filtered pool, refilled dead groups, four times the batch and three times the learning rate stay within 0.35 points. On ChartQA, {{knob.count}} single-setting changes (loss aggregation, KL penalty, reward scaling, response cap, list-aware reward, canvas size, image geometry) read {{knob.lo}} to {{knob.hi}} points against a same-seed repeat of 0.5, all inside their intervals.</p></div></div>
+  <div class="item"><span class="id">A8</span><div><b>Vision-side options did not improve SLAKE.</b><p>2B SLAKE, short answers: SFT {{med.slk2.sft}}, with LoRA on the vision encoder {{vis.vis}}, on upscaled images {{vis.upsft}}; GRPO {{med.slk2.grpo}}, on upscaled images {{vis.upgrpo}}, with a masked-image perception loss {{vis.papo}}. The perception loss taught the model to reply that the image is missing: {{vis.papo.black}}% correct with a black image.</p></div></div>
+  <div class="item"><span class="id">A9</span><div><b>RL moves the model less than SFT only where SFT moves it far.</b><p>Forward KL from the base model: VQAv2 SFT {{kl.vqa.sft}} vs GRPO {{kl.vqa.grpo}} nats; short-answer ChartQA {{kl.cqa.sft}} vs {{kl.cqa.grpo}}.</p></div></div>
+  <div class="item"><span class="id">A10</span><div><b>Datasets rejected at screening.</b><p>Images changed the answers by under 10 points on Kvasir-VQA-x1, PathVQA, ReXVQA, MedThinkVQA and DeepTumorVQA (audited separately in Section 5); CLEVR counting and compositional CLEVR are near the ceiling.</p></div></div>
+  <figure class="wide">
+    <div class="tbl"><table>
+      <thead><tr><th>Candidate</th><th class="n">Short-answer accuracy</th><th class="n">Reasoning payoff, matched format</th><th class="n">Points lost, black / swapped image</th><th class="n">Learnable</th><th>Screen</th></tr></thead>
+      <tbody>{{SCREENING_ROWS}}</tbody>
+    </table></div>
+    <figcaption><b>Table A10. Data screen.</b> Qwen3-VL-2B-Instruct on 500 training questions per candidate. Reasoning payoff: step-by-step minus short-answer accuracy with the same tagged final answer, points with 95% interval. Learnable: share of questions with some but not all of 8 samples correct.</figcaption>
+  </figure>
+
+  <h3>Scope</h3>
+  <ul class="small">
+    <li>One training seed per model; intervals cover the sampling of test questions.</li>
+    <li>The judge audit, pass@k, the unseen sets and the CT audit are at 2B; the main photo matrix and SLAKE also at 8B.</li>
+    <li>Fixed test subsets scored locally, not benchmark evaluation servers; contamination is checked with exact image hashes against this project's training pools.</li>
+  </ul>
+
+  <h3>Reproducibility</h3>
+  <p class="small">Training uses TRL 1.8 with PEFT and colocated vLLM; evaluation runs through one protocol-hashed harness that stores per-question predictions for every model and protocol. Experiments are declared in <code>experiments.toml</code> before they run, and this page is rebuilt from the records with <code>python -m scripts.report_page</code>. About 279 GPU-hours in total, on cluster GPUs (RTX PRO 6000 96 GB, A100 80 GB, A30 24 GB) and one RTX 4090 24 GB; the 2B pipeline runs end to end on a single 24 GB GPU.</p>
+
+  <h3>Terms</h3>
+  <dl class="gloss">
+    <dt>GRPO</dt><dd>Group Relative Policy Optimization: sample several responses per question and use each one's reward minus the group mean as its advantage, so no value network is needed.</dd>
+    <dt>Verifiable reward</dt><dd>A reward computed by a program, here 1 when the tagged answer matches the reference after normalization and 0 otherwise.</dd>
+    <dt>Audited judge</dt><dd>Exact-match hits plus LLM-judge acceptances, each acceptance weighted by the share of its stratum that an image-aware auditor confirmed.</dd>
+    <dt>pass@k</dt><dd>The probability that at least one of k samples is correct, estimated without bias from 32 samples.</dd>
+    <dt>Forward KL</dt><dd>E[log p₀(y|x) − log p(y|x)] over responses y sampled from the starting model p₀: how much less likely the trained model p finds what the start would say.</dd>
+    <dt>Calibration error</dt><dd>The gap between confidence (share of samples giving the majority answer) and accuracy, averaged over 10 confidence bins.</dd>
+  </dl>
+</section>
+</main>
+
+<footer>Rebuilt {{date}} from the saved evaluation records in <a href="https://github.com/guangboyu/vqa-rlvr">github.com/guangboyu/vqa-rlvr</a>.</footer>
+<div id="tip" hidden></div>
+
+<script>
+(function () {
+  var tip = document.getElementById("tip");
+  document.addEventListener("pointerover", function (e) {
+    var el = e.target.closest ? e.target.closest("[data-tip]") : null;
+    if (!el) { tip.hidden = true; return; }
+    tip.textContent = el.getAttribute("data-tip");
+    tip.hidden = false;
+  });
+  document.addEventListener("pointermove", function (e) {
+    if (tip.hidden) return;
+    var x = Math.min(e.clientX + 12, window.innerWidth - tip.offsetWidth - 8);
+    tip.style.left = x + "px";
+    tip.style.top = (e.clientY - tip.offsetHeight - 10) + "px";
+  });
+  var button = document.getElementById("present");
+  var counter = document.getElementById("counter");
+  var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+  function current() {
+    var y = window.scrollY + 60, idx = 0;
+    slides.forEach(function (s, i) { if (s.offsetTop <= y) idx = i; });
+    return idx;
+  }
+  function go(i) {
+    i = Math.max(0, Math.min(slides.length - 1, i));
+    window.scrollTo({ top: slides[i].offsetTop - 44 });
+    counter.textContent = (i + 1) + " / " + slides.length;
+  }
+  function setPresent(on) {
+    document.body.classList.toggle("present", on);
+    button.textContent = on ? "Exit" : "Present";
+    button.setAttribute("aria-pressed", on ? "true" : "false");
+    if (on) go(current());
+  }
+  button.addEventListener("click", function () { setPresent(!document.body.classList.contains("present")); });
+  document.addEventListener("keydown", function (e) {
+    if (!document.body.classList.contains("present")) return;
+    if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") { e.preventDefault(); go(current() + 1); }
+    else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); go(current() - 1); }
+    else if (e.key === "Escape") { setPresent(false); }
+  });
+  window.addEventListener("scroll", function () {
+    if (document.body.classList.contains("present")) counter.textContent = (current() + 1) + " / " + slides.length;
+  }, { passive: true });
+})();
+</script>
+</body>
+</html>
