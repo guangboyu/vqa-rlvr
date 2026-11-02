@@ -27,7 +27,7 @@
         "source_sha256": "4188e102ed07881fcc144402497a366b8dbd9ef0b69cade3d56fc46156bccf93"
       }
     ],
-    "study": "Corrected shared-pool comparison"
+    "study": "2B models trained on VQAv2 and GQA"
   },
   {
     "title": "SFT changes the visible response",
@@ -65,7 +65,7 @@
         "source_sha256": "cbea119f896e7deba2e33b1bccee42388251b8313b816a56e79d33ea6e190fbb"
       }
     ],
-    "study": "Corrected shared-pool comparison"
+    "study": "2B models trained on VQAv2 and GQA"
   },
   {
     "title": "A long explanation can be wrong",
@@ -103,7 +103,7 @@
         "source_sha256": "abcc6d5009094f2f23373639e72b8c36a20610548977bbfeba0b1a783262e00b"
       }
     ],
-    "study": "Corrected shared-pool comparison"
+    "study": "2B models trained on VQAv2 and GQA"
   },
   {
     "title": "An improvement after SFT then RL",
@@ -141,7 +141,7 @@
         "source_sha256": "6433b2b79ab7ebb61500933c988f2cb024e7855579ca269b61a3b0827c8e0e65"
       }
     ],
-    "study": "Corrected shared-pool comparison"
+    "study": "2B models trained on VQAv2 and GQA"
   },
   {
     "title": "RL can also lose a correct answer",
@@ -179,7 +179,7 @@
         "source_sha256": "6433b2b79ab7ebb61500933c988f2cb024e7855579ca269b61a3b0827c8e0e65"
       }
     ],
-    "study": "Corrected shared-pool comparison"
+    "study": "2B models trained on VQAv2 and GQA"
   },
   {
     "title": "Image sensitivity is not enough",
@@ -221,6 +221,6 @@
         "source_sha256": "3a53c5a827739cab742e6f5201a802e5d8ff5da29e9feb0f10599b13eaa3d6e4"
       }
     ],
-    "study": "Historical public-checkpoint image audit"
+    "study": "Instruct 2B with the image changed"
   }
 ]

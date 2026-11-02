@@ -2,10 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
-::selection { background: #e8a33d; color: #0b0e13; }
+@layer base {
+  html { color-scheme: light; }
+  body {
+    @apply bg-paper font-sans text-ink antialiased;
+    font-feature-settings: "tnum" 0;
+  }
+  h1, h2, h3 { text-wrap: balance; }
+  ::selection { background: #dfe7f1; }
+}
+
+@layer components {
+  /* Booktabs-style tables: heavy top and bottom rules, hairlines between rows. */
+  .data-table { @apply w-full border-y-[1.5px] border-ink text-sm tabular-nums; }
+  .data-table th { @apply border-b border-ink px-3 pb-2 pt-3 text-right align-bottom text-xs font-medium text-ink-2; }
+  .data-table th:first-child, .data-table td:first-child { @apply pl-0 text-left; }
+  .data-table td { @apply border-b border-rule px-3 py-2.5 text-right; }
+  .data-table tr:last-child td { @apply border-b-0; }
+  .data-table tr.group-row td { @apply pb-1 pt-4 text-left text-[11px] uppercase tracking-[0.1em] text-ink-3; }
+  .eyebrow { @apply text-[11px] uppercase tracking-[0.12em] text-ink-3; }
+}
+
 ::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-thumb { background: #2e3745; border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: #d9d9d4; border-radius: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 
-@keyframes pulse-dot { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+@keyframes pulse-dot { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
 .streaming-dot { animation: pulse-dot 1s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .streaming-dot { animation: none; } }

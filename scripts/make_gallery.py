@@ -201,12 +201,12 @@ def make_gallery():
                 image=f"/examples/{filename}",
                 answers=source["answers"],
                 responses=responses,
-                study="Corrected shared-pool comparison" if current else "Historical experiments",
+                study="2B models trained on VQAv2 and GQA" if current else "July 2026 models",
             )
         )
     intervention = intervention_example(output)
     if intervention is not None:
-        intervention["study"] = "Historical public-checkpoint image audit"
+        intervention["study"] = "Instruct 2B with the image changed"
         examples.append(intervention)
     (output / "gallery.json").write_text(json.dumps(examples, indent=2) + "\n")
     print(f"Gallery: {len(examples)} examples copied from recorded responses")

@@ -3,17 +3,21 @@ export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
+      // A light, paper-like palette shared with the report page; the method colors live in
+      // src/components/ui.tsx because they are picked per model at run time.
       colors: {
-        ink: {
-          950: '#0b0e13', 900: '#10141b', 800: '#171c26', 700: '#222936',
-          600: '#2e3745', 400: '#5c6b7f', 300: '#8b99ab', 100: '#dbe2ea', 50: '#f2f5f8',
-        },
-        ember: { 600: '#c9882a', 500: '#e8a33d', 400: '#f0b65e' },
-        verify: '#4cc38a',
+        paper: '#ffffff',
+        wash: '#f6f6f4',
+        rule: '#e6e6e3',
+        line: '#cfcfca',
+        ink: { DEFAULT: '#1c1d20', 2: '#4a4c52', 3: '#7a7d85', 4: '#a9abb0' },
+        accent: '#23466f',
+        miss: '#a33a3a',
       },
       fontFamily: {
-        display: ['Georgia', 'Cambria', 'serif'],
-        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+        serif: ['Newsreader', '"Source Serif 4"', 'Georgia', 'serif'],
+        sans: ['"IBM Plex Sans"', '"Helvetica Neue"', 'Arial', 'sans-serif'],
+        mono: ['"IBM Plex Mono"', 'ui-monospace', 'Menlo', 'monospace'],
       },
     },
   },

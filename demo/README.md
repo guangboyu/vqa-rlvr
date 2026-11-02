@@ -1,8 +1,9 @@
-# Recorded gallery and live VQA comparison
+# Demo: recorded examples, results and a live comparison
 
-The default app needs no GPU or downloaded model. It serves recorded examples
-and artifact-derived results, including metric disagreements and counterexamples.
-The gallery is illustrative; its selected examples do not estimate failure rates.
+The app has three views. Examples shows recorded answers to the same test questions,
+including scorer disagreements and counterexamples; Results shows the evaluation tables; Live
+comparison asks the 2B models a question about your own image. The first two need no GPU or
+downloaded model. The examples are illustrative and do not estimate failure rates.
 
 ## Start
 
@@ -18,12 +19,13 @@ uv run --frozen uvicorn demo.backend.app:app --host 127.0.0.1 --port 8000
 Open `http://127.0.0.1:8000`. For frontend development, `npm run dev` serves Vite
 on port 5173 and proxies `/api` and `/examples` to port 8000.
 
-The dashboard reads `results/report.json`, which `python -m scripts.report` writes from
+The Results view reads `results/report.json`, which `python -m scripts.report` writes from
 the same evaluation records as every table in the README and `docs/supplementary/`, so the
-two cannot disagree. Switch between short and reasoning prompts, inspect scoring and
-response behavior, and compare fixed image interventions.
-Historical experiments remain accessible with their original limitations;
-judge-adjusted scores are separate from official benchmark accuracy.
+two cannot disagree. Switch between short and reasoning prompts and between scorers, and
+inspect response behavior and image interventions. The July 2026 experiments remain
+reachable from the bottom of the view, with their limitations stated.
+`node screenshot.mjs` (in `demo/frontend`, with the server on port 8000) refreshes the
+screenshots in `demo/assets/`.
 
 ## Optional live inference
 

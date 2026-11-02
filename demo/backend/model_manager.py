@@ -32,20 +32,20 @@ class ModelSpec:
 LINEUP = [
     ModelSpec(
         "zero_shot",
-        "Qwen3-VL-2B (zero-shot)",
+        "Instruct 2B",
         "Qwen/Qwen3-VL-2B-Instruct",
-        "The released Instruct checkpoint, before our VQA fine-tuning.",
+        "The released Qwen3-VL-2B-Instruct checkpoint, before any training here.",
         "89644892e4d85e24eaac8bacfd4f463576704203",
     ),
     ModelSpec(
         "sft",
-        "+ SFT (LoRA)",
+        "SFT 2B",
         str(ROOT / "checkpoints/merged/sharedpool_20260913_sft_2b"),
         "One epoch on 39,458 VQAv2/GQA short answers, with held-out images excluded.",
     ),
     ModelSpec(
         "grpo",
-        "+ GRPO (RLVR)",
+        "GRPO 2B",
         str(ROOT / "checkpoints/merged/sharedpool_20260913_grpo_2b_base"),
         "300 correctness-only GRPO updates from Instruct on the shared VQAv2/GQA pool.",
     ),

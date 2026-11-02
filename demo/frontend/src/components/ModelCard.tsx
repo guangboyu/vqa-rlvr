@@ -1,4 +1,6 @@
 import type { ModelSpec } from '../lib/api'
+import { methodColor, methodOf, responseParts } from '../lib/methods'
+import { ModelName } from './ui'
 
 export interface CardState {
   text: string
@@ -7,53 +9,40 @@ export interface CardState {
   finishedAt: number | null
 }
 
-const ANSWER_RE = /<answer>([\s\S]*?)<\/answer>/g
-
-function splitAnswer(text: string): { reasoning: string; answer: string | null } {
-  const matches = [...text.matchAll(ANSWER_RE)]
-  if (matches.length === 0) return { reasoning: text, answer: null }
-  const last = matches[matches.length - 1]
-  return { reasoning: text.slice(0, last.index).trim(), answer: last[1].trim() }
-}
-
 export default function ModelCard({ spec, state }: { spec: ModelSpec; state: CardState }) {
-  const { reasoning, answer } = splitAnswer(state.text)
-  const seconds =
-    state.startedAt && (state.finishedAt ?? Date.now())
-      ? (((state.finishedAt ?? Date.now()) - state.startedAt) / 1000).toFixed(1)
-      : null
+  const { reasoning, answer } = responseParts(state.text, state.status === 'done')
+  const seconds = state.startedAt
+    ? (((state.finishedAt ?? Date.now()) - state.startedAt) / 1000).toFixed(1)
+    : null
+  const color = methodColor(methodOf(spec.key))
 
   return (
-    <div className="flex min-h-[16rem] flex-col rounded-lg border border-ink-700 bg-ink-900">
-      <div className="flex items-baseline justify-between border-b border-ink-700 px-4 py-3">
-        <div>
-          <h3 className="font-display text-lg text-ink-50">{spec.label}</h3>
-          <p className="text-xs text-ink-400">{spec.description}</p>
+    <div className={`flex min-h-[18rem] flex-col rounded-lg border border-rule bg-paper ${spec.loaded ? '' : 'opacity-60'}`}>
+      <div className="border-b border-rule px-4 py-3">
+        <div className="flex items-center justify-between gap-3">
+          <ModelName name={spec.label} className="text-[15px] font-medium" />
+          {state.status === 'streaming' && (
+            <span className="streaming-dot h-2 w-2 shrink-0 rounded-full" style={{ background: color }} />
+          )}
+          {state.status === 'done' && seconds && (
+            <span className="shrink-0 text-xs tabular-nums text-ink-3">{seconds} s</span>
+          )}
         </div>
-        {state.status === 'streaming' && (
-          <span className="streaming-dot h-2.5 w-2.5 shrink-0 rounded-full bg-ember-500" />
-        )}
-        {state.status === 'done' && seconds && (
-          <span className="shrink-0 font-mono text-xs text-ink-400">{seconds}s</span>
-        )}
+        <p className="mt-1 text-xs leading-relaxed text-ink-3">{spec.description}</p>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-3">
+      <div className="flex-1 overflow-y-auto px-4 py-4">
         {state.status === 'idle' && !state.text ? (
-          <p className="text-sm italic text-ink-600">Waiting for a question…</p>
+          <p className="text-sm text-ink-4">{spec.loaded ? 'The answer appears here.' : 'Not loaded'}</p>
         ) : (
           <>
             {reasoning && (
-              <p className="whitespace-pre-wrap font-mono text-[13px] leading-relaxed text-ink-300">
-                {reasoning}
-              </p>
+              <p className="whitespace-pre-wrap text-[13.5px] leading-relaxed text-ink-2">{reasoning}</p>
             )}
             {answer !== null && (
-              <div className="mt-3 rounded-md border border-ember-600/40 bg-ember-500/10 px-3 py-2">
-                <span className="mr-2 font-mono text-[10px] uppercase tracking-widest text-ember-400">
-                  answer
-                </span>
-                <span className="font-display text-xl text-ink-50">{answer}</span>
+              <div className="mt-4 border-l-2 bg-wash px-3 py-2" style={{ borderColor: color }}>
+                <span className="eyebrow mr-2">Answer</span>
+                <span className="font-serif text-xl">{answer}</span>
               </div>
             )}
           </>
