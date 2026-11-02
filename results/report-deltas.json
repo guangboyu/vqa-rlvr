@@ -1,0 +1,130 @@
+{
+ "base2|cqa-grpo2-base-e1|chartqa|reasoning|official|original|original": {
+  "n": 1250,
+  "delta": 10.4,
+  "low": 8.16,
+  "high": 12.64,
+  "resamples": 10000,
+  "seed": 0
+ },
+ "base2|cqa-grpo2-base-e1|gqa|reasoning|official|original|original": {
+  "n": 12578,
+  "delta": 15.940531086023215,
+  "low": 15.11369057083797,
+  "high": 16.75942121163937,
+  "resamples": 10000,
+  "seed": 0
+ },
+ "base2|cqa-grpo2-base-e1|textvqa|reasoning|official|original|original": {
+  "n": 5000,
+  "delta": 5.852,
+  "low": 4.898000000000001,
+  "high": 6.798,
+  "resamples": 10000,
+  "seed": 0
+ },
+ "base2|cqa-grpo2-base-e1|vqav2|reasoning|official|original|original": {
+  "n": 5000,
+  "delta": 15.206,
+  "low": 13.98995,
+  "high": 16.398049999999998,
+  "resamples": 10000,
+  "seed": 0
+ },
+ "cqa-sft2|cqa-grpo2-sft-e1|chartqa|reasoning|official|original|original": {
+  "n": 1250,
+  "delta": 13.52,
+  "low": 10.879999999999999,
+  "high": 16.08,
+  "resamples": 10000,
+  "seed": 0
+ },
+ "dtff-blind-sft2|dtff-sft2|deeptumorff|short|official|black|original": {
+  "n": 10000,
+  "delta": 2.6990000000000003,
+  "low": 2.149,
+  "high": 3.2620000000000005,
+  "resamples": 10000,
+  "seed": 0
+ },
+ "dtvx-probe-sft2|dtvx-grpo2-base|deeptumorx|short|official|original|original": {
+  "n": 6607,
+  "delta": -0.3027092477675193,
+  "low": -1.5892235507794763,
+  "high": 0.9989405176328138,
+  "resamples": 10000,
+  "seed": 0
+ },
+ "dtvx-probe-sft2|dtvx-grpo2-sft|deeptumorx|short|official|original|original": {
+  "n": 6607,
+  "delta": 0.7416376570304223,
+  "low": -0.3636294838807322,
+  "high": 1.816255486605116,
+  "resamples": 10000,
+  "seed": 0
+ },
+ "omx-sft2|omx-short2-base|pathvqa|short|official|original|original": {
+  "n": 2240,
+  "delta": 2.2916666666666665,
+  "low": 1.235119047619048,
+  "high": 3.3482142857142856,
+  "resamples": 10000,
+  "seed": 0
+ },
+ "omx-sft2|omx-short2-sft|omnimedx|short|normalized|original|original": {
+  "n": 1156,
+  "delta": 0.5190311418685121,
+  "low": 0.08650519031141869,
+  "high": 1.0380622837370241,
+  "resamples": 10000,
+  "seed": 0
+ },
+ "sft2|p1-f-short2-base|textvqa|short|official|original|original": {
+  "n": 5000,
+  "delta": 0.9259999999999999,
+  "low": 0.244,
+  "high": 1.6040499999999995,
+  "resamples": 10000,
+  "seed": 0
+ },
+ "sft4k2|p1-f-short2-base|textvqa|short|official|original|original": {
+  "n": 5000,
+  "delta": 0.886,
+  "low": 0.34995,
+  "high": 1.4240000000000002,
+  "resamples": 10000,
+  "seed": 0
+ },
+ "slk-sft2|slk-short2-base-e1|pathvqa|short|official|original|original": {
+  "n": 2240,
+  "delta": 0.8333333333333334,
+  "low": 0.17857142857142858,
+  "high": 1.5029761904761902,
+  "resamples": 10000,
+  "seed": 0
+ },
+ "slk-sft2|slk-short2-sft-e1|slake|short|official|original|original": {
+  "n": 1061,
+  "delta": 1.3195098963242224,
+  "low": 0.0,
+  "high": 2.7332704995287465,
+  "resamples": 10000,
+  "seed": 0
+ },
+ "slk-sft8|slk-short8-base-e1|pathvqa|short|official|original|original": {
+  "n": 2240,
+  "delta": 1.413690476190476,
+  "low": 0.7886904761904762,
+  "high": 2.0390624999999947,
+  "resamples": 10000,
+  "seed": 0
+ },
+ "slk-sft8|slk-short8-sft-e1|slake|short|official|original|original": {
+  "n": 1061,
+  "delta": 1.0367577756833177,
+  "low": -0.2827521206409048,
+  "high": 2.4505183788878417,
+  "resamples": 10000,
+  "seed": 0
+ }
+}

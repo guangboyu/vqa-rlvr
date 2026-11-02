@@ -2,9 +2,10 @@
 
     python -m scripts.report_page
 
-Every number comes from the evaluation records and result files under results/; paired
-differences are recomputed from the saved per-question predictions (10,000 bootstrap
-resamples), so they need the predictions beside the records. The prose lives in
+Every number comes from the evaluation records and result files under results/. Paired
+differences are recomputed from the per-question predictions (10,000 bootstrap resamples)
+when they sit beside the records; the predictions stay local, so each difference is also
+kept in results/report-deltas.json and read from there in a clean clone. The prose lives in
 scripts/report_page.template.html with {{key}} slots filled from the values below.
 """
 
@@ -23,9 +24,12 @@ sys.path.insert(0, str(REPO))
 from vqar.config import MAX_PIXELS  # noqa: E402
 from vqar.eval.paired import paired_bootstrap, question_scores  # noqa: E402
 from vqar.eval.report import Cell, load_cells  # noqa: E402
+from vqar.registry import DATASETS  # noqa: E402
 
 RESULTS = REPO / "results"
 CELLS = load_cells(RESULTS / "records", REPO / "data")
+DELTAS_PATH = RESULTS / "report-deltas.json"
+DELTAS = json.loads(DELTAS_PATH.read_text()) if DELTAS_PATH.exists() else {}
 METHODS = ("base", "sft", "grpo", "sftgrpo")
 METHOD_NAMES = {"base": "Base", "sft": "SFT", "grpo": "GRPO", "sftgrpo": "SFT → GRPO"}
 
@@ -55,10 +59,16 @@ def tokens(arm, dataset, prompt="reasoning"):
 def delta(reference, candidate, dataset, prompt="short", variant="official",
           modes=("original", "original")):
     """candidate − reference with a paired 95% bootstrap interval over the test questions;
-    `modes` gives each side's image mode."""
-    scores = [question_scores(record(arm, dataset, prompt, mode).predictions_path(), variant)
-              for arm, mode in zip((reference, candidate), modes, strict=True)]
-    return paired_bootstrap(*scores)
+    `modes` gives each side's image mode. Recomputed from the predictions when present, else
+    read from the saved differences."""
+    key = "|".join((reference, candidate, dataset, prompt, variant, *modes))
+    paths = [record(arm, dataset, prompt, mode).predictions_path()
+             for arm, mode in zip((reference, candidate), modes, strict=True)]
+    if all(path.exists() for path in paths):
+        DELTAS[key] = paired_bootstrap(*(question_scores(path, variant) for path in paths))
+    if key not in DELTAS:
+        raise SystemExit(f"no predictions and no saved difference for {key}")
+    return DELTAS[key]
 
 
 def f1(x):
@@ -232,7 +242,9 @@ put("knob.lo", signed(min(spread)))
 put("knob.hi", signed(max(spread)))
 
 # Harness counts.
-record_files = [p for p in (RESULTS / "records").rglob("*.json")]
+# Published records only: in-progress batches and licence-restricted datasets stay local.
+record_files = [p for p in (RESULTS / "records").glob("*/*.json")
+                if DATASETS[p.name.split("-")[0]].public_records]
 put("h.records", f"{len(record_files):,}")
 test_sets = ["vqav2", "gqa", "clevr", "textvqa", "chartqa", "slake", "omnimedx", "pathvqa",
              "vizwiz"]
@@ -675,6 +687,7 @@ def main():
     out = REPO / "docs" / "report" / "index.html"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(page)
+    DELTAS_PATH.write_text(json.dumps(dict(sorted(DELTAS.items())), indent=1) + "\n")
     print(f"{out} {len(page) // 1024} KiB")
 
 
