@@ -8563,6 +8563,182 @@
   },
   {
    "arm": "base2",
+   "dataset": "deeptumorff",
+   "role": "test",
+   "tier": "full",
+   "prompt": "short",
+   "image_mode": "black",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 10000,
+    "official": {
+     "overall": 0.21443,
+     "by_answer_type": {
+      "measurement": 0.16574394463667821,
+      "medical reasoning": 0.07454068241469816,
+      "recognition": 0.4789915966386555,
+      "visual reasoning": 0.1723882440108669
+     }
+    },
+    "normalized": {
+     "overall": 0.21443,
+     "by_answer_type": {
+      "measurement": 0.16574394463667821,
+      "medical reasoning": 0.07454068241469816,
+      "recognition": 0.4789915966386555,
+      "visual reasoning": 0.1723882440108669
+     }
+    },
+    "mean_output_tokens": 4.2798,
+    "truncated_fraction": 0.0077,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.21443,
+    "answers_scored_differently": 0,
+    "paired_with_original": {
+     "n": 10000,
+     "original": {
+      "official": 0.16393,
+      "normalized": 0.16393
+     },
+     "normalized_answer_changed_fraction": 0.5824
+    }
+   }
+  },
+  {
+   "arm": "base2",
+   "dataset": "deeptumorff",
+   "role": "test",
+   "tier": "full",
+   "prompt": "short",
+   "image_mode": "original",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 10000,
+    "official": {
+     "overall": 0.16393,
+     "by_answer_type": {
+      "measurement": 0.08452792881858626,
+      "medical reasoning": 0.07349081364829396,
+      "recognition": 0.4300543746910529,
+      "visual reasoning": 0.11318844159051618
+     }
+    },
+    "normalized": {
+     "overall": 0.16393,
+     "by_answer_type": {
+      "measurement": 0.08452792881858626,
+      "medical reasoning": 0.07349081364829396,
+      "recognition": 0.4300543746910529,
+      "visual reasoning": 0.11318844159051618
+     }
+    },
+    "mean_output_tokens": 3.8995,
+    "truncated_fraction": 0.0011,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.16393,
+    "answers_scored_differently": 0
+   }
+  },
+  {
+   "arm": "base2",
+   "dataset": "deeptumorv",
+   "role": "test",
+   "tier": "full",
+   "prompt": "short",
+   "image_mode": "black",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 2097152,
+   "legacy": false,
+   "metrics": {
+    "n": 6607,
+    "official": {
+     "overall": 0.18253367640381413,
+     "by_answer_type": {
+      "measurement": 0.1965260545905707,
+      "medical reasoning": 0.2596754057428215,
+      "recognition": 0.1418032786885246,
+      "visual reasoning": 0.16686114352392065
+     }
+    },
+    "normalized": {
+     "overall": 0.3385802936279703,
+     "by_answer_type": {
+      "measurement": 0.24367245657568237,
+      "medical reasoning": 0.4044943820224719,
+      "recognition": 0.5032786885245901,
+      "visual reasoning": 0.3142746013224426
+     }
+    },
+    "mean_output_tokens": 3.457090964128954,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.18253367640381413,
+    "answers_scored_differently": 1031,
+    "paired_with_original": {
+     "n": 6607,
+     "original": {
+      "official": 0.160587255940669,
+      "normalized": 0.33812622975631906
+     },
+     "normalized_answer_changed_fraction": 0.5356440139246254
+    }
+   }
+  },
+  {
+   "arm": "base2",
+   "dataset": "deeptumorv",
+   "role": "test",
+   "tier": "full",
+   "prompt": "short",
+   "image_mode": "original",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 2097152,
+   "legacy": false,
+   "metrics": {
+    "n": 6607,
+    "official": {
+     "overall": 0.160587255940669,
+     "by_answer_type": {
+      "measurement": 0.14292803970223325,
+      "medical reasoning": 0.2671660424469413,
+      "recognition": 0.21967213114754097,
+      "visual reasoning": 0.11318553092182031
+     }
+    },
+    "normalized": {
+     "overall": 0.33812622975631906,
+     "by_answer_type": {
+      "measurement": 0.2540942928039702,
+      "medical reasoning": 0.41697877652933835,
+      "recognition": 0.5163934426229508,
+      "visual reasoning": 0.29482691559704394
+     }
+    },
+    "mean_output_tokens": 4.3821704253064935,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.160587255940669,
+    "answers_scored_differently": 1173
+   }
+  },
+  {
+   "arm": "base2",
    "dataset": "deeptumorx",
    "role": "rl",
    "tier": "dev",
@@ -25455,6 +25631,48 @@
     "empty_answer_fraction": 0.0,
     "official_on_lowercased_answers": 0.266,
     "answers_scored_differently": 0
+   }
+  },
+  {
+   "arm": "base2",
+   "dataset": "m3dvqa",
+   "role": "test",
+   "tier": "full",
+   "prompt": "short",
+   "image_mode": "original",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 13790,
+    "official": {
+     "overall": 0.30014503263234227,
+     "by_answer_type": {
+      "abnormality": 0.3710144927536232,
+      "location": 0.34797297297297297,
+      "organ": 0.4015,
+      "phase": 0.134,
+      "plane": 0.123
+     }
+    },
+    "normalized": {
+     "overall": 0.4593908629441624,
+     "by_answer_type": {
+      "abnormality": 0.48923395445134576,
+      "location": 0.4702702702702703,
+      "organ": 0.4495,
+      "phase": 0.3335,
+      "plane": 0.507
+     }
+    },
+    "mean_output_tokens": 3.2633067440174037,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.30014503263234227,
+    "answers_scored_differently": 2196
    }
   },
   {
@@ -97863,6 +98081,182 @@
    }
   },
   {
+   "arm": "dtff-blind-sft2",
+   "dataset": "deeptumorff",
+   "role": "test",
+   "tier": "full",
+   "prompt": "short",
+   "image_mode": "black",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 10000,
+    "official": {
+     "overall": 0.57565,
+     "by_answer_type": {
+      "measurement": 0.43766683143845775,
+      "medical reasoning": 0.6451443569553805,
+      "recognition": 0.6984676223430548,
+      "visual reasoning": 0.5505309953074833
+     }
+    },
+    "normalized": {
+     "overall": 0.57565,
+     "by_answer_type": {
+      "measurement": 0.43766683143845775,
+      "medical reasoning": 0.6451443569553805,
+      "recognition": 0.6984676223430548,
+      "visual reasoning": 0.5505309953074833
+     }
+    },
+    "mean_output_tokens": 4.9977,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.57565,
+    "answers_scored_differently": 0,
+    "paired_with_original": {
+     "n": 10000,
+     "original": {
+      "official": 0.56171,
+      "normalized": 0.56171
+     },
+     "normalized_answer_changed_fraction": 0.302
+    }
+   }
+  },
+  {
+   "arm": "dtff-blind-sft2",
+   "dataset": "deeptumorff",
+   "role": "test",
+   "tier": "full",
+   "prompt": "short",
+   "image_mode": "original",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 10000,
+    "official": {
+     "overall": 0.56171,
+     "by_answer_type": {
+      "measurement": 0.43914977755808204,
+      "medical reasoning": 0.6309711286089239,
+      "recognition": 0.6786950074147305,
+      "visual reasoning": 0.5319091133613237
+     }
+    },
+    "normalized": {
+     "overall": 0.56171,
+     "by_answer_type": {
+      "measurement": 0.43914977755808204,
+      "medical reasoning": 0.6309711286089239,
+      "recognition": 0.6786950074147305,
+      "visual reasoning": 0.5319091133613237
+     }
+    },
+    "mean_output_tokens": 5.0071,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.56171,
+    "answers_scored_differently": 0
+   }
+  },
+  {
+   "arm": "dtff-sft2",
+   "dataset": "deeptumorff",
+   "role": "test",
+   "tier": "full",
+   "prompt": "short",
+   "image_mode": "black",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 10000,
+    "official": {
+     "overall": 0.5098600000000001,
+     "by_answer_type": {
+      "measurement": 0.37478991596638656,
+      "medical reasoning": 0.6178477690288714,
+      "recognition": 0.6272862086010875,
+      "visual reasoning": 0.4678686095332181
+     }
+    },
+    "normalized": {
+     "overall": 0.5098600000000001,
+     "by_answer_type": {
+      "measurement": 0.37478991596638656,
+      "medical reasoning": 0.6178477690288714,
+      "recognition": 0.6272862086010875,
+      "visual reasoning": 0.4678686095332181
+     }
+    },
+    "mean_output_tokens": 4.9528,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.5098600000000001,
+    "answers_scored_differently": 0,
+    "paired_with_original": {
+     "n": 10000,
+     "original": {
+      "official": 0.60264,
+      "normalized": 0.60264
+     },
+     "normalized_answer_changed_fraction": 0.4195
+    }
+   }
+  },
+  {
+   "arm": "dtff-sft2",
+   "dataset": "deeptumorff",
+   "role": "test",
+   "tier": "full",
+   "prompt": "short",
+   "image_mode": "original",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 10000,
+    "official": {
+     "overall": 0.60264,
+     "by_answer_type": {
+      "measurement": 0.4555116164112704,
+      "medical reasoning": 0.6440944881889764,
+      "recognition": 0.7894216510133465,
+      "visual reasoning": 0.5633242775994073
+     }
+    },
+    "normalized": {
+     "overall": 0.60264,
+     "by_answer_type": {
+      "measurement": 0.4555116164112704,
+      "medical reasoning": 0.6440944881889764,
+      "recognition": 0.7894216510133465,
+      "visual reasoning": 0.5633242775994073
+     }
+    },
+    "mean_output_tokens": 4.9988,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.60264,
+    "answers_scored_differently": 0
+   }
+  },
+  {
    "arm": "dtv-probe-sft2",
    "dataset": "deeptumor",
    "role": "dev",
@@ -98075,6 +98469,94 @@
     "answer_tag_fraction": 0.0,
     "empty_answer_fraction": 0.0,
     "official_on_lowercased_answers": 0.35992129559558045,
+    "answers_scored_differently": 0
+   }
+  },
+  {
+   "arm": "dtvv-probe-sft2",
+   "dataset": "deeptumorv",
+   "role": "test",
+   "tier": "full",
+   "prompt": "short",
+   "image_mode": "black",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 2097152,
+   "legacy": false,
+   "metrics": {
+    "n": 6607,
+    "official": {
+     "overall": 0.3431209323444831,
+     "by_answer_type": {
+      "measurement": 0.23424317617866006,
+      "medical reasoning": 0.4344569288389513,
+      "recognition": 0.5081967213114754,
+      "visual reasoning": 0.32166472189809414
+     }
+    },
+    "normalized": {
+     "overall": 0.3431209323444831,
+     "by_answer_type": {
+      "measurement": 0.23424317617866006,
+      "medical reasoning": 0.4344569288389513,
+      "recognition": 0.5081967213114754,
+      "visual reasoning": 0.32166472189809414
+     }
+    },
+    "mean_output_tokens": 2.0,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.3431209323444831,
+    "answers_scored_differently": 0,
+    "paired_with_original": {
+     "n": 6607,
+     "original": {
+      "official": 0.36582412592704705,
+      "normalized": 0.36582412592704705
+     },
+     "normalized_answer_changed_fraction": 0.25533525049190253
+    }
+   }
+  },
+  {
+   "arm": "dtvv-probe-sft2",
+   "dataset": "deeptumorv",
+   "role": "test",
+   "tier": "full",
+   "prompt": "short",
+   "image_mode": "original",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 2097152,
+   "legacy": false,
+   "metrics": {
+    "n": 6607,
+    "official": {
+     "overall": 0.36582412592704705,
+     "by_answer_type": {
+      "measurement": 0.24367245657568237,
+      "medical reasoning": 0.4157303370786517,
+      "recognition": 0.6196721311475409,
+      "visual reasoning": 0.32555425904317387
+     }
+    },
+    "normalized": {
+     "overall": 0.36582412592704705,
+     "by_answer_type": {
+      "measurement": 0.24367245657568237,
+      "medical reasoning": 0.4157303370786517,
+      "recognition": 0.6196721311475409,
+      "visual reasoning": 0.32555425904317387
+     }
+    },
+    "mean_output_tokens": 2.0,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.36582412592704705,
     "answers_scored_differently": 0
    }
   },
@@ -101906,6 +102388,48 @@
     "empty_answer_fraction": 0.0,
     "official_on_lowercased_answers": 0.8114,
     "answers_scored_differently": 2
+   }
+  },
+  {
+   "arm": "m3d-blind-sft2",
+   "dataset": "m3dvqa",
+   "role": "test",
+   "tier": "full",
+   "prompt": "short",
+   "image_mode": "original",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 13790,
+    "official": {
+     "overall": 0.6868020304568528,
+     "by_answer_type": {
+      "abnormality": 0.660455486542443,
+      "location": 0.6097972972972973,
+      "organ": 0.7235,
+      "phase": 0.6505,
+      "plane": 0.864
+     }
+    },
+    "normalized": {
+     "overall": 0.6868020304568528,
+     "by_answer_type": {
+      "abnormality": 0.660455486542443,
+      "location": 0.6097972972972973,
+      "organ": 0.7235,
+      "phase": 0.6505,
+      "plane": 0.864
+     }
+    },
+    "mean_output_tokens": 2.0,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.6868020304568528,
+    "answers_scored_differently": 0
    }
   },
   {

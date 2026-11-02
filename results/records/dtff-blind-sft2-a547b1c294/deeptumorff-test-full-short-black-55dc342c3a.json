@@ -1,0 +1,105 @@
+{
+  "schema": "run-record/1",
+  "legacy": false,
+  "model_id": "a547b1c294241572745bb2c0b8758bc76e8fd44de4ef5dbf74e5bd9fca2c0981",
+  "protocol_id": "55dc342c3ab8eb9b89fa52cc8fd127dc49a2293f0d621d5d78d99260d9eaa597",
+  "model": {
+    "source": "checkpoints/merged/dtff_blind_sft2",
+    "label": "dtff-blind-sft2",
+    "run": null,
+    "step": null,
+    "weights": {
+      "sha256": "3b53ad708ee331a5625448e82ca72e3a55991e9fd2e0861ecf43893d7f15504d",
+      "config_sha256": "e475ba87af77a77c5b0872f6b32be09a175c534ef17c688c0274fcf9b6dbd9f5"
+    }
+  },
+  "protocol": {
+    "dataset": "deeptumorff",
+    "ladder": "in-domain",
+    "role": "test",
+    "tier": "full",
+    "question_limit": null,
+    "prompt": "short",
+    "prompt_text": "{question}\nAnswer the question using a single word or phrase.",
+    "max_tokens": 64,
+    "temperature": 0.0,
+    "samples": 1,
+    "image_mode": "black",
+    "max_pixels": 786432,
+    "scorers": {
+      "official": "mean_relative_accuracy/v1",
+      "normalized": "mean_relative_accuracy/v1"
+    },
+    "extraction": "last_answer_tag_or_full_text",
+    "answer_tag_rule": "raw text contains </answer>",
+    "data": {
+      "subsets": {
+        "deeptumorff_test": "b31a856b9e10c64e"
+      },
+      "selection_sha256": "f3532ee3f484b7af57f61457d881d4dd28eabcae4dc5765ab81601ff4c127c1a",
+      "image_groups_sha256": "582caef92318d350df2069fa2e53df37d6f58da2227ba6a690016279c066ec6d"
+    }
+  },
+  "metrics": {
+    "n": 10000,
+    "official": {
+      "overall": 0.57565,
+      "by_answer_type": {
+        "measurement": 0.43766683143845775,
+        "medical reasoning": 0.6451443569553805,
+        "recognition": 0.6984676223430548,
+        "visual reasoning": 0.5505309953074833
+      }
+    },
+    "normalized": {
+      "overall": 0.57565,
+      "by_answer_type": {
+        "measurement": 0.43766683143845775,
+        "medical reasoning": 0.6451443569553805,
+        "recognition": 0.6984676223430548,
+        "visual reasoning": 0.5505309953074833
+      }
+    },
+    "mean_output_tokens": 4.9977,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.57565,
+    "answers_scored_differently": 0,
+    "paired_with_original": {
+      "n": 10000,
+      "original": {
+        "official": 0.56171,
+        "normalized": 0.56171
+      },
+      "normalized_answer_changed_fraction": 0.302
+    }
+  },
+  "provenance": {
+    "code_version": "b27b7ca02d53d16a991c76ec766a293fc5a60138",
+    "uncommitted_changes": false,
+    "source_sha256": {
+      "vqar/eval/__init__.py": "2aa88c809409a57502d0d9b2893e14c3b5bf99d971bceefcc1ed4716ef295f81",
+      "vqar/eval/examples.py": "34e53468b64e5d7d23913dbdc2d37d39c22e4e6501abc882297b7fc7a13385dd",
+      "vqar/eval/protocol.py": "358305c53f73b9229696fdc9434ac5139fe3452f5491a45e2d9820209d3790bc",
+      "vqar/eval/record.py": "6be2298f531240b01df2feecedd50af2d32a1c17f6029951ddf3f7723834b023",
+      "vqar/eval/runner.py": "f0a55a3f8fcaddc6c4154cef031a22911f5cc0cafe7a7cd436c811b2b75e8fca",
+      "vqar/inference.py": "f77143773554fbf3710e045220e2efb36d5698035a760094a9aace008bf593bf",
+      "vqar/config.py": "afff5f8b371e8c1d50f337b9427e7594ca5f531fcc199fe69270a3d1a453c7a0",
+      "vqar/data.py": "fe74ba7a8034eebd291b58dbf4c58f206e7b5eb90b50400d994d4237fa4b4fca",
+      "vqar/metrics.py": "74cdd78a8d14648e018b3986cf26b6a733529cdaf6cc0f518f3b45fe906fa182",
+      "vqar/registry.py": "494047cf3135f3f54ad8f22708efd2f9964ad359686795d4524eab52c5a29fab",
+      "vqar/splits.py": "206963ba5aaa52b03482f52b268832dc1bd611613adfd2ea0fb1aac11c2eb693",
+      "vqar/ood_metrics.py": "9449e0a85c4b7ff3efcbc88264ee1e03d53689c39c2fe030a13887465fa1b226",
+      "vqar/ood.py": "d59220be09094fa5a5ffbb6e791b38ee5b3c8dca0ca381ef64a28bf0f94ccb8f",
+      "uv.lock": "8c79fab440350a15e75e9507c3b5338ecc63beb92fc12c6ef18fbe01122ac323"
+    },
+    "versions": {
+      "torch": "2.11.0+cu129",
+      "transformers": "5.13.0",
+      "vllm": "0.23.0+cu129",
+      "datasets": "5.0.0"
+    },
+    "timestamp": "2026-11-02T01:24:15+00:00"
+  }
+}
