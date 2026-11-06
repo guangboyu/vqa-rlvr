@@ -15,7 +15,7 @@ DeepTumorVQA multiple choice):
 DeepTumorVQA's answer options and answer frequencies give most answers away, and M3D-VQA's correct
 option is A in nearly half of its questions. A debiased DeepTumorVQA, built here, brings the text-only
 rule to chance (<!--n:au.x.rule-->35.2<!--/n-->% against <!--n:au.x.chance-->33.7<!--/n-->%). On it GRPO and SFT reach the same accuracy
-(<!--n:au.x.grpo-->36.4<!--/n-->% and <!--n:au.x.sft-->36.7<!--/n-->%), and the one thing a 2B model learns from 2D views of the scan is whether a
+(<!--n:au.x.grpo-->36.4<!--/n-->% and <!--n:au.x.sft-->36.7<!--/n-->%), and what a 2B model learns from 2D views of the scan is whether a
 lesion is present.
 
 ## Shortcut audit of 3D CT benchmarks

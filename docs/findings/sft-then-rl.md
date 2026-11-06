@@ -9,8 +9,9 @@ after SFT is polish: <!--n:med.slk2.sftgrpo_sft-->+1.3 [+0.0, +2.7]<!--/n-->, <!
 
 On SLAKE's open-answer questions Instruct's pass@8 is <!--n:reach.slk2.reach-->53.7<!--/n-->%. GRPO ends close to it at
 <!--n:reach.slk2.rl-->56.1<!--/n-->%, and SFT passes it at <!--n:reach.slk2.sft-->68.6<!--/n-->%; 8B repeats this (<!--n:reach.slk8.reach-->56.7<!--/n-->, <!--n:reach.slk8.rl-->59.5<!--/n-->,
-<!--n:reach.slk8.sft-->72.1<!--/n-->). RL can only reward answers the model samples, and SFT can teach the others. That is
-an observed pattern with an untested explanation; the [reach table](what-the-gain-is.md#reach) has every set.
+<!--n:reach.slk8.sft-->72.1<!--/n-->). The proposed mechanism is that RL can only reward answers the model samples while
+SFT can teach the others; the pattern is measured on every set in the [reach table](what-the-gain-is.md#reach),
+and the mechanism itself is untested.
 
 ## Medical images: SFT then RL is the best model, and RL forgets less
 

@@ -16,10 +16,10 @@ in <!--n:ba.rl.level-->5<!--/n--> of <!--n:ba.rl.settings-->6<!--/n--> settings,
 times smaller than SFT's, and on sets no model trained on it keeps a small lead over SFT
 (<!--n:tv.rl_sft.v-->+0.9<!--/n--> on TextVQA, <!--n:vw.rl_sft.v-->+1.0<!--/n--> on VizWiz).
 
-Two limits go with these. In short-answer settings RL is overconfident, with a calibration error
-of <!--n:cal.grpo.lo-->12.1<!--/n-->–<!--n:cal.grpo.hi-->23.7<!--/n--> points against SFT's <!--n:cal.sft.lo-->2.2<!--/n-->–<!--n:cal.sft.hi-->8.6<!--/n-->. And all of this describes RL
-from Instruct: GRPO after SFT keeps SFT's priors, answering <!--n:ba.omx.sftgrpo.blackgain-->+24.0<!--/n--> points more blind on
-OmniMedVQA's held-out collections.
+These measurements describe RL from Instruct; GRPO after SFT keeps SFT's priors, with a
+black-image score <!--n:ba.omx.sftgrpo.blackgain-->+24.0<!--/n--> points from Instruct's on OmniMedVQA's held-out collections. In short-answer
+settings RL is also more confident than it is accurate, with a calibration error of
+<!--n:cal.grpo.lo-->12.1<!--/n-->–<!--n:cal.grpo.hi-->23.7<!--/n--> points against SFT's <!--n:cal.sft.lo-->2.2<!--/n-->–<!--n:cal.sft.hi-->8.6<!--/n-->.
 
 ## Reach
 
@@ -47,7 +47,7 @@ multiple choice, so it has no row. `python -m scripts.reach`, no GPU.
 On these <!--n:reach.sets-->10<!--/n--> rows RL from Instruct ends at most <!--n:reach.rl.most-->2.8<!--/n--> points above reach. SFT passes it only
 on SLAKE, by <!--n:reach.slk2.sft.over-->14.9<!--/n--> points at 2B and <!--n:reach.slk8.sft.over-->15.4<!--/n--> at 8B. Low reach points to SFT first; high
 reach only leaves RL room, since on GQA under the short prompt reach is <!--n:reach.gqa.reach-->67.8<!--/n-->% and RL ends at
-<!--n:reach.gqa.rl-->50.3<!--/n-->%. One domain supports the rule so far, and new training sources will test it.
+<!--n:reach.gqa.rl-->50.3<!--/n-->%. New training sources will test the rule beyond SLAKE.
 
 ## Held-out pass@k before and after RL
 

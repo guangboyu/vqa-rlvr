@@ -1,6 +1,6 @@
 # What did not work
 
-Each entry is something tried that did not earn a place in the recipe, in one form: tried, expected,
+Each entry is a change tried against the recipe and kept out of it, in one form: tried, expected,
 saw, why, implies. "Why" says whether it was observed here or is a proposed explanation. "Expected" is
 what was written down before the run; where nothing was, it says so. The tables are below the
 checklist.
@@ -16,7 +16,7 @@ checklist.
   prompt, but +6.1 normalized and +0.65 audited. Its 16.4-point GQA gain is mostly casing (+0.8
   normalized). The short prompt barely moves.
 - **Why (proposed):** a teacher of the same size knows little the reference doesn't already say.
-- **Implies:** not worth it at this scale. Retry only with a much stronger teacher.
+- **Implies:** stays out of the recipe at this scale; a much stronger teacher is the condition for a retry.
 
 ### Filtered pool
 
@@ -34,7 +34,7 @@ checklist.
 - **Expected:** a gain: filtered pools go stale as the model improves, and refilling keeps every group live.
 - **Saw:** within 0.5 points on every set and prompt except CLEVR under the reasoning prompt (−2.0).
 - **Why (proposed):** with this learning rate and pool, signal is not what limits the run.
-- **Implies:** not a default. Tested on photos, not yet on charts.
+- **Implies:** stays out of the default. Tested on photos; charts are untested.
 
 ### Format reward at 8B
 

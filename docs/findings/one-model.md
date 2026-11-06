@@ -2,11 +2,12 @@
 
 *The [report](https://guangboyu.github.io/vqa-rlvr/report/)'s open question.*
 
-One model trained on photos and charts together lost its chart reasoning: <!--n:ph.cq.mix.r-->65.9<!--/n-->% on ChartQA
-against <!--n:cq.grpo.r-->80.1<!--/n-->% for the chart-only model, at <!--n:ph.cq.mix.tok-->11<!--/n--> tokens. It also trained for <!--n:mix.updates-->2,844<!--/n-->
-updates against the chart-only model's <!--n:cq.updates-->1,844<!--/n-->, and it collapsed between updates 1,750 and 2,000, so
-mixing and training length are confounded. A chart-only control at the same length settles which one
-caused it; it is declared in `experiments.toml` as the card `chart-length-control`.
+Does one model learn when to reason? Trained on photos and charts together, a 2B model kept its chart
+reasoning until update 1,750, lost it by update 2,000, and ended at <!--n:ph.cq.mix.r-->65.9<!--/n-->% on ChartQA
+against <!--n:cq.grpo.r-->80.1<!--/n-->% for the chart-only model, at <!--n:ph.cq.mix.tok-->11<!--/n--> tokens. It trained for <!--n:mix.updates-->2,844<!--/n-->
+updates against the chart-only model's <!--n:cq.updates-->1,844<!--/n-->, so mixing and training length are confounded. A
+chart-only control at the same length, declared in `experiments.toml` as `chart-length-control` and
+running, settles which one caused it.
 
 ## One model on both families
 

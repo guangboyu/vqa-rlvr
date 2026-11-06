@@ -256,7 +256,7 @@ body.present .counter { display: block; position: fixed; z-index: 6; font-family
     <li><a href="#reasoning-pays">Reasoning pays</a>: RL wins and keeps the reasoning. <a class="deep" href="https://github.com/guangboyu/vqa-rlvr/blob/main/docs/findings/reasoning-pays.md">evidence</a></li>
     <li><a href="#form">Reasoning doesn't pay</a>: RL changes form, not ability. <a class="deep" href="https://github.com/guangboyu/vqa-rlvr/blob/main/docs/findings/form-not-ability.md">evidence</a></li>
     <li><a href="#knowledge">Knowledge missing</a>: SFT first, RL polishes. <a class="deep" href="https://github.com/guangboyu/vqa-rlvr/blob/main/docs/findings/sft-then-rl.md">evidence</a></li>
-    <li><a href="#gain">What RL's gain is made of</a>: it needs the image, moves the model less, and is overconfident. <a class="deep" href="https://github.com/guangboyu/vqa-rlvr/blob/main/docs/findings/what-the-gain-is.md">evidence</a></li>
+    <li><a href="#gain">What RL's gain is made of</a>: it needs the image and moves the model less. <a class="deep" href="https://github.com/guangboyu/vqa-rlvr/blob/main/docs/findings/what-the-gain-is.md">evidence</a></li>
     <li><a href="#evaluation">Why trust it</a>: the harness every number passes through. <a class="deep" href="https://github.com/guangboyu/vqa-rlvr/blob/main/docs/harness/evaluation.md">evidence</a></li>
     <li><a href="#open">Open</a>: one model for photos and charts. <a class="deep" href="https://github.com/guangboyu/vqa-rlvr/blob/main/docs/findings/one-model.md">evidence</a></li>
   </ul>
@@ -299,7 +299,7 @@ body.present .counter { display: block; position: fixed; z-index: 6; font-family
     {{PASSK_FIG}}
     <figcaption><b>Figure 3. Coverage on ChartQA.</b> pass@k (%) on all 1,250 test questions, 32 samples at temperature 1, official scorer, k on a log scale. Left: models trained with reasoning, scored under the reasoning prompt. Right: short-answer models, scored with short answers.</figcaption>
   </figure>
-  <p class="small">Scope: one dataset so far, and SFT here trains on short answers. A second chart-and-document source and SFT on reasoning traces are the next tests.</p>
+  <p class="small">Scope: ChartQA is the one chart source in this study, and SFT in this comparison trains on its short reference answers. A second chart-and-document source and SFT on reasoning traces are the next tests.</p>
 </section>
 
 <section class="slide" id="form">
@@ -310,7 +310,7 @@ body.present .counter { display: block; position: fixed; z-index: 6; font-family
 
 <section class="slide" id="knowledge">
   <h2><span class="num">5</span>Where the answer is out of reach, SFT goes first</h2>
-  <p>On medical images SFT beats RL from Instruct in domain, and GRPO started from SFT is the best model in all three settings. SFT teaches the domain's answers; RL then polishes them, adding {{med.slk2.sftgrpo_sft.v}} points on SLAKE at 2B.</p>
+  <p>On medical images GRPO started from SFT is the best model in all three settings, and SFT beats RL from Instruct in domain. SFT teaches the domain's answers; RL then polishes them, adding {{med.slk2.sftgrpo_sft.v}} points on SLAKE at 2B.</p>
   <figure class="wide">
     <div class="tbl"><table>
       <thead><tr><th>Trained and tested on</th><th class="n">Instruct</th><th class="n">SFT</th><th class="n">GRPO</th><th class="n">SFT → GRPO</th><th class="n">SFT → GRPO<br>minus SFT</th><th class="n">PathVQA<br>Instruct · SFT · GRPO · SFT → GRPO</th><th class="n">PathVQA<br>GRPO minus SFT</th></tr></thead>
@@ -318,7 +318,7 @@ body.present .counter { display: block; position: fixed; z-index: 6; font-family
     </table></div>
     <figcaption><b>Table 1. Medical images.</b> Short-answer accuracy (%) on each training set's own test questions and on PathVQA, which no model trained on. Differences in points with paired 95% intervals. SLAKE and PathVQA use the official scorer; OmniMedVQA the normalized scorer, which credits the option text as well as its letter.</figcaption>
   </figure>
-  <p>Reach shows why. On SLAKE's open-answer questions Instruct's pass@8, the share of questions where one of GRPO's eight samples is right, is {{reach.slk2.reach}}%. GRPO ends close to it at {{reach.slk2.rl}}% and SFT passes it at {{reach.slk2.sft}}%; 8B repeats this ({{reach.slk8.reach}}, {{reach.slk8.rl}}, {{reach.slk8.sft}}). Across {{reach.sets}} open-answer rows RL from Instruct ends at most {{reach.rl.most}} points above reach, and only on SLAKE does SFT pass it. RL can only reward answers the model samples; SFT can teach the others. This is an observed pattern with an untested explanation, in the spirit of what Yue et al. (2025) report for text; here it is measured per domain.</p>
+  <p>Reach separates the two methods. On SLAKE's open-answer questions Instruct's pass@8, the share of questions where one of GRPO's eight samples is right, is {{reach.slk2.reach}}%. GRPO ends close to it at {{reach.slk2.rl}}% and SFT passes it at {{reach.slk2.sft}}%; 8B repeats this ({{reach.slk8.reach}}, {{reach.slk8.rl}}, {{reach.slk8.sft}}). Across {{reach.sets}} open-answer rows RL from Instruct ends at most {{reach.rl.most}} points above reach, and only on SLAKE does SFT pass it. The proposed mechanism, in the spirit of what Yue et al. (2025) report for text, is that RL can only reward answers the model samples while SFT can teach the others; the pattern is measured here per domain, and the mechanism itself is untested.</p>
 </section>
 
 <section class="slide" id="gain">
@@ -335,7 +335,7 @@ body.present .counter { display: block; position: fixed; z-index: 6; font-family
     <tbody>{{KL_ROWS}}</tbody>
   </table></div>
   <p style="margin-top: 16px">On sets no model trained on, RL keeps a small edge over SFT: {{tv.rl_sft}} points on TextVQA and {{vw.rl_sft}} on VizWiz. SFT on exactly the 4,000 questions GRPO drew does not close it.</p>
-  <p class="small">Two limits go with these. In short-answer settings RL is overconfident, with a calibration error of {{cal.grpo.lo}}–{{cal.grpo.hi}} points against SFT's {{cal.sft.lo}}–{{cal.sft.hi}}. And they describe RL from Instruct: GRPO after SFT keeps SFT's priors, answering {{ba.omx.sftgrpo.blackgain}} points more blind on OmniMedVQA's held-out collections.</p>
+  <p class="small">These measurements describe RL from Instruct; GRPO after SFT keeps SFT's priors, with a black-image score {{ba.omx.sftgrpo.blackgain}} points from Instruct's on OmniMedVQA's held-out collections. In short-answer settings RL is also more confident than it is accurate, with a calibration error of {{cal.grpo.lo}}–{{cal.grpo.hi}} points against SFT's {{cal.sft.lo}}–{{cal.sft.hi}}.</p>
 </section>
 
 <section class="slide" id="evaluation">
@@ -360,7 +360,7 @@ body.present .counter { display: block; position: fixed; z-index: 6; font-family
 
 <section class="slide" id="open">
   <h2><span class="num">8</span>Open: one model for photos and charts</h2>
-  <p>One model trained on photos and charts together lost its chart reasoning: it collapsed to {{ph.cq.mix.tok}}-token answers everywhere and ended at {{ph.cq.mix.r}}% on ChartQA against {{cq.grpo.r}}% for the chart-only model. It also trained for {{mix.updates}} updates against the chart-only model's {{cq.updates}}, and the collapse came between updates 1,750 and 2,000, so mixing and training length are confounded. A chart-only control at the same length is declared and running; it decides whether the fix is routing prompts by domain or knowing when to stop.</p>
+  <p>Does one model learn when to reason? Trained on photos and charts together, a 2B model kept its chart reasoning until update 1,750, lost it by update 2,000, and ended at {{ph.cq.mix.r}}% on ChartQA against {{cq.grpo.r}}% for the chart-only model, at {{ph.cq.mix.tok}} tokens per answer. It trained for {{mix.updates}} updates against the chart-only model's {{cq.updates}}, so mixing and training length are confounded. A chart-only control at the same length is declared and running; it decides whether the fix is routing prompts by domain or knowing when to stop.</p>
 </section>
 
 <section class="slide" id="future">
