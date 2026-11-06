@@ -102,41 +102,44 @@ def macro_score(scores: dict[str, float], categories: dict[str, str], macro: lis
     return {"categories": means, "macro": sum(means.values()) / len(means)}
 
 
+def benchmark_row(config: dict, found: dict, dataset: str, columns: list[tuple[str, str]]) -> dict:
+    """One benchmark's scores, image gains and verdicts for every column."""
+    variant = scorer(config, dataset)
+    pixels = budget(config, dataset)
+
+    def cell(label, prompt, mode="original"):
+        return found[(label, Protocol(dataset, prompt=prompt, image_mode=mode, max_pixels=pixels))]
+
+    def score(record):
+        return 100 * record.metrics[variant]["overall"]
+
+    cells = {}
+    for label, prompt in columns:
+        record = cell(label, prompt)
+        short, black = cell(label, "short"), cell(label, "short", "black")
+        entry = {"score": score(record), "n": record.metrics["n"],
+                 "tokens": record.metrics["mean_output_tokens"],
+                 "image_gain": score(short) - score(black)}
+        if label != INSTRUCT:
+            reference = cell(INSTRUCT, prompt)
+            delta = paired_bootstrap(question_scores(reference.predictions_path(), variant),
+                                     question_scores(record.predictions_path(), variant))
+            entry |= {"vs_instruct": delta, "verdict": verdict(delta)}
+        cells[f"{label}|{prompt}"] = entry
+    return {"dataset": dataset, "display_name": DATASETS[dataset].display_name,
+            "category": DATASETS[dataset].category, "scorer": variant, "cells": cells}
+
+
 def summarize(config: dict) -> dict:
     found = records_for(config)
-    rows, by_arm = [], {}
-    categories = {dataset: DATASETS[dataset].category for dataset in config["benchmarks"]}
     # Instruct has one column per prompt; every other arm has its training prompt.
     columns = [(spec["label"], prompt) for spec in config["arms"] for prompt in spec["prompts"]]
-    for dataset in config["benchmarks"]:
-        variant = scorer(config, dataset)
-        pixels = budget(config, dataset)
-
-        def cell(label, prompt, mode="original"):
-            return found[(label, Protocol(dataset, prompt=prompt, image_mode=mode,
-                                          max_pixels=pixels))]
-
-        def score(record):
-            return 100 * record.metrics[variant]["overall"]
-
-        row = {"dataset": dataset, "display_name": DATASETS[dataset].display_name,
-               "category": categories[dataset], "scorer": variant, "cells": {}}
-        for label, prompt in columns:
-            record = cell(label, prompt)
-            short, black = cell(label, "short"), cell(label, "short", "black")
-            entry = {"score": score(record), "n": record.metrics["n"],
-                     "tokens": record.metrics["mean_output_tokens"],
-                     "image_gain": score(short) - score(black)}
-            if label != INSTRUCT:
-                reference = cell(INSTRUCT, prompt)
-                delta = paired_bootstrap(question_scores(reference.predictions_path(), variant),
-                                         question_scores(record.predictions_path(), variant))
-                entry |= {"vs_instruct": delta, "verdict": verdict(delta)}
-            row["cells"][f"{label}|{prompt}"] = entry
-            by_arm.setdefault(f"{label}|{prompt}", {})[dataset] = entry["score"]
-        rows.append(row)
+    rows = [benchmark_row(config, found, dataset, columns) for dataset in config["benchmarks"]]
+    categories = {row["dataset"]: row["category"] for row in rows}
     summary = {}
-    for column, scores in by_arm.items():
+    for label, prompt in columns:
+        column = f"{label}|{prompt}"
+        scores = {row["dataset"]: row["cells"][column]["score"] for row in rows}
         counted = [row["cells"][column].get("verdict") for row in rows]
         summary[column] = {**macro_score(scores, categories, config["macro"]),
                            "wins": counted.count("win"), "ties": counted.count("tie"),
