@@ -148,12 +148,76 @@
    "holds_if": "SFT on traces ends at least 2 dev points below the chart-only GRPO model",
    "if_holds": "The chart win stands against SFT on reasoning traces.",
    "if_not": "The win comes from the reasoning targets rather than from RL, and the root claim changes.",
-   "status": "experimental",
-   "why": "",
-   "implies": "",
-   "final": null,
-   "held": null,
-   "train_hours": null
+   "status": "null",
+   "why": "Observed: 70.2 against GRPO's 75.8 on dev (-5.6 [-8.6, -2.6]), and 1.6 above Instruct. Answers stay long (184 tokens). Trained on the 6,401 questions with a correct sample.",
+   "implies": "The chart win stands against SFT on the same information RL has.",
+   "final": {
+    "accuracy": 70.19999999999999,
+    "baseline": 75.8,
+    "tokens": 184.172,
+    "baseline_tokens": 144.904,
+    "n": 500,
+    "delta": -5.6000000000000005,
+    "low": -8.6,
+    "high": -2.6,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "final_step": 201,
+   "baseline_step": 1844,
+   "curve": [
+    {
+     "step": 201,
+     "accuracy": 70.19999999999999,
+     "tokens": 184.172
+    }
+   ],
+   "baseline_curve": [
+    {
+     "step": 250,
+     "accuracy": 74.4,
+     "tokens": 175.088
+    },
+    {
+     "step": 500,
+     "accuracy": 72.6,
+     "tokens": 170.956
+    },
+    {
+     "step": 750,
+     "accuracy": 72.2,
+     "tokens": 152.136
+    },
+    {
+     "step": 1000,
+     "accuracy": 73.8,
+     "tokens": 144.196
+    },
+    {
+     "step": 1250,
+     "accuracy": 74.6,
+     "tokens": 150.444
+    },
+    {
+     "step": 1500,
+     "accuracy": 75.2,
+     "tokens": 141.76
+    },
+    {
+     "step": 1750,
+     "accuracy": 76.2,
+     "tokens": 141.16
+    },
+    {
+     "step": 1844,
+     "accuracy": 75.8,
+     "tokens": 144.904
+    }
+   ],
+   "held": true,
+   "verdict": "\u2212",
+   "noise_floor": 0.5219206680584552,
+   "train_hours": 0.2959748888888889
   },
   {
    "id": "reasoning-sft-8b",
@@ -166,12 +230,76 @@
    "holds_if": "SFT on 8B traces ends at least 2 dev points below the chart-only GRPO model",
    "if_holds": "The chart win stands even against a larger teacher's traces.",
    "if_not": "A larger teacher can replace RL at 2B on charts; compare against 2B self-traces to separate teacher size from targets.",
-   "status": "experimental",
-   "why": "",
-   "implies": "",
-   "final": null,
-   "held": null,
-   "train_hours": null
+   "status": "null",
+   "why": "Observed: 71.8 against GRPO's 75.8 on dev (-4.0 [-7.2, -0.8]), close to the teacher's own 72.6. Trained on the 6,164 questions with a correct sample.",
+   "implies": "The chart win stands even against a larger teacher's traces, and offline SFT lands near its teacher rather than past it.",
+   "final": {
+    "accuracy": 71.8,
+    "baseline": 75.8,
+    "tokens": 213.454,
+    "baseline_tokens": 144.904,
+    "n": 500,
+    "delta": -4.0,
+    "low": -7.199999999999999,
+    "high": -0.8,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "final_step": 193,
+   "baseline_step": 1844,
+   "curve": [
+    {
+     "step": 193,
+     "accuracy": 71.8,
+     "tokens": 213.454
+    }
+   ],
+   "baseline_curve": [
+    {
+     "step": 250,
+     "accuracy": 74.4,
+     "tokens": 175.088
+    },
+    {
+     "step": 500,
+     "accuracy": 72.6,
+     "tokens": 170.956
+    },
+    {
+     "step": 750,
+     "accuracy": 72.2,
+     "tokens": 152.136
+    },
+    {
+     "step": 1000,
+     "accuracy": 73.8,
+     "tokens": 144.196
+    },
+    {
+     "step": 1250,
+     "accuracy": 74.6,
+     "tokens": 150.444
+    },
+    {
+     "step": 1500,
+     "accuracy": 75.2,
+     "tokens": 141.76
+    },
+    {
+     "step": 1750,
+     "accuracy": 76.2,
+     "tokens": 141.16
+    },
+    {
+     "step": 1844,
+     "accuracy": 75.8,
+     "tokens": 144.904
+    }
+   ],
+   "held": true,
+   "verdict": "\u2212",
+   "noise_floor": 0.5219206680584552,
+   "train_hours": 0.29036597222222227
   },
   {
    "id": "prompt-routing",

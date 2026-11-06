@@ -1082,6 +1082,18 @@ label = "dtvx-grpo2-sft"
 name = "SFT → GRPO (debiased DeepTumorVQA, 2,000 updates)"
 model = "checkpoints/merged/dtvx_grpo2_sft"
 
+[[arms]]
+label = "card-reasoning-sft-self"
+name = "SFT on Instruct 2B's reasoning traces (ChartQA)"
+model = "checkpoints/merged/card_reasoning_sft_self"
+run = "card-reasoning-sft-self"
+
+[[arms]]
+label = "card-reasoning-sft-8b"
+name = "SFT on Instruct 8B's reasoning traces (ChartQA)"
+model = "checkpoints/merged/card_reasoning_sft_8b"
+run = "card-reasoning-sft-8b"
+
 # Experiment cards (Milestone 2). One change against a frozen recipe, with the prediction
 # committed before the run starts. Cards read dev rows only; test rows stay for reported arms.
 [[cards]]
@@ -1130,7 +1142,9 @@ holds = { max_delta = -2.0 }
 baseline_run = "runs/chartqa-epoch-20261007/grpo2-base"
 if_holds = "The chart win stands against SFT on reasoning traces."
 if_not = "The win comes from the reasoning targets rather than from RL, and the root claim changes."
-status = "experimental"
+status = "null"
+why = "Observed: 70.2 against GRPO's 75.8 on dev (-5.6 [-8.6, -2.6]), and 1.6 above Instruct. Answers stay long (184 tokens). Trained on the 6,401 questions with a correct sample."
+implies = "The chart win stands against SFT on the same information RL has."
 
 [[cards]]
 id = "reasoning-sft-8b"
@@ -1148,7 +1162,9 @@ holds = { max_delta = -2.0 }
 baseline_run = "runs/chartqa-epoch-20261007/grpo2-base"
 if_holds = "The chart win stands even against a larger teacher's traces."
 if_not = "A larger teacher can replace RL at 2B on charts; compare against 2B self-traces to separate teacher size from targets."
-status = "experimental"
+status = "null"
+why = "Observed: 71.8 against GRPO's 75.8 on dev (-4.0 [-7.2, -0.8]), close to the teacher's own 72.6. Trained on the 6,164 questions with a correct sample."
+implies = "The chart win stands even against a larger teacher's traces, and offline SFT lands near its teacher rather than past it."
 
 [[cards]]
 id = "prompt-routing"
@@ -1215,3 +1231,62 @@ why = """Observed before any training: under all three wordings Instruct 2B wrot
 ChartQA (ratio 0.68-0.88, the rule needed 2) and lost 3.8-8.4 points on ChartQA and 13.9-21.9 on VQAv2 against \
 the better of short and reasoning."""
 implies = "An instruction alone does not make the released model reason selectively. Routing is the mixture recipe to test."
+
+# The Milestone 2 table: existing arms re-scored on the benchmarks, no retraining. Each arm is scored
+# under the prompt it trained with, against Instruct under the same prompt. Every arm also gets the
+# short prompt with original and black images, for its image gain. `python -m scripts.categories`.
+[categories]
+benchmarks = ["mmstar", "realworldqa", "vqav2", "gqa", "textvqa", "vizwiz", "mathvista", "mmmu", "chartqa",
+              "charxiv", "ocrbench", "docvqa", "vstar", "hrbench4k", "pope", "hallusionbench", "slake",
+              "omnimedx"]
+macro = ["General VQA", "Reasoning", "Document-chart", "Perception"]
+max_pixels = { hrbench4k = 2097152 }
+normalized = ["omnimedx"]  # its official scorer counts option letters only
+
+[[categories.arms]]
+label = "base2"
+method = "Instruct"
+trained_on = "none"
+prompts = ["short", "reasoning"]
+
+[[categories.arms]]
+label = "sft2"
+method = "SFT"
+trained_on = "VQAv2 + GQA"
+prompts = ["short"]
+
+[[categories.arms]]
+label = "p1-f-short2-base"
+method = "GRPO"
+trained_on = "VQAv2 + GQA"
+prompts = ["short"]
+
+[[categories.arms]]
+label = "p1-f-grpo2-base"
+method = "GRPO, reasoning rollouts"
+trained_on = "VQAv2 + GQA"
+prompts = ["reasoning"]
+
+[[categories.arms]]
+label = "p1-f-short2-sft"
+method = "SFT → GRPO"
+trained_on = "VQAv2 + GQA"
+prompts = ["short"]
+
+[[categories.arms]]
+label = "cqa-sft2"
+method = "SFT"
+trained_on = "ChartQA"
+prompts = ["short"]
+
+[[categories.arms]]
+label = "cqa-grpo2-base-e1"
+method = "GRPO"
+trained_on = "ChartQA"
+prompts = ["reasoning"]
+
+[[categories.arms]]
+label = "cqa-grpo2-sft-e1"
+method = "SFT → GRPO"
+trained_on = "ChartQA"
+prompts = ["reasoning"]

@@ -267,8 +267,8 @@ official scorer, reasoning prompt; `python -m scripts.cards summarize` writes `r
 | Experiment | Change | Predicted | Dev accuracy and length | Prediction | Train GPU-h |
 | --- | --- | --- | --- | --- | ---: |
 | chart-length-control | 2,844 updates instead of 1,844 on ChartQA alone: the mixture's horizon and learning-rate schedule | Holds | 75.8 → 75.8, 145 → 179 tokens | held | 9.8 |
-| reasoning-sft-self | SFT on one correct reasoning sample per question from Instruct 2B, instead of GRPO | Holds | not finished | — | — |
-| reasoning-sft-8b | SFT on one correct reasoning sample per question from Instruct 8B, instead of GRPO | Holds | not finished | — | — |
+| reasoning-sft-self | SFT on one correct reasoning sample per question from Instruct 2B, instead of GRPO | Holds | 75.8 → 70.2, 145 → 184 tokens | held | 0.3 |
+| reasoning-sft-8b | SFT on one correct reasoning sample per question from Instruct 8B, instead of GRPO | Holds | 75.8 → 71.8, 145 → 213 tokens | held | 0.3 |
 | prompt-routing | Photos roll out under the short prompt and charts under the reasoning prompt, on the mixture's pool and 2,844 updates | Holds | not finished | — | — |
 | mix-ratio-90 | 90% charts and 10% photos instead of 65% and 35%, all under the reasoning prompt, 2,844 updates | Does not hold | not finished | — | — |
 | adaptive-prompt | All rollouts under the winning adaptive prompt, on the mixture's pool and 2,844 updates | Does not hold | not finished | — | — |
