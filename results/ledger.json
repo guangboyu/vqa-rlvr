@@ -220,9 +220,9 @@
    "holds_if": "end-of-run ChartQA dev tokens >= 50% of the chart-only control's and dev accuracy >= its accuracy - 2 points",
    "if_holds": "One model and one prompt keep both behaviors; this is the recipe to carry to the 8B gate.",
    "if_not": "The prompt alone does not protect chart reasoning; compare with routing.",
-   "status": "experimental",
-   "why": "",
-   "implies": "",
+   "status": "retired",
+   "why": "Observed before any training: under all three wordings Instruct 2B wrote longer answers on VQAv2 than on ChartQA (ratio 0.68-0.88, the rule needed 2) and lost 3.8-8.4 points on ChartQA and 13.9-21.9 on VQAv2 against the better of short and reasoning.",
+   "implies": "An instruction alone does not make the released model reason selectively. Routing is the mixture recipe to test.",
    "final": null,
    "held": null,
    "train_hours": null

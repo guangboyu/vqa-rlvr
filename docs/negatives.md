@@ -83,6 +83,7 @@ checklist.
 - Learning rate 3×: within 0.9 points on every cell. 10×: costs accuracy everywhere.
 - Unmerged rollouts: no cell moves more than 0.52 points; kept because they are on-policy.
 - Eight single-setting changes on ChartQA (loss averaging, KL, reward scaling, response cap, list-aware reward, canvas, image geometry): none beats a same-seed repeat, at 300 updates.
+- A prompt that lets the model decide whether to reason (two wordings and a few-shot form): Instruct wrote longer answers on photos than on charts and lost 4–22 points, so none went on to train.
 - Clip-higher: not run, since with one gradient pass per batch the policy ratio is 1 and the clip never binds.
 
 ## Considered, not run
