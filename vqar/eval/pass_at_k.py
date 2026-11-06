@@ -46,9 +46,6 @@ class SampledCell:
     outcomes: dict[str, tuple[int, float]]  # qid -> (fully correct samples, mean score)
     cohort: dict[str, tuple]  # qid -> (question, references, image id)
 
-    def image_groups(self) -> dict[str, str]:
-        return {qid: fields[-1] for qid, fields in self.cohort.items()}
-
     def pass_at_k(self, k: int) -> dict[str, float]:
         return {qid: estimate_pass_at_k(self.samples, correct, k)
                 for qid, (correct, _) in self.outcomes.items()}
@@ -107,19 +104,20 @@ def _scores(rows: list[dict], variant: str, protocol: dict) -> list[float]:
 
 
 def paired_pass_at_k(reference: SampledCell, candidate: SampledCell, ks: list[int], *,
-                     by_image: bool = True, resamples: int = 10_000, seed: int = 0) -> list[dict]:
+                     image_groups: dict[str, str] | None = None, resamples: int = 10_000,
+                     seed: int = 0) -> list[dict]:
     """Candidate minus reference for the mean score and each pass@k, in points.
 
-    By default the bootstrap resamples images, since questions on one image are not
-    independent; every estimate still weights questions equally.
+    Give each question's image key to resample images, since questions on one image are not
+    independent; every estimate still weights questions equally. Sidecars don't store the key
+    (their image id is the question's own id outside swapped mode), so the caller supplies it.
     """
     if reference.protocol != candidate.protocol:
         raise ValueError("Paired pass@k needs the same protocol in both records")
     if reference.cohort != candidate.cohort or reference.variant != candidate.variant:
         raise ValueError("Paired pass@k needs identical questions, references and images")
-    groups = reference.image_groups() if by_image else None
     metrics = {"mean_score": (reference.mean_scores(), candidate.mean_scores())}
     metrics |= {f"pass@{k}": (reference.pass_at_k(k), candidate.pass_at_k(k)) for k in ks}
     return [{"metric": name, **paired_bootstrap(*pair, resamples=resamples, seed=seed,
-                                                image_groups=groups)}
+                                                image_groups=image_groups)}
             for name, pair in metrics.items()]

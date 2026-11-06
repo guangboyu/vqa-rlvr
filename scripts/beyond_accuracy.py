@@ -64,8 +64,8 @@ def majority(lines: list[dict]) -> dict[str, tuple[float, float]]:
 
 
 def calibration_error(pairs: list[tuple[float, float]], bins: int = BINS) -> float:
-    """Expected calibration error: the confidence-weighted gap between mean confidence and
-    mean correctness over equal-width confidence bins."""
+    """Expected calibration error: the gap between mean confidence and mean correctness,
+    weighted by how many questions fall in each equal-width confidence bin."""
     grouped = defaultdict(list)
     for confidence, correct in pairs:
         grouped[min(int(confidence * bins), bins - 1)].append((confidence, correct))

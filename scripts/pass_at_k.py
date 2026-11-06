@@ -11,17 +11,37 @@ asked, not training seeds or a fresh draw of samples.
 import argparse
 import json
 import tomllib
+from functools import cache
 from pathlib import Path
 
 from vqar.eval.matrix import declared_records, load_matrix
-from vqar.eval.pass_at_k import VARIANTS, default_ks, load_sampled, paired_pass_at_k
+from vqar.eval.pass_at_k import (
+    VARIANTS,
+    SampledCell,
+    default_ks,
+    load_sampled,
+    paired_pass_at_k,
+)
 from vqar.eval.protocol import Protocol
 from vqar.eval.report import ROOT
 from vqar.eval.runner import DATA_DIR, RECORDS_DIR
+from vqar.splits import load_role
 
 
 def declared_output(name: str) -> Path:
     return ROOT / "results" / f"passk-{name}.json"
+
+
+@cache
+def image_keys(dataset: str, role: str) -> dict[str, str]:
+    rows = load_role(DATA_DIR, [dataset], role)
+    return dict(zip(rows["qid"], rows["image_key"], strict=True))
+
+
+def image_groups(cell: SampledCell) -> dict[str, str]:
+    """Each question's image key, from the split file: sidecars don't store it."""
+    keys = image_keys(cell.protocol["dataset"], cell.protocol["role"])
+    return {qid: keys[qid] for qid in cell.outcomes}
 
 
 def declared_pairs(name: str) -> list[tuple[Path, Path]]:
@@ -93,6 +113,7 @@ def write_report(output: Path, records: list[Path], pairs: list, args, parser) -
                          "dataset": cells[reference].protocol["dataset"],
                          "prompt": cells[reference].protocol["prompt"],
                          "deltas": paired_pass_at_k(cells[reference], cells[candidate], ks,
+                                                    image_groups=image_groups(cells[reference]),
                                                     resamples=args.resamples)}
                         for reference, candidate in pairs],
     }

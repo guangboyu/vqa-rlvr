@@ -123,22 +123,22 @@ pass@k on all 1,250 test questions, 32 samples at temperature 1 (official scorer
 <!-- report:chartqa-passk-deltas -->
 | Comparison | Prompt | Dataset | Mean score | pass@1 | pass@4 | pass@32 |
 | --- | --- | --- | ---: | ---: | ---: | ---: |
-| Instruct → GRPO (ChartQA) − Instruct 2B | reasoning | ChartQA (human) | +8.43 [+7.38, +9.49] | +8.43 [+7.38, +9.49] | +3.98 [+3.16, +4.83] | +1.52 [+0.56, +2.56] |
-| SFT → GRPO (ChartQA) − SFT 2B (ChartQA) | reasoning | ChartQA (human) | +15.14 [+13.96, +16.33] | +15.14 [+13.96, +16.33] | +5.90 [+4.85, +6.98] | +0.56 [-0.56, +1.68] |
-| Instruct → short-prompt GRPO (ChartQA) − Instruct 2B | short | ChartQA (human) | +2.25 [+1.79, +2.72] | +2.25 [+1.79, +2.72] | -0.37 [-0.90, +0.15] | -3.52 [-4.72, -2.32] |
-| SFT 2B (ChartQA) − Instruct 2B | short | ChartQA (human) | -1.70 [-2.77, -0.65] | -1.70 [-2.77, -0.65] | +4.26 [+3.21, +5.36] | +3.68 [+2.32, +5.04] |
-| Instruct → GRPO (ChartQA, 1 epoch) − Instruct 2B | reasoning | ChartQA (human) | +13.35 [+12.00, +14.69] | +13.35 [+12.00, +14.69] | +4.48 [+3.40, +5.59] | +0.48 [-0.72, +1.68] |
-| SFT → GRPO (ChartQA, 1 epoch) − SFT 2B (ChartQA) | reasoning | ChartQA (human) | +21.41 [+19.96, +22.85] | +21.41 [+19.96, +22.85] | +6.30 [+5.08, +7.58] | -1.28 [-2.48, -0.08] |
-| Instruct → short-prompt GRPO (ChartQA, 1 epoch) − Instruct 2B | short | ChartQA (human) | +5.08 [+4.02, +6.16] | +5.08 [+4.02, +6.16] | -1.89 [-2.97, -0.84] | -8.96 [-10.72, -7.28] |
+| Instruct → GRPO (ChartQA) − Instruct 2B | reasoning | ChartQA (human) | +8.43 [+7.28, +9.59] | +8.43 [+7.28, +9.59] | +3.98 [+3.09, +4.91] | +1.52 [+0.48, +2.64] |
+| SFT → GRPO (ChartQA) − SFT 2B (ChartQA) | reasoning | ChartQA (human) | +15.14 [+13.96, +16.35] | +15.14 [+13.96, +16.35] | +5.90 [+4.88, +6.92] | +0.56 [-0.48, +1.60] |
+| Instruct → short-prompt GRPO (ChartQA) − Instruct 2B | short | ChartQA (human) | +2.25 [+1.78, +2.76] | +2.25 [+1.78, +2.76] | -0.37 [-0.92, +0.17] | -3.52 [-4.80, -2.32] |
+| SFT 2B (ChartQA) − Instruct 2B | short | ChartQA (human) | -1.70 [-2.79, -0.61] | -1.70 [-2.79, -0.61] | +4.26 [+3.16, +5.36] | +3.68 [+2.40, +5.04] |
+| Instruct → GRPO (ChartQA, 1 epoch) − Instruct 2B | reasoning | ChartQA (human) | +13.35 [+11.94, +14.82] | +13.35 [+11.94, +14.82] | +4.48 [+3.33, +5.68] | +0.48 [-0.72, +1.76] |
+| SFT → GRPO (ChartQA, 1 epoch) − SFT 2B (ChartQA) | reasoning | ChartQA (human) | +21.41 [+19.95, +22.82] | +21.41 [+19.95, +22.82] | +6.30 [+5.07, +7.50] | -1.28 [-2.48, -0.08] |
+| Instruct → short-prompt GRPO (ChartQA, 1 epoch) − Instruct 2B | short | ChartQA (human) | +5.08 [+4.00, +6.20] | +5.08 [+4.00, +6.20] | -1.89 [-2.97, -0.82] | -8.96 [-10.72, -7.20] |
 <!-- /report:chartqa-passk-deltas -->
 
 The full epoch separates the two kinds of RL further. Trained with reasoning, GRPO from
-Instruct gains 13.3 [+12.0, +14.7] points at pass@1 and ends level with Instruct at pass@32
-(+0.5 [−0.7, +1.7]; the pilot was +1.5 [+0.6, +2.6]): the extra updates concentrate
+Instruct gains 13.3 [+11.9, +14.8] points at pass@1 and ends level with Instruct at pass@32
+(+0.5 [−0.7, +1.8]; the pilot was +1.5 [+0.5, +2.6]): the extra updates concentrate
 probability on answers Instruct could already sample, without losing them. GRPO after SFT
 gains 21.4 at pass@1 and ends 1.3 points below SFT at pass@32 ([−2.5, −0.1]). Short-prompt
 GRPO narrows with every update: its pass@1 gain grows from 2.2 to 5.1 while its pass@32 gap
-widens from −3.5 to −9.0 [−10.7, −7.3], below Instruct from k = 4 on. SFT does the reverse,
+widens from −3.5 to −9.0 [−10.7, −7.2], below Instruct from k = 4 on. SFT does the reverse,
 −1.7 at pass@1 and +3.7 at pass@32. At the same data and update budget, then, reasoning RL
 keeps Instruct's coverage at k = 32 and short-answer RL gives up 9 points of it.
 

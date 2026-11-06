@@ -103,20 +103,22 @@ def test_different_protocols_or_questions_cannot_be_paired(tmp_path):
         paired_pass_at_k(before, other, [1], resamples=50)
 
 
-def test_bootstrap_resamples_images_by_default(tmp_path):
+def test_bootstrap_resamples_the_given_images(tmp_path):
     questions = ("q1", "q2", "q3")
     before = load_sampled(saved(tmp_path, ["no"] * 8, label="b", questions=questions).path)
     after = load_sampled(saved(tmp_path, ["yes"] * 8, label="a", questions=questions).path)
-    rows = paired_pass_at_k(before, after, [1, 8], resamples=50)
+    shared = {"q1": "image-a", "q2": "image-a", "q3": "image-b"}
+    rows = paired_pass_at_k(before, after, [1, 8], image_groups=shared, resamples=50)
     assert [row["metric"] for row in rows] == ["mean_score", "pass@1", "pass@8"]
-    assert all(row["delta"] == 100 and row["image_groups"] == 3 for row in rows)
-    assert "image_groups" not in paired_pass_at_k(before, after, [1], by_image=False,
-                                                  resamples=50)[0]
+    assert all(row["delta"] == 100 and row["image_groups"] == 2 for row in rows)
+    assert "image_groups" not in paired_pass_at_k(before, after, [1], resamples=50)[0]
 
 
 def test_cli_writes_curves_and_paired_differences(tmp_path, monkeypatch):
+    import scripts.pass_at_k
     from scripts.pass_at_k import main
 
+    monkeypatch.setattr(scripts.pass_at_k, "image_groups", lambda cell: {"q1": "image-a"})
     before = saved(tmp_path, ["no"] * 4 + ["yes"] * 4, label="before")
     after = saved(tmp_path, ["yes"] * 8, label="after")
     output = tmp_path / "report.json"

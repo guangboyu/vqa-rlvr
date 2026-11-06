@@ -519,30 +519,30 @@ Candidate minus reference, points, with 95% intervals that resample images:
 <!-- report:passk-deltas -->
 | Comparison | Prompt | Dataset | Mean score | pass@1 | pass@4 | pass@32 |
 | --- | --- | --- | ---: | ---: | ---: | ---: |
-| Instruct → short-prompt GRPO − Instruct 2B | short | VQAv2 | +3.54 [+2.88, +4.20] | +3.01 [+2.30, +3.75] | -0.61 [-1.39, +0.18] | -3.20 [-4.50, -1.90] |
-| Instruct → short-prompt GRPO − Instruct 2B | short | GQA | +2.57 [+1.72, +3.44] | +2.57 [+1.72, +3.44] | -3.04 [-4.08, -2.04] | -7.60 [-9.30, -6.00] |
-| Instruct → short-prompt GRPO − Instruct 2B | short | TextVQA | +2.52 [+1.87, +3.21] | +2.41 [+1.62, +3.20] | -0.50 [-1.25, +0.24] | -1.90 [-3.00, -0.90] |
-| SFT 2B − Instruct 2B | short | VQAv2 | -0.08 [-0.93, +0.78] | -0.18 [-1.10, +0.74] | +2.68 [+1.79, +3.60] | +2.60 [+1.50, +3.70] |
-| SFT 2B − Instruct 2B | short | GQA | +0.49 [-0.55, +1.54] | +0.49 [-0.55, +1.54] | +4.67 [+3.43, +5.91] | +4.60 [+3.00, +6.30] |
-| SFT 2B − Instruct 2B | short | TextVQA | -4.94 [-5.89, -3.97] | -4.29 [-5.35, -3.19] | -0.30 [-1.39, +0.80] | +1.70 [+0.60, +2.90] |
-| SFT on the 4,000 RL questions − Instruct 2B | short | VQAv2 | -1.53 [-2.18, -0.88] | -1.27 [-1.99, -0.56] | +2.07 [+1.29, +2.88] | +2.50 [+1.50, +3.60] |
-| SFT on the 4,000 RL questions − Instruct 2B | short | GQA | -2.05 [-2.93, -1.15] | -2.05 [-2.93, -1.15] | +2.64 [+1.56, +3.72] | +5.20 [+3.60, +6.80] |
-| SFT on the 4,000 RL questions − Instruct 2B | short | TextVQA | -2.83 [-3.59, -2.06] | -2.72 [-3.61, -1.82] | -0.17 [-1.05, +0.73] | +1.50 [+0.50, +2.50] |
-| SFT on the 4,000 RL questions − Instruct → short-prompt GRPO | short | VQAv2 | -5.07 [-5.93, -4.22] | -4.28 [-5.22, -3.35] | +2.68 [+1.69, +3.71] | +5.70 [+4.20, +7.30] |
-| SFT on the 4,000 RL questions − Instruct → short-prompt GRPO | short | GQA | -4.62 [-5.73, -3.51] | -4.62 [-5.73, -3.51] | +5.68 [+4.33, +7.06] | +12.80 [+10.70, +15.00] |
-| SFT on the 4,000 RL questions − Instruct → short-prompt GRPO | short | TextVQA | -5.35 [-6.18, -4.52] | -5.12 [-6.00, -4.26] | +0.33 [-0.47, +1.16] | +3.40 [+2.20, +4.70] |
-| Instruct → short-prompt GRPO, full pool − Instruct → short-prompt GRPO | short | VQAv2 | +1.77 [+0.82, +2.72] | +1.74 [+0.71, +2.76] | -0.55 [-1.63, +0.51] | -2.60 [-3.80, -1.40] |
-| Instruct → short-prompt GRPO, full pool − Instruct → short-prompt GRPO | short | GQA | +4.50 [+2.99, +6.04] | +4.50 [+2.99, +6.04] | +0.43 [-1.17, +2.05] | -3.20 [-5.10, -1.30] |
-| Instruct → short-prompt GRPO, full pool − Instruct → short-prompt GRPO | short | TextVQA | +0.96 [+0.11, +1.82] | +0.94 [+0.02, +1.85] | -0.88 [-1.85, +0.07] | -2.70 [-4.00, -1.40] |
-| Instruct → short-prompt GRPO, full pool − Instruct 2B | short | VQAv2 | +5.31 [+4.26, +6.38] | +4.74 [+3.62, +5.88] | -1.16 [-2.33, -0.03] | -5.80 [-7.40, -4.20] |
-| Instruct → short-prompt GRPO, full pool − Instruct 2B | short | GQA | +7.07 [+5.54, +8.66] | +7.07 [+5.54, +8.66] | -2.61 [-4.21, -0.99] | -10.80 [-12.90, -8.70] |
-| Instruct → short-prompt GRPO, full pool − Instruct 2B | short | TextVQA | +3.48 [+2.55, +4.46] | +3.35 [+2.29, +4.43] | -1.38 [-2.54, -0.25] | -4.60 [-6.10, -3.20] |
-| SFT → short-prompt GRPO − SFT 2B | short | VQAv2 | +4.72 [+4.05, +5.42] | +4.12 [+3.37, +4.91] | -2.32 [-3.21, -1.47] | -4.40 [-5.70, -3.10] |
-| SFT → short-prompt GRPO − SFT 2B | short | GQA | +4.69 [+3.67, +5.73] | +4.69 [+3.67, +5.73] | -5.21 [-6.40, -4.03] | -10.30 [-12.20, -8.40] |
-| SFT → short-prompt GRPO − SFT 2B | short | TextVQA | +5.49 [+4.82, +6.16] | +4.79 [+4.12, +5.46] | -0.36 [-0.95, +0.20] | -2.10 [-3.20, -1.10] |
-| Instruct → GRPO − Instruct 2B | reasoning | VQAv2 | +23.31 [+21.43, +25.26] | +19.90 [+17.87, +21.93] | +7.88 [+5.94, +9.85] | -1.90 [-3.90, +0.10] |
-| Instruct → GRPO − Instruct 2B | reasoning | GQA | +25.03 [+22.80, +27.28] | +25.03 [+22.80, +27.28] | +10.97 [+8.85, +13.12] | -5.80 [-8.20, -3.30] |
-| Instruct → GRPO − Instruct 2B | reasoning | TextVQA | +10.31 [+8.84, +11.80] | +9.81 [+8.21, +11.43] | +2.32 [+0.83, +3.81] | -1.30 [-3.10, +0.50] |
+| Instruct → short-prompt GRPO − Instruct 2B | short | VQAv2 | +3.54 [+2.89, +4.20] | +3.01 [+2.30, +3.74] | -0.61 [-1.41, +0.17] | -3.20 [-4.55, -1.99] |
+| Instruct → short-prompt GRPO − Instruct 2B | short | GQA | +2.57 [+1.66, +3.48] | +2.57 [+1.66, +3.48] | -3.04 [-4.10, -2.04] | -7.60 [-9.27, -5.99] |
+| Instruct → short-prompt GRPO − Instruct 2B | short | TextVQA | +2.52 [+1.86, +3.21] | +2.41 [+1.62, +3.23] | -0.50 [-1.25, +0.22] | -1.90 [-2.92, -0.90] |
+| SFT 2B − Instruct 2B | short | VQAv2 | -0.08 [-0.92, +0.79] | -0.18 [-1.10, +0.73] | +2.68 [+1.80, +3.61] | +2.60 [+1.51, +3.73] |
+| SFT 2B − Instruct 2B | short | GQA | +0.49 [-0.64, +1.62] | +0.49 [-0.64, +1.62] | +4.67 [+3.34, +5.97] | +4.60 [+2.78, +6.48] |
+| SFT 2B − Instruct 2B | short | TextVQA | -4.94 [-5.91, -3.95] | -4.29 [-5.39, -3.18] | -0.30 [-1.38, +0.80] | +1.70 [+0.50, +2.91] |
+| SFT on the 4,000 RL questions − Instruct 2B | short | VQAv2 | -1.53 [-2.17, -0.87] | -1.27 [-1.98, -0.55] | +2.07 [+1.28, +2.87] | +2.50 [+1.49, +3.59] |
+| SFT on the 4,000 RL questions − Instruct 2B | short | GQA | -2.05 [-3.04, -1.04] | -2.05 [-3.04, -1.04] | +2.64 [+1.43, +3.82] | +5.20 [+3.47, +6.98] |
+| SFT on the 4,000 RL questions − Instruct 2B | short | TextVQA | -2.83 [-3.58, -2.06] | -2.72 [-3.63, -1.82] | -0.17 [-1.05, +0.72] | +1.50 [+0.50, +2.52] |
+| SFT on the 4,000 RL questions − Instruct → short-prompt GRPO | short | VQAv2 | -5.07 [-5.92, -4.25] | -4.28 [-5.18, -3.37] | +2.68 [+1.71, +3.68] | +5.70 [+4.23, +7.25] |
+| SFT on the 4,000 RL questions − Instruct → short-prompt GRPO | short | GQA | -4.62 [-5.86, -3.35] | -4.62 [-5.86, -3.35] | +5.68 [+4.24, +7.17] | +12.80 [+10.56, +15.11] |
+| SFT on the 4,000 RL questions − Instruct → short-prompt GRPO | short | TextVQA | -5.35 [-6.20, -4.54] | -5.12 [-6.01, -4.27] | +0.33 [-0.48, +1.14] | +3.40 [+2.18, +4.70] |
+| Instruct → short-prompt GRPO, full pool − Instruct → short-prompt GRPO | short | VQAv2 | +1.77 [+0.83, +2.73] | +1.74 [+0.74, +2.76] | -0.55 [-1.64, +0.52] | -2.60 [-3.81, -1.41] |
+| Instruct → short-prompt GRPO, full pool − Instruct → short-prompt GRPO | short | GQA | +4.50 [+2.91, +6.17] | +4.50 [+2.91, +6.17] | +0.43 [-1.27, +2.19] | -3.20 [-5.09, -1.31] |
+| Instruct → short-prompt GRPO, full pool − Instruct → short-prompt GRPO | short | TextVQA | +0.96 [+0.14, +1.83] | +0.94 [+0.07, +1.85] | -0.88 [-1.82, +0.08] | -2.70 [-3.97, -1.41] |
+| Instruct → short-prompt GRPO, full pool − Instruct 2B | short | VQAv2 | +5.31 [+4.25, +6.37] | +4.74 [+3.61, +5.88] | -1.16 [-2.34, -0.02] | -5.80 [-7.41, -4.30] |
+| Instruct → short-prompt GRPO, full pool − Instruct 2B | short | GQA | +7.07 [+5.47, +8.73] | +7.07 [+5.47, +8.73] | -2.61 [-4.24, -0.95] | -10.80 [-13.16, -8.52] |
+| Instruct → short-prompt GRPO, full pool − Instruct 2B | short | TextVQA | +3.48 [+2.60, +4.45] | +3.35 [+2.33, +4.43] | -1.38 [-2.50, -0.25] | -4.60 [-6.13, -3.12] |
+| SFT → short-prompt GRPO − SFT 2B | short | VQAv2 | +4.72 [+4.04, +5.41] | +4.12 [+3.34, +4.88] | -2.32 [-3.24, -1.51] | -4.40 [-5.71, -3.17] |
+| SFT → short-prompt GRPO − SFT 2B | short | GQA | +4.69 [+3.60, +5.80] | +4.69 [+3.60, +5.80] | -5.21 [-6.46, -3.96] | -10.30 [-12.36, -8.30] |
+| SFT → short-prompt GRPO − SFT 2B | short | TextVQA | +5.49 [+4.84, +6.16] | +4.79 [+4.13, +5.48] | -0.36 [-0.93, +0.21] | -2.10 [-3.20, -1.10] |
+| Instruct → GRPO − Instruct 2B | reasoning | VQAv2 | +23.31 [+21.40, +25.28] | +19.90 [+17.87, +21.97] | +7.88 [+5.95, +9.85] | -1.90 [-3.89, +0.10] |
+| Instruct → GRPO − Instruct 2B | reasoning | GQA | +25.03 [+22.44, +27.59] | +25.03 [+22.44, +27.59] | +10.97 [+8.55, +13.35] | -5.80 [-8.47, -3.17] |
+| Instruct → GRPO − Instruct 2B | reasoning | TextVQA | +10.31 [+8.85, +11.82] | +9.81 [+8.19, +11.44] | +2.32 [+0.77, +3.82] | -1.30 [-3.11, +0.50] |
 <!-- /report:passk-deltas -->
 
 RL sharpens; SFT broadens. Short-prompt GRPO raises pass@1 over Instruct by 2.4–3.0 points on
