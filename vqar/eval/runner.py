@@ -6,6 +6,7 @@ import json
 import math
 import shutil
 import subprocess
+import time
 from collections import defaultdict
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
@@ -36,6 +37,7 @@ def run_eval(model: ModelRef, protocol: Protocol, generator, *, data_dir: Path =
     per conversation, `samples` dicts with text, output_tokens, and finish_reason. Batches
     are saved as they finish, so an interrupted run resumes where it stopped.
     """
+    started = time.monotonic()
     engine_pixels = getattr(generator, "max_pixels", protocol.max_pixels)
     if engine_pixels != protocol.max_pixels:
         raise ValueError(f"The protocol's image budget is {protocol.max_pixels} pixels, but the "
@@ -85,7 +87,9 @@ def run_eval(model: ModelRef, protocol: Protocol, generator, *, data_dir: Path =
     metrics = summarize(lines, protocol.dataset, protocol.prompt)
     if protocol.image_mode in INTERVENTIONS:
         metrics["paired_with_original"] = paired_with_original(lines, original)
-    record = RunRecord(model_identity, identity, metrics, provenance())
+    # This process's time on the cell: a resumed evaluation counts only its last segment.
+    record = RunRecord(model_identity, identity, metrics,
+                       {**provenance(), "eval_seconds": round(time.monotonic() - started, 1)})
     saved = record.save(path, lines)
     shutil.rmtree(progress, ignore_errors=True)
     return saved

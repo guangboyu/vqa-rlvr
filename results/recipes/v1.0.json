@@ -1,0 +1,45 @@
+{
+ "recipe": "v1.0",
+ "source": "run_config.json of run p1f-grpo2-base, the final rerun's Instruct 2B GRPO arm",
+ "git_sha": "d5ee053e8dfcb033193c7783b32d2f06207cbdc0",
+ "hardware": "80gb",
+ "preset": {
+  "name": "grpo_2b_main",
+  "model": "Qwen/Qwen3-VL-2B-Instruct",
+  "datasets": [
+   "vqav2",
+   "gqa"
+  ],
+  "quantize_4bit": false,
+  "learning_rate": 1e-05,
+  "num_generations": 8,
+  "per_device_batch_size": 8,
+  "gradient_accumulation": 4,
+  "max_steps": 1000,
+  "max_completion_length": 640,
+  "rewards": [
+   "correctness"
+  ],
+  "reward_weights": [
+   1.0
+  ],
+  "kl_beta": 0.0,
+  "vllm_gpu_memory_utilization": 0.15,
+  "rollout_prompt": "reasoning",
+  "pool": null,
+  "rollout_lora": true,
+  "vllm_sleep": false,
+  "lora_r": 16,
+  "lora_alpha": 32,
+  "lora_targets": [
+   "q_proj",
+   "k_proj",
+   "v_proj",
+   "o_proj",
+   "gate_proj",
+   "up_proj",
+   "down_proj"
+  ],
+  "seed": 42
+ }
+}

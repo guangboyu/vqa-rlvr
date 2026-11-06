@@ -194,6 +194,22 @@ GRPO_PRESETS: dict[str, GRPOPreset] = {
             rewards=("correctness",),
             reward_weights=(1.0,),
         ),
+        # Recipe v1.0, frozen by the final rerun (results/recipes/v1.0.json). Cards change one
+        # thing against it; datasets and update count are the usual per-run flags.
+        GRPOPreset(
+            name="grpo_2b_v1",
+            model=MODEL_2B,
+            datasets=("vqav2", "gqa"),
+            quantize_4bit=False,
+            learning_rate=1e-5,
+            num_generations=8,
+            per_device_batch_size=8,
+            gradient_accumulation=4,
+            max_steps=1000,
+            rewards=("correctness",),
+            reward_weights=(1.0,),
+            rollout_lora=True,
+        ),
         # Same-scale EM contrast for the E7 self-distill 8B arm: bf16 student
         # (NF4 corrupts TRL colocate sync — see opd_self_8b_main), matched
         # geometry and lr, correctness-only reward, sized for 48GB+ cards.

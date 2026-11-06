@@ -496,6 +496,23 @@ def passk_deltas_table(arms: list[Arm], passk: dict | None) -> str:
     return table(["Comparison", "Prompt", "Dataset", *header], rows, 3)
 
 
+def cards_table(ledger: dict | None) -> str:
+    """One row per declared experiment: the change, what was predicted, and what happened."""
+    if ledger is None or not ledger["cards"]:
+        return "No declared experiment has finished yet.\n"
+    rows = []
+    for card in ledger["cards"]:
+        final = card.get("final")
+        saw = "running" if final is None else (
+            f"{final['baseline']:.1f} → {final['accuracy']:.1f}, "
+            f"{final['baseline_tokens']:.0f} → {final['tokens']:.0f} tokens")
+        held = {True: "held", False: "did not hold", None: "—"}[card.get("held")]
+        hours = f"{card['train_hours']:.1f}" if card.get("train_hours") else "—"
+        rows.append([card["id"], card["change"], card["predicted"].split(".")[0], saw, held, hours])
+    return table(["Experiment", "Change", "Predicted", "Dev accuracy and length", "Prediction",
+                  "Train GPU-h"], rows, 5)
+
+
 def reach_table(reach: dict | None) -> str:
     """Instruct's pass@8 on open-answer questions against each method's greedy end point."""
     if reach is None:
@@ -792,7 +809,9 @@ def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
     ood = load_result(root / "results", "ood.json")
     beyond = load_result(root / "results", "beyond-accuracy.json")
     reach = load_result(root / "results", "reach.json")
+    ledger = load_result(root / "results", "ledger.json")
     blocks = {
+        "cards": cards_table(ledger),
         "reach": reach_table(reach),
         "matched": matrix_table(matched, cells),
         "matched-deltas": deltas_table(matched, declared(

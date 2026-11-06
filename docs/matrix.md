@@ -257,3 +257,12 @@ so the reward was not gained by answering several ways at once.
 | Instruct 8B → short-prompt GRPO | 2.1 · 0.0 · 4.3 | 1.1 · 0.0 · 3.7 | 0.0 · 0.0 · 0.0 | 0.9 · 0.0 · 2.5 |
 | SFT 8B → short-prompt GRPO | 0.6 · 0.0 · 1.1 | 0.2 · 0.0 · 0.7 | 0.0 · 0.0 · 0.0 | 0.6 · 0.0 · 1.3 |
 <!-- /report:answer-form -->
+
+## Declared experiments
+
+Each row is one change against the frozen recipe, with its prediction committed before it ran. Dev rows,
+official scorer, reasoning prompt; `python -m scripts.cards summarize` writes `results/ledger.json`.
+
+<!-- report:cards -->
+No declared experiment has finished yet.
+<!-- /report:cards -->

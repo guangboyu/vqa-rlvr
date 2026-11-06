@@ -1101,6 +1101,8 @@ accuracy within 2 points of it: chart questions reward reasoning, and the collap
 photo questions' pressure toward short answers. Answers keep shortening slowly, as they did from \
 198 tokens at update 300 to 162 at 1,844."""
 holds_if = "end-of-run dev tokens >= 50% of the baseline's and dev accuracy >= baseline - 2 points"
+holds = { min_token_ratio = 0.5, max_accuracy_drop = 2.0 }
+baseline_run = "runs/chartqa-epoch-20261007/grpo2-base"
 if_holds = "Mixing caused the collapse: run the prompt-routing and ratio cards."
 if_not = "Long-run RL instability, not mixing: no ratio cards; the finding becomes when to stop."
 status = "experimental"
