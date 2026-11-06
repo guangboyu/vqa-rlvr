@@ -38,6 +38,11 @@ _ANSWER_INSTRUCTION = (
     "Then write the final answer as a single word or phrase inside <answer> </answer> tags."
 )
 
+_ADAPTIVE_INSTRUCTION = (
+    "If you need to think, think step by step inside <think> </think> tags; otherwise leave them "
+    "empty. Then write only the final answer inside <answer> </answer> tags."
+)
+
 PROMPTS: dict[str, Prompt] = {
     p.name: p
     for p in [
@@ -66,6 +71,26 @@ PROMPTS: dict[str, Prompt] = {
         Prompt(
             "stepwise",
             "{question}\nThink step by step inside <think> </think> tags. " + _ANSWER_INSTRUCTION,
+            512,
+            diagnostic=True,
+        ),
+        # One prompt where the model decides whether to reason: two wordings and a few-shot form,
+        # compared on Instruct before any of them trains (card adaptive-prompt).
+        Prompt("adaptive", "{question}\n" + _ADAPTIVE_INSTRUCTION, 512, diagnostic=True),
+        Prompt(
+            "adaptive_cue",
+            "{question}\nIf the question needs reading values, comparing or calculating, think "
+            "step by step inside <think> </think> tags; otherwise leave them empty. Then write "
+            "only the final answer inside <answer> </answer> tags.",
+            512,
+            diagnostic=True,
+        ),
+        Prompt(
+            "adaptive_fewshot",
+            "Question: What color is the bus?\n<think></think><answer>red</answer>\n\n"
+            "Question: How much higher is the 2010 bar than the 2000 bar?\n"
+            "<think>The 2010 bar reads 40 and the 2000 bar reads 25. 40 - 25 = 15.</think>"
+            "<answer>15</answer>\n\nQuestion: {question}\n" + _ADAPTIVE_INSTRUCTION,
             512,
             diagnostic=True,
         ),

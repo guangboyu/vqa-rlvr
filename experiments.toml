@@ -1187,3 +1187,27 @@ baseline_run = "runs/cards/chart-length-control"
 if_holds = "Ratio alone protects chart reasoning; check what it costs on photos."
 if_not = "Ratio only delays the collapse; routing is the recipe to carry forward."
 status = "experimental"
+
+# Before this card trains, Instruct 2B answers ChartQA and VQAv2 dev questions under the three
+# adaptive prompts, beside short and reasoning (records in runs/cards/prompt-check). A wording goes
+# forward only if its ChartQA answers are at least twice as long as its VQAv2 answers and its
+# accuracy on each dataset is within 3 points of the better of short and reasoning there. Among
+# those, the highest lower accuracy wins and is frozen. If none passes, the card is dropped.
+[[cards]]
+id = "adaptive-prompt"
+node = "open"
+question = "Does a mixed model keep chart reasoning under one prompt that lets it decide whether to reason?"
+recipe = "v1.0"
+baseline = "card-chart-length-control"
+dataset = "chartqa"
+change = "All rollouts under the winning adaptive prompt, on the mixture's pool and 2,844 updates"
+train = ["--preset", "grpo_2b_v1", "--datasets", "vqav2", "gqa", "chartqa", "--pool", "mix-chartqa-vqa4k",
+         "--max-steps", "2844", "--hardware", "24gb", "--save-steps", "250", "--save-total-limit", "0",
+         "--no-wandb", "--rollout-prompt", "adaptive"]
+predicted = """Does not hold. The prompt gives permission to skip reasoning but the reward still pays for short answers on photos, and the mixed model already separated the families for 1,750 updates under the plain prompt before it collapsed."""
+holds_if = "end-of-run ChartQA dev tokens >= 50% of the chart-only control's and dev accuracy >= its accuracy - 2 points"
+holds = { min_token_ratio = 0.5, max_accuracy_drop = 2.0 }
+baseline_run = "runs/cards/chart-length-control"
+if_holds = "One model and one prompt keep both behaviors; this is the recipe to carry to the 8B gate."
+if_not = "The prompt alone does not protect chart reasoning; compare with routing."
+status = "experimental"
