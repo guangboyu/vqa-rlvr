@@ -503,7 +503,7 @@ def cards_table(ledger: dict | None) -> str:
     rows = []
     for card in ledger["cards"]:
         final = card.get("final")
-        saw = "running" if final is None else (
+        saw = "not finished" if final is None else (
             f"{final['baseline']:.1f} → {final['accuracy']:.1f}, "
             f"{final['baseline_tokens']:.0f} → {final['tokens']:.0f} tokens")
         held = {True: "held", False: "did not hold", None: "—"}[card.get("held")]

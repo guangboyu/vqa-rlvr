@@ -10,7 +10,10 @@ Usage:
 """
 
 import argparse
+import hashlib
+import json
 from functools import partial
+from pathlib import Path
 
 from vqar import config
 from vqar.data import cap_pixels, upscale_to_budget
@@ -43,36 +46,59 @@ def fit_sft_image(image, upscale: bool = False, blind: bool = False,
 
 
 def to_sft_columns(batch: dict, upscale: bool = False, blind: bool = False,
-                   max_pixels: int = config.MAX_PIXELS) -> dict:
+                   max_pixels: int = config.MAX_PIXELS,
+                   targets: dict[str, str] | None = None) -> dict:
     """Map unified examples to TRL's VLM prompt-completion contract.
 
     Prompt-completion (not messages) on purpose: TRL masks the entire prompt —
     including the image pad tokens — so loss lands only on the answer. In messages
     mode the collator trained on image pads for this model (loss ~15, random-level).
     TRL injects the image before the first user turn and applies the chat template.
+    With `targets` (question id -> full response), rows train on reasoning traces under the
+    reasoning prompt instead of short answers.
     """
+    template = PROMPTS["reasoning" if targets else "short"].text
+    completions = ([targets[qid] for qid in batch["qid"]] if targets
+                   else [answers[0] for answers in batch["answers"]])
     return {
         "prompt": [
-            [{"role": "user", "content": PROMPTS["short"].text.format(question=q)}]
+            [{"role": "user", "content": template.format(question=q)}]
             for q in batch["question"]
         ],
         "completion": [
-            [{"role": "assistant", "content": answers[0]}] for answers in batch["answers"]
+            [{"role": "assistant", "content": completion}] for completion in completions
         ],
         "image": [fit_sft_image(img, upscale, blind, max_pixels) for img in batch["image"]],
     }
 
 
-def load_datasets(preset: config.SFTPreset, pool: str | None = None):
-    """SFT rows, or declared RL-pool questions supervised with their original labels."""
+def load_targets(path: Path) -> dict[str, str]:
+    """Reasoning traces from scripts.build_traces: question id -> full response."""
+    rows = [json.loads(line) for line in Path(path).read_text().splitlines()]
+    return {row["qid"]: row["target"] for row in rows}
+
+
+def load_datasets(preset: config.SFTPreset, pool: str | None = None,
+                  targets: dict[str, str] | None = None):
+    """SFT rows, or declared RL-pool questions supervised with their original labels.
+
+    With `targets`, only the questions that have a trace train, on that trace.
+    """
     check_trainable(preset.datasets)
     train = (load_pool(ROOT / "data", preset.datasets, preset.seed, pool)
              if pool else load_role(ROOT / "data", preset.datasets, "sft", preset.seed))
-    columns = ["image", "question", "answers"]
+    columns = ["image", "question", "answers", "qid"]
+    if targets:
+        train = train.filter(lambda qid: qid in targets, input_columns="qid")
+        if len(train) != len(targets):
+            raise ValueError(f"{len(targets)} traces but {len(train)} matching training rows.")
     transform = partial(to_sft_columns, upscale=getattr(preset, "image_upscale", False),
                         blind=getattr(preset, "blind_images", False),
-                        max_pixels=getattr(preset, "max_pixels", config.MAX_PIXELS))
+                        max_pixels=getattr(preset, "max_pixels", config.MAX_PIXELS),
+                        targets=targets)
     train = train.select_columns(columns).with_transform(transform)
+    if targets:  # Dev rows have no traces; adapters are scored on them after training.
+        return train, None
     # A dataset whose held-out images all sit in test (omnimedx) has no dev role: no dev loss.
     if not all("dev" in DATASETS[name].subsets for name in preset.datasets):
         return train, None
@@ -98,6 +124,9 @@ def main() -> None:
     parser.add_argument("--max-steps", type=int, default=-1, help="cap steps (sanity runs)")
     parser.add_argument("--pool", default=None,
                         help="supervise the exact questions in a declared RL pool")
+    parser.add_argument("--targets-file", type=Path, default=None,
+                        help="train on these reasoning traces (scripts.build_traces) under the "
+                        "reasoning prompt, instead of short answers")
     parser.add_argument("--datasets", nargs="+", default=None,
                         help="train on these datasets' sft roles (default: the preset's)")
     parser.add_argument("--vision-lora", action="store_true", default=None,
@@ -114,7 +143,8 @@ def main() -> None:
     args = parse_arguments(parser)
 
     preset = resolve_preset(config.SFT_PRESETS, args)
-    train_ds, dev_ds = load_datasets(preset, args.pool)
+    targets = load_targets(args.targets_file) if args.targets_file else None
+    train_ds, dev_ds = load_datasets(preset, args.pool, targets)
     if args.dry_run:
         print(f"hardware={args.hardware}; train={len(train_ds)}, "
               f"dev={len(dev_ds) if dev_ds is not None else 'none'}")
@@ -166,6 +196,9 @@ def main() -> None:
         "data": provenance(ROOT / "data", preset.datasets),
         "samples": {"train": len(train_ds), "dev": len(dev_ds) if dev_ds is not None else 0},
         **({"pool": pool_provenance(ROOT / "data", args.pool)} if args.pool else {}),
+        **({"targets": {"file": str(args.targets_file), "questions": len(targets),
+                        "sha256": hashlib.sha256(args.targets_file.read_bytes()).hexdigest()}}
+           if targets else {}),
     }, sft_config)
     # TRL constructs PEFT before Trainer sets its seed, so seed the adapter initialization too.
     set_seed(preset.seed)

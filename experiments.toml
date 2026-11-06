@@ -1123,7 +1123,7 @@ baseline = "cqa-grpo2-base-e1"
 change = "SFT on one correct reasoning sample per question from Instruct 2B, instead of GRPO"
 entry = "train_sft.py"
 train = ["--preset", "sft_2b", "--datasets", "chartqa", "--hardware", "24gb", "--save-total-limit", "0",
-         "--no-wandb", "--targets-file", "data/traces/chartqa-base2.jsonl"]
+         "--no-wandb", "--targets-file", "data/traces/chartqa-base2.jsonl", "--max-length", "1536"]
 predicted = """Holds. GRPO stays at least 2 points ahead on dev. Correct traces lift SFT above Instruct and keep its reasoning, but one offline pass cannot sharpen the way repeated on-policy updates do."""
 holds_if = "SFT on traces ends at least 2 dev points below the chart-only GRPO model"
 holds = { max_delta = -2.0 }
@@ -1141,7 +1141,7 @@ baseline = "cqa-grpo2-base-e1"
 change = "SFT on one correct reasoning sample per question from Instruct 8B, instead of GRPO"
 entry = "train_sft.py"
 train = ["--preset", "sft_2b", "--datasets", "chartqa", "--hardware", "24gb", "--save-total-limit", "0",
-         "--no-wandb", "--targets-file", "data/traces/chartqa-base8.jsonl"]
+         "--no-wandb", "--targets-file", "data/traces/chartqa-base8.jsonl", "--max-length", "1536"]
 predicted = """Holds. GRPO stays at least 2 points ahead on dev, with this arm at or above SFT on 2B's traces: a stronger teacher improves the targets, and the student still gets one offline pass."""
 holds_if = "SFT on 8B traces ends at least 2 dev points below the chart-only GRPO model"
 holds = { max_delta = -2.0 }

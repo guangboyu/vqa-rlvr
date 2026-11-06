@@ -208,6 +208,24 @@
    "final": null,
    "held": null,
    "train_hours": null
+  },
+  {
+   "id": "adaptive-prompt",
+   "node": "open",
+   "question": "Does a mixed model keep chart reasoning under one prompt that lets it decide whether to reason?",
+   "recipe": "v1.0",
+   "baseline": "card-chart-length-control",
+   "change": "All rollouts under the winning adaptive prompt, on the mixture's pool and 2,844 updates",
+   "predicted": "Does not hold. The prompt gives permission to skip reasoning but the reward still pays for short answers on photos, and the mixed model already separated the families for 1,750 updates under the plain prompt before it collapsed.",
+   "holds_if": "end-of-run ChartQA dev tokens >= 50% of the chart-only control's and dev accuracy >= its accuracy - 2 points",
+   "if_holds": "One model and one prompt keep both behaviors; this is the recipe to carry to the 8B gate.",
+   "if_not": "The prompt alone does not protect chart reasoning; compare with routing.",
+   "status": "experimental",
+   "why": "",
+   "implies": "",
+   "final": null,
+   "held": null,
+   "train_hours": null
   }
  ]
 }

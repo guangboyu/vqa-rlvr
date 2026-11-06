@@ -35,10 +35,10 @@ def test_the_rule_reads_length_and_accuracy():
     assert not held({**base, "tokens": 10, "delta": -1.0}, {"max_delta": -2.0})
 
 
-def test_a_card_without_records_reads_as_running(tmp_path):
+def test_a_card_without_records_reads_as_not_finished(tmp_path):
     row = summarize_card({"id": "x", "change": "c", "predicted": "p"}, 0.5, tmp_path)
     assert row["final"] is None and row["held"] is None
-    assert "running" in cards_table({"cards": [row]})
+    assert "not finished" in cards_table({"cards": [row]})
 
 
 def test_the_table_reports_a_finished_card():
