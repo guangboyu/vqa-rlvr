@@ -2,7 +2,7 @@
 
 Usage: python -m scripts.check_metrics --sources-dir path/to/evaluators
 The directory must contain vqav2.py, textvqa.py, and GQA's eval.py.
-See docs/supplementary/validation.md.
+See docs/harness/validation.md.
 """
 
 import argparse

@@ -6,7 +6,7 @@ Does short-answer SFT before the same RL change the result? And which standard c
 the RL recipe matter here? Every arm is evaluated on the same test questions with both
 prompt templates and both scorer variants, so a change in one view can be checked in the
 other. The recipe below was frozen after one-change experiments against a fixed baseline
-([results](supplement.md#recipe-experiments)); every headline number comes from arms trained
+([recipe experiments](../negatives.md#recipe-experiments)); every headline number comes from arms trained
 under it.
 
 ## Arms
@@ -99,7 +99,7 @@ runs. Evaluation also accepts untagged answers and reports the dataset authors' 
 beside the normalized one. The tag requirement is the reasoning template's answer rule
 (`vqar/answers.py`): `train_grpo.py --rollout-prompt short` trains under the short template
 instead, whose rule scores the whole trimmed response. `--pool <name>` draws prompts from a
-declared pool (`scripts/build_pool.py`, [ADR 0003](../adr/0003-rl-pools-are-declared-files-beside-the-split-files.md))
+declared pool (`scripts/build_pool.py`, ADR 0003)
 rather than the whole rl roles; the final runs use the whole rl roles.
 
 **Refilling dead groups (opt-in).** `train_grpo.py --refill-rounds N` turns on DAPO's

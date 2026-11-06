@@ -20,7 +20,7 @@ Open `http://127.0.0.1:8000`. For frontend development, `npm run dev` serves Vit
 on port 5173 and proxies `/api` and `/examples` to port 8000.
 
 The Results view reads `results/report.json`, which `python -m scripts.report` writes from
-the same evaluation records as every table in the README and `docs/supplementary/`, so the
+the same evaluation records as every table in the README and `docs/`, so the
 two cannot disagree. Switch between short and reasoning prompts and between scorers, and
 inspect response behavior and image interventions. The July 2026 experiments remain
 reachable from the bottom of the view, with their limitations stated.
@@ -31,7 +31,7 @@ screenshots in `demo/assets/`.
 
 Prepare the three 2B model paths listed in `backend/model_manager.py`. The default
 lineup uses the pinned Instruct revision and the corrected SFT/base-to-GRPO models
-from the [corrected campaign](../docs/supplementary/results.md). Fresh adapters are prepared
+from the [corrected campaign](../docs/history.md#the-corrected-campaign-september-13-recipe). Fresh adapters are prepared
 locally and have not been published. Historical Hub adapters correspond to older runs.
 Then enable model loading:
 

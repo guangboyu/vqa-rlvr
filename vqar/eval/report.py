@@ -22,8 +22,10 @@ from vqar.registry import DATASETS, SCORER_VARIANTS, TRAINING_ROLES
 from vqar.splits import read_split
 
 ROOT = Path(__file__).resolve().parent.parent.parent
-MARKED_FILES = ("README.md", "docs/supplementary/results.md", "docs/supplementary/supplement.md",
-                "docs/supplementary/history.md")
+MARKED_FILES = ("README.md", "docs/findings/reasoning-pays.md", "docs/findings/form-not-ability.md",
+                "docs/findings/sft-then-rl.md", "docs/findings/what-the-gain-is.md",
+                "docs/findings/one-model.md", "docs/negatives.md", "docs/matrix.md",
+                "docs/ct-audit.md", "docs/harness/training-evidence.md", "docs/history.md")
 BLOCK = re.compile(r"(<!-- report:(?P<name>[\w-]+) -->\n)(?P<body>.*?)(<!-- /report:(?P=name) -->)",
                    re.DOTALL)
 PROMPT_ORDER = ("short", "reasoning")
@@ -494,6 +496,19 @@ def passk_deltas_table(arms: list[Arm], passk: dict | None) -> str:
     return table(["Comparison", "Prompt", "Dataset", *header], rows, 3)
 
 
+def reach_table(reach: dict | None) -> str:
+    """Instruct's pass@8 on open-answer questions against each method's greedy end point."""
+    if reach is None:
+        return "Reach has not been computed yet.\n"
+    rows = [[row["label"], row["prompt"], f"{row['open_questions']:,}",
+             f"{row['greedy']['instruct']:.1f}", f"**{row['reach']:.1f}**",
+             f"{row['greedy']['rl']:.1f}", f"{row['greedy']['sft']:.1f}",
+             f"{row['greedy']['sft_rl']:.1f}" if "sft_rl" in row["greedy"] else "—"]
+            for row in reach["rows"]]
+    return table(["Test set", "Prompt", "Open questions", "Instruct, greedy",
+                  "Instruct, pass@8", "RL from Instruct", "SFT", "SFT → RL"], rows, 2)
+
+
 def knobs_table(knobs: dict | None) -> str:
     """One row per training knob: its change against the baseline on the dev role."""
     if knobs is None:
@@ -776,7 +791,9 @@ def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
     chartqa_judge = load_result(root / "results", "judge-chartqa.json")
     ood = load_result(root / "results", "ood.json")
     beyond = load_result(root / "results", "beyond-accuracy.json")
+    reach = load_result(root / "results", "reach.json")
     blocks = {
+        "reach": reach_table(reach),
         "matched": matrix_table(matched, cells),
         "matched-deltas": deltas_table(matched, declared(
             deltas, load_comparisons(toml, "matched"), ("official",))),

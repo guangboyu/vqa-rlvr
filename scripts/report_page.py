@@ -7,12 +7,17 @@ differences are recomputed from the per-question predictions (10,000 bootstrap r
 when they sit beside the records; the predictions stay local, so each difference is also
 kept in results/report-deltas.json and read from there in a clean clone. The prose lives in
 scripts/report_page.template.html with {{key}} slots filled from the values below.
+
+The same values go to results/numbers.json, the one source of every number quoted outside a
+generated table. In the markdown pages a quoted number is written <!--n:key-->80.1<!--/n-->;
+this script refreshes those and a test fails when one drifts.
 """
 
 import datetime
 import html
 import json
 import math
+import re
 import sys
 from functools import cache
 from pathlib import Path
@@ -30,8 +35,10 @@ RESULTS = REPO / "results"
 CELLS = load_cells(RESULTS / "records", REPO / "data")
 DELTAS_PATH = RESULTS / "report-deltas.json"
 DELTAS = json.loads(DELTAS_PATH.read_text()) if DELTAS_PATH.exists() else {}
+NUMBERS_PATH = RESULTS / "numbers.json"
+QUOTED_NUMBER = re.compile(r"<!--n:(?P<key>[\w.]+)-->.*?<!--/n-->")
 METHODS = ("base", "sft", "grpo", "sftgrpo")
-METHOD_NAMES = {"base": "Base", "sft": "SFT", "grpo": "GRPO", "sftgrpo": "SFT → GRPO"}
+METHOD_NAMES = {"base": "Instruct", "sft": "SFT", "grpo": "GRPO", "sftgrpo": "SFT → GRPO"}
 
 
 def load(name):
@@ -117,6 +124,8 @@ put("cq.audgain.ci", ci(aud))
 best_short = max(acc(arm, "chartqa", "short") for arm in CQ.values())
 put("cq.bestshort", f1(best_short))
 put("cq.overshort", f1(acc(CQ["grpo"], "chartqa", "reasoning") - best_short))
+best_sft = max(acc(CQ["sft"], "chartqa", prompt) for prompt in ("short", "reasoning"))
+put("cq.oversft", f1(acc(CQ["grpo"], "chartqa", "reasoning") - best_sft))
 best_short_aud = max(judge[(arm, "short")]["audited"] for arm in CQ.values())
 put("cq.overshort.aud", f1(judge[(CQ["grpo"], "reasoning")]["audited"] - best_short_aud))
 d = delta(CQ["sft"], CQ["sftgrpo"], "chartqa", "reasoning")
@@ -139,9 +148,11 @@ for name in ("base", "sft", "grpo", "sftgrpo", "sft4k"):
     put(f"vw.{name}", f1(ood[PH[name]]))
 put("tv.rl_sft", ci(delta(PH["sft"], PH["grpo"], "textvqa")))
 put("tv.rl_sft4k", ci(delta(PH["sft4k"], PH["grpo"], "textvqa")))
+put("tv.rl_sft.v", signed(delta(PH["sft"], PH["grpo"], "textvqa")["delta"]))
 vw = {(c["reference"], c["candidate"]): c for c in load("ood.json")["comparisons"]
       if c["dataset"] == "vizwiz"}
 put("vw.rl_sft", ci(vw[(PH["sft"], PH["grpo"])]))
+put("vw.rl_sft.v", signed(vw[(PH["sft"], PH["grpo"])]["delta"]))
 vw_rl_4k = vw[(PH["grpo"], PH["sft4k"])]
 put("vw.rl_sft4k", ci({k: -vw_rl_4k[k] for k in ("delta", "high", "low")}
                       | {"low": -vw_rl_4k["high"], "high": -vw_rl_4k["low"]}))
@@ -163,6 +174,11 @@ put("ph.cq.vqa.tok", f"{tokens(PH['grpor'], 'chartqa'):.0f}")
 put("ph.cq.mix.r", f1(acc("mix-grpo2-base", "chartqa", "reasoning")))
 put("ph.cq.mix.tok", f"{tokens('mix-grpo2-base', 'chartqa'):.0f}")
 judge_photo = {(c["arm"], c["dataset"], c["prompt"]): c for c in load("judge-final.json")["cells"]}
+photo_gain = {p["scorer"]: p for p in load("judge-final.json")["paired_deltas"]
+              if (p["reference"], p["candidate"], p["dataset"], p["prompt"])
+              == ("base2", PH["grpor"], "vqav2", "reasoning")}
+put("ph.vqav2.gain", f1(photo_gain["official"]["delta"]))
+put("ph.vqav2.audgain", f1(photo_gain["audited"]["delta"]))
 put("ph.vqav2.base.r.aud", f1(judge_photo[("base2", "vqav2", "reasoning")]["audited"]))
 put("ph.vqav2.grpor.r.aud", f1(judge_photo[(PH["grpor"], "vqav2", "reasoning")]["audited"]))
 put("ph.vqav2.base.s.aud", f1(judge_photo[("base2", "vqav2", "short")]["audited"]))
@@ -226,6 +242,69 @@ for key, ds, base, sft, grpo in BEYOND_SETTINGS:
     put(f"cal.{key}.grpo.conf", f1(by(ds, base, grpo)["calibration"]["mean_confidence"]))
     put(f"cal.{key}.grpo.acc", f1(by(ds, base, grpo)["calibration"]["majority_accuracy"]))
 put("cal.slk2.base", f1(by("slake", "base2", "base2")["calibration"]["calibration_error"]))
+
+
+# Calibration error over the short-answer settings, each method's every arm.
+SHORT_CALIBRATION = {
+    "sft": (("slake", "base2", "slk-sft2"), ("slake", "base8", "slk-sft8"),
+            ("omnimedx", "base2", "omx-sft2"), ("omnimedx", "base2", "omx-sft2-matched"),
+            ("vqav2", "base2", "sft2"), ("vqav2", "base2", "sft4k2"),
+            ("chartqa", "base2", "cqa-sft2")),
+    "grpo": (("slake", "base2", "slk-short2-base-e1"), ("slake", "base8", "slk-short8-base-e1"),
+             ("omnimedx", "base2", "omx-short2-base"), ("vqav2", "base2", "p1-f-short2-base"),
+             ("chartqa", "base2", "cqa-short2-base-e1"))}
+for name, settings in SHORT_CALIBRATION.items():
+    errors = [by(*setting)["calibration"]["calibration_error"] for setting in settings]
+    put(f"cal.{name}.lo", f1(min(errors)))
+    put(f"cal.{name}.hi", f1(max(errors)))
+
+# What survives a black image, at 8B on SLAKE: the two methods on the same training questions.
+slk8_base = by("slake", "base8", "base8")["accuracy"]
+for name, arm in (("sft", "slk-sft8"), ("grpo", "slk-short8-base-e1")):
+    row = by("slake", "base8", arm)
+    put(f"ba.slk8.{name}.gain", f1(row["accuracy"] - slk8_base))
+    put(f"ba.slk8.{name}.blackgain", f1(row["black_gain"]["delta"]))
+for key, ds, base, arm in (("slk2", "slake", "base2", "slk-short2-sft-e1"),
+                           ("slk8", "slake", "base8", "slk-short8-sft-e1"),
+                           ("omx", "omnimedx", "base2", "omx-short2-sft")):
+    put(f"ba.{key}.sftgrpo.blackgain", signed(by(ds, base, arm)["black_gain"]["delta"]))
+put("ba.omx.sft.blackgain", signed(by("omnimedx", "base2", "omx-sft2")["black_gain"]["delta"]))
+put("ba.omx.sftm.blackgain",
+    signed(by("omnimedx", "base2", "omx-sft2-matched")["black_gain"]["delta"]))
+RL_BLIND = [by(ds, base, arm, prompt)["black_gain"] for ds, base, arm, prompt in (
+    ("slake", "base2", "slk-short2-base-e1", "short"),
+    ("slake", "base8", "slk-short8-base-e1", "short"),
+    ("omnimedx", "base2", "omx-short2-base", "short"),
+    ("vqav2", "base2", "p1-f-short2-base", "short"),
+    ("chartqa", "base2", "cqa-short2-base-e1", "short"),
+    ("chartqa", "base2", "cqa-grpo2-base-e1", "reasoning"))]
+put("ba.rl.settings", str(len(RL_BLIND)))
+put("ba.rl.level", str(sum(d["low"] <= 0 <= d["high"] for d in RL_BLIND)))
+put("ba.rl.most", signed(max(d["delta"] for d in RL_BLIND)))
+medical_kl = [float(N[f"kl.{key}.sft"]) / float(N[f"kl.{key}.grpo"])
+              for key in ("slk2", "slk8", "omx")]
+put("kl.med.lo", str(round(min(medical_kl))))
+put("kl.med.hi", str(round(max(medical_kl))))
+
+# Reach: Instruct's pass@8 on open-answer questions against each method's greedy end point.
+reach = load("reach.json")
+for row in reach["rows"]:
+    if row["dataset"] == "slake":
+        key = "slk2" if "2B" in row["label"] else "slk8"
+        put(f"reach.{key}.reach", f1(row["reach"]))
+        put(f"reach.{key}.rl", f1(row["greedy"]["rl"]))
+        put(f"reach.{key}.sft", f1(row["greedy"]["sft"]))
+        put(f"reach.{key}.sft.over", f1(row["sft_minus_reach"]["delta"]))
+    if (row["dataset"], row["prompt"]) == ("chartqa", "reasoning"):
+        put("reach.cq.reach", f1(row["reach"]))
+        put("reach.cq.instruct", f1(row["greedy"]["instruct"]))
+        put("reach.cq.rl", f1(row["greedy"]["rl"]))
+        put("reach.cq.sft", f1(row["greedy"]["sft"]))
+    if (row["dataset"], row["prompt"]) == ("gqa", "short"):
+        put("reach.gqa.reach", f1(row["reach"]))
+        put("reach.gqa.rl", f1(row["greedy"]["rl"]))
+put("reach.sets", str(len(reach["rows"])))
+put("reach.rl.most", f1(max(reach["verdict"]["rl_above_reach"].values())))
 vision = {row["model"]: row for spec in beyond if spec.get("group") == "vision"
           for row in spec["rows"] if not row.get("missing")}
 put("vis.papo.black", f1(vision["slk-short2-base-e1-papo"]["black_accuracy"]))
@@ -254,13 +333,20 @@ N_questions = sum(record("base2", ds).metrics["n"] if ds != "vizwiz" else VIZWIZ
 put("h.questions", f"{N_questions:,}")
 put("h.sets", str(len(test_sets)))
 put("h.pathvqa", f"{record('base2', 'pathvqa').metrics['n']:,}")
+# Measured once, outside the records: docs/harness/validation.md, results/judge-*.json.
+put("h.parity", "626,074")
+put("h.misses", "54,060")
+put("h.audited", "800")
+put("h.sampler.merged", "0.132")
+put("h.sampler.unmerged", "0.008")
+# Updates of the chart-only and the photos + charts runs (experiments.toml, run configs).
+put("cq.updates", "1,844")
+put("mix.updates", "2,844")
 put("date", datetime.date.today().strftime("%-d %B %Y"))
 
 
 # Shortcut audit of 3D CT benchmarks.
 PUBLISHED = {"deeptumor_mc": 64.6, "deeptumor_ff": 63.4, "m3d": 75.78}  # papers' fine-tuned
-M3D_LAMED = {"plane": 98.80, "phase": 79.75, "organ": 74.75, "abnormality": 66.65,
-             "location": 58.94}  # M3D paper, Table 4, closed-ended, 13,791 test questions
 prior = {name: load(f"screening/{name}-option-prior.json")["benchmark"]["all"]
          for name in ("deeptumor", "deeptumorx", "m3dvqa", "deeptumorff")}
 put("au.mc.rule", f1(prior["deeptumor"]["prior_accuracy"]))
@@ -313,7 +399,7 @@ def tip(text):
 
 
 def marker(cx, cy, method, r=5.5, title=""):
-    """Base is a hollow ring; trained models are filled dots in their method color."""
+    """Instruct is a hollow ring; trained models are filled dots in their method color."""
     if method == "base":
         return (f'<circle class="mk base" cx="{cx:.1f}" cy="{cy:.1f}" r="{r - 1:.1f}" '
                 f'{tip(title)}/>')
@@ -348,7 +434,7 @@ def axis_ticks(x, lo, hi, step, y0, y1, fmt="{:g}"):
 
 
 def chartqa_figure():
-    rows = [("Base", "base", "base2"), ("SFT", "sft", "cqa-sft2"),
+    rows = [("Instruct", "base", "base2"), ("SFT", "sft", "cqa-sft2"),
             ("GRPO, short-answer rollouts", "grpo", "cqa-short2-base-e1"),
             ("GRPO, reasoning rollouts", "grpo", "cqa-grpo2-base-e1"),
             ("SFT → GRPO, reasoning rollouts", "sftgrpo", "cqa-grpo2-sft-e1")]
@@ -425,11 +511,11 @@ def passk_panel(title, series, lo, hi):
 
 def passk_figure():
     reasoning = passk_panel("Reasoning prompt", [
-        ("Base", "base", passk[("base2", "reasoning")]),
+        ("Instruct", "base", passk[("base2", "reasoning")]),
         ("GRPO", "grpo", passk[(CQ["grpo"], "reasoning")]),
         ("SFT → GRPO", "sftgrpo", passk[(CQ["sftgrpo"], "reasoning")])], 60, 100)
     short = passk_panel("Short-answer prompt", [
-        ("Base", "base", passk[("base2", "short")]),
+        ("Instruct", "base", passk[("base2", "short")]),
         ("SFT", "sft", passk[("cqa-sft2", "short")]),
         ("GRPO", "grpo", passk[(CQ["short"], "short")])], 60, 100)
     return f'<div class="panels">{reasoning}{short}</div>'
@@ -523,20 +609,6 @@ def audit_figure():
             f'the image against published fine-tuned models">' + "".join(parts) + "</svg>")
 
 
-def m3d_table():
-    rows = []
-    for name in ("plane", "phase", "organ", "abnormality", "location"):
-        blind, lamed = float(N[f"au.m3d.{name}"]), M3D_LAMED[name]
-        rows.append(f'<tr><td>{name.capitalize()}</td><td class="n">{blind:.1f}</td>'
-                    f'<td class="n">{lamed:.1f}</td>'
-                    f'<td class="n">{signed(blind - lamed)}</td></tr>')
-    mean_blind = float(N["au.m3d.blind.mean"])
-    rows.append(f'<tr class="total"><td>Mean of types</td><td class="n">{mean_blind:.1f}</td>'
-                f'<td class="n">{PUBLISHED["m3d"]:.1f}</td>'
-                f'<td class="n">{signed(mean_blind - PUBLISHED["m3d"])}</td></tr>')
-    return "".join(rows)
-
-
 # ---------------------------------------------------------------- tables
 
 def method_cells(values, best):
@@ -616,18 +688,6 @@ def kl_table():
     return "".join(out)
 
 
-def transfer_table():
-    out = []
-    for ds, name in (("vqav2", "VQAv2"), ("gqa", "GQA"), ("textvqa", "TextVQA")):
-        d = delta("base2", CQ["grpo"], ds, "reasoning")
-        out.append(f'<tr><td>{name}</td><td class="n">{N[f"ph.{ds}.base.r"]} '
-                   f'<span class="sub-n">{N[f"ph.{ds}.base.tok"]} tok</span></td>'
-                   f'<td class="n">{N[f"ph.{ds}.cq.r"]} <span class="sub-n">'
-                   f'{N[f"ph.{ds}.cq.tok"]} tok</span></td><td class="n">{ci(d)}</td>'
-                   f'<td class="n">{N[f"ph.{ds}.base.s"]} → {N[f"ph.{ds}.cq.s"]}</td></tr>')
-    return "".join(out)
-
-
 def whole(x):
     """Rounded to a whole number, with a typographic minus and no negative zero."""
     return str(round(x)).replace("-", "\u2212")
@@ -663,19 +723,44 @@ def screening_table():
 
 FRAGMENTS = {
     "AUDIT_FIG": audit_figure(),
-    "M3D_ROWS": m3d_table(),
     "OVERVIEW_ROWS": overview_table(),
     "CHARTQA_FIG": chartqa_figure(),
     "PASSK_FIG": passk_figure(),
     "BLACK_FIG": black_figure(),
     "MEDICAL_ROWS": medical_table(),
     "KL_ROWS": kl_table(),
-    "TRANSFER_ROWS": transfer_table(),
     "SCREENING_ROWS": screening_table(),
 }
 
 
+def plain(value):
+    """A value without its markup, for the markdown pages and the numbers file."""
+    return html.unescape(re.sub(r"<[^>]+>", "", value))
+
+
+def numbers():
+    return {key: plain(value) for key, value in sorted(N.items()) if key != "date"}
+
+
+def fill_numbers(text, values):
+    """Refresh every <!--n:key-->value<!--/n--> in a markdown page."""
+    return QUOTED_NUMBER.sub(lambda m: f"<!--n:{m['key']}-->{values[m['key']]}<!--/n-->", text)
+
+
+def numbered_pages():
+    pages = [REPO / "README.md", *sorted((REPO / "docs").rglob("*.md"))]
+    talk = REPO / "interview" / "talk.md"  # local only, absent from a clean clone
+    return [*pages, talk] if talk.exists() else pages
+
+
 def main():
+    values = numbers()
+    NUMBERS_PATH.write_text(json.dumps(values, indent=1, ensure_ascii=False) + "\n")
+    for path in numbered_pages():
+        text = path.read_text()
+        if fill_numbers(text, values) != text:
+            path.write_text(fill_numbers(text, values))
+            print(f"updated numbers in {path.relative_to(REPO)}")
     page = (HERE / "report_page.template.html").read_text()
     for key, value in FRAGMENTS.items():
         page = page.replace("{{" + key + "}}", value)

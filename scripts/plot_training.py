@@ -7,7 +7,7 @@ A run directory holds `metrics.jsonl` (the Trainer's logged signals), optionally
 `prompt_draws.jsonl` (every rollout's score, for the dead-group split) and
 `checkpoints/dev-records/` (the dev evaluation of each kept adapter). Runs are overlaid,
 labelled by directory name. What each panel means and when to worry is in
-docs/supplementary/monitoring.md.
+docs/harness/monitoring.md.
 """
 
 import argparse

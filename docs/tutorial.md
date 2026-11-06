@@ -5,7 +5,7 @@ the data, check the splits, evaluate the starting model, measure how much of the
 teach it, train with SFT and GRPO, evaluate the result, and regenerate the tables. Every
 command below was run on an RTX 4090; the timings and outputs are from that card, after the
 model download. Larger cards use the `80gb` or `96gb` hardware profiles described in the
-[hardware notes](supplementary/hardware.md).
+[hardware notes](harness/hardware.md).
 
 ## 1. Environment
 
@@ -97,7 +97,7 @@ in the repository, so on the recorded data this command returns them from the ca
 SFT on the short-answer pool, then GRPO from either starting point. A two-step run checks
 the whole path in a few minutes; the full recipe is one SFT epoch (no `--max-steps`) and
 1,000 GRPO updates (`--max-steps 1000 --rollout-lora`), as in the
-[method](supplementary/method.md).
+[method](harness/method.md).
 
 ```bash
 uv run --frozen python train_sft.py --preset sft_2b --hardware 24gb \
@@ -115,7 +115,7 @@ form the run's learning curve and stay in `runs/<run>/checkpoints/dev-records/`;
 `--no-dev-eval` skips the step. A run interrupted at any point resumes from its last
 complete checkpoint when started again with the same `--run-dir`. While a longer run
 trains, `python -m scripts.watch_training runs/grpo-smoke/metrics.jsonl` prints its health
-signals with warning flags; [monitoring](supplementary/monitoring.md) explains each one.
+signals with warning flags; [monitoring](harness/monitoring.md) explains each one.
 
 To start GRPO from the SFT model instead, merge the adapter and pass the merge:
 
@@ -146,7 +146,7 @@ after the original cells. On the smoke tier, CLEVR counting drops from 0.97 to 0
 
 ## 7. Tables and the dashboard
 
-The tables in the README and the supplementary pages are generated from the records of the
+The tables in the README and the docs pages are generated from the records of the
 arms declared in `experiments.toml`:
 
 ```bash

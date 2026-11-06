@@ -247,7 +247,7 @@ and should not be treated as a random sample.
 - Reproduce the single-reference reward edge case with
   `uv run --frozen pytest tests/test_metrics.py -k SingleReference`.
 - Compare official and normalized scores on the same saved predictions in the
-  [results](results.md); inspect an example in the gallery.
+  [findings](../findings/reasoning-pays.md); inspect an example in the gallery.
 - Inspect `run_config.json` and `run_summary.json` after a two-update GRPO check.
   Count prompt groups, response tokens, zero-variance rewards, and actual updates.
 - Read `train_opd.py` alongside the token-level checks in `results/validation.json`.
@@ -309,10 +309,10 @@ These checks ran on ChartQA before any training knob was promoted to a full run.
   Instruct 2B scores 69.52 under the reasoning prompt with original images and 65.24 on the
   canvas (−4.28 [−6.78, −1.77]); numeric answers lose 7.6 points (68.1 → 60.5) and text
   answers none (72.4 → 75.0). Photos lose at most 1 point on the same canvas
-  ([image resolution](supplement.md#image-resolution)). `train_grpo.py --image-fit budget`
+  ([image resolution](../negatives.md#image-resolution)). `train_grpo.py --image-fit budget`
   trains on the evaluation geometry instead (opt-in; recorded runs keep the canvas). As a
   300-update ChartQA knob it reads 0 against the canvas-trained baseline, +0.1 points on dev
-  ([knobs](supplement.md#training-knobs-chartqa)): the trained models are evaluated on original
+  ([knobs](../negatives.md#training-knobs-chartqa)): the trained models are evaluated on original
   images either way.
 - **Sampler against trainer, evaluation geometry.** Images of varying shape could make vLLM
   and the trainer's processor expand image tokens differently. `scripts/check_logprob_gap.py

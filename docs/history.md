@@ -122,7 +122,7 @@ Mean output tokens · share of responses that close an `<answer>` tag, reasoning
 <!-- /report:corrected-behavior -->
 
 What each RL run trained on, and its training signals (defined on the
-[results](supplement.md#what-each-rl-run-trained-on) page).
+[training evidence](harness/training-evidence.md#what-each-rl-run-trained-on) page).
 
 <!-- report:corrected-exposure -->
 | Run | Updates | Questions | Responses | Groups with varied rewards (%) | Updates without reward variation | Mean reward |
@@ -150,7 +150,7 @@ sampled from merged weights like the corrected run, tracked that run's reward on
 question order for its first updates and removed the reasoning between updates 110 and
 200. Only 23–49% of the
 corrected runs' groups had varied rewards; the final runs' shares are on the
-[results](supplement.md#what-each-rl-run-trained-on) page.
+[training evidence](harness/training-evidence.md#what-each-rl-run-trained-on) page.
 
 ## The July runs
 

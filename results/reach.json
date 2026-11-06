@@ -1,0 +1,340 @@
+{
+ "scorer": "normalized",
+ "k": 8,
+ "open_forms": [
+  "number",
+  "text"
+ ],
+ "rows": [
+  {
+   "label": "SLAKE, 2B",
+   "dataset": "slake",
+   "prompt": "short",
+   "k": 8,
+   "questions": 1061,
+   "open_questions": 706,
+   "reach": 53.68271954674221,
+   "greedy": {
+    "instruct": 34.27762039660057,
+    "rl": 56.09065155807365,
+    "sft": 68.55524079320114,
+    "sft_rl": 70.96317280453258
+   },
+   "rl_minus_reach": {
+    "n": 706,
+    "delta": 2.4079320113314444,
+    "low": -0.7117563739376738,
+    "high": 5.524079320113314,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "sft_minus_reach": {
+    "n": 706,
+    "delta": 14.872521246458922,
+    "low": 11.048158640226628,
+    "high": 18.69688385269122,
+    "resamples": 10000,
+    "seed": 0
+   }
+  },
+  {
+   "label": "SLAKE, 8B",
+   "dataset": "slake",
+   "prompt": "short",
+   "k": 8,
+   "questions": 1061,
+   "open_questions": 706,
+   "reach": 56.657223796033996,
+   "greedy": {
+    "instruct": 46.60056657223796,
+    "rl": 59.49008498583569,
+    "sft": 72.09631728045326,
+    "sft_rl": 74.07932011331445
+   },
+   "rl_minus_reach": {
+    "n": 706,
+    "delta": 2.8328611898017,
+    "low": 0.28328611898017,
+    "high": 5.382436260623229,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "sft_minus_reach": {
+    "n": 706,
+    "delta": 15.439093484419264,
+    "low": 12.039660056657224,
+    "high": 18.980169971671387,
+    "resamples": 10000,
+    "seed": 0
+   }
+  },
+  {
+   "label": "ChartQA",
+   "dataset": "chartqa",
+   "prompt": "reasoning",
+   "k": 8,
+   "questions": 1250,
+   "open_questions": 1146,
+   "reach": 87.09156371180494,
+   "greedy": {
+    "instruct": 70.15706806282722,
+    "rl": 80.89005235602095,
+    "sft": 66.49214659685863,
+    "sft_rl": 80.6282722513089
+   },
+   "rl_minus_reach": {
+    "n": 1146,
+    "delta": -6.201511355783991,
+    "low": -8.01707854688195,
+    "high": -4.4174607211209835,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "sft_minus_reach": {
+    "n": 1146,
+    "delta": -20.599417114946295,
+    "low": -23.16112506584759,
+    "high": -18.047102295568667,
+    "resamples": 10000,
+    "seed": 0
+   }
+  },
+  {
+   "label": "ChartQA",
+   "dataset": "chartqa",
+   "prompt": "short",
+   "k": 8,
+   "questions": 1250,
+   "open_questions": 1146,
+   "reach": 78.16597848685858,
+   "greedy": {
+    "instruct": 66.57940663176265,
+    "rl": 68.49912739965096,
+    "sft": 69.63350785340315
+   },
+   "rl_minus_reach": {
+    "n": 1146,
+    "delta": -9.666851087207622,
+    "low": -11.319567771429497,
+    "high": -8.093795009956802,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "sft_minus_reach": {
+    "n": 1146,
+    "delta": -8.53247063345544,
+    "low": -10.389278309494635,
+    "high": -6.675912739608368,
+    "resamples": 10000,
+    "seed": 0
+   }
+  },
+  {
+   "label": "VQAv2",
+   "dataset": "vqav2",
+   "prompt": "reasoning",
+   "k": 8,
+   "questions": 1000,
+   "open_questions": 637,
+   "reach": 61.062852526248975,
+   "greedy": {
+    "instruct": 43.01412872841444,
+    "rl": 58.084772370486654,
+    "sft": 48.19466248037676,
+    "sft_rl": 56.5149136577708
+   },
+   "rl_minus_reach": {
+    "n": 637,
+    "delta": -2.9780801557623175,
+    "low": -5.483151192454876,
+    "high": -0.5415247039505989,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "sft_minus_reach": {
+    "n": 637,
+    "delta": -12.868190045872208,
+    "low": -15.670509273954188,
+    "high": -10.128881360110201,
+    "resamples": 10000,
+    "seed": 0
+   }
+  },
+  {
+   "label": "GQA",
+   "dataset": "gqa",
+   "prompt": "reasoning",
+   "k": 8,
+   "questions": 1000,
+   "open_questions": 644,
+   "reach": 61.2975115744739,
+   "greedy": {
+    "instruct": 39.75155279503105,
+    "rl": 51.5527950310559,
+    "sft": 49.53416149068323,
+    "sft_rl": 54.34782608695652
+   },
+   "rl_minus_reach": {
+    "n": 644,
+    "delta": -9.744716543417999,
+    "low": -12.54144229137942,
+    "high": -6.976036656727764,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "sft_minus_reach": {
+    "n": 644,
+    "delta": -11.76335008379067,
+    "low": -14.77790871970667,
+    "high": -8.805400068266117,
+    "resamples": 10000,
+    "seed": 0
+   }
+  },
+  {
+   "label": "TextVQA",
+   "dataset": "textvqa",
+   "prompt": "reasoning",
+   "k": 8,
+   "questions": 1000,
+   "open_questions": 948,
+   "reach": 75.0758984913214,
+   "greedy": {
+    "instruct": 60.54852320675106,
+    "rl": 69.40928270042194,
+    "sft": 59.28270042194093,
+    "sft_rl": 68.14345991561181
+   },
+   "rl_minus_reach": {
+    "n": 948,
+    "delta": -5.666615790899453,
+    "low": -7.6540068635551854,
+    "high": -3.719530414763164,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "sft_minus_reach": {
+    "n": 948,
+    "delta": -15.793198069380468,
+    "low": -18.24089935268935,
+    "high": -13.424914687315509,
+    "resamples": 10000,
+    "seed": 0
+   }
+  },
+  {
+   "label": "VQAv2",
+   "dataset": "vqav2",
+   "prompt": "short",
+   "k": 8,
+   "questions": 1000,
+   "open_questions": 637,
+   "reach": 66.89398791858179,
+   "greedy": {
+    "instruct": 55.4160125588697,
+    "rl": 56.82888540031397,
+    "sft": 57.45682888540031,
+    "sft_rl": 56.043956043956044
+   },
+   "rl_minus_reach": {
+    "n": 637,
+    "delta": -10.065102518267818,
+    "low": -12.254759386164245,
+    "high": -8.008780626576653,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "sft_minus_reach": {
+    "n": 637,
+    "delta": -9.437159033181477,
+    "low": -11.639052247745058,
+    "high": -7.332014210532465,
+    "resamples": 10000,
+    "seed": 0
+   }
+  },
+  {
+   "label": "GQA",
+   "dataset": "gqa",
+   "prompt": "short",
+   "k": 8,
+   "questions": 1000,
+   "open_questions": 644,
+   "reach": 67.75818462622641,
+   "greedy": {
+    "instruct": 50.0,
+    "rl": 50.31055900621118,
+    "sft": 55.12422360248447,
+    "sft_rl": 54.037267080745345
+   },
+   "rl_minus_reach": {
+    "n": 644,
+    "delta": -17.44762562001523,
+    "low": -20.10311392513598,
+    "high": -14.826508838071806,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "sft_minus_reach": {
+    "n": 644,
+    "delta": -12.633961023741941,
+    "low": -15.347465914626287,
+    "high": -10.03944865678646,
+    "resamples": 10000,
+    "seed": 0
+   }
+  },
+  {
+   "label": "TextVQA",
+   "dataset": "textvqa",
+   "prompt": "short",
+   "k": 8,
+   "questions": 1000,
+   "open_questions": 948,
+   "reach": 78.09685110390888,
+   "greedy": {
+    "instruct": 70.14767932489451,
+    "rl": 70.35864978902954,
+    "sft": 67.9324894514768,
+    "sft_rl": 69.51476793248945
+   },
+   "rl_minus_reach": {
+    "n": 948,
+    "delta": -7.73820131487934,
+    "low": -9.357990392753702,
+    "high": -6.214481892940378,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "sft_minus_reach": {
+    "n": 948,
+    "delta": -10.164361652432081,
+    "low": -12.160337311300847,
+    "high": -8.241592408154146,
+    "resamples": 10000,
+    "seed": 0
+   }
+  }
+ ],
+ "verdict": {
+  "rl_margin": 5.0,
+  "sft_margin": 5.0,
+  "rl_above_reach": {
+   "SLAKE, 2B short": 2.4079320113314395,
+   "SLAKE, 8B short": 2.8328611898016973,
+   "ChartQA reasoning": -6.2015113557839925,
+   "ChartQA short": -9.666851087207618,
+   "VQAv2 reasoning": -2.9780801557623207,
+   "GQA reasoning": -9.744716543418,
+   "TextVQA reasoning": -5.666615790899456,
+   "VQAv2 short": -10.065102518267814,
+   "GQA short": -17.44762562001523,
+   "TextVQA short": -7.738201314879333
+  },
+  "sft_above_reach_on_slake": {
+   "SLAKE, 2B": 14.872521246458923,
+   "SLAKE, 8B": 15.439093484419267
+  },
+  "holds": true
+ }
+}

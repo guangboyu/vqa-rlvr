@@ -2,7 +2,7 @@
 
 TRL's colocate weight sync merges the adapter into the bf16 base weights and loads them into
 vLLM. A learning-rate-1e-5 update is far below one bf16 step of most weights, so the merged
-sampler rounds away much of what the trainer learned (docs/supplementary/method.md). Here
+sampler rounds away much of what the trainer learned (docs/harness/method.md). Here
 vLLM keeps the base weights it loaded and serves the trainer's adapter unmerged, as the dev
 evaluation does: the adapter is written to a local directory once per update and passed to
 `llm.chat` as a LoRARequest (`vqar.rl.make_chat_rollout(serve_adapter=True)`).

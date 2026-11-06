@@ -1,18 +1,35 @@
 # What RL adds to a vision-language model
 
-When does reinforcement learning with a verifiable reward improve a vision-language model
-beyond supervised fine-tuning on the same data? This repository trains Qwen3-VL at 2B and 8B
-with SFT, with GRPO and a 0/1 correctness reward, and with SFT followed by GRPO, on photo,
-chart and medical questions, and scores every model through one evaluation harness.
+When does reinforcement learning with a verifiable reward improve a vision-language model beyond
+supervised fine-tuning on the same data? This repository trains Qwen3-VL at 2B and 8B with SFT, with
+GRPO and a 0/1 correctness reward, and with SFT followed by GRPO, and scores every model through one
+evaluation harness.
+
+**Whether RL beats SFT depends on what the task pays for.** RL mostly sharpens what the model can
+already sample; where the answer is out of reach, SFT has to go first.
 
 **Report:** [guangboyu.github.io/vqa-rlvr/report](https://guangboyu.github.io/vqa-rlvr/report/)
-has the findings, figures and evaluation harness on one page.
 
-## Results at a glance
+## Results
 
-Accuracy (%) on fixed test sets, best in each row in bold. Instruct is the released Qwen3-VL
-Instruct model; the other columns were trained on each row's own training data, except the
-unseen rows, which test models trained elsewhere.
+- **Where reasoning pays, RL wins and keeps it.** On ChartQA, GRPO raises accuracy from <!--n:cq.base.r-->69.7<!--/n-->% to
+  <!--n:cq.grpo.r-->80.1<!--/n-->%, <!--n:cq.oversft-->11.3<!--/n--> points above SFT's best, with answers still <!--n:cq.grpo.tok-->162<!--/n--> tokens long. That is one
+  dataset so far, against SFT on short answers. ([evidence](docs/findings/reasoning-pays.md))
+- **Where it doesn't, RL changes form, not ability.** On VQAv2 under the reasoning prompt, answers go
+  from <!--n:ph.vqav2.base.tok-->148<!--/n--> tokens to <!--n:ph.vqav2.grpor.tok-->8<!--/n-->, and accuracy ends at <!--n:ph.vqav2.grpor.r-->78.3<!--/n-->%, the level of
+  short answers (<!--n:ph.vqav2.base.s-->77.9<!--/n-->%). ([evidence](docs/findings/form-not-ability.md))
+- **RL's gains come from the image.** At 8B on SLAKE, <!--n:ba.slk8.sft.blackgain-->10.4<!--/n--> of SFT's <!--n:ba.slk8.sft.gain-->19.1<!--/n-->-point gain
+  survives a black image, against <!--n:ba.slk8.grpo.blackgain-->0.4<!--/n--> of RL's <!--n:ba.slk8.grpo.gain-->10.3<!--/n-->. RL is also overconfident, with a
+  calibration error of <!--n:cal.grpo.lo-->12.1<!--/n-->–<!--n:cal.grpo.hi-->23.7<!--/n--> points against SFT's <!--n:cal.sft.lo-->2.2<!--/n-->–<!--n:cal.sft.hi-->8.6<!--/n-->.
+  ([evidence](docs/findings/what-the-gain-is.md))
+
+On medical images the answers are out of reach at first: SFT beats GRPO from Instruct (<!--n:med.slk2.sft-->74.8<!--/n-->% against
+<!--n:med.slk2.grpo-->65.6<!--/n-->% on SLAKE), and GRPO after SFT is the best model in every setting (<!--n:med.slk2.sftgrpo-->76.2<!--/n-->%).
+([evidence](docs/findings/sft-then-rl.md))
+
+Accuracy (%) on fixed test sets, best in each row in bold. Instruct is the released Qwen3-VL Instruct
+model; the other columns were trained on each row's own training data, except the unseen rows, which test
+models trained elsewhere.
 
 <!-- report:overview -->
 | Test set | Prompt | Instruct | SFT | GRPO | SFT → GRPO |
@@ -26,40 +43,6 @@ unseen rows, which test models trained elsewhere.
 | TextVQA, unseen (VQAv2 + GQA models) | short | 80.5 | 80.1 | **81.0** | 80.9 |
 | VizWiz, unseen (VQAv2 + GQA models) | short | 42.5 | 42.5 | **43.6** | 43.0 |
 <!-- /report:overview -->
-
-RL helps most where reasoning helps. On ChartQA, GRPO keeps its step-by-step reasoning and
-gains 10.4 points, about ten points above every short-answer model, while its pass@32 stays
-level with Instruct's. On medical images SFT teaches the domain's answers, and GRPO started
-from SFT is the best model in every setting. On data that no model trained on, GRPO keeps a
-lead of about one to two points over SFT.
-
-RL's gains depend on the image. With a black image in place of the real one, GRPO answers no
-more questions than Instruct in five of six settings, while SFT answers up to 24 points more.
-On medical data GRPO also moves the model five to sixteen times less than SFT, measured by
-forward KL from Instruct.
-
-RL does not help everywhere. On short-answer photo questions (VQAv2, GQA) it drops the
-reasoning and only matches SFT; on medical data, SFT beats GRPO started from Instruct; and RL
-is overconfident, with a calibration error of 12 to 24 points against SFT's 2 to 9. These
-results and the full test matrix are in the [supplement](docs/supplementary/supplement.md).
-
-## Do 3D CT benchmarks need the scan?
-
-The same harness measures how much of two 3D CT benchmarks can be answered without looking.
-Accuracy (%) of 2B models trained with SFT; "without the image" means black images at test
-time (and in training, except for DeepTumorVQA multiple choice):
-
-| Benchmark | Text-only rule | Without the image | With the image | Published fine-tuned model |
-| --- | ---: | ---: | ---: | ---: |
-| DeepTumorVQA v2, multiple choice | 60.7 | 59.0 | 61.4 | 64.6 |
-| DeepTumorVQA v2, free form | 57.4 | 57.6 | 60.3 | 63.4 |
-| M3D-VQA, mean over question types | — | 70.2 | — | 75.8 |
-
-DeepTumorVQA's answer options and answer frequencies give most answers away, and M3D-VQA's
-correct option is A in nearly half of its questions. A debiased DeepTumorVQA, built here,
-brings the text-only rule down to chance (35.2% against 33.7%). On it, GRPO and SFT reach
-the same accuracy, and the one thing a 2B model learns from 2D views of the scan is whether
-a lesion is present ([details](docs/supplementary/supplement.md#shortcut-audit-of-3d-ct-benchmarks)).
 
 ## Quick start
 
@@ -77,9 +60,10 @@ uv run --frozen python train_grpo.py --preset grpo_2b_main --hardware 24gb \
 ```
 
 The [tutorial](docs/tutorial.md) goes through data, evaluation, SFT and GRPO with the
-expected output of each step, and [method](docs/supplementary/method.md) has the command
+expected output of each step, and [method](docs/harness/method.md) has the command
 behind every model in the tables. All tables are generated from the saved evaluation records
-by `python -m scripts.report`, and a test fails if a committed table drifts from them.
+by `python -m scripts.report`, quoted numbers come from `results/numbers.json`, and a test fails if
+either drifts from the records.
 
 ## Demo
 
@@ -96,16 +80,11 @@ uv run --frozen uvicorn demo.backend.app:app --port 8000
 
 ## Documentation
 
-- [Results](docs/supplementary/results.md) and [supplement](docs/supplementary/supplement.md): every table, with paired 95% intervals, including the negative results.
-- [Evaluation](docs/supplementary/evaluation.md) and [validation](docs/supplementary/validation.md): the harness, the dataset screen, and how the scorers were checked against the authors' code.
-- [Hardware](docs/supplementary/hardware.md) and [monitoring](docs/supplementary/monitoring.md): GPU profiles, memory, resuming, and what to watch while RL trains.
-- [History](docs/supplementary/history.md): the July 2026 version of this repository had a defective VQAv2 reward and 47 test images in its training pools; this page records both, the corrections, and the status of every earlier claim.
-
-## Next steps
-
-RL restricted to the CT questions that need the image (lesion presence); 3D perception tools
-that return measurements to the language model; a second domain where reasoning pays; and
-calibrated RL that is rewarded for abstaining when unsure.
+- **Findings:** [reasoning pays](docs/findings/reasoning-pays.md), [form, not ability](docs/findings/form-not-ability.md), [SFT first](docs/findings/sft-then-rl.md), [what the gain is made of](docs/findings/what-the-gain-is.md), and the open question of [one model for photos and charts](docs/findings/one-model.md).
+- **[What did not work](docs/negatives.md):** each thing tried, what was expected, what happened and what it implies.
+- **[Do 3D CT benchmarks need the scan?](docs/ct-audit.md)** A separate note: on DeepTumorVQA a text-only rule scores <!--n:au.mc.rule-->60.7<!--/n-->%, and on a debiased version built here GRPO and SFT reach the same accuracy.
+- **Harness:** [method](docs/harness/method.md), [evaluation](docs/harness/evaluation.md), [validation](docs/harness/validation.md), [training evidence](docs/harness/training-evidence.md), [hardware](docs/harness/hardware.md), [monitoring](docs/harness/monitoring.md).
+- **[Full tables](docs/matrix.md)** with paired 95% intervals, and [history](docs/history.md): the July 2026 version of this repository had a defective VQAv2 reward and 47 test images in its training pools; that page records both, the corrections, and the status of every earlier claim.
 
 ## Acknowledgments
 
