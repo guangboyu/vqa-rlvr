@@ -29,6 +29,7 @@ MARKED_FILES = ("README.md", "docs/findings/reasoning-pays.md", "docs/findings/f
 BLOCK = re.compile(r"(<!-- report:(?P<name>[\w-]+) -->\n)(?P<body>.*?)(<!-- /report:(?P=name) -->)",
                    re.DOTALL)
 PROMPT_ORDER = ("short", "reasoning")
+OOD_COHORT_LADDER = ("near-ood", "far-ood")
 
 
 class Cell(NamedTuple):
@@ -61,7 +62,7 @@ def load_cells(records_dir: Path, data_dir: Path | None = None) -> dict[Cell, Ru
     for path in record_files(records_dir):
         record = RunRecord.load(path)
         spec = DATASETS[record.protocol["dataset"]]
-        if not spec.require_split and spec.ladder != "in-domain":
+        if not spec.require_split and spec.ladder in OOD_COHORT_LADDER:
             continue  # optional OOD cohorts are reported from results/ood.json
         if not spec.public_records:
             continue  # local-only records under the dataset's licence

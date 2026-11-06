@@ -8,12 +8,18 @@ means adding one entry here plus its loader in `vqar.data`.
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
-from vqar import metrics
+from vqar import benchmark_metrics, metrics
 from vqar.ood_metrics import official_vizwiz_accuracy, project_case_whitespace_em
 
-ROLES = ("sft", "rl", "dev", "test")
+# `published` holds every row of a benchmark as its authors release it, to compare with published
+# numbers; it may overlap training, so the held-out checks skip it. `test` holds its clean rows.
+ROLES = ("sft", "rl", "dev", "test", "published")
 TRAINING_ROLES = frozenset({"sft", "rl"})
-LADDER = ("in-domain", "near-ood", "far-ood")
+# `benchmark` marks a public test-only benchmark: outside the OOD ladder's cohorts, it can never
+# train and its records reach the tables.
+LADDER = ("in-domain", "near-ood", "far-ood", "benchmark")
+CATEGORIES = ("General VQA", "Reasoning", "Perception", "Document-chart", "Hallucination",
+              "Medical")
 SCORER_VARIANTS = ("official", "normalized")
 
 Scorer = Callable[[str, list[str]], float]
@@ -116,6 +122,7 @@ class DatasetSpec:
     official_roles: frozenset[str]
     sizes: Mapping[str, int]  # materialization sizes and seeds, recorded in data/manifest.json
     materialize: Callable[[Mapping[str, int]], dict]  # sizes -> {subset name: Dataset}
+    category: str  # its group in the Milestone 2 table; a label, outside any protocol's identity
     project: Scorer | None = None
     metric_metadata: Mapping | None = None
     require_split: bool = True  # optional OOD data is not required to run the tutorial
@@ -123,10 +130,14 @@ class DatasetSpec:
     # False when the licence forbids publishing per-question results: records stay local
     # (.gitignore) and generated tables leave the dataset out, so they match a fresh checkout.
     public_records: bool = True
+    # Numbers beyond accuracy, computed from a record's prediction lines into its metrics.
+    summary_metrics: Callable[[list[dict]], dict] | None = None
 
     def __post_init__(self):
         if unknown := set(self.subsets) - set(ROLES):
             raise ValueError(f"{self.name}: unknown roles {sorted(unknown)}")
+        if self.category not in CATEGORIES:
+            raise ValueError(f"{self.name}: unknown category {self.category!r}")
         if self.ladder not in LADDER:
             raise ValueError(f"{self.name}: unknown ladder position {self.ladder!r}")
         if self.ladder != "in-domain" and TRAINING_ROLES & set(self.subsets):
@@ -285,12 +296,89 @@ def _prepared_ood(sizes):
     raise ValueError("Use python -m scripts.prepare_ood with pinned local source files")
 
 
+def _mmstar(sizes):
+    from vqar import data
+
+    return {"mmstar_eval": data.load_mmstar(sizes["rows"])}
+
+
+def _mathvista(sizes):
+    from vqar import data
+
+    return {"mathvista_eval": data.load_mathvista(sizes["rows"])}
+
+
+def _mmmu(sizes):
+    from vqar import data
+
+    return {"mmmu_eval": data.load_mmmu(sizes["rows"])}
+
+
+def _charxiv(sizes):
+    from vqar import data
+
+    return {"charxiv_eval": data.load_charxiv(sizes["rows"])}
+
+
+def _ocrbench(sizes):
+    from vqar import data
+
+    return {"ocrbench_eval": data.load_ocrbench(sizes["rows"])}
+
+
+def _docvqa(sizes):
+    from vqar import data
+
+    return {"docvqa_eval": data.load_docvqa(sizes["rows"])}
+
+
+def _vstar(sizes):
+    from vqar import data
+
+    return {"vstar_eval": data.load_vstar(sizes["rows"])}
+
+
+def _hrbench4k(sizes):
+    from vqar import data
+
+    return {"hrbench4k_eval": data.load_hrbench4k(sizes["rows"])}
+
+
+def _pope(sizes):
+    from vqar import data
+
+    return {"pope_eval": data.load_pope(sizes["rows"])}
+
+
+def _hallusionbench(sizes):
+    from vqar import data
+
+    return {"hallusionbench_eval": data.load_hallusionbench(sizes["rows"])}
+
+
+_BENCHMARK_ROLES = frozenset({"test", "published"})
+_CHOICE_SCHEMA = ("option letter; references hold the letter, the option's text, then every "
+                  "option in letter order")
+
+
+def _benchmark(name: str, rows: int, **fields) -> DatasetSpec:
+    """A public benchmark: one materialized subset playing `published` in full and `test` on its
+    clean rows. Where the authors' evaluator needs an LLM there is no official scorer, only a
+    declared project scorer."""
+    subset = f"{name}_eval"
+    return DatasetSpec(name=name, subsets={"test": subset, "published": subset},
+                       official_splits=_BENCHMARK_ROLES, ladder="benchmark",
+                       official_roles=_BENCHMARK_ROLES if fields.get("official") else frozenset(),
+                       sizes={"rows": rows}, require_split=False, **fields)
+
+
 DATASETS: dict[str, DatasetSpec] = {
     spec.name: spec
     for spec in [
         DatasetSpec(
             name="vqav2",
             display_name="VQAv2",
+            category="General VQA",
             sources={
                 "HuggingFaceM4/the_cauldron": "847a98a779b1652d65111daf20c972dfcd333605",
                 "lmms-lab/VQAv2": "32665d35052eb4a6d4414851c3c829a72754915a",
@@ -309,6 +397,7 @@ DATASETS: dict[str, DatasetSpec] = {
         DatasetSpec(
             name="gqa",
             display_name="GQA",
+            category="General VQA",
             sources={"lmms-lab/GQA": "a6e72d6e1b912da88af8b2f9eba05d5ea8ec2dd8"},
             subsets={"sft": "gqa_sft", "rl": "gqa_rl", "dev": "gqa_sft", "test": "gqa_eval"},
             official_splits=frozenset({"sft", "rl", "dev", "test"}),
@@ -324,6 +413,7 @@ DATASETS: dict[str, DatasetSpec] = {
         DatasetSpec(
             name="clevr",
             display_name="CLEVR counting",
+            category="General VQA",
             sources={"leonardPKU/clevr_cogen_a_train": "d5a8da66aa97c9c19ebe4075b7c7f777fef850a6"},
             subsets={"rl": "clevr_rl", "dev": "clevr_val", "test": "clevr_test"},
             official_splits=frozenset(),  # slices of one shuffled source split
@@ -338,6 +428,7 @@ DATASETS: dict[str, DatasetSpec] = {
         DatasetSpec(
             name="textvqa",
             display_name="TextVQA",
+            category="General VQA",
             sources={"lmms-lab/textvqa": "9c0699cd19768ac5ab97568f6b3cbac4c0062884"},
             subsets={"test": "textvqa_eval"},
             official_splits=frozenset({"test"}),
@@ -355,6 +446,7 @@ DATASETS: dict[str, DatasetSpec] = {
         # cohorts: the tutorial does not need them and the headline tables leave them out.
         DatasetSpec(
             name="chartqa", display_name="ChartQA (human)",
+            category="Document-chart",
             sources={"HuggingFaceM4/ChartQA": "b605b6e08b57faf4359aeb2fe6a3ca595f99b6c5"},
             subsets={"sft": "chartqa_train", "rl": "chartqa_train", "dev": "chartqa_val",
                      "test": "chartqa_test"},
@@ -368,6 +460,7 @@ DATASETS: dict[str, DatasetSpec] = {
         ),
         DatasetSpec(
             name="clevrcomp", display_name="CLEVR compositional",
+            category="General VQA",
             sources={"HuggingFaceM4/the_cauldron": "847a98a779b1652d65111daf20c972dfcd333605"},
             subsets={"sft": "clevrcomp_train", "rl": "clevrcomp_train",
                      "dev": "clevrcomp_train", "test": "clevrcomp_test"},
@@ -384,6 +477,7 @@ DATASETS: dict[str, DatasetSpec] = {
         # Evaluation shows up to eight images per case; training is not supported yet.
         DatasetSpec(
             name="medthink", display_name="MedThinkVQA",
+            category="Medical",
             sources={"bio-nlp-umass/MedThinkVQA": "5555b80e167c4796efab92fe709fb05914077dc0"},
             subsets={"sft": "medthink_train", "rl": "medthink_train", "dev": "medthink_train",
                      "test": "medthink_test"},
@@ -401,6 +495,7 @@ DATASETS: dict[str, DatasetSpec] = {
         # slices of one scan can land on both sides, so held-out scores may run optimistic.
         DatasetSpec(
             name="kvasirx1", display_name="Kvasir-VQA-x1 (atomic)",
+            category="Medical",
             sources={"SimulaMet/Kvasir-VQA-x1": "61e41148c3214bc5140ad0ab4c28520a512e2a73"},
             subsets={"sft": "kvasirx1_train", "rl": "kvasirx1_train", "dev": "kvasirx1_val",
                      "test": "kvasirx1_test"},
@@ -413,6 +508,7 @@ DATASETS: dict[str, DatasetSpec] = {
         ),
         DatasetSpec(
             name="omnimedvqa", display_name="OmniMedVQA (open access)",
+            category="Medical",
             sources={"foreverbeliever/OmniMedVQA": "1ba51c28fc0773bdf7efb8396e5bcfd4227e22da"},
             subsets={"sft": "omnimedvqa_train", "rl": "omnimedvqa_train",
                      "dev": "omnimedvqa_val", "test": "omnimedvqa_test"},
@@ -434,6 +530,7 @@ DATASETS: dict[str, DatasetSpec] = {
         # omnimedvqa's dev and test images, and there is no dev role.
         DatasetSpec(
             name="omnimedx", display_name="OmniMedVQA (held-out collections)",
+            category="Medical",
             sources={"foreverbeliever/OmniMedVQA": "1ba51c28fc0773bdf7efb8396e5bcfd4227e22da"},
             subsets={"sft": "omnimedx_train", "rl": "omnimedx_train", "test": "omnimedx_test"},
             official_splits=frozenset(),
@@ -445,6 +542,7 @@ DATASETS: dict[str, DatasetSpec] = {
         ),
         DatasetSpec(
             name="slake", display_name="SLAKE (English)",
+            category="Medical",
             sources={"BoKelvin/SLAKE": "a9083ce6c34ac3ffb17671a605962924d8a8f9e9"},
             subsets={"sft": "slake_train", "rl": "slake_train", "dev": "slake_validation",
                      "test": "slake_test"},
@@ -458,6 +556,7 @@ DATASETS: dict[str, DatasetSpec] = {
         # PathVQA images, so its questions are answerable from text.
         DatasetSpec(
             name="pathvqa", display_name="PathVQA",
+            category="Medical",
             sources={"flaviagiammarino/path-vqa": "1685832883334b5bb5beaf4e4b333fdeecaa4ad9"},
             subsets={"sft": "pathvqa_train", "rl": "pathvqa_train", "dev": "pathvqa_validation",
                      "test": "pathvqa_test"},
@@ -477,6 +576,7 @@ DATASETS: dict[str, DatasetSpec] = {
         # pools and per-question records of this dataset stay out of git (.gitignore).
         DatasetSpec(
             name="rexvqa", display_name="ReXVQA (frontal view)",
+            category="Medical",
             sources={"rajpurkarlab/ReXVQA": "b1adadb963bb16634f2e07c1c224a2e83fc8558a",
                      "rajpurkarlab/ReXGradient-160K":
                      "b9277dd929190931f5a8b6ae19f3e3c8aae2f1f7"},
@@ -499,6 +599,7 @@ DATASETS: dict[str, DatasetSpec] = {
         # becomes dev. Annotations CC BY 4.0; CT data from AbdomenAtlas 3.0 Mini, CC BY-NC-SA.
         DatasetSpec(
             name="deeptumor", display_name="DeepTumorVQA (whole-volume montage)",
+            category="Medical",
             sources={"tumor-vqa/DeepTumorVQA_2.0": "a8b9db5133fda02567476dcb49498ec51f6aed37"},
             subsets={"sft": "deeptumor_train", "rl": "deeptumor_train", "dev": "deeptumor_dev",
                      "test": "deeptumor_test"},
@@ -518,6 +619,7 @@ DATASETS: dict[str, DatasetSpec] = {
         # 6,607 of the benchmark's questions; the montages are stored as released (grayscale).
         DatasetSpec(
             name="deeptumorx", display_name="DeepTumorVQA (debiased options)",
+            category="Medical",
             sources={"tumor-vqa/DeepTumorVQA_2.0": "a8b9db5133fda02567476dcb49498ec51f6aed37"},
             subsets={"sft": "deeptumorx_train", "rl": "deeptumorx_train",
                      "dev": "deeptumorx_dev", "test": "deeptumorx_test"},
@@ -535,6 +637,7 @@ DATASETS: dict[str, DatasetSpec] = {
         # (2,048 vision tokens; train and evaluate with a 2,097,152-pixel budget).
         DatasetSpec(
             name="deeptumorv", display_name="DeepTumorVQA (debiased, 32-slice grid)",
+            category="Medical",
             sources={"tumor-vqa/DeepTumorVQA_2.0": "a8b9db5133fda02567476dcb49498ec51f6aed37"},
             subsets={"sft": "deeptumorv_train", "rl": "deeptumorv_train",
                      "dev": "deeptumorv_dev", "test": "deeptumorv_test"},
@@ -552,6 +655,7 @@ DATASETS: dict[str, DatasetSpec] = {
         # relative accuracy and text by exact match, as the dataset's authors score free form.
         DatasetSpec(
             name="deeptumorff", display_name="DeepTumorVQA (free form)",
+            category="Medical",
             sources={"tumor-vqa/DeepTumorVQA_2.0": "a8b9db5133fda02567476dcb49498ec51f6aed37"},
             subsets={"sft": "deeptumorff_train", "rl": "deeptumorff_train",
                      "dev": "deeptumorff_dev", "test": "deeptumorff_test"},
@@ -567,6 +671,7 @@ DATASETS: dict[str, DatasetSpec] = {
         # the volume. Every question shows a black image (vqar.data.load_m3dvqa).
         DatasetSpec(
             name="m3dvqa", display_name="M3D-VQA (questions only, black image)",
+            category="Medical",
             sources={"GoodBaiBai88/M3D-VQA": "25e34a768946fa5e11ebf4dda613d1d509bd9e91"},
             subsets={"sft": "m3dvqa_train", "rl": "m3dvqa_train", "dev": "m3dvqa_dev",
                      "test": "m3dvqa_test"},
@@ -579,6 +684,7 @@ DATASETS: dict[str, DatasetSpec] = {
         ),
         DatasetSpec(
             name="vizwiz", display_name="VizWiz",
+            category="General VQA",
             sources={"https://vizwiz.cs.colorado.edu/VizWiz_all_answers/VQA_test.json":
                      "fa113f0e90230ab4690bb41c4d74e40f7087cc7c192dd8363fa4d6bad339b7aa",
                      "https://vizwiz.cs.colorado.edu/VizWiz_final/images/test.zip":
@@ -598,6 +704,7 @@ DATASETS: dict[str, DatasetSpec] = {
         ),
         DatasetSpec(
             name="realworldqa", display_name="RealWorldQA",
+            category="General VQA",
             sources={"xai-org/RealworldQA": "17e7f75e092e47169732462ea3cdfebe911105dd"},
             subsets={"test": "realworldqa_eval"}, official_splits=frozenset({"test"}),
             ladder="far-ood", answer_schema="original question/options; one raw answer",
@@ -611,6 +718,135 @@ DATASETS: dict[str, DatasetSpec] = {
                             "no punctuation/article/number normalization or option guessing"},
                 "normalized": {"same_as": "project", "name": "case/whitespace exact match"}},
             require_split=False,
+        ),
+        _benchmark(
+            "mmstar", 1500, display_name="MMStar", category="General VQA",
+            sources={"Lin-Chen/MMStar": "bc98d668301da7b14f648724866e57302778ab27"},
+            answer_schema=_CHOICE_SCHEMA, materialize=_mmstar,
+            official=benchmark_metrics.mmstar_accuracy,
+            normalized=benchmark_metrics.normalized_choice_accuracy,
+            metric_metadata={"primary": "official", "official": {
+                "name": "MMStar option letter",
+                "source": "MMStar-Benchmark/MMStar eval/vlmeval/evaluate/mmstar.py",
+                "rule": "the letter opens the response, alone or after '(', 'option ' or "
+                        "'the answer is '"}},
+        ),
+        _benchmark(
+            "mathvista", 1000, display_name="MathVista (testmini)", category="Reasoning",
+            sources={"AI4Math/MathVista": "2b6ad69445fbb5695c9b165475e8decdbeb97747"},
+            answer_schema=f"{_CHOICE_SCHEMA} (540 rows); else an integer, a float or a Python "
+            "list as one reference",
+            materialize=_mathvista, official=None,
+            project=benchmark_metrics.mathvista_accuracy,
+            normalized=benchmark_metrics.normalized_mixed_accuracy,
+            metric_metadata={"primary": "project", "project": {
+                "name": "MathVista by answer type",
+                "source": "project-defined: the authors extract answers with GPT; normalization "
+                          "from lupantech/MathVista evaluation/calculate_score.py",
+                "rule": "options through VLMEvalKit's can_infer; else the last number, truncated "
+                        "for an integer, rounded to the reference's decimals for a float; lists "
+                        "element by element"}},
+        ),
+        _benchmark(
+            "mmmu", 900, display_name="MMMU (validation)", category="Reasoning",
+            sources={"MMMU/MMMU": "876ce5cb130f7f7e290ce4d9984357737d4db5cf"},
+            answer_schema=f"{_CHOICE_SCHEMA} (847 rows); else open answers, any one counting",
+            materialize=_mmmu, max_images=5, official=benchmark_metrics.mmmu_accuracy,
+            normalized=benchmark_metrics.normalized_mixed_accuracy,
+            metric_metadata={"primary": "official", "official": {
+                "name": "MMMU rule parser",
+                "source": "MMMU-Benchmark/MMMU mmmu/utils/eval_utils.py",
+                "rule": "parse_multi_choice_response and parse_open_response with eval_open; the "
+                        "authors' random guess on an unparsable choice is seeded by the response"}},
+        ),
+        _benchmark(
+            "charxiv", 1000, display_name="CharXiv (reasoning)", category="Document-chart",
+            sources={"princeton-nlp/CharXiv": "f441eb632fc62f6f777830a0f47619e6e86459b0"},
+            answer_schema="a number or short text read or reasoned from a chart; one reference",
+            materialize=_charxiv, official=None, project=benchmark_metrics.charxiv_accuracy,
+            normalized=metrics.exact_match,
+            metric_metadata={"primary": "project", "project": {
+                "name": "CharXiv rule match",
+                "source": "project-defined: the authors grade with GPT; text relaxation from "
+                          "lmms-eval tasks/_task_utils/reasoning_utils.py",
+                "rule": "numbers equal in value at six decimals in any notation; text normalized "
+                        "equal, 90% contained, or the same comma-separated terms"}},
+        ),
+        _benchmark(
+            "ocrbench", 1000, display_name="OCRBench", category="Document-chart",
+            sources={"echo840/OCRBench": "92a54bd1384387c178d5a07140a2d85e0a3d12e1"},
+            answer_schema="text read from the image; any one reference counts",
+            materialize=_ocrbench, official=benchmark_metrics.ocrbench_accuracy,
+            normalized=metrics.exact_match,
+            metric_metadata={"primary": "official", "official": {
+                "name": "OCRBench substring",
+                "source": "Yuliang-Liu/MultimodalOCR OCRBench/example.py",
+                "rule": "a reference is a substring of the response; lowercase, or for HME100k "
+                        "formulas without spaces and with case kept"}},
+        ),
+        _benchmark(
+            "docvqa", 5349, display_name="DocVQA", category="Document-chart",
+            sources={"lmms-lab-encoder/DocVQA": "539088ef8a8ada01ac8e2e6d4e372586748a265e"},
+            answer_schema="text read from a document; one to six annotator answers",
+            materialize=_docvqa, official=benchmark_metrics.docvqa_anls,
+            normalized=metrics.exact_match,
+            metric_metadata={"primary": "official", "official": {
+                "name": "ANLS, threshold 0.5",
+                "source": "QwenLM/Qwen-VL eval_mm/infographicsvqa_eval.py (the RRC script)",
+                "rule": "one minus the best normalized edit distance, zero below 0.5"}},
+        ),
+        _benchmark(
+            "vstar", 191, display_name="V*", category="Perception",
+            sources={"craigwu/vstar_bench": "d9ae62c903da0c98336e85c5ee89cd863b04b4da"},
+            answer_schema=_CHOICE_SCHEMA + " (two or four options)",
+            materialize=_vstar, official=None, project=benchmark_metrics.option_accuracy,
+            normalized=benchmark_metrics.normalized_choice_accuracy,
+            metric_metadata={"primary": "project", "project": {
+                "name": "option letter",
+                "source": "project-defined: the authors rank options by likelihood; reader from "
+                          "open-compass/VLMEvalKit vlmeval/utils/matching_util.py",
+                "rule": "the one option letter named, else the one option's text contained"}},
+        ),
+        # Options are circular in the data: 200 questions, each listed with four rotations of its
+        # options. Each row is scored alone and rotations are averaged, as the authors and
+        # VLMEvalKit report it; no question must be right under every rotation.
+        _benchmark(
+            "hrbench4k", 800, display_name="HR-Bench 4K", category="Perception",
+            sources={"DreamMr/HR-Bench": "83b9013d6293b85dc507e87199ca52517536939c"},
+            answer_schema=_CHOICE_SCHEMA,
+            materialize=_hrbench4k, official=None, project=benchmark_metrics.option_accuracy,
+            normalized=benchmark_metrics.normalized_choice_accuracy,
+            metric_metadata={"primary": "project", "project": {
+                "name": "option letter, rotations averaged",
+                "source": "project-defined: the authors' evaluator requires an LLM judge "
+                          "(DreamMr/HR-Bench hrbench/vlmeval/dataset/utils/hrbench.py); reader "
+                          "from VLMEvalKit's exact_matching policy, vlmeval/utils/matching_util.py",
+                "rule": "the one option letter named, else the one option's text contained"}},
+        ),
+        _benchmark(
+            "pope", 9000, display_name="POPE", category="Hallucination",
+            sources={"lmms-lab-encoder/POPE": "4db1276663dfa5eb8ad16a52d24c31a09e470896"},
+            answer_schema="yes or no; one reference",
+            materialize=_pope, official=benchmark_metrics.pope_accuracy,
+            normalized=metrics.exact_match, summary_metrics=benchmark_metrics.pope_summary,
+            metric_metadata={"primary": "official", "official": {
+                "name": "POPE yes/no",
+                "source": "RUCAIBox/POPE evaluate.py",
+                "rule": "in the first sentence 'No', 'not' or 'no' reads as no, anything else as "
+                        "yes; precision, recall, F1 and yes ratio are recorded too"}},
+        ),
+        _benchmark(
+            "hallusionbench", 1129, display_name="HallusionBench", category="Hallucination",
+            sources={"rayguan/HallusionBench": "2067dfdce5abc7efdbb0927f4721ae282f0b6c51"},
+            answer_schema="yes or no; one reference; the 178 questions released without an image "
+            "stay in the published role only",
+            materialize=_hallusionbench, official=None,
+            project=benchmark_metrics.yes_no_accuracy, normalized=metrics.exact_match,
+            metric_metadata={"primary": "project", "project": {
+                "name": "yes/no word",
+                "source": "project-defined: the authors grade with GPT-4 "
+                          "(tianyi-lab/HallusionBench utils.py)",
+                "rule": "the first stand-alone yes or no; an answer with neither is wrong"}},
         ),
     ]
 }

@@ -146,7 +146,7 @@ def test_project_primary_roundtrip_display_and_paired_ci(prepared_inputs, tmp_pa
     assert record.metrics["official"] is None
     assert record.metrics["project"]["overall"] == 1
     assert record.metrics["normalized"] == record.metrics["project"]
-    assert describe(record).startswith("project case/whitespace EM 1.0000")
+    assert describe(record).startswith("project case/whitespace exact match 1.0000")
     cached = ScriptedGenerator(good)
     assert run_eval(model, Protocol("realworldqa"), cached, data_dir=data,
                     records_dir=tmp_path / "records") == record

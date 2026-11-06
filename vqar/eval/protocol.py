@@ -15,7 +15,7 @@ IMAGE_MODES = ("original", "black", "swapped", "canvas", "first", "none", "upsca
 # Interventions change what the image shows; they pair with the original-image cell.
 INTERVENTIONS = ("black", "swapped", "first", "none")
 # Training roles are read only by the learnability pre-check and the screening battery.
-EVAL_ROLES = ("dev", "test", "rl", "sft")
+EVAL_ROLES = ("dev", "test", "rl", "sft", "published")
 EXTRACTION_RULE = "last_answer_tag_or_full_text"
 # The corrected campaign's rule; retention reports it beside mean output tokens.
 ANSWER_TAG_RULE = "raw text contains </answer>"

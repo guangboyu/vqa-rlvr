@@ -205,6 +205,8 @@ def summarize(lines: list[dict], dataset: str, prompt: str) -> dict:
                              abs_tol=1e-12)
             for line in lines
         )
+    if DATASETS[dataset].summary_metrics is not None:
+        metrics.update(DATASETS[dataset].summary_metrics(lines))
     if len(lines) > metrics["n"]:
         metrics.update(sampled_metrics(lines, dataset, prompt))
     return metrics

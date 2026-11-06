@@ -30,7 +30,8 @@ class Example:
 
 
 def to_example(row: dict) -> Example:
-    payloads = row.get("images") or [row["image"]]  # multi-image rows list every shown image
+    # Multi-image rows list every shown image; an empty list is a question with no image at all.
+    payloads = row["images"] if "images" in row else [row["image"]]
     images = [p["bytes"] if p["bytes"] is not None else Path(p["path"]).read_bytes()
               for p in payloads]
     return Example(row["dataset"], row["qid"], images, row["question"], list(row["answers"]),

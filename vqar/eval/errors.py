@@ -36,8 +36,6 @@ ERROR_KINDS = {
 
 # Answer forms a few random samples cannot hit by chance.
 OPEN_FORMS = ("number", "text")
-YES_NO = {"yes", "no", "true", "false"}
-NUMBER = re.compile(r"[-+]?[\d,]*\.?\d+%?")
 
 HEDGE = re.compile(r"\bor\b|/")
 LONG_ANSWER_WORDS = 6
@@ -60,21 +58,6 @@ def long_answer(answer: str | None, raw: str) -> bool:
 
 ANSWER_FORM_CHECKS = {check.__name__: check
                       for check in (hedged, multiple_answer_tags, long_answer)}
-
-
-def reference_form(answers: list[str]) -> str:
-    """The most common reference's form: yes/no, choice, number or text.
-
-    `answer_type` means something different in each dataset; this one tag does not. A choice
-    reference is an uppercase option letter, which is how multiple-choice loaders store it.
-    """
-    if answers and re.fullmatch(r"[A-Z]", answers[0].strip()):
-        return "choice"
-    cleaned = [answer.strip().rstrip(".").lower() for answer in answers]
-    common = max(cleaned, key=cleaned.count) if cleaned else ""
-    if common in YES_NO:
-        return "yes/no"
-    return "number" if NUMBER.fullmatch(common) else "text"
 
 
 def is_right(score: float) -> bool:

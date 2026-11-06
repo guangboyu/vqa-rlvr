@@ -1307,3 +1307,318 @@ def load_m3dvqa(train_size: int, dev_size: int, seed: int) -> dict[str, Dataset]
               "dev": rng.sample(read("val"), dev_size)}
     return {name: _build(_m3dvqa_generate, records=tuple(sorted(records, key=lambda r: r["qid"])))
             for name, records in splits.items()}
+
+
+# Public benchmarks (Milestone 2, 2026-11-06). Test-only rows in source order. Nothing is resized
+# here: the evaluation protocol's pixel budget decides what the model sees. Parquet rows are read
+# one batch at a time inside the generator, so a multi-gigabyte source never sits in memory or in
+# the build's fingerprint.
+OPTION_INSTRUCTION = "Answer with the letter of the correct option."
+
+
+def _as_released(payload: bytes) -> bytes:
+    """RGB and grayscale bytes stay as released: decoding reads grayscale as R = G = B, and an RGB
+    PNG would add 70% to DocVQA's scans. Alpha and palettes become RGB, as other harnesses do."""
+    import io
+
+    with PILImage.open(io.BytesIO(payload)) as image:
+        keep = image.mode in ("RGB", "L")
+    return payload if keep else _rgb_png(payload)
+
+
+def choice_answers(letter: str, options: list[str]) -> list[str]:
+    """The reference letter, its option's text, then every option in letter order: the first two
+    are the project's multiple-choice convention, the rest feed the rule-based option readers."""
+    return [letter, options[ord(letter) - ord("A")], *options]
+
+
+def _benchmark_row(dataset: str, qid: str, image: bytes, question: str, answers: list[str],
+                   answer_type: str) -> dict:
+    return {"dataset": dataset, "qid": str(qid),
+            "image": {"bytes": _as_released(image), "path": None},
+            "question": question, "answers": answers, "answer_type": answer_type}
+
+
+def _images_row(dataset: str, qid: str, images: list[bytes], placeholder: bytes | None,
+                question: str, answers: list[str], answer_type: str) -> dict:
+    """A unified row with an `images` list; `image` keeps the first, or a placeholder when there
+    are none, so split files can still key the row."""
+    shown = [{"bytes": _as_released(image), "path": None} for image in images]
+    first = shown[0] if shown else {"bytes": placeholder, "path": None}
+    return {"dataset": dataset, "qid": str(qid), "image": first, "images": shown,
+            "question": question, "answers": answers, "answer_type": answer_type}
+
+
+def _snapshot(repo_id: str, patterns: list[str]):
+    """The pinned revision's local folder; offline it reads the hub cache without a request."""
+    from pathlib import Path
+
+    from huggingface_hub import snapshot_download
+
+    return Path(snapshot_download(repo_id, repo_type="dataset", allow_patterns=patterns,
+                                  revision=SOURCE_REVISIONS[repo_id]))
+
+
+def _parquet_generate(files: tuple[str, ...], columns: tuple[str, ...], to_row) -> Iterator[dict]:
+    import pyarrow.parquet as pq
+
+    index = 0
+    for file in files:
+        for batch in pq.ParquetFile(file).iter_batches(batch_size=16, columns=list(columns)):
+            for row in batch.to_pylist():
+                yield to_row(row, index)
+                index += 1
+
+
+def _checked_rows(rows: Dataset, expected: int) -> Dataset:
+    """A pinned source must give the rows it was registered with, each under its own ID."""
+    if len(rows) != expected or len(set(rows["qid"])) != expected:
+        raise ValueError(f"expected {expected} distinct rows, got {len(rows)} "
+                         f"with {len(set(rows['qid']))} IDs")
+    return rows
+
+
+def _from_parquet(files, columns, to_row, expected: int, features=FEATURES) -> Dataset:
+    gen_kwargs = {"files": tuple(str(file) for file in files), "columns": tuple(columns),
+                  "to_row": to_row}
+    rows = Dataset.from_generator(_parquet_generate, features=features, gen_kwargs=gen_kwargs)
+    return _checked_rows(rows, expected)
+
+
+_MMSTAR_INLINE = re.compile(r"(?:^|,\s)([A-D]):\s")
+_MMSTAR_BLOCK = re.compile(r"(?:^|\n)\(([A-D])\)\s")
+
+
+def mmstar_options(question: str) -> list[str]:
+    """The option texts a question writes out, 'Options: A: x, B: y' or lines of '(A) x'. Some
+    rows hold the literal option 'nan', as released."""
+    parts = _MMSTAR_BLOCK.split(question)
+    if len(parts) == 1:
+        parts = _MMSTAR_INLINE.split(question.split("Options:")[-1].strip())
+    letters, texts = parts[1::2], parts[2::2]
+    if not letters or letters != [chr(ord("A") + i) for i in range(len(letters))]:
+        raise ValueError(f"unreadable options: {question[-120:]!r}")
+    return [text.strip() for text in texts]
+
+
+def mmstar_row(row: dict, index: int) -> dict:
+    question = row["question"]
+    if "option letter" not in question:  # the rows copied from MathVista already say so
+        question = f"{question}\n{OPTION_INSTRUCTION}"
+    return _benchmark_row("mmstar", row["index"], row["image"], question,
+                          choice_answers(row["answer"], mmstar_options(row["question"])),
+                          row["category"])
+
+
+def load_mmstar(expected: int) -> Dataset:
+    """MMStar's val split, its only one, with each question as released."""
+    root = _snapshot("Lin-Chen/MMStar", ["mmstar.parquet"])
+    return _from_parquet([root / "mmstar.parquet"],
+                         ["index", "question", "answer", "category", "image"], mmstar_row, expected)
+
+
+def mathvista_row(row: dict, index: int) -> dict:
+    """The authors' `query` is the question: it carries the hint, the unit and the options."""
+    answer = row["answer"]
+    if row["question_type"] == "multi_choice":
+        letter = chr(ord("A") + row["choices"].index(answer))
+        answers, kind = choice_answers(letter, row["choices"]), "multi_choice"
+    else:
+        answers, kind = [answer], row["answer_type"]
+    if row["precision"] is not None and len(answer.split(".")[1]) != int(row["precision"]):
+        raise ValueError(f"{row['pid']}: the scorer reads precision from the reference's decimals")
+    return _benchmark_row("mathvista", row["pid"], row["decoded_image"]["bytes"], row["query"],
+                          answers, kind)
+
+
+def load_mathvista(expected: int) -> Dataset:
+    root = _snapshot("AI4Math/MathVista", ["data/testmini-*.parquet"])
+    return _from_parquet(sorted((root / "data").glob("testmini-*.parquet")),
+                         ["pid", "decoded_image", "choices", "precision", "answer", "question_type",
+                          "answer_type", "query"], mathvista_row, expected)
+
+
+def mmmu_row(row: dict, index: int) -> dict:
+    """Every stored image in order, `<image n>` placeholders left in the text as released. Options
+    print as the authors' prompt does, and a list-shaped open answer means any of its items."""
+    import ast
+
+    images = [row[f"image_{i}"]["bytes"] for i in range(1, 8)
+              if row[f"image_{i}"] and row[f"image_{i}"]["bytes"]]
+    question, answer = row["question"], row["answer"]
+    if row["question_type"] == "multiple-choice":
+        options = [str(option) for option in ast.literal_eval(row["options"])]
+        lines = "\n".join(f"({chr(ord('A') + i)}) {text}" for i, text in enumerate(options))
+        question = f"{question}\n{lines}\n{OPTION_INSTRUCTION}"
+        answers = choice_answers(answer, options)
+    else:
+        answers = ast.literal_eval(answer) if answer.startswith("[") else [answer]
+    return _images_row("mmmu", row["id"], images, None, question, answers, row["question_type"])
+
+
+def load_mmmu(expected: int) -> Dataset:
+    """MMMU's validation split; each subject is one parquet file."""
+    root = _snapshot("MMMU/MMMU", ["*/validation-*.parquet"])
+    columns = ["id", "question", "options", "answer", "question_type",
+               *(f"image_{i}" for i in range(1, 8))]
+    return _from_parquet(sorted(root.glob("*/validation-*.parquet")), columns, mmmu_row, expected,
+                         features=MULTI_IMAGE_FEATURES)
+
+
+CHARXIV_ANSWER_TYPES = {1: "text-in-chart", 2: "text-in-general", 3: "number-in-chart",
+                        4: "number-in-general"}
+
+
+def charxiv_row(row: dict, index: int) -> dict:
+    """One reasoning question per chart; the descriptive questions are left out."""
+    qid = row["figure_path"].removeprefix("images/").removesuffix(".jpg")
+    return _benchmark_row("charxiv", qid, row["image"]["bytes"], row["reasoning_q"],
+                          [row["reasoning_a"]], CHARXIV_ANSWER_TYPES[row["reasoning_a_type"]])
+
+
+def load_charxiv(expected: int) -> Dataset:
+    root = _snapshot("princeton-nlp/CharXiv", ["val.parquet"])
+    return _from_parquet([root / "val.parquet"], ["image", "figure_path", "reasoning_q",
+                                                  "reasoning_a", "reasoning_a_type"],
+                         charxiv_row, expected)
+
+
+def ocrbench_row(row: dict, index: int) -> dict:
+    """References stay as released: the official rule tells formulas by their trailing newline."""
+    answers = list(row["answer"])
+    if (row["dataset"] == "HME100k") != any(answer.endswith("\n") for answer in answers):
+        raise ValueError(f"row {index}: only HME100k references may end in a newline")
+    return _benchmark_row("ocrbench", f"test-{index}", row["image"]["bytes"], row["question"],
+                          answers, row["question_type"])
+
+
+def load_ocrbench(expected: int) -> Dataset:
+    root = _snapshot("echo840/OCRBench", ["data/test-*.parquet"])
+    return _from_parquet(sorted((root / "data").glob("test-*.parquet")),
+                         ["dataset", "question", "question_type", "answer", "image"],
+                         ocrbench_row, expected)
+
+
+def docvqa_row(row: dict, index: int) -> dict:
+    """A question can have several `question_types`; its answer type is the first."""
+    kinds = row["question_types"] or [""]
+    return _benchmark_row("docvqa", row["questionId"], row["image"]["bytes"], row["question"],
+                          list(row["answers"]), kinds[0])
+
+
+def load_docvqa(expected: int) -> Dataset:
+    root = _snapshot("lmms-lab-encoder/DocVQA", ["DocVQA/validation-*.parquet"])
+    return _from_parquet(sorted((root / "DocVQA").glob("validation-*.parquet")),
+                         ["questionId", "question", "question_types", "image", "answers"],
+                         docvqa_row, expected)
+
+
+_VSTAR_OPTION = re.compile(r"^\(([A-Z])\)\s*(.*)$", re.MULTILINE)
+
+
+def vstar_row(row: dict, image: bytes) -> dict:
+    """The text carries its options. Its closing instruction ('... directly') would contradict
+    the reasoning prompt, so it gives way to the project's option instruction."""
+    options = [text.strip() for _, text in _VSTAR_OPTION.findall(row["text"])]
+    stem_and_options = row["text"].rsplit("\n", 1)[0]
+    return _benchmark_row("vstar", row["question_id"], image,
+                          f"{stem_and_options}\n{OPTION_INSTRUCTION}",
+                          choice_answers(row["label"], options), row["category"])
+
+
+def _vstar_generate(root: str, rows: tuple[dict, ...]) -> Iterator[dict]:
+    from pathlib import Path
+
+    for row in rows:
+        yield vstar_row(row, (Path(root) / row["image"]).read_bytes())
+
+
+def load_vstar(expected: int) -> Dataset:
+    """The rows of test_questions.jsonl; the repository's other image folders are not in it."""
+    import json
+
+    root = _snapshot("craigwu/vstar_bench", ["test_questions.jsonl", "direct_attributes/*",
+                                             "relative_position/*"])
+    lines = (root / "test_questions.jsonl").read_text().splitlines()
+    rows = tuple(json.loads(line) for line in lines)
+    return _checked_rows(_build(_vstar_generate, root=str(root), rows=rows), expected)
+
+
+def hrbench_row(row: dict, index: int) -> dict:
+    """One rotation of one question: the authors list each question four times with its options
+    rotated. The image is the released 4K JPEG, not downscaled."""
+    import base64
+
+    options = [row[letter] for letter in "ABCD"]
+    lines = "\n".join(f"{letter}. {text}" for letter, text in zip("ABCD", options, strict=True))
+    question = f"{row['question']}\n{lines}\n{OPTION_INSTRUCTION}"
+    return _benchmark_row("hrbench4k", row["index"], base64.b64decode(row["image"]), question,
+                          choice_answers(row["answer"], options), row["category"])
+
+
+def load_hrbench4k(expected: int) -> Dataset:
+    root = _snapshot("DreamMr/HR-Bench", ["hr_bench_4k.parquet"])
+    return _from_parquet([root / "hr_bench_4k.parquet"],
+                         ["index", "answer", "question", "A", "B", "C", "D", "category", "image"],
+                         hrbench_row, expected)
+
+
+def pope_row(row: dict, index: int) -> dict:
+    return _benchmark_row("pope", row["id"], row["image"]["bytes"], row["question"],
+                          [row["answer"]], row["category"])
+
+
+def load_pope(expected: int) -> Dataset:
+    """POPE's adversarial, popular and random sets: 3,000 questions each on the same 500 images."""
+    root = _snapshot("lmms-lab-encoder/POPE", ["data/test-*.parquet"])
+    return _from_parquet(sorted((root / "data").glob("test-*.parquet")),
+                         ["id", "question", "answer", "category", "image"], pope_row, expected)
+
+
+def text_only_placeholder() -> bytes:
+    """Never shown: the split file's key for a question released without an image. No other
+    registered source stores a black 16-pixel square, so it cannot match a training image."""
+    import io
+
+    buffer = io.BytesIO()
+    PILImage.new("RGB", (16, 16)).save(buffer, "PNG")
+    return buffer.getvalue()
+
+
+def hallusion_row(row: dict, image: bytes | None, placeholder: bytes) -> dict:
+    """gt_answer 1 is yes, 0 is no. Questions with `visual_input` 0 are text-only controls: they
+    keep an empty `images` list, their answer type says so, and only the `published` role holds
+    them, since a row without an image has no image gain to report."""
+    kind = f"{row['category']} {row['subcategory']}" + ("" if image else " text-only")
+    qid = "-".join(row[key] for key in ("category", "subcategory", "set_id", "figure_id",
+                                        "question_id"))
+    return _images_row("hallusionbench", qid, [image] if image else [], placeholder,
+                       row["question"], ["yes" if row["gt_answer"] == "1" else "no"], kind)
+
+
+def _hallusion_generate(files: tuple[tuple[str, str], ...],
+                        rows: tuple[dict, ...]) -> Iterator[dict]:
+    from pathlib import Path
+
+    # The JSON writes .png where nine files on disk end in .PNG, which only a case-insensitive
+    # file system forgives.
+    paths = {name.lower(): Path(path) for name, path in files}
+    placeholder = text_only_placeholder()
+    for row in rows:
+        name = row["filename"]
+        image = paths[str(Path(name)).lower()].read_bytes() if name else None
+        yield hallusion_row(row, image, placeholder)
+
+
+def load_hallusionbench(expected: int) -> Dataset:
+    """Every row of HallusionBench.json. The README's table (254 questions) and the sample result
+    file predate the dataset's expansion; the JSON holds the current benchmark."""
+    import json
+
+    root = _snapshot("rayguan/HallusionBench", ["HallusionBench.json", "data/*"])
+    rows = tuple(json.loads((root / "HallusionBench.json").read_text()))
+    files = tuple((str(path.relative_to(root / "data")), str(path))
+                  for path in sorted((root / "data").rglob("*")) if path.is_file())
+    built = Dataset.from_generator(_hallusion_generate, features=MULTI_IMAGE_FEATURES,
+                                   gen_kwargs={"files": files, "rows": rows})
+    return _checked_rows(built, expected)

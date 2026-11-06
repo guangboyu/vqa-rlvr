@@ -12,8 +12,9 @@ reward. A question counts for a greedy arm when its one answer gets full credit.
 import json
 from dataclasses import dataclass
 
+from vqar.answers import reference_form
 from vqar.config import MAX_PIXELS
-from vqar.eval.errors import OPEN_FORMS, reference_form
+from vqar.eval.errors import OPEN_FORMS
 from vqar.eval.paired import paired_bootstrap
 from vqar.eval.pass_at_k import FULL_CREDIT, estimate_pass_at_k, load_sampled
 from vqar.eval.report import ROOT, Cell, load_cells

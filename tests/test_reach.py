@@ -3,7 +3,7 @@
 import pytest
 
 from scripts.reach import reach_by_question, verdict
-from vqar.eval.errors import reference_form
+from vqar.answers import reference_form
 from vqar.eval.pass_at_k import SampledCell
 
 
@@ -11,6 +11,7 @@ from vqar.eval.pass_at_k import SampledCell
     (["yes"], "yes/no"), (["No."], "yes/no"), (["no", "yes", "no"], "yes/no"),
     (["B", "a red car"], "choice"), (["14"], "number"), (["1,250"], "number"), (["25%"], "number"),
     (["-0.5"], "number"), (["a red car"], "text"), (["a"], "text"), ([], "text"),
+    (["C"], "text"),  # a capital letter alone is an open answer, as in CharXiv and DocVQA
 ])
 def test_reference_form(answers, form):
     assert reference_form(answers) == form

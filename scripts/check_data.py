@@ -121,7 +121,8 @@ def main():
     for dataset, split in splits.items():
         sizes = {role: sum(len(p["indices"]) for p in parts)
                  for role, parts in split["roles"].items()}
-        print(f"{dataset} ({split['ladder']}): {sizes}", flush=True)
+        clean = f", clean rows {split['clean_rows']}" if "clean_rows" in split else ""
+        print(f"{dataset} ({split['ladder']}): {sizes}{clean}", flush=True)
     report = overlap_report(list(splits.values()))
     path = args.data_dir / "splits" / "overlap-report.json"
     path.write_text(json.dumps(report, indent=2) + "\n")

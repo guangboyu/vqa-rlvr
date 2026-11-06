@@ -52,7 +52,8 @@ def describe(record) -> str:
     if official is not None:
         scores.insert(0, f"official {official['overall']:.4f}")
     if project := record.metrics.get("project"):
-        scores.insert(0, f"project case/whitespace EM {project['overall']:.4f}")
+        name = record.protocol["metric_metadata"]["project"]["name"]
+        scores.insert(0, f"project {name} {project['overall']:.4f}")
     return f"{', '.join(scores)}, n={record.metrics['n']}"
 
 
@@ -78,7 +79,7 @@ def main() -> None:
                         help="default: required tutorial datasets with the chosen role; "
                         "optional OOD datasets must be named")
     parser.add_argument("--prompts", nargs="+", choices=sorted(PROMPTS), default=["short"])
-    parser.add_argument("--role", choices=("test", "dev"), default="test")
+    parser.add_argument("--role", choices=("test", "dev", "published"), default="test")
     parser.add_argument("--tier", default="full",
                         help=f"{', '.join(Protocol.TIERS)}, or first-N (the role's first N "
                         "questions in their fixed order)")

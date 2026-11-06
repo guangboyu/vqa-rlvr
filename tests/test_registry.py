@@ -46,7 +46,12 @@ def test_role_listing_follows_registry_order():
                                           "clevrcomp", "medthink", "kvasirx1", "omnimedvqa",
                                           "omnimedx", "slake", "pathvqa", "rexvqa",
                                           "deeptumor", "deeptumorx", "deeptumorv", "deeptumorff",
-                                          "m3dvqa", "vizwiz", "realworldqa"]
+                                          "m3dvqa", "vizwiz", "realworldqa", "mmstar", "mathvista",
+                                          "mmmu", "charxiv", "ocrbench", "docvqa", "vstar",
+                                          "hrbench4k", "pope", "hallusionbench"]
+    assert datasets_with_role("published") == ["mmstar", "mathvista", "mmmu", "charxiv",
+                                               "ocrbench", "docvqa", "vstar", "hrbench4k", "pope",
+                                               "hallusionbench"]
     assert datasets_with_role("sft") == ["vqav2", "gqa", "chartqa", "clevrcomp", "medthink",
                                          "kvasirx1", "omnimedvqa", "omnimedx", "slake",
                                          "pathvqa", "rexvqa", "deeptumor", "deeptumorx",
