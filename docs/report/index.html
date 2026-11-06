@@ -360,7 +360,7 @@ body.present .counter { display: block; position: fixed; z-index: 6; font-family
 
 <section class="slide" id="open">
   <h2><span class="num">8</span>Open: one model for photos and charts</h2>
-  <p>Does one model learn when to reason? Trained on photos and charts together, a 2B model kept its chart reasoning until update 1,750, lost it by update 2,000, and ended at 65.9% on ChartQA against 80.1% for the chart-only model, at 11 tokens per answer. It trained for 2,844 updates against the chart-only model's 1,844, so mixing and training length are confounded. A chart-only control at the same length is declared and running; it decides whether the fix is routing prompts by domain or knowing when to stop.</p>
+  <p>Does one model learn when to reason? Trained on photos and charts together, a 2B model kept its chart reasoning until update 1,750, lost it by update 2,000, and ended at 65.9% on ChartQA against 80.1% for the chart-only model. The cause is mixing, not training length: a chart-only model trained for the same 2,844 updates keeps 179-token answers and its dev accuracy (75.8% → 75.8%). Routing prompts by domain is the next test.</p>
 </section>
 
 <section class="slide" id="future">

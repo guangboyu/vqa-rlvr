@@ -1,0 +1,141 @@
+{
+ "cards": [
+  {
+   "id": "chart-length-control",
+   "node": "open",
+   "question": "Does chart-only GRPO keep its reasoning past update 2,000? The photos + charts model collapsed to about 10 tokens between updates 1,750 and 2,000 of 2,844, while the chart-only model stopped at 1,844, so mixing and training length are confounded.",
+   "recipe": "v1.0",
+   "baseline": "cqa-grpo2-base-e1",
+   "change": "2,844 updates instead of 1,844 on ChartQA alone: the mixture's horizon and learning-rate schedule",
+   "predicted": "Holds. End-of-run dev answers stay above half the 1,844-update model's length and dev accuracy within 2 points of it: chart questions reward reasoning, and the collapse came from the photo questions' pressure toward short answers. Answers keep shortening slowly, as they did from 198 tokens at update 300 to 162 at 1,844.",
+   "holds_if": "end-of-run dev tokens >= 50% of the baseline's and dev accuracy >= baseline - 2 points",
+   "if_holds": "Mixing caused the collapse: run the prompt-routing and ratio cards.",
+   "if_not": "Long-run RL instability, not mixing: no ratio cards; the finding becomes when to stop.",
+   "status": "null",
+   "why": "Observed: 1,000 more updates leave dev accuracy where it was (75.8) and answers do not collapse. They lengthen after update 1,250 (137 to 179 tokens), so the predicted slow shortening was wrong.",
+   "implies": "The collapse comes from mixing, not length. Next: prompt routing and one other ratio. Chart-only training gains nothing past 1,844 updates.",
+   "final": {
+    "accuracy": 75.8,
+    "baseline": 75.8,
+    "tokens": 179.136,
+    "baseline_tokens": 144.904,
+    "n": 500,
+    "delta": 0.0,
+    "low": -2.6,
+    "high": 2.6,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "final_step": 2844,
+   "baseline_step": 1844,
+   "curve": [
+    {
+     "step": 250,
+     "accuracy": 72.39999999999999,
+     "tokens": 216.426
+    },
+    {
+     "step": 500,
+     "accuracy": 75.2,
+     "tokens": 150.624
+    },
+    {
+     "step": 750,
+     "accuracy": 75.4,
+     "tokens": 156.676
+    },
+    {
+     "step": 1000,
+     "accuracy": 75.6,
+     "tokens": 157.126
+    },
+    {
+     "step": 1250,
+     "accuracy": 76.6,
+     "tokens": 136.678
+    },
+    {
+     "step": 1500,
+     "accuracy": 75.6,
+     "tokens": 157.486
+    },
+    {
+     "step": 1750,
+     "accuracy": 76.6,
+     "tokens": 165.786
+    },
+    {
+     "step": 2000,
+     "accuracy": 75.4,
+     "tokens": 171.248
+    },
+    {
+     "step": 2250,
+     "accuracy": 75.6,
+     "tokens": 172.516
+    },
+    {
+     "step": 2500,
+     "accuracy": 75.4,
+     "tokens": 182.03
+    },
+    {
+     "step": 2750,
+     "accuracy": 75.4,
+     "tokens": 179.774
+    },
+    {
+     "step": 2844,
+     "accuracy": 75.8,
+     "tokens": 179.136
+    }
+   ],
+   "baseline_curve": [
+    {
+     "step": 250,
+     "accuracy": 74.4,
+     "tokens": 175.088
+    },
+    {
+     "step": 500,
+     "accuracy": 72.6,
+     "tokens": 170.956
+    },
+    {
+     "step": 750,
+     "accuracy": 72.2,
+     "tokens": 152.136
+    },
+    {
+     "step": 1000,
+     "accuracy": 73.8,
+     "tokens": 144.196
+    },
+    {
+     "step": 1250,
+     "accuracy": 74.6,
+     "tokens": 150.444
+    },
+    {
+     "step": 1500,
+     "accuracy": 75.2,
+     "tokens": 141.76
+    },
+    {
+     "step": 1750,
+     "accuracy": 76.2,
+     "tokens": 141.16
+    },
+    {
+     "step": 1844,
+     "accuracy": 75.8,
+     "tokens": 144.904
+    }
+   ],
+   "held": true,
+   "verdict": "0",
+   "noise_floor": 0.5219206680584552,
+   "train_hours": 9.838978222222224
+  }
+ ]
+}

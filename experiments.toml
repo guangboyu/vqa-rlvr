@@ -1105,4 +1105,7 @@ holds = { min_token_ratio = 0.5, max_accuracy_drop = 2.0 }
 baseline_run = "runs/chartqa-epoch-20261007/grpo2-base"
 if_holds = "Mixing caused the collapse: run the prompt-routing and ratio cards."
 if_not = "Long-run RL instability, not mixing: no ratio cards; the finding becomes when to stop."
-status = "experimental"
+status = "null"
+why = """Observed: 1,000 more updates leave dev accuracy where it was (75.8) and answers do not collapse. \
+They lengthen after update 1,250 (137 to 179 tokens), so the predicted slow shortening was wrong."""
+implies = "The collapse comes from mixing, not length. Next: prompt routing and one other ratio. Chart-only training gains nothing past 1,844 updates."

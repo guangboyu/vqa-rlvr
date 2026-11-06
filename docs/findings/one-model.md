@@ -3,11 +3,12 @@
 *The [report](https://guangboyu.github.io/vqa-rlvr/report/)'s open question.*
 
 Does one model learn when to reason? Trained on photos and charts together, a 2B model kept its chart
-reasoning until update 1,750, lost it by update 2,000, and ended at <!--n:ph.cq.mix.r-->65.9<!--/n-->% on ChartQA
-against <!--n:cq.grpo.r-->80.1<!--/n-->% for the chart-only model, at <!--n:ph.cq.mix.tok-->11<!--/n--> tokens. It trained for <!--n:mix.updates-->2,844<!--/n-->
-updates against the chart-only model's <!--n:cq.updates-->1,844<!--/n-->, so mixing and training length are confounded. A
-chart-only control at the same length, declared in `experiments.toml` as `chart-length-control` and
-running, settles which one caused it.
+reasoning until update 1,750, lost it by update 2,000, and ended at <!--n:ph.cq.mix.r-->65.9<!--/n-->% on ChartQA against
+<!--n:cq.grpo.r-->80.1<!--/n-->% for the chart-only model, at <!--n:ph.cq.mix.tok-->11<!--/n--> tokens.
+
+The cause is mixing, not training length. A chart-only model trained for the same <!--n:mix.updates-->2,844<!--/n--> updates keeps
+<!--n:ctrl.tok-->179<!--/n-->-token answers and its dev accuracy (<!--n:ctrl.base.acc-->75.8<!--/n-->% → <!--n:ctrl.acc-->75.8<!--/n-->%). Routing prompts by domain is the next
+test.
 
 ## One model on both families
 

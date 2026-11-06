@@ -264,5 +264,7 @@ Each row is one change against the frozen recipe, with its prediction committed 
 official scorer, reasoning prompt; `python -m scripts.cards summarize` writes `results/ledger.json`.
 
 <!-- report:cards -->
-No declared experiment has finished yet.
+| Experiment | Change | Predicted | Dev accuracy and length | Prediction | Train GPU-h |
+| --- | --- | --- | --- | --- | ---: |
+| chart-length-control | 2,844 updates instead of 1,844 on ChartQA alone: the mixture's horizon and learning-rate schedule | Holds | 75.8 → 75.8, 145 → 179 tokens | held | 9.8 |
 <!-- /report:cards -->

@@ -303,6 +303,12 @@ for row in reach["rows"]:
     if (row["dataset"], row["prompt"]) == ("gqa", "short"):
         put("reach.gqa.reach", f1(row["reach"]))
         put("reach.gqa.rl", f1(row["greedy"]["rl"]))
+# The chart-only control at the mixed model's length (results/ledger.json, dev rows).
+control = next(card for card in load("ledger.json")["cards"]
+               if card["id"] == "chart-length-control")["final"]
+put("ctrl.acc", f1(control["accuracy"]))
+put("ctrl.base.acc", f1(control["baseline"]))
+put("ctrl.tok", f"{control['tokens']:.0f}")
 put("reach.sets", str(len(reach["rows"])))
 put("reach.rl.most", f1(max(reach["verdict"]["rl_above_reach"].values())))
 vision = {row["model"]: row for spec in beyond if spec.get("group") == "vision"
