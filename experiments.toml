@@ -1081,3 +1081,26 @@ model = "checkpoints/merged/dtvx_grpo2_base"
 label = "dtvx-grpo2-sft"
 name = "SFT → GRPO (debiased DeepTumorVQA, 2,000 updates)"
 model = "checkpoints/merged/dtvx_grpo2_sft"
+
+# Experiment cards (Milestone 2). One change against a frozen recipe, with the prediction
+# committed before the run starts. Cards read dev rows only; test rows stay for reported arms.
+[[cards]]
+id = "chart-length-control"
+node = "open"
+question = """Does chart-only GRPO keep its reasoning past update 2,000? The photos + charts model \
+collapsed to about 10 tokens between updates 1,750 and 2,000 of 2,844, while the chart-only \
+model stopped at 1,844, so mixing and training length are confounded."""
+recipe = "v1.0"
+baseline = "cqa-grpo2-base-e1"
+change = "2,844 updates instead of 1,844 on ChartQA alone: the mixture's horizon and learning-rate schedule"
+train = ["--preset", "grpo_2b_main", "--datasets", "chartqa", "--max-steps", "2844",
+         "--rollout-lora", "--hardware", "24gb", "--save-steps", "250", "--save-total-limit", "0",
+         "--no-wandb"]
+predicted = """Holds. End-of-run dev answers stay above half the 1,844-update model's length and dev \
+accuracy within 2 points of it: chart questions reward reasoning, and the collapse came from the \
+photo questions' pressure toward short answers. Answers keep shortening slowly, as they did from \
+198 tokens at update 300 to 162 at 1,844."""
+holds_if = "end-of-run dev tokens >= 50% of the baseline's and dev accuracy >= baseline - 2 points"
+if_holds = "Mixing caused the collapse: run the prompt-routing and ratio cards."
+if_not = "Long-run RL instability, not mixing: no ratio cards; the finding becomes when to stop."
+status = "experimental"
