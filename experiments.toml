@@ -1109,3 +1109,81 @@ status = "null"
 why = """Observed: 1,000 more updates leave dev accuracy where it was (75.8) and answers do not collapse. \
 They lengthen after update 1,250 (137 to 179 tokens), so the predicted slow shortening was wrong."""
 implies = "The collapse comes from mixing, not length. Next: prompt routing and one other ratio. Chart-only training gains nothing past 1,844 updates."
+
+# Traces come from the released models' own samples, never from an RL model: traces from RL would
+# need RL to exist, so they could not show whether RL was needed. Sampling is on the rl role only.
+# Before the 8B card runs, Instruct 2B and 8B answer the same 500 ChartQA dev questions: it runs only
+# if 8B's greedy reasoning accuracy beats 2B's by at least 3 points.
+[[cards]]
+id = "reasoning-sft-self"
+node = "reasoning-pays"
+question = "Does SFT on reasoning traces close GRPO's lead on ChartQA, given the same information RL has: the model's own samples and the checker?"
+recipe = "v1.0"
+baseline = "cqa-grpo2-base-e1"
+change = "SFT on one correct reasoning sample per question from Instruct 2B, instead of GRPO"
+entry = "train_sft.py"
+train = ["--preset", "sft_2b", "--datasets", "chartqa", "--hardware", "24gb", "--save-total-limit", "0",
+         "--no-wandb", "--targets-file", "data/traces/chartqa-base2.jsonl"]
+predicted = """Holds. GRPO stays at least 2 points ahead on dev. Correct traces lift SFT above Instruct and keep its reasoning, but one offline pass cannot sharpen the way repeated on-policy updates do."""
+holds_if = "SFT on traces ends at least 2 dev points below the chart-only GRPO model"
+holds = { max_delta = -2.0 }
+baseline_run = "runs/chartqa-epoch-20261007/grpo2-base"
+if_holds = "The chart win stands against SFT on reasoning traces."
+if_not = "The win comes from the reasoning targets rather than from RL, and the root claim changes."
+status = "experimental"
+
+[[cards]]
+id = "reasoning-sft-8b"
+node = "reasoning-pays"
+question = "Does SFT on a larger model's reasoning traces close GRPO's lead on ChartQA?"
+recipe = "v1.0"
+baseline = "cqa-grpo2-base-e1"
+change = "SFT on one correct reasoning sample per question from Instruct 8B, instead of GRPO"
+entry = "train_sft.py"
+train = ["--preset", "sft_2b", "--datasets", "chartqa", "--hardware", "24gb", "--save-total-limit", "0",
+         "--no-wandb", "--targets-file", "data/traces/chartqa-base8.jsonl"]
+predicted = """Holds. GRPO stays at least 2 points ahead on dev, with this arm at or above SFT on 2B's traces: a stronger teacher improves the targets, and the student still gets one offline pass."""
+holds_if = "SFT on 8B traces ends at least 2 dev points below the chart-only GRPO model"
+holds = { max_delta = -2.0 }
+baseline_run = "runs/chartqa-epoch-20261007/grpo2-base"
+if_holds = "The chart win stands even against a larger teacher's traces."
+if_not = "A larger teacher can replace RL at 2B on charts; compare against 2B self-traces to separate teacher size from targets."
+status = "experimental"
+
+[[cards]]
+id = "prompt-routing"
+node = "open"
+question = "Does a mixed model keep chart reasoning when each dataset rolls out under its own prompt?"
+recipe = "v1.0"
+baseline = "card-chart-length-control"
+dataset = "chartqa"
+change = "Photos roll out under the short prompt and charts under the reasoning prompt, on the mixture's pool and 2,844 updates"
+train = ["--preset", "grpo_2b_v1", "--datasets", "vqav2", "gqa", "chartqa", "--pool", "mix-chartqa-vqa4k",
+         "--max-steps", "2844", "--hardware", "24gb", "--save-steps", "250", "--save-total-limit", "0",
+         "--no-wandb", "--route-prompts", "vqav2=short", "gqa=short", "chartqa=reasoning"]
+predicted = """Holds. Chart answers stay above half the chart-only length and ChartQA dev within 2 points of it: photo questions no longer have reasoning to delete, so their pressure toward short answers is gone."""
+holds_if = "end-of-run ChartQA dev tokens >= 50% of the chart-only control's and dev accuracy >= its accuracy - 2 points"
+holds = { min_token_ratio = 0.5, max_accuracy_drop = 2.0 }
+baseline_run = "runs/cards/chart-length-control"
+if_holds = "One model can keep both behaviors under routed prompts; apply the 8B gate."
+if_not = "Sharing weights is enough to carry the pressure across prompts; a mixed hero run is off the table."
+status = "experimental"
+
+[[cards]]
+id = "mix-ratio-90"
+node = "open"
+question = "Does a mixed model keep chart reasoning under one prompt when photos are only 10% of the pool?"
+recipe = "v1.0"
+baseline = "card-chart-length-control"
+dataset = "chartqa"
+change = "90% charts and 10% photos instead of 65% and 35%, all under the reasoning prompt, 2,844 updates"
+train = ["--preset", "grpo_2b_v1", "--datasets", "vqav2", "gqa", "chartqa", "--pool", "mix-chartqa-vqa90-10",
+         "--max-steps", "2844", "--hardware", "24gb", "--save-steps", "250", "--save-total-limit", "0",
+         "--no-wandb"]
+predicted = """Does not hold. Fewer photos delay the collapse, as 65% charts delayed it by about 1,500 updates, but one prompt still pays for short answers on some questions and 2,844 updates are long enough to reach it."""
+holds_if = "end-of-run ChartQA dev tokens >= 50% of the chart-only control's and dev accuracy >= its accuracy - 2 points"
+holds = { min_token_ratio = 0.5, max_accuracy_drop = 2.0 }
+baseline_run = "runs/cards/chart-length-control"
+if_holds = "Ratio alone protects chart reasoning; check what it costs on photos."
+if_not = "Ratio only delays the collapse; routing is the recipe to carry forward."
+status = "experimental"

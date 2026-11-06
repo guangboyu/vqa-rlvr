@@ -31,6 +31,8 @@ def test_the_rule_reads_length_and_accuracy():
     assert held({**base, "tokens": 100, "delta": -1.9}, rule)
     assert not held({**base, "tokens": 70, "delta": 0.0}, rule)
     assert not held({**base, "tokens": 140, "delta": -2.1}, rule)
+    assert held({**base, "tokens": 10, "delta": -2.5}, {"max_delta": -2.0})
+    assert not held({**base, "tokens": 10, "delta": -1.0}, {"max_delta": -2.0})
 
 
 def test_a_card_without_records_reads_as_running(tmp_path):

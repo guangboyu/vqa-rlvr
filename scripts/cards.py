@@ -77,15 +77,19 @@ def compare(reference: RunRecord, candidate: RunRecord) -> dict:
 
 def held(final: dict, rule: dict) -> bool:
     """Whether the card's committed rule read true at the end of the run."""
-    return (final["tokens"] >= rule["min_token_ratio"] * final["baseline_tokens"]
-            and final["delta"] >= -rule["max_accuracy_drop"])
+    checks = {"min_token_ratio": final["tokens"] >= rule.get("min_token_ratio", 0)
+                                 * final["baseline_tokens"],
+              "max_accuracy_drop": final["delta"] >= -rule.get("max_accuracy_drop", 0),
+              "max_delta": final["delta"] <= rule.get("max_delta", 0)}
+    return all(checks[name] for name in rule)
 
 
 def summarize_card(card: dict, floor: float, root: Path = ROOT) -> dict:
     row = {key: card.get(key, "") for key in TEXT_FIELDS}
     run = run_dir(card, root)
-    records = dev_records(run)
-    baseline = dev_records(root / card["baseline_run"]) if "baseline_run" in card else {}
+    records = dev_records(run, card.get("dataset"))
+    baseline = (dev_records(root / card["baseline_run"], card.get("dataset"))
+                if "baseline_run" in card else {})
     finals = [step for step, prompt in records if prompt == PROMPT]
     if not finals or not baseline:
         return {**row, "final": None, "held": None, "train_hours": train_hours(run)}
