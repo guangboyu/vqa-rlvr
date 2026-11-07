@@ -95,7 +95,17 @@ class Judge:
         )
         self._db.commit()
 
-    def _check_budget(self, projected_usd: float = 0.0) -> None:
+    def ledger_entry(self, key: str) -> tuple[bool, float] | None:
+        """A verdict another audit stored here under its own key, and what it cost."""
+        row = self._db.execute("SELECT verdict, cost_usd FROM judgments WHERE key = ?",
+                               (key,)).fetchone()
+        return None if row is None else (bool(row[0]), row[1])
+
+    def record_in_ledger(self, key: str, verdict: bool, cost_usd: float) -> None:
+        """Keep another audit's verdict and spend here, so one cap covers all paid calls."""
+        self._store(key, verdict, cost_usd)
+
+    def check_budget(self, projected_usd: float = 0.0) -> None:
         """Refuse a call whose projected cost would take total spend past the cap."""
         if self.spend() + projected_usd > self.budget_usd:
             raise JudgeBudgetExceeded(
@@ -150,8 +160,8 @@ class Judge:
         cached = self._cached(key)
         if cached is not None:
             return cached
-        self._check_budget(self.estimate_batch_cost([(question, golds, prediction)])
-                           / BATCH_DISCOUNT)
+        self.check_budget(self.estimate_batch_cost([(question, golds, prediction)])
+                          / BATCH_DISCOUNT)
         message = self.client.messages.create(**self._params(question, golds, prediction))
         verdict = self._verdict(message)
         self._store(key, verdict, self._cost(message.usage))
@@ -176,7 +186,7 @@ class Judge:
             pending = [key for key in todo if key not in verdicts]
             chunks = [{key: todo[key] for key in pending[start:start + BATCH_CHUNK]}
                       for start in range(0, len(pending), BATCH_CHUNK)]
-            self._check_budget(sum(self.estimate_batch_cost(c.values()) for c in chunks))
+            self.check_budget(sum(self.estimate_batch_cost(c.values()) for c in chunks))
             submitted = [(self._submit(chunk), chunk) for chunk in chunks]
             for batch_id, chunk in submitted:
                 verdicts.update(self._collect(batch_id, chunk, poll_seconds))

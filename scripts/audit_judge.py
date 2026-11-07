@@ -75,24 +75,27 @@ def draw(strata: dict, seed: int = 0) -> list[dict]:
     return sample
 
 
-def image_payloads(sample: list[dict]) -> dict[tuple[str, str], tuple[str, str]]:
-    """(dataset, qid) -> (media type, base64 data), images shrunk to at most MAX_SIDE pixels."""
+def image_payloads(sample: list[dict], role: str = "test", data_dir=DATA_DIR,
+                   max_side: int = MAX_SIDE) -> dict[tuple[str, str], tuple[str, str]]:
+    """(dataset, qid) -> (media type, base64 data), images shrunk to at most `max_side` pixels.
+    Only the sampled rows' images are read: a training role can hold many gigabytes of them."""
     wanted = {(row["dataset"], row["qid"]) for row in sample}
     payloads = {}
     for dataset in sorted({row["dataset"] for row in sample}):
-        rows = load_role(DATA_DIR, [dataset], "test", seed=None)
+        rows = load_role(data_dir, [dataset], role, seed=None)
         rows = rows.cast_column("image", ImageFeature(decode=False))
-        for qid, image in zip(rows["qid"], rows["image"], strict=True):
-            if (dataset, qid) in wanted:
-                raw = image["bytes"] or open(image["path"], "rb").read()
-                payloads[dataset, qid] = encode(raw)
+        positions = [i for i, qid in enumerate(rows["qid"]) if (dataset, qid) in wanted]
+        for row in rows.select(positions):
+            image = row["image"]
+            raw = image["bytes"] or open(image["path"], "rb").read()
+            payloads[dataset, row["qid"]] = encode(raw, max_side)
     return payloads
 
 
-def encode(raw: bytes) -> tuple[str, str]:
+def encode(raw: bytes, max_side: int = MAX_SIDE) -> tuple[str, str]:
     with Image.open(io.BytesIO(raw)) as picture:
         picture = picture.convert("RGB")
-        picture.thumbnail((MAX_SIDE, MAX_SIDE))
+        picture.thumbnail((max_side, max_side))
         buffer = io.BytesIO()
         picture.save(buffer, "JPEG", quality=90)
     return "image/jpeg", base64.standard_b64encode(buffer.getvalue()).decode()
@@ -107,6 +110,17 @@ def request(index: int, row: dict, image: tuple[str, str]) -> dict:
             {"type": "image", "source": {"type": "base64", "media_type": image[0],
                                          "data": image[1]}},
             {"type": "text", "text": text}]}]}}
+
+
+def batch_cost(tokens_in: int, tokens_out: int) -> float:
+    """USD at the auditor's batch price."""
+    return (tokens_in * 4 + tokens_out * 20) / 1e6 / 2
+
+
+def cost_bound(items: int, input_tokens: int = 1_700) -> float:
+    """Upper bound: a 1024-pixel image is at most ~1,400 tokens, plus the text, and low effort
+    keeps thinking and answer near 150 output tokens."""
+    return batch_cost(items * input_tokens, items * 300)
 
 
 def run_batch(client, requests: list[dict], poll_seconds: float = 30.0) -> dict[str, dict]:
@@ -164,10 +178,7 @@ def main() -> None:
     images = image_payloads(sample)
     requests = [request(i, row, images[row["dataset"], row["qid"]])
                 for i, row in enumerate(sample)]
-    # Upper bound at batch prices: a 1024-pixel image is at most ~1,400 tokens, plus the text,
-    # and low effort keeps thinking and answer near 150 output tokens.
-    bound = len(requests) * (1_700 * 4 + 300 * 20) / 1e6 / 2
-    print(f"{len(requests)} audit items; cost at most about ${bound:.2f}")
+    print(f"{len(requests)} audit items; cost at most about ${cost_bound(len(requests)):.2f}")
     if args.dry_run:
         return
     answers = run_batch(judge.client, requests)
@@ -178,7 +189,7 @@ def main() -> None:
     tokens_out = sum(a["output_tokens"] for a in answers.values())
     report = {"auditor": "Opus 5.5, pinned as vqar.judge.AUDIT_MODEL", "effort": "low",
               "per_stratum": PER_STRATUM,
-              "prompt": PROMPT, "cost_usd": (tokens_in * 4 + tokens_out * 20) / 1e6 / 2,
+              "prompt": PROMPT, "cost_usd": batch_cost(tokens_in, tokens_out),
               "rates": summarize(sample),
               "items": [{key: value for key, value in row.items() if key != "answers"}
                         for row in sample]}
