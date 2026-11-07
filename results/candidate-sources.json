@@ -1,0 +1,200 @@
+{
+ "geoqa": {
+  "source_rows": 8031,
+  "dropped": {
+   "empty answer": 1
+  },
+  "materialized_rows": 8030,
+  "overlap": {
+   "source_rows": 8030,
+   "rows_lost": 91,
+   "by_dataset": {
+    "mmstar": {
+     "image": 0,
+     "gray": 0,
+     "near": 20,
+     "question": 8
+    },
+    "mathvista": {
+     "image": 66,
+     "gray": 67,
+     "near": 81,
+     "question": 10
+    }
+   }
+  },
+  "roles": {
+   "sft": 7439,
+   "rl": 7439,
+   "dev": 500
+  },
+  "reference_forms": {
+   "number": 6495,
+   "text": 944
+  },
+  "distinct_rl_images": 6823,
+  "dev_rows_repeating_a_training_question": 19
+ },
+ "mmk12": {
+  "source_rows": 15616,
+  "dropped": {
+   "answer longer than a final answer": 85
+  },
+  "materialized_rows": 15531,
+  "overlap": {
+   "source_rows": 15531,
+   "rows_lost": 0,
+   "by_dataset": {}
+  },
+  "roles": {
+   "sft": 15031,
+   "rl": 15031,
+   "dev": 500
+  },
+  "reference_forms": {
+   "number": 9511,
+   "text": 5520
+  },
+  "distinct_rl_images": 14726,
+  "dev_rows_repeating_a_training_question": 2
+ },
+ "virl39k": {
+  "source_rows": 38870,
+  "dropped": {
+   "answer longer than a final answer": 58,
+   "blank placeholder image (DeepScaleR, text-only math)": 1375,
+   "question states its own answer": 1,
+   "several images (training shows one)": 2289
+  },
+  "materialized_rows": 35147,
+  "overlap": {
+   "source_rows": 35147,
+   "rows_lost": 1012,
+   "by_dataset": {
+    "chartqa": {
+     "image": 10,
+     "gray": 0,
+     "near": 0,
+     "question": 0
+    },
+    "clevrcomp": {
+     "image": 12,
+     "gray": 0,
+     "near": 0,
+     "question": 0
+    },
+    "mmstar": {
+     "image": 0,
+     "gray": 0,
+     "near": 88,
+     "question": 256
+    },
+    "mathvista": {
+     "image": 35,
+     "gray": 45,
+     "near": 63,
+     "question": 261
+    },
+    "ocrbench": {
+     "image": 1,
+     "gray": 1,
+     "near": 1,
+     "question": 0
+    },
+    "geoqa": {
+     "image": 153,
+     "gray": 0,
+     "near": 0,
+     "question": 0
+    },
+    "mmk12": {
+     "image": 372,
+     "gray": 0,
+     "near": 0,
+     "question": 0
+    }
+   }
+  },
+  "roles": {
+   "sft": 33635,
+   "rl": 33635,
+   "dev": 500
+  },
+  "reference_forms": {
+   "number": 17600,
+   "choice": 9706,
+   "text": 5916,
+   "yes/no": 413
+  },
+  "distinct_rl_images": 27590,
+  "dev_rows_repeating_a_training_question": 32
+ },
+ "docvqat": {
+  "source_rows": 39463,
+  "dropped": {},
+  "materialized_rows": 39463,
+  "overlap": {
+   "source_rows": 39463,
+   "rows_lost": 568,
+   "by_dataset": {
+    "docvqa": {
+     "image": 6,
+     "gray": 6,
+     "near": 22,
+     "question": 546
+    }
+   }
+  },
+  "roles": {
+   "sft": 38395,
+   "rl": 38395,
+   "dev": 500
+  },
+  "reference_forms": {
+   "text": 27595,
+   "number": 10724,
+   "yes/no": 72,
+   "choice": 4
+  },
+  "distinct_rl_images": 9967,
+  "dev_rows_repeating_a_training_question": 49,
+  "numeric_references": {
+   "numeric_rows": 11972,
+   "pay_one_digit_off": 10871
+  }
+ },
+ "infovqa": {
+  "source_rows": 26747,
+  "dropped": {},
+  "materialized_rows": 23946,
+  "overlap": {
+   "source_rows": 23946,
+   "rows_lost": 1,
+   "by_dataset": {
+    "ocrbench": {
+     "image": 0,
+     "gray": 0,
+     "near": 0,
+     "question": 1
+    }
+   }
+  },
+  "roles": {
+   "sft": 23945,
+   "rl": 23945,
+   "dev": 2588
+  },
+  "reference_forms": {
+   "number": 11992,
+   "text": 11946,
+   "yes/no": 5,
+   "choice": 2
+  },
+  "distinct_rl_images": 4406,
+  "dev_rows_repeating_a_training_question": 10,
+  "numeric_references": {
+   "numeric_rows": 12243,
+   "pay_one_digit_off": 10034
+  }
+ }
+}

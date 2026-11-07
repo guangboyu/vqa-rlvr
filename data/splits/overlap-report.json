@@ -1,17 +1,24 @@
 {
   "version": "split-files-v1",
-  "held_out_images": 61697,
-  "training_images": 173882,
+  "held_out_images": 63673,
+  "training_images": 225454,
   "training_images_shared_across_subsets": {
+    "chartqa_train & virl39k_train": 191,
+    "clevrcomp_train & virl39k_train": 7,
     "deeptumor_train & deeptumorff_train": 210,
     "deeptumor_train & deeptumorff_train & deeptumorx_train": 7415,
     "deeptumor_train & deeptumorx_train": 147,
     "deeptumorff_train & deeptumorx_train": 132,
+    "geoqa_train & virl39k_train": 1351,
     "gqa_rl & gqa_sft": 1,
+    "gqa_rl & virl39k_train": 6,
     "gqa_rl & vqav2_rl": 4,
     "gqa_rl & vqav2_sft": 12,
+    "gqa_sft & virl39k_train": 14,
     "gqa_sft & vqav2_rl": 11,
     "gqa_sft & vqav2_sft": 26,
-    "omnimedvqa_train & omnimedx_train": 58542
+    "mmk12_train & virl39k_train": 10370,
+    "omnimedvqa_train & omnimedx_train": 58542,
+    "virl39k_train & vqav2_rl": 1
   }
 }

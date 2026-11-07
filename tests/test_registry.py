@@ -55,7 +55,8 @@ def test_role_listing_follows_registry_order():
     assert datasets_with_role("sft") == ["vqav2", "gqa", "chartqa", "clevrcomp", "medthink",
                                          "kvasirx1", "omnimedvqa", "omnimedx", "slake",
                                          "pathvqa", "rexvqa", "deeptumor", "deeptumorx",
-                                         "deeptumorv", "deeptumorff", "m3dvqa"]
+                                         "deeptumorv", "deeptumorff", "m3dvqa", "geoqa", "mmk12",
+                                         "virl39k", "docvqat", "infovqa"]
     assert datasets_with_role("sft", optional=False) == ["vqav2", "gqa"]
     assert datasets_with_role("dev", optional=False) == ["vqav2", "gqa", "clevr"]
 

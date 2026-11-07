@@ -24,6 +24,7 @@ from datasets import Dataset, Features, Image, Sequence, Value, load_dataset
 from PIL import Image as PILImage
 
 from vqar.answers import extract_answer
+from vqar.benchmark_metrics import math_form, plain_number
 from vqar.config import MAX_PIXELS, RL_IMAGE_SIZE
 from vqar.registry import SOURCE_REVISIONS
 
@@ -1622,3 +1623,279 @@ def load_hallusionbench(expected: int) -> Dataset:
     built = Dataset.from_generator(_hallusion_generate, features=MULTI_IMAGE_FEATURES,
                                    gen_kwargs={"files": files, "rows": rows})
     return _checked_rows(built, expected)
+
+
+# Training candidates (Milestone 2, 2026-11-07): one subset each for sft and rl, with images flat on
+# white. Each source has a `*_drop` rule; `dropped_rows` tallies it from the text columns alone.
+GEOQA = "leonardPKU/GEOQA_R1V_Train_8K"
+MMK12 = "FanqingM/MMK12"
+VIRL39K = "TIGER-Lab/ViRL39K"
+DOCVQA = "lmms-lab-encoder/DocVQA"
+MAX_MATH_REFERENCE = 80  # vqar.rewards.format_reward's longest answer
+
+
+def on_white(payload: bytes) -> bytes:
+    """Transparency flattened on white; other bytes stay as released. Dropping alpha, as
+    `_as_released` does, turns 3% of MMK12's and 1.5% of ViRL39K's diagrams into black rectangles:
+    black strokes on a transparent background."""
+    import io
+
+    with PILImage.open(io.BytesIO(payload)) as image:
+        if image.mode in ("RGB", "L") and "transparency" not in image.info:
+            return payload
+        layer = image.convert("RGBA")
+    canvas = PILImage.new("RGBA", layer.size, "white")
+    canvas.alpha_composite(layer)
+    buffer = io.BytesIO()
+    canvas.convert("RGB").save(buffer, "PNG")
+    return buffer.getvalue()
+
+
+def _candidate_row(dataset: str, qid: str, image: bytes, question: str, answers: list[str],
+                   answer_type: str) -> dict:
+    return {"dataset": dataset, "qid": str(qid), "image": {"bytes": on_white(image), "path": None},
+            "question": question, "answers": answers, "answer_type": answer_type}
+
+
+def math_reference_drop(reference: str) -> str | None:
+    """Why a math reference cannot pay a reward, if so: nothing to match, or a formula no rule
+    reads (a piecewise function, a proof line) that could never be a short final answer."""
+    if not math_form(reference):
+        return "empty answer"
+    if r"\begin" in reference or len(reference) > MAX_MATH_REFERENCE:
+        return "answer longer than a final answer"
+    return None
+
+
+def math_references(reference: str) -> list[str]:
+    """The reference as released and, first when it differs, its bare number. Reference forms and
+    the benchmark question check read the first: '145', not '145°', is a number."""
+    number = plain_number(reference)
+    return [number, reference] if number not in (None, reference) else [reference]
+
+
+def _kept_rows(files: tuple[str, ...], columns: tuple[str, ...], to_row) -> Iterator[dict]:
+    """Rows of the parquet files, skipping those `to_row` drops by returning None."""
+    for row in _parquet_generate(files, columns, to_row):
+        if row is not None:
+            yield row
+
+
+def _from_candidate_parquet(files, columns, to_row, expected: int) -> Dataset:
+    gen_kwargs = {"files": tuple(str(file) for file in files), "columns": tuple(columns),
+                  "to_row": to_row}
+    return _checked_rows(Dataset.from_generator(_kept_rows, features=FEATURES,
+                                                gen_kwargs=gen_kwargs), expected)
+
+
+_GEOQA_ANSWER = re.compile(r"<answer>(.*?)</answer>", re.DOTALL)
+
+
+def geoqa_reference(solution: str) -> str:
+    return _GEOQA_ANSWER.search(solution).group(1).strip()
+
+
+def geoqa_drop(row: dict) -> str | None:
+    return math_reference_drop(geoqa_reference(row["solution"]))
+
+
+def geoqa_row(row: dict, index: int) -> dict | None:
+    """The source holds no row ID: rows are named by position, so dropping one renames nothing."""
+    if geoqa_drop(row):
+        return None
+    return _candidate_row("geoqa", f"train-{index}", row["image"]["bytes"], row["problem"],
+                          math_references(geoqa_reference(row["solution"])), "")
+
+
+def load_geoqa(expected: int) -> Dataset:
+    root = _snapshot(GEOQA, ["data/train-*.parquet"])
+    return _from_candidate_parquet(sorted((root / "data").glob("train-*.parquet")),
+                                   ["image", "problem", "solution"], geoqa_row, expected)
+
+
+def mmk12_drop(row: dict) -> str | None:
+    return math_reference_drop(row["answer"])
+
+
+def mmk12_row(row: dict, index: int) -> dict | None:
+    if mmk12_drop(row):
+        return None
+    return _candidate_row("mmk12", row["id"], row["image"]["bytes"], row["question"],
+                          math_references(row["answer"].strip()), row["subject"])
+
+
+def load_mmk12(expected: int) -> Dataset:
+    """The train split. The card also lists a 2,000-row test split; it was not downloaded."""
+    root = _snapshot(MMK12, ["data/train-*.parquet"])
+    return _from_candidate_parquet(sorted((root / "data").glob("train-*.parquet")),
+                                   ["id", "question", "answer", "subject", "image"], mmk12_row,
+                                   expected)
+
+
+# ViRL39K wraps questions for its own trainer: image placeholders, a literal '/n', sentences
+# pointing at the image, and escaped line breaks. They go, so a repeat reads as a repeat.
+_VIRL_PLACEHOLDER = re.compile(r"<image(?:_\d+)?>(?:/n)?", re.IGNORECASE)
+_VIRL_WRAPPER = re.compile(r"Based on the given images, answer the following question\.|"
+                           r"The (?:below|above) problem is with the following images:")
+_ESCAPED_NEWLINE = re.compile(r"\\n(?![a-z])")  # TeX commands such as \neq stay
+_VIRL_BOXED = re.compile(r"\\boxed\{(.*)\}", re.DOTALL)
+_OPTION_MARK = re.compile(r"(?:(?<=\s)|^)\(?([A-H])[.):]\s*|\(([A-H])\)\s*", re.MULTILINE)
+VIRL_BLANK_SOURCE = "DeepScaleR"  # text-only math shown with 19 blank white placeholder images
+
+
+def virl_question(text: str) -> str:
+    text = _VIRL_WRAPPER.sub("", _VIRL_PLACEHOLDER.sub("", text)).replace("\\\\", "\\")
+    return _ESCAPED_NEWLINE.sub("\n", text).strip()
+
+
+def virl_reference(answer: str) -> str:
+    return _VIRL_BOXED.fullmatch(answer.strip()).group(1).strip()
+
+
+def _option_run(marks: list[tuple], start: int) -> list[tuple]:
+    """The marks after `start` that continue its letters in order, others skipped."""
+    run = [marks[start]]
+    for mark in marks[start + 1:]:
+        if mark[0] == chr(ord(run[-1][0]) + 1):
+            run.append(mark)
+    return run
+
+
+def written_options(question: str) -> list[str]:
+    """The option texts a question writes last, from its last run of marks A, B, ... A last option
+    ends with its line, so a closing instruction does not join it. Options drawn in the image
+    leave blanks, which read as no options: any letter would match a blank reference."""
+    marks = [(found.group(1) or found.group(2), found) for found in _OPTION_MARK.finditer(question)]
+    for start in reversed([i for i, (letter, _) in enumerate(marks) if letter == "A"]):
+        run = _option_run(marks, start)
+        if len(run) > 1:
+            ends = [mark.start() for _, mark in run[1:]] + [len(question)]
+            texts = [question[mark.end():end] for (_, mark), end in zip(run, ends, strict=True)]
+            texts[-1] = texts[-1].split("\n")[0]
+            texts = [text.strip().rstrip(",;.").strip() for text in texts]
+            return texts if all(texts) else []
+    return []
+
+
+def virl_answers(question: str, reference: str) -> list[str]:
+    """A letter with readable options takes the multiple-choice form; a letter without keeps one
+    reference, which `reference_form` reads as an open answer."""
+    if re.fullmatch(r"[A-H]", reference):
+        options = written_options(question)
+        if ord(reference) - ord("A") < len(options):
+            return choice_answers(reference, options)
+    return math_references(reference)
+
+
+def virl_drop(row: dict) -> str | None:
+    if len(row["image"]) != 1:
+        return "several images (training shows one)"
+    if row["source"] == VIRL_BLANK_SOURCE:
+        return "blank placeholder image (DeepScaleR, text-only math)"
+    if _VIRL_BOXED.search(row["question"]):
+        return "question states its own answer"
+    return math_reference_drop(virl_reference(row["answer"]))
+
+
+def virl_row(row: dict, image: bytes) -> dict:
+    question = virl_question(row["question"])
+    return _candidate_row("virl39k", row["qid"], image, question,
+                          virl_answers(question, virl_reference(row["answer"])), row["category"])
+
+
+def _virl_generate(archive: str, rows: tuple[dict, ...]) -> Iterator[dict]:
+    import zipfile
+
+    with zipfile.ZipFile(archive) as source:
+        for row in rows:
+            yield virl_row(row, source.read(row["image"][0]))
+
+
+def _virl_rows(root) -> list[dict]:
+    import pyarrow.parquet as pq
+
+    columns = ["qid", "question", "answer", "category", "source", "image"]
+    return pq.read_table(root / "39Krelease.parquet", columns=columns).to_pylist()
+
+
+def load_virl39k(expected: int) -> Dataset:
+    """Images are read from the release's zip, in place: no extracted tree to keep or to trust."""
+    root = _snapshot(VIRL39K, ["39Krelease.parquet", "images.zip"])
+    rows = tuple(row for row in _virl_rows(root) if not virl_drop(row))
+    built = _build(_virl_generate, archive=str(root / "images.zip"), rows=rows)
+    return _checked_rows(built, expected)
+
+
+def span_drop(row: dict) -> str | None:
+    return None if any(answer.strip() for answer in row["answers"] or []) else "empty answer"
+
+
+def _span_answers(row: dict) -> list[str]:
+    return [answer for answer in row["answers"] if answer.strip()]
+
+
+def docvqat_row(row: dict, index: int) -> dict | None:
+    """As `docvqa_row`, on the train split; the `docvqa` benchmark reads validation."""
+    if span_drop(row):
+        return None
+    kinds = row["question_types"] or [""]
+    return _candidate_row("docvqat", row["questionId"], row["image"]["bytes"], row["question"],
+                          _span_answers(row), kinds[0])
+
+
+def load_docvqat(expected: int) -> Dataset:
+    """The card comments the train split out of its configs, so `load_dataset` cannot see it; the
+    files are there at the pinned revision."""
+    root = _snapshot(DOCVQA, ["DocVQA/train-*.parquet"])
+    return _from_candidate_parquet(sorted((root / "DocVQA").glob("train-*.parquet")),
+                                   ["questionId", "question", "question_types", "image", "answers"],
+                                   docvqat_row, expected)
+
+
+def infovqa_row(row: dict, index: int) -> dict | None:
+    """Only the validation split fills `answer_type`, and a question can have several."""
+    if span_drop(row):
+        return None
+    kinds = row["answer_type"] or [""]
+    return _candidate_row("infovqa", row["questionId"], row["image"]["bytes"], row["question"],
+                          _span_answers(row), kinds[0])
+
+
+def load_infovqa(train: int, validation: int) -> dict[str, Dataset]:
+    root = _snapshot(DOCVQA, [f"InfographicVQA/{split}-*.parquet"
+                              for split in ("train", "validation")])
+    columns = ["questionId", "question", "answer_type", "image", "answers"]
+    folder = root / "InfographicVQA"
+    return {name: _from_candidate_parquet(sorted(folder.glob(f"{split}-*.parquet")), columns,
+                                          infovqa_row, expected)
+            for name, split, expected in (("train", "train", train),
+                                          ("val", "validation", validation))}
+
+
+# dataset -> (repository, folder, splits, the columns its drop rule reads, its drop rule)
+_CANDIDATE_TEXT = {"geoqa": (GEOQA, "data", ["train"], ["solution"], geoqa_drop),
+                   "mmk12": (MMK12, "data", ["train"], ["answer"], mmk12_drop),
+                   "docvqat": (DOCVQA, "DocVQA", ["train"], ["answers"], span_drop),
+                   "infovqa": (DOCVQA, "InfographicVQA", ["train", "validation"], ["answers"],
+                               span_drop)}
+
+
+def _candidate_text_rows(dataset: str) -> tuple[list[dict], object]:
+    """A candidate's source rows without their images, and its drop rule."""
+    import pyarrow.parquet as pq
+
+    if dataset == "virl39k":
+        return _virl_rows(_snapshot(VIRL39K, ["39Krelease.parquet", "images.zip"])), virl_drop
+    repo, folder, splits, columns, drop = _CANDIDATE_TEXT[dataset]
+    root = _snapshot(repo, [f"{folder}/{split}-*.parquet" for split in splits]) / folder
+    return [row for split in splits for file in sorted(root.glob(f"{split}-*.parquet"))
+            for row in pq.read_table(file, columns=columns).to_pylist()], drop
+
+
+def dropped_rows(dataset: str) -> dict:
+    """A candidate's source rows and how many each drop rule removes, read from the raw source."""
+    from collections import Counter
+
+    rows, drop = _candidate_text_rows(dataset)
+    reasons = Counter(reason for row in rows if (reason := drop(row)))
+    return {"source_rows": len(rows), "dropped": dict(sorted(reasons.items()))}

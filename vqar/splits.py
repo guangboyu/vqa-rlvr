@@ -157,14 +157,15 @@ def near_duplicate_pools(splits: list[dict]) -> list[str]:
                    for part in parts})
 
 
-def near_duplicate_index(splits: list[dict], data_dir: Path) -> dict[str, set[bytes]]:
-    """dHash -> thumbnails of every image shown in the training roles of the pass's pools."""
+def near_duplicate_index(splits: list[dict], data_dir: Path,
+                         roles=TRAINING_ROLES) -> dict[str, set[bytes]]:
+    """dHash -> thumbnails of every image shown in the given roles of the pass's pools."""
     index = {}
     for split in splits:
         if split["dataset"] in NEAR_DUPLICATE_SKIPPED:
             continue
         for role, parts in split["roles"].items():
-            if role not in TRAINING_ROLES:
+            if role not in roles:
                 continue
             for part in parts:
                 rows = subset_near_keys(Path(data_dir), part["subset"])
@@ -469,7 +470,8 @@ def build_split(dataset: str, data_dir: Path, other_splits: list[dict],
     A benchmark (a dataset with a `published` role) keeps every row there; its test role also
     loses rows repeating a training question, rows without an image and resized copies of training
     images, and a later training pool loses rows repeating a question of a benchmark's test role
-    or showing one of its images in another color mode. Other datasets' test roles keep the
+    or showing one of its images in another color mode or as a perceptual copy (MMStar's JPEG
+    copies of GEOQA's diagrams match no pixel key). Other datasets' test roles keep the
     exact-image rule alone, so rebuilding one cannot change a recorded table.
 
     Register a benchmark before a new training source: the color-mode check runs only when the
@@ -491,13 +493,15 @@ def build_split(dataset: str, data_dir: Path, other_splits: list[dict],
     others_dev = role_keys(other_splits, {"dev"})
     others_train = role_keys(other_splits, TRAINING_ROLES)
     # Only a dataset that trains can repeat a benchmark's question or image into training.
-    benchmark_questions, benchmark_grays = set(), set()
+    benchmark_questions, benchmark_grays, benchmark_copies = set(), set(), {}
     if TRAINING_ROLES & set(spec.subsets):
         benchmarks = [other for other in other_splits if "published" in other["roles"]]
         benchmark_questions = role_question_keys(benchmarks, {"test"}, data_dir)
         benchmark_grays = role_gray_keys(benchmarks, {"test"}, data_dir)
+        benchmark_copies = near_duplicate_index(benchmarks, data_dir, {"test"})
 
-    def part(role: str, excluded: set[str], questions=frozenset(), grays=frozenset()) -> dict:
+    def part(role: str, excluded: set[str], questions=frozenset(), grays=frozenset(),
+             copies=None) -> dict:
         name = spec.subsets[role]
         indices = [i for i, key in enumerate(keys[name]) if key not in excluded]
         if questions:
@@ -506,6 +510,9 @@ def build_split(dataset: str, data_dir: Path, other_splits: list[dict],
         if grays:
             own_grays = subset_gray_keys(Path(data_dir), name)
             indices = [i for i in indices if not own_grays[i] & grays]
+        if copies:
+            found = near_duplicate_rows(subset_near_keys(Path(data_dir), name), copies)
+            indices = [i for i in indices if i not in found]
         return {"subset": name, "indices": indices}
 
     def part_keys(role_part: dict) -> set[str]:
@@ -531,20 +538,24 @@ def build_split(dataset: str, data_dir: Path, other_splits: list[dict],
         roles["test"] = [part("test", others_train | others_dev)]
         held |= part_keys(roles["test"][0])
     if "dev" in spec.subsets:
-        dev = part("dev", others_train | others_held | held)
+        # Dev selects models, so a new source's dev also stays clear of what benchmarks hold.
+        dev = part("dev", others_train | others_held | held, benchmark_questions, benchmark_grays,
+                   benchmark_copies)
         if carved:
             chosen = carve_dev(keys[dev["subset"]], dev["indices"], seed, dev_target)
             dev["indices"] = [i for i in dev["indices"] if keys[dev["subset"]][i] in chosen]
         roles["dev"] = [dev]
         held |= part_keys(dev)
     if "sft" in spec.subsets:
-        roles["sft"] = [part("sft", held | others_held, benchmark_questions, benchmark_grays)]
+        roles["sft"] = [part("sft", held | others_held, benchmark_questions, benchmark_grays,
+                             benchmark_copies)]
     if "rl" in spec.subsets:
         # RL may reuse SFT training examples; it never sees dev or test images. A dataset
         # whose RL role reads its SFT subset reuses exactly the SFT rows.
         shares_sft = spec.subsets["rl"] == spec.subsets.get("sft")
         own = ([] if shares_sft
-               else [part("rl", held | others_held, benchmark_questions, benchmark_grays)])
+               else [part("rl", held | others_held, benchmark_questions, benchmark_grays,
+                          benchmark_copies)])
         roles["rl"] = own + [dict(p) for p in roles.get("sft", [])]
     others = others_held | others_train
     shared = {role: sum(key in others for key in keys[spec.subsets[role]]) for role in roles}
@@ -563,8 +574,47 @@ def build_split(dataset: str, data_dir: Path, other_splits: list[dict],
     if carved:
         split["dev_selection"] = {"seed": seed, "target": dev_target,
                                   "method": "whole images from the SFT pool"}
+    # Split files built before this field stay as they are: only new pools carry it.
+    trained = sorted({spec.subsets[role] for role in TRAINING_ROLES & set(spec.subsets)})
+    if trained:
+        split["pool_losses"] = {name: pool_losses(name, keys[name], other_splits, data_dir)
+                                for name in trained}
     validate_split(split)
     return split
+
+
+def overlap_rows(keys: list[str], own: dict, other: dict, data_dir: Path) -> dict[str, set]:
+    """Rows of a training subset that one other dataset takes out, by rule: its held-out images, and
+    for a benchmark the gray and perceptual copies of its clean images and repeats of its clean
+    questions. `own` holds the subset's gray keys, near keys and question keys."""
+    held = role_keys([other], HELD_OUT_ROLES)
+    found = {"image": {i for i, key in enumerate(keys) if key in held},
+             "gray": set(), "near": set(), "question": set()}
+    if "published" in other["roles"]:
+        grays = role_gray_keys([other], {"test"}, data_dir)
+        questions = role_question_keys([other], {"test"}, data_dir)
+        found["gray"] = {i for i, row in enumerate(own["grays"]) if row & grays}
+        found["near"] = near_duplicate_rows(own["nears"],
+                                            near_duplicate_index([other], data_dir, {"test"}))
+        found["question"] = {i for i, key in enumerate(own["questions"]) if key in questions}
+    return found
+
+
+def pool_losses(name: str, keys: list[str], other_splits: list[dict], data_dir: Path) -> dict:
+    """What each other dataset takes out of a new training subset. A row two datasets claim counts
+    under each, and once in `rows_lost`. Dev rows carved afterwards are not counted."""
+    own = {}
+    if any("published" in other["roles"] for other in other_splits):
+        own = {"grays": subset_gray_keys(Path(data_dir), name),
+               "nears": subset_near_keys(Path(data_dir), name),
+               "questions": question_keys(data_dir, name)}
+    by_dataset, lost = {}, set()
+    for other in other_splits:
+        found = overlap_rows(keys, own, other, data_dir)
+        if taken := set().union(*found.values()):
+            by_dataset[other["dataset"]] = {rule: len(rows) for rule, rows in found.items()}
+            lost |= taken
+    return {"source_rows": len(keys), "rows_lost": len(lost), "by_dataset": by_dataset}
 
 
 def roles_sha256(split: dict) -> str:

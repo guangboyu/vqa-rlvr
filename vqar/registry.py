@@ -356,6 +356,37 @@ def _hallusionbench(sizes):
     return {"hallusionbench_eval": data.load_hallusionbench(sizes["rows"])}
 
 
+def _geoqa(sizes):
+    from vqar import data
+
+    return {"geoqa_train": data.load_geoqa(sizes["rows"])}
+
+
+def _mmk12(sizes):
+    from vqar import data
+
+    return {"mmk12_train": data.load_mmk12(sizes["rows"])}
+
+
+def _virl39k(sizes):
+    from vqar import data
+
+    return {"virl39k_train": data.load_virl39k(sizes["rows"])}
+
+
+def _docvqat(sizes):
+    from vqar import data
+
+    return {"docvqat_train": data.load_docvqat(sizes["rows"])}
+
+
+def _infovqa(sizes):
+    from vqar import data
+
+    splits = data.load_infovqa(sizes["train"], sizes["val"])
+    return {f"infovqa_{name}": subset for name, subset in splits.items()}
+
+
 _BENCHMARK_ROLES = frozenset({"test", "published"})
 _CHOICE_SCHEMA = ("option letter; references hold the letter, the option's text, then every "
                   "option in letter order")
@@ -370,6 +401,38 @@ def _benchmark(name: str, rows: int, **fields) -> DatasetSpec:
                        official_splits=_BENCHMARK_ROLES, ladder="benchmark",
                        official_roles=_BENCHMARK_ROLES if fields.get("official") else frozenset(),
                        sizes={"rows": rows}, require_split=False, **fields)
+
+
+_ANLS_METADATA = {"primary": "official", "official": {
+    "name": "ANLS, threshold 0.5",
+    "source": "QwenLM/Qwen-VL eval_mm/infographicsvqa_eval.py (the RRC script)",
+    "rule": "one minus the best normalized edit distance, zero below 0.5"},
+    "normalized": {"name": "ANLS at 0.5 as 0 or 1",
+                   "source": "project-defined, for a training reward",
+                   "rule": "any ANLS credit counts as right"}}
+
+
+def _math_candidate(name: str, rows: int, **fields) -> DatasetSpec:
+    """A math training candidate: one released split playing sft and rl, dev carved from it by whole
+    image. No author evaluator is ported (ViRL39K's card recommends the math-verify library), so the
+    project rule is both the reported column and the reward."""
+    subset = f"{name}_train"
+    return DatasetSpec(
+        name=name, category="Reasoning",
+        subsets={"sft": subset, "rl": subset, "dev": subset},
+        official_splits=frozenset({"sft", "rl"}), ladder="in-domain", official=None,
+        normalized=benchmark_metrics.math_answer_accuracy,
+        project=benchmark_metrics.math_answer_accuracy, official_roles=frozenset(),
+        sizes={"rows": rows}, require_split=False,
+        metric_metadata={"primary": "project",
+                         "project": {"name": "math answer equality",
+                                     "source": "project-defined, for a training reward",
+                                     "rule": "numbers equal in value after degree, percent and "
+                                             "unit marks are stripped; else one TeX-free "
+                                             "spelling or VQA-normalized words; options by "
+                                             "letter or text"},
+                         "normalized": {"same_as": "project", "name": "math answer equality"}},
+        **fields)
 
 
 DATASETS: dict[str, DatasetSpec] = {
@@ -847,6 +910,60 @@ DATASETS: dict[str, DatasetSpec] = {
                 "source": "project-defined: the authors grade with GPT-4 "
                           "(tianyi-lab/HallusionBench utils.py)",
                 "rule": "the first stand-alone yes or no; an answer with neither is wrong"}},
+        ),
+        # Training candidates (2026-11-07), screened before any training. They come after the
+        # benchmarks so `vqar.splits.build_split` takes overlapping rows out of them. Their loaders
+        # drop what cannot train: GEOQA 1 empty answer; MMK12 85 answers too long to be final;
+        # ViRL39K 2,289 rows with several images, 1,375 blank-image rows, 58 long answers and 1
+        # question stating its answer. results/candidate-sources.json has the counts.
+        _math_candidate(
+            "geoqa", 8030,
+            display_name="GEOQA (R1V train)",
+            sources={"leonardPKU/GEOQA_R1V_Train_8K": "9a9df3e7e9b444fb53f845cd0f3e75e201d939ce"},
+            answer_schema="a number with or without degree or unit marks, TeX fractions and "
+            "roots, some Chinese units; references hold the bare number, then the released text",
+            materialize=_geoqa,
+        ),
+        _math_candidate(
+            "mmk12", 15531,
+            display_name="MMK12 (train)",
+            sources={"FanqingM/MMK12": "372a609268ea79b5e78d90ab173e02c37b486163"},
+            answer_schema="fill-in-the-blank math in TeX or plain text; references hold the bare "
+            "number when there is one, then the released text",
+            materialize=_mmk12,
+        ),
+        _math_candidate(
+            "virl39k", 35147,
+            display_name="ViRL39K (one image)",
+            sources={"TIGER-Lab/ViRL39K": "812ec617dea4bc8a4e751663b88e4ebb7de4d00e"},
+            answer_schema=f"boxed answers: {_CHOICE_SCHEMA} where the question writes options "
+            "readably; else a number, TeX or a phrase",
+            materialize=_virl39k,
+        ),
+        DatasetSpec(
+            name="docvqat", display_name="DocVQA (train)",
+            category="Document-chart",
+            sources={"lmms-lab-encoder/DocVQA": "539088ef8a8ada01ac8e2e6d4e372586748a265e"},
+            # Its validation split is the docvqa benchmark, so dev is carved from train.
+            subsets={"sft": "docvqat_train", "rl": "docvqat_train", "dev": "docvqat_train"},
+            official_splits=frozenset({"sft", "rl"}),
+            ladder="in-domain", answer_schema="text read from a document; one to fourteen "
+            "accepted answers",
+            official=benchmark_metrics.docvqa_anls, normalized=benchmark_metrics.anls_match,
+            official_roles=frozenset(ROLES), sizes={"rows": 39463}, materialize=_docvqat,
+            require_split=False, metric_metadata=_ANLS_METADATA,
+        ),
+        DatasetSpec(
+            name="infovqa", display_name="InfographicVQA",
+            category="Document-chart",
+            sources={"lmms-lab-encoder/DocVQA": "539088ef8a8ada01ac8e2e6d4e372586748a265e"},
+            subsets={"sft": "infovqa_train", "rl": "infovqa_train", "dev": "infovqa_val"},
+            official_splits=frozenset({"sft", "rl", "dev"}),
+            ladder="in-domain", answer_schema="text or a number read from an infographic; one to "
+            "eight accepted answers",
+            official=benchmark_metrics.docvqa_anls, normalized=benchmark_metrics.anls_match,
+            official_roles=frozenset(ROLES), sizes={"train": 23946, "val": 2801},
+            materialize=_infovqa, require_split=False, metric_metadata=_ANLS_METADATA,
         ),
     ]
 }

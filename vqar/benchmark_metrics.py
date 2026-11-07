@@ -16,8 +16,10 @@ Sources, read 2026-11-06; the registry's metric metadata names each one per data
 
 import ast
 import math
+import operator
 import random
 import re
+import unicodedata
 
 from vqar.metrics import exact_match, normalize_answer
 
@@ -336,3 +338,163 @@ def charxiv_accuracy(prediction: str, answers: list[str]) -> float:
     relaxed = ((gold and gold in predicted and len(gold) >= 0.9 * len(predicted))
                or (predicted and predicted in gold and len(predicted) >= 0.9 * len(gold)))
     return float(predicted == gold or bool(relaxed) or _same_terms(prediction, reference))
+
+
+# Training rewards of the candidate sources: 0 or 1, so a GRPO group is right or wrong.
+def anls_match(prediction: str, answers: list[str]) -> float:
+    """DocVQA's ANLS at the authors' threshold, as a reward: any credit counts as right. Spans a
+    little off pass by design, and so does a number one digit off: '2020' for '2021'."""
+    return float(docvqa_anls(prediction, answers) > 0)
+
+
+# TeX commands that read the same as a mark, or as nothing, in a final answer.
+_TEX_COMMANDS = {"dfrac": r"\frac", "tfrac": r"\frac", "pi": "π", "times": "*", "cdot": "*",
+                 "circ": "°", "degree": "°", "sqrt": "√", "leqslant": "≤", "leq": "≤", "le": "≤",
+                 "geqslant": "≥", "geq": "≥", "ge": "≥", "left": "", "right": "", "quad": "",
+                 "qquad": "", "mathrm": "", "text": "", "textbf": "", "mathbf": "", "rm": "",
+                 "unit": "", "number": "", "quantity": "", "angle": "∠", "triangle": "△"}
+_TEX_COMMAND = re.compile(r"\\([a-zA-Z]+)")
+_TEX_SPACING = re.compile(r"\\[,;:! ()\[\]]")
+_MATH_MARKS = str.maketrans({"$": None, "~": None, "×": "*", "·": "*", "−": "-", "–": "-",
+                             "或": "or"})
+_DEGREE_POWER = re.compile(r"(?:\{\})?\^\{?°\}?")
+_MIXED_NUMBER = re.compile(r"(\d+)\\frac\{(\d+)\}\{(\d+)\}")
+_ROOT_ATOM = re.compile(r"√(\d+(?:\.\d+)?|[a-zA-Z])")
+_ROOT_GROUP = re.compile(r"√\{([^{}]*)\}")
+_POWER_BRACES = re.compile(r"\^\{([-\w.]+)\}")
+_PLAIN_BRACES = re.compile(r"(?<![a-zA-Z}√^_])\{([^{}]*)\}")
+_FRACTION = re.compile(r"\\frac\{([^{}]*)\}\{([^{}]*)\}")
+_SIMPLE_TERM = re.compile(r"[\w.]+")
+
+
+def _fraction(found: re.Match) -> str:
+    top, bottom = (term if _SIMPLE_TERM.fullmatch(term) else f"({term})" for term in found.groups())
+    return f"{top}/{bottom}"
+
+
+def _without_groups(text: str) -> str:
+    """Roots, powers, fractions and plain braces undone from the inside out."""
+    while True:
+        simpler = _ROOT_GROUP.sub(r"√(\1)", text)
+        simpler = _POWER_BRACES.sub(r"^\1", simpler)
+        simpler = _PLAIN_BRACES.sub(r"\1", simpler)
+        simpler = _FRACTION.sub(_fraction, simpler)
+        if simpler == text:
+            return text
+        text = simpler
+
+
+def math_form(text: str) -> str:
+    """A final answer in one spelling: no dollar signs, spaces or sizing commands, degrees as °,
+    roots as √(x), fractions as a/b, lowercase. '$$\\dfrac{1}{2}$$' and '1/2' read the same."""
+    text = unicodedata.normalize("NFKC", text.replace("˚", "°")).translate(_MATH_MARKS)
+    text = _TEX_SPACING.sub("", text).replace(r"\%", "%")
+    text = _TEX_COMMAND.sub(lambda found: _TEX_COMMANDS.get(found[1], found[0]), text)
+    text = _DEGREE_POWER.sub("°", "".join(text.split()))
+    text = _MIXED_NUMBER.sub(r"(\1+\2/\3)", text)
+    text = _without_groups(_ROOT_ATOM.sub(r"√(\1)", text))
+    return text.lower().rstrip(".;,。")
+
+
+# Marks stripped from the end of a number: degrees, percent, and common units of length, area,
+# volume, time, mass and money, in English and in the Chinese some references use.
+_UNIT_NAMES = ("°", "度", "%", "km/h", "m/s", "cm/s", "cm", "mm", "dm", "km", "m", "meters?",
+               "metres?", "centimeters?", "millimeters?", "kilometers?", "inch(?:es)?", "in", "ft",
+               "feet", "foot", "yards?", "miles?", "degrees?", "seconds?", "sec", "s", "minutes?",
+               "mins?", "hours?", "hrs?", "h", "days?", "years?", "kg", "g", "grams?",
+               "kilograms?", "yuan", "dollars?", "cents?", "units?", "米", "厘米", "分米", "毫米",
+               "千米", "公里", "平方米", "平方厘米", "立方米", "海里", "小时", "分钟", "秒", "天",
+               "克", "千克", "元", "个", "o")  # 'o' is how 35º reads once normalized
+_UNIT_TAIL = re.compile(r"(?<=[\d)π}])\(?(?:square|cubic|sq\.?)?(?:" + "|".join(_UNIT_NAMES)
+                        + r")(?:\^?[23]\^?)?\)?$")
+_THOUSANDS = re.compile(r"(?<![\d.])\d{1,3}(?:,\d{3})+(?![\d,])")
+_CURRENCY = str.maketrans(dict.fromkeys("¥€£"))
+# A left side that names its value (x, ∠AOD, cosA) or computes it (7*5). Anything else is an
+# equation to state, whose right side is no answer: '(x-2)^2+(y+3)^2=13' does not mean 13.
+_VALUE_NAME = re.compile(r"[∠△]?[a-z]{1,8}\d?|[\d.+\-*/()°π√]+")
+_LEADING_ZEROS = re.compile(r"(?<![\d.])0+(?=\d)")
+_PLAIN_NUMBER = re.compile(r"-?(?:\d+(?:\.\d+)?|\.\d+)")
+_MULTIPLIED = re.compile(r"(?<=[\d)i])(?=pi|sqrt|\()|(?<=\))(?=\d)")
+_ARITHMETIC = re.compile(r"[\d.+\-*/()pisqrt]+")
+_MAX_EXPRESSION = 100  # longer than any numeric answer the sources hold
+_WORD = re.compile(r"[^\W\d_]{2,}")
+_OPERATORS = {ast.Add: operator.add, ast.Sub: operator.sub, ast.Mult: operator.mul,
+              ast.Div: operator.truediv, ast.Pow: operator.pow}
+
+
+def _without_unit(form: str) -> str:
+    """The value part of a math form: what 'x=5' names, no unit, no separators."""
+    name, equals, value = form.rpartition("=")
+    if equals and _VALUE_NAME.fullmatch(name):
+        form = value
+    form = _UNIT_TAIL.sub("", form.translate(_CURRENCY))
+    return _THOUSANDS.sub(lambda found: found[0].replace(",", ""), form)
+
+
+def plain_number(text: str) -> str | None:
+    """The number a final answer writes, marks removed, when it is one plain number: '145' from
+    '145°' or '$$145^{\\circ}$$'. Fractions and roots do not count."""
+    value = _without_unit(math_form(text))
+    return value if _PLAIN_NUMBER.fullmatch(value) else None
+
+
+def _arithmetic(node: ast.AST) -> float:
+    """The value of a parsed expression; anything but arithmetic on numbers raises ValueError."""
+    match node:
+        case ast.Constant(value=int() | float() as value):
+            return float(value)
+        case ast.Name(id="pi"):
+            return math.pi
+        case ast.Call(func=ast.Name(id="sqrt"), args=[argument], keywords=[]):
+            return math.sqrt(_arithmetic(argument))
+        case ast.UnaryOp(op=ast.USub(), operand=operand):
+            return -_arithmetic(operand)
+        case ast.UnaryOp(op=ast.UAdd(), operand=operand):
+            return _arithmetic(operand)
+        case ast.BinOp(left=left, op=op, right=right) if type(op) in _OPERATORS:
+            return _OPERATORS[type(op)](_arithmetic(left), _arithmetic(right))
+    raise ValueError("not arithmetic")
+
+
+def math_value(form: str) -> float | None:
+    """The number a math form evaluates to: 2√(3), 8/3π, 20(3+√(3)); None when it has symbols."""
+    expression = _without_unit(form).replace("π", "pi").replace("√", "sqrt").replace("^", "**")
+    expression = _MULTIPLIED.sub("*", _LEADING_ZEROS.sub("", expression))
+    if len(expression) > _MAX_EXPRESSION or not _ARITHMETIC.fullmatch(expression):
+        return None
+    try:
+        value = _arithmetic(ast.parse(expression, mode="eval").body)
+    except (ValueError, SyntaxError, TypeError, ArithmeticError, RecursionError):
+        return None
+    return value if isinstance(value, float) and math.isfinite(value) else None
+
+
+def _same_math(prediction: str, reference: str) -> bool:
+    """Equal as spelled in one form, equal in value, or equal as VQA-normalized words. Words need a
+    word: normalization drops articles, which would read the expression 'a-c' as the letter c."""
+    predicted, expected = math_form(prediction), math_form(reference)
+    if not predicted or not expected:
+        return False
+    if predicted == expected:
+        return True
+    values = math_value(predicted), math_value(expected)
+    if None not in values:
+        return math.isclose(*values, rel_tol=1e-6, abs_tol=1e-12)
+    has_word = _WORD.search(prediction) or _WORD.search(reference)
+    return bool(has_word) and normalize_answer(prediction) == normalize_answer(reference)
+
+
+def math_answer_accuracy(prediction: str, answers: list[str]) -> float:
+    """Project rule for the math sources, 0 or 1. Numbers compare by value after degree, percent
+    and unit marks are stripped, so '10 m' passes for '10cm'. A row with options reads a bare letter
+    as that letter, then an option's text, so 'A cyclin ...' is not the letter A, then a leading
+    letter."""
+    if not is_choice(answers):
+        return float(any(_same_math(prediction, answer) for answer in answers))
+    options = options_of(answers)
+    letter = _LEADING_LETTER.match(prediction)
+    by_letter = float(bool(letter) and options.get(letter.group(1).upper()) == answers[1])
+    if letter and not prediction[letter.end():].strip():
+        return by_letter
+    named = [text for text in options.values() if _same_math(prediction, text)]
+    return float(answers[1] in named) if named else by_letter
