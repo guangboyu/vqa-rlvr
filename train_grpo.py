@@ -95,6 +95,8 @@ def main() -> None:
                         help="upper clip of the policy ratio (DAPO clip-higher uses 0.28)")
     parser.add_argument("--rollout-prompt", choices=sorted(PROMPTS), default=None,
                         help="template the rollouts answer; its answer rule scores them")
+    parser.add_argument("--route-prompts", nargs="+", default=None, metavar="DATASET=TEMPLATE",
+                        help="roll these datasets out under their own template")
     parser.add_argument("--pool", default=None,
                         help="train on a declared pool under data/pools/ (default: whole rl roles)")
     parser.add_argument("--refill-rounds", type=int, default=None,

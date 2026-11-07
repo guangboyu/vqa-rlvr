@@ -109,3 +109,28 @@ def test_lora_dropout_applies_only_to_the_sft_recipe():
 
     assert lora_config(config.SFT_PRESETS["sft_2b"]).lora_dropout == 0.05
     assert lora_config(config.GRPO_PRESETS["grpo_2b_main"]).lora_dropout == 0.0
+
+
+def test_routes_give_each_dataset_its_own_rollout_template(monkeypatch):
+    from vqar.rl import prompt_routes, to_grpo_columns
+
+    monkeypatch.setattr("vqar.rl.fit_rl_image", lambda image, *args: image)
+    preset = replace(config.GRPO_PRESETS["grpo_2b_v1"], datasets=("vqav2", "chartqa"),
+                     route_prompts=("vqav2=short", "chartqa=reasoning"))
+    batch = {"question": ["Q1?", "Q2?"], "image": [None, None], "answers": [["a"], ["b"]],
+             "dataset": ["vqav2", "chartqa"], "qid": ["1", "2"]}
+    columns = to_grpo_columns(batch, "reasoning", routes=prompt_routes(preset))
+    assert columns["rollout_prompt"] == ["short", "reasoning"]
+    assert "single word" in columns["prompt"][0][0]["content"]
+    assert "<think>" in columns["prompt"][1][0]["content"]
+    assert to_grpo_columns(batch, "reasoning")["rollout_prompt"] == ["reasoning", "reasoning"]
+
+
+def test_a_route_needs_a_trained_dataset_and_a_known_template():
+    from vqar.rl import prompt_routes
+
+    preset = config.GRPO_PRESETS["grpo_2b_v1"]
+    with pytest.raises(ValueError):
+        prompt_routes(replace(preset, route_prompts=("chartqa=short",)))
+    with pytest.raises(ValueError):
+        prompt_routes(replace(preset, route_prompts=("vqav2=nope",)))

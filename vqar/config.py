@@ -119,6 +119,8 @@ class GRPOPreset:
     kl_beta: float = 0.0  # modern GRPO practice; one 0.04 sanity run in the sandbox
     vllm_gpu_memory_utilization: float = 0.3
     rollout_prompt: str = "reasoning"  # template the rollouts answer; its answer rule scores them
+    # Per-dataset exceptions to rollout_prompt, each "dataset=template".
+    route_prompts: tuple[str, ...] = ()
     pool: str | None = None  # a declared pool of rl-role questions; None: the whole role
     # DAPO dynamic sampling: at most this many extra generation rounds per update replace
     # groups whose answers all scored the same. 0 (off) keeps the fixed-compute baseline.
@@ -329,7 +331,7 @@ OPD_PRESETS: dict[str, OPDPreset] = {
 
 # Opt-in fields added after runs were launched, with their off value. Left off, they are
 # not written, so earlier run configs and the auto-resume check against them stay the same.
-OPT_IN_FIELDS = {"refill_rounds": 0, "rollout_lora": False, "vllm_sleep": True,
+OPT_IN_FIELDS = {"refill_rounds": 0, "rollout_lora": False, "vllm_sleep": True, "route_prompts": (),
                  "loss_type": "dapo", "scale_rewards": "group", "num_iterations": 1,
                  "epsilon_high": 0.2, "canvas_size": RL_IMAGE_SIZE, "image_fit": "canvas",
                  "perception_coef": 0.0, "vision_lora": False, "image_upscale": False,

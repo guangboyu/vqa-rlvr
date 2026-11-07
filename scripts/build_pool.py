@@ -7,6 +7,8 @@ on some but not all of its sampled answers.
         results/records/base2-*/chartqa-rl-dev-reasoning-t1k8-*.json
     python -m scripts.build_pool --name mix-chartqa-vqa4k --union part1-short2-actual4000 \
         --whole-roles chartqa
+    python -m scripts.build_pool --name mix-chartqa-vqa90-10 --union part1-short2-actual4000 \
+        --take 820 --whole-roles chartqa
 
 Writes data/pools/<name>.json; train_grpo.py --pool <name> trains on it. The selection
 model, rule, and source records are part of the pool's definition. --union instead combines
@@ -36,13 +38,15 @@ def main():
                         help="combine these declared pools (and --whole-roles) instead")
     parser.add_argument("--whole-roles", nargs="+", default=[], metavar="DATASET",
                         help="with --union: add every rl-role question of these datasets")
+    parser.add_argument("--take", type=int, default=None,
+                        help="with --union: keep a seeded sample of the pools' members")
     parser.add_argument("--data-dir", type=Path, default=DATA_DIR)
     args = parser.parse_args()
     if bool(args.records) == bool(args.union):
         parser.error("give learnability records or --union, not both")
 
     if args.union:
-        pool = union_pool(args.name, args.data_dir, args.union, args.whole_roles)
+        pool = union_pool(args.name, args.data_dir, args.union, args.whole_roles, args.take)
     else:
         records = [RunRecord.load(path) for path in args.records]
         pool = filtered_pool(args.name, records, *args.keep, limit=args.limit)

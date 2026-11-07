@@ -40,14 +40,26 @@ def fit_rl_image(image, image_fit: str = "canvas", canvas_size: int = config.RL_
     return to_uniform_canvas(image, canvas_size)
 
 
+def prompt_routes(preset) -> dict[str, str]:
+    """Each "dataset=template" exception to the preset's rollout template, checked."""
+    routes = dict(item.split("=", 1) for item in getattr(preset, "route_prompts", ()))
+    for dataset, template in routes.items():
+        if dataset not in preset.datasets or template not in PROMPTS:
+            raise ValueError(f"Bad route {dataset}={template} for datasets {preset.datasets}")
+    return routes
+
+
 def to_grpo_columns(batch: dict, template: str, canvas_size: int = config.RL_IMAGE_SIZE,
-                    image_fit: str = "canvas", max_pixels: int = config.MAX_PIXELS) -> dict:
+                    image_fit: str = "canvas", max_pixels: int = config.MAX_PIXELS,
+                    routes: dict[str, str] | None = None) -> dict:
     """GRPO rows: conversational `prompt` + `image`; question/answers/dataset and the
-    rollout template ride along as extra columns that TRL forwards to every reward."""
+    rollout template ride along as extra columns that TRL forwards to every reward.
+    `routes` gives some datasets their own template."""
+    templates = [(routes or {}).get(dataset, template) for dataset in batch["dataset"]]
     return {
         "prompt": [
-            [{"role": "user", "content": PROMPTS[template].text.format(question=q)}]
-            for q in batch["question"]
+            [{"role": "user", "content": PROMPTS[name].text.format(question=q)}]
+            for name, q in zip(templates, batch["question"], strict=True)
         ],
         "image": [fit_rl_image(img, image_fit, canvas_size, max_pixels)
                   for img in batch["image"]],
@@ -55,7 +67,7 @@ def to_grpo_columns(batch: dict, template: str, canvas_size: int = config.RL_IMA
         "answers": batch["answers"],
         "dataset": batch["dataset"],
         "qid": batch["qid"],
-        "rollout_prompt": [template] * len(batch["question"]),
+        "rollout_prompt": templates,
     }
 
 
@@ -69,7 +81,8 @@ def load_rl_dataset(preset, data_dir: Path | None = None):
         to_grpo_columns, template=preset.rollout_prompt,
         canvas_size=getattr(preset, "canvas_size", config.RL_IMAGE_SIZE),
         image_fit=getattr(preset, "image_fit", "canvas"),
-        max_pixels=getattr(preset, "max_pixels", config.MAX_PIXELS)))
+        max_pixels=getattr(preset, "max_pixels", config.MAX_PIXELS),
+        routes=prompt_routes(preset)))
 
 
 def build_rewards(names: tuple[str, ...]):
@@ -204,7 +217,7 @@ def dry_run(preset) -> None:
 
     ds = load_rl_dataset(preset)
     row = ds[0]
-    template = PROMPTS[preset.rollout_prompt]
+    template = PROMPTS[row["rollout_prompt"]]  # the first row's, when datasets are routed
     assert row["prompt"][0]["content"] == template.text.format(question=row["question"]), row
     pool = preset.pool or "the whole rl roles"
     print(f"dataset ok: {len(ds)} prompts from {pool} of {preset.datasets}")

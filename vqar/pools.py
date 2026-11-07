@@ -94,15 +94,23 @@ def filtered_pool(name: str, records: list, low: int, high: int,
             "selection": selection, "members": members}
 
 
-def union_pool(name: str, data_dir: Path, pools: list[str], roles: list[str]) -> dict:
+def union_pool(name: str, data_dir: Path, pools: list[str], roles: list[str],
+               take: int | None = None, seed: int = 42) -> dict:
     """A pool of other declared pools' members plus whole rl roles, e.g. the questions two
-    single-dataset runs drew, so one run can train on exactly their union."""
-    members, parts = [], []
+    single-dataset runs drew, so one run can train on exactly their union. `take` keeps a seeded
+    sample of the declared pools' members, which sets the mixture's ratio."""
+    declared_members = []
+    parts = []
     for pool in pools:
         declared = read_pool(data_dir, pool)
-        members += [{"dataset": m["dataset"], "qid": m["qid"]} for m in declared["members"]]
+        declared_members += [{"dataset": m["dataset"], "qid": m["qid"]}
+                             for m in declared["members"]]
         parts.append({"pool": pool, "members": len(declared["members"]),
                       "sha256": hashlib.sha256(pool_path(data_dir, pool).read_bytes()).hexdigest()})
+    if take is not None:
+        declared_members = random.Random(seed).sample(declared_members, take)
+        parts.append({"take": take, "seed": seed})
+    members = declared_members
     for dataset in roles:
         qids = load_role(data_dir, [dataset], "rl", seed=None)["qid"]
         members += [{"dataset": dataset, "qid": qid} for qid in qids]
