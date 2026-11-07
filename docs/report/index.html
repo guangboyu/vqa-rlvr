@@ -220,7 +220,7 @@ body.present .counter { display: block; position: fixed; z-index: 6; font-family
 
 <main>
 <header class="paper slide" id="top">
-  <div class="kicker">Technical report · 6 November 2026</div>
+  <div class="kicker">Technical report · 7 November 2026</div>
   <h1>What reinforcement learning adds to a vision-language model</h1>
   <div class="byline"><span class="who">Guangbo Yu</span><span>Qwen3-VL 2B and 8B</span><span><a href="https://github.com/guangboyu/vqa-rlvr">Code and records</a></span></div>
 
@@ -251,7 +251,7 @@ body.present .counter { display: block; position: fixed; z-index: 6; font-family
 <section class="slide" id="claim">
   <h2><span class="num">1</span>The claim</h2>
   <p>RL with a verifiable reward trains a model on its own samples and pays it only when a program confirms the answer. For language models this step turns a fine-tuned model into a reasoning one. Vision-language models answer a different mix of questions: many are settled by looking rather than deriving, and a reward that checks only the final answer can just as well teach a model to stop thinking. The comparisons that would show when RL helps are rarely run under one recipe, one evaluation and matched data. We run them.</p>
-  <p><b>Whether RL beats SFT depends on what the task pays for. RL mostly sharpens what the model can already sample; where the answer is out of reach, SFT has to go first.</b> The rest of this report hangs from that claim, and each branch links to the page with all of its evidence.</p>
+  <p><b>Whether RL beats SFT depends on what the task pays for. RL mostly sharpens what the model can already sample; where the answer is out of reach, SFT has to go first.</b> Across 18 public benchmarks, the released model's reasoning prompt beats its short prompt on only 3: MathVista (+5.1 points), ChartQA (+3.8) and MMMU (+0.7); on VQAv2 it costs −22.8. The rest of this report hangs from that claim, and each branch links to the page with all of its evidence.</p>
   <ul class="tree">
     <li><a href="#reasoning-pays">Reasoning pays</a>: RL wins and keeps the reasoning. <a class="deep" href="https://github.com/guangboyu/vqa-rlvr/blob/main/docs/findings/reasoning-pays.md">evidence</a></li>
     <li><a href="#form">Reasoning doesn't pay</a>: RL changes form, not ability. <a class="deep" href="https://github.com/guangboyu/vqa-rlvr/blob/main/docs/findings/form-not-ability.md">evidence</a></li>
@@ -367,7 +367,7 @@ body.present .counter { display: block; position: fixed; z-index: 6; font-family
 <section class="slide" id="future">
   <h2><span class="num">9</span>Next</h2>
   <ol>
-    <li><b>A strategy-by-category map.</b> The same arms on a table grouped into general VQA, reasoning, document and chart, perception and hallucination benchmarks, with an image-gain column for each, plus one new training source each for reasoning and for documents. Predictions for the new sources are written before they train.</li>
+    <li><b>New training sources.</b> The <a href="https://github.com/guangboyu/vqa-rlvr/blob/main/docs/matrix.md#category-table">category table</a> scores every model on 18 benchmarks across general VQA, reasoning, document and chart, perception, hallucination and medical. One new source each for reasoning and documents comes next, with predictions written before they train.</li>
     <li><b>Error analysis that names the errors.</b> Rule-based checks on every evaluation and labeled samples at milestones, so each error type can be taken to the literature on reducing it.</li>
     <li><b>Medical imaging as its own milestone,</b> from 2D medical questions to 3D abdominal CT.</li>
   </ol>
@@ -417,7 +417,7 @@ body.present .counter { display: block; position: fixed; z-index: 6; font-family
 </section>
 </main>
 
-<footer>Rebuilt 6 November 2026 from the saved evaluation records in <a href="https://github.com/guangboyu/vqa-rlvr">github.com/guangboyu/vqa-rlvr</a>.</footer>
+<footer>Rebuilt 7 November 2026 from the saved evaluation records in <a href="https://github.com/guangboyu/vqa-rlvr">github.com/guangboyu/vqa-rlvr</a>.</footer>
 <div id="tip" hidden></div>
 
 <script>

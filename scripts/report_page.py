@@ -325,6 +325,7 @@ put("cat.benchmarks", str(len(table["rows"])))
 put("cat.reasoning.pays", str(sum(value > 0.5 for value in payoff.values())))
 put("cat.payoff.mathvista", signed(payoff["mathvista"]))
 put("cat.payoff.chartqa", signed(payoff["chartqa"]))
+put("cat.payoff.mmmu", signed(payoff["mmmu"]))
 put("cat.payoff.vqav2", signed(payoff["vqav2"]))
 put("reach.rl.most", f1(max(reach["verdict"]["rl_above_reach"].values())))
 vision = {row["model"]: row for spec in beyond if spec.get("group") == "vision"

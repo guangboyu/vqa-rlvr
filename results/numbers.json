@@ -86,6 +86,7 @@
  "cat.benchmarks": "18",
  "cat.payoff.chartqa": "+3.8",
  "cat.payoff.mathvista": "+5.1",
+ "cat.payoff.mmmu": "+0.7",
  "cat.payoff.vqav2": "−22.8",
  "cat.reasoning.pays": "3",
  "cq.audgain": "5.4",

@@ -8,12 +8,15 @@ evaluation harness.
 **Whether RL beats SFT depends on what the task pays for.** RL mostly sharpens what the model can
 already sample; where the answer is out of reach, SFT has to go first.
 
+Across <!--n:cat.benchmarks-->18<!--/n--> public benchmarks, reasoning beats short answers on only <!--n:cat.reasoning.pays-->3<!--/n-->.
+
 **Report:** [guangboyu.github.io/vqa-rlvr/report](https://guangboyu.github.io/vqa-rlvr/report/)
 
 ## Results
 
 - **Where reasoning pays, RL wins and keeps it.** On ChartQA, GRPO raises accuracy from <!--n:cq.base.r-->69.7<!--/n-->% to
-  <!--n:cq.grpo.r-->80.1<!--/n-->%, <!--n:cq.oversft-->11.3<!--/n--> points above SFT's best, with answers still <!--n:cq.grpo.tok-->162<!--/n--> tokens long.
+  <!--n:cq.grpo.r-->80.1<!--/n-->%, <!--n:cq.oversft-->11.3<!--/n--> points above SFT on short answers and <!--n:cq.traces.self.lead-->5.6<!--/n--> above SFT on reasoning traces,
+  with answers still <!--n:cq.grpo.tok-->162<!--/n--> tokens long.
   ([evidence](docs/findings/reasoning-pays.md))
 - **Where it doesn't, RL changes form, not ability.** On VQAv2 under the reasoning prompt, answers go
   from <!--n:ph.vqav2.base.tok-->148<!--/n--> tokens to <!--n:ph.vqav2.grpor.tok-->8<!--/n-->, and accuracy ends at <!--n:ph.vqav2.grpor.r-->78.3<!--/n-->%, the level of
@@ -83,7 +86,7 @@ uv run --frozen uvicorn demo.backend.app:app --port 8000
 - **[What did not work](docs/negatives.md):** each thing tried, what was expected, what happened and what it implies.
 - **[Do 3D CT benchmarks need the scan?](docs/ct-audit.md)** A separate note: on DeepTumorVQA a text-only rule scores <!--n:au.mc.rule-->60.7<!--/n-->%, and on a debiased version built here GRPO and SFT reach the same accuracy.
 - **Harness:** [method](docs/harness/method.md), [evaluation](docs/harness/evaluation.md), [validation](docs/harness/validation.md), [training evidence](docs/harness/training-evidence.md), [hardware](docs/harness/hardware.md), [monitoring](docs/harness/monitoring.md).
-- **[Full tables](docs/matrix.md)** with paired 95% intervals, and [history](docs/history.md): earlier versions of this repository, the corrections made since, and the status of every earlier claim.
+- **[Category table](docs/matrix.md#category-table)** across 18 benchmarks, and [full tables](docs/matrix.md) with paired 95% intervals, and [history](docs/history.md): earlier versions of this repository, the corrections made since, and the status of every earlier claim.
 
 ## Acknowledgments
 
