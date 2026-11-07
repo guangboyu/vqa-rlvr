@@ -351,11 +351,13 @@ class TestAnlsReward:
         assert anls_match("ab", ["ac"]) == 1  # distance 1 of 2: exactly 0.5, the authors keep it
         assert anls_match("abc", ["ade"]) == 0  # 2 of 3
 
-    def test_a_number_one_digit_off_passes_as_the_rule_is_written(self):
-        # The cost of ANLS as a reward, recorded here so a change to it is a decision.
-        assert anls_match("2020", ["2021"]) == 1
-        assert anls_match("12", ["13"]) == 1
-        assert anls_match("8", ["9"]) == 0
+    def test_a_number_needs_the_same_number(self):
+        assert anls_match("2020", ["2021"]) == 0
+        assert anls_match("12", ["13"]) == 0
+        assert anls_match("2021", ["2021"]) == 1
+        assert anls_match("1,250", ["1250"]) == 1
+        assert anls_match("2021", ["2021", "the year"]) == 1
+        assert anls_match("the yeat", ["2021", "the year"]) == 1
 
 
 class TestRewardPath:
@@ -508,10 +510,10 @@ class TestOverlap:
         assert split["pool_losses"]["mmk12_train"]["by_dataset"]["geoqa"]["image"] == 1
 
 
-def test_the_summary_counts_numbers_anls_pays_one_digit_off():
+def test_the_summary_counts_numbers_the_reward_pays_one_digit_off():
     from scripts.candidate_sources import numeric_leniency, one_digit_off
 
     assert one_digit_off("2021") == "2022" and one_digit_off("$29.25") == "$29.26"
     assert one_digit_off("19") == "10"  # only the last digit changes
     rows = [["2021"], ["$29.25", "29.25"], ["9"], ["Washington", "washington"]]
-    assert numeric_leniency(rows) == {"numeric_rows": 3, "pay_one_digit_off": 2}
+    assert numeric_leniency(rows) == {"numeric_rows": 3, "pay_one_digit_off": 0}

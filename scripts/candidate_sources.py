@@ -4,7 +4,7 @@
 
 Per candidate: source rows and what its drop rule removed, rows other datasets took out by rule,
 the final role sizes, the reference-form mix of the rl role, repeated questions between dev and
-training, and for the document sources how many numeric references ANLS pays one digit off.
+training, and for the document sources how many numeric references the reward pays one digit off.
 """
 
 import argparse

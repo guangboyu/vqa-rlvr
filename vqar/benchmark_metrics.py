@@ -343,8 +343,17 @@ def charxiv_accuracy(prediction: str, answers: list[str]) -> float:
 # Training rewards of the candidate sources: 0 or 1, so a GRPO group is right or wrong.
 def anls_match(prediction: str, answers: list[str]) -> float:
     """DocVQA's ANLS at the authors' threshold, as a reward: any credit counts as right. Spans a
-    little off pass by design, and so does a number one digit off: '2020' for '2021'."""
-    return float(docvqa_anls(prediction, answers) > 0)
+    little off pass by design; a reference that is a number needs that number, since one digit
+    off is a wrong answer that ANLS would pay ('2020' for '2021')."""
+    predicted = read_number(prediction)
+    spans = []
+    for answer in answers:
+        value = read_number(answer)
+        if value is None:
+            spans.append(answer)
+        elif predicted is not None and abs(predicted - value) < 1e-9:
+            return 1.0
+    return float(bool(spans) and docvqa_anls(prediction, spans) > 0)
 
 
 # TeX commands that read the same as a mark, or as nothing, in a final answer.
