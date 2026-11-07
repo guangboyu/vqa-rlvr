@@ -343,17 +343,23 @@ def charxiv_accuracy(prediction: str, answers: list[str]) -> float:
 # Training rewards of the candidate sources: 0 or 1, so a GRPO group is right or wrong.
 def anls_match(prediction: str, answers: list[str]) -> float:
     """DocVQA's ANLS at the authors' threshold, as a reward: any credit counts as right. Spans a
-    little off pass by design; a reference that is a number needs that number, since one digit
-    off is a wrong answer that ANLS would pay ('2020' for '2021')."""
-    predicted = read_number(prediction)
+    little off pass by design; a reference with no letters (a number, date or time) must match,
+    since one digit off is a wrong answer that ANLS would pay ('2020' for '2021')."""
     spans = []
     for answer in answers:
-        value = read_number(answer)
-        if value is None:
+        if any(character.isalpha() for character in answer):
             spans.append(answer)
-        elif predicted is not None and abs(predicted - value) < 1e-9:
+        elif _same_figure(prediction, answer):
             return 1.0
     return float(bool(spans) and docvqa_anls(prediction, spans) > 0)
+
+
+def _same_figure(prediction: str, answer: str) -> bool:
+    """The same value when both read as numbers, else the same text ignoring spaces."""
+    predicted, value = read_number(prediction), read_number(answer)
+    if predicted is not None and value is not None:
+        return abs(predicted - value) < 1e-9
+    return "".join(prediction.split()) == "".join(answer.split())
 
 
 # TeX commands that read the same as a mark, or as nothing, in a final answer.

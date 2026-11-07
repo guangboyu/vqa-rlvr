@@ -356,6 +356,8 @@ class TestAnlsReward:
         assert anls_match("12", ["13"]) == 0
         assert anls_match("2021", ["2021"]) == 1
         assert anls_match("1,250", ["1250"]) == 1
+        assert anls_match("1/8/93", ["1/8/93"]) == 1
+        assert anls_match("1/8/94", ["1/8/93"]) == 0
         assert anls_match("2021", ["2021", "the year"]) == 1
         assert anls_match("the yeat", ["2021", "the year"]) == 1
 
