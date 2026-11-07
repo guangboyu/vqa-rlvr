@@ -160,7 +160,7 @@
   "dev_rows_repeating_a_training_question": 49,
   "numeric_references": {
    "numeric_rows": 11972,
-   "pay_one_digit_off": 10871
+   "pay_one_digit_off": 1225
   }
  },
  "infovqa": {
@@ -194,7 +194,7 @@
   "dev_rows_repeating_a_training_question": 10,
   "numeric_references": {
    "numeric_rows": 12243,
-   "pay_one_digit_off": 10034
+   "pay_one_digit_off": 187
   }
  }
 }
