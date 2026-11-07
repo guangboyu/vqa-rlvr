@@ -514,6 +514,35 @@ def cards_table(ledger: dict | None) -> str:
                   "Train GPU-h"], rows, 5)
 
 
+def categories_table(result: dict | None) -> str:
+    """Every benchmark under every arm's training prompt, grouped by category, with the macro."""
+    if result is None:
+        return "The category table has not been computed yet.\n"
+    arms = result["arms"]
+    header = ["Category", "Benchmark", *(f"{a['method']} ({a['trained_on']}, {a['prompt']})"
+                                         if a["trained_on"] != "none"
+                                         else f"Instruct ({a['prompt']})" for a in arms)]
+    rows = [[row["category"], row["display_name"],
+             *(f"{row['cells'][a['column']]['score']:.1f}" for a in arms)]
+            for row in result["rows"]]
+    rows.append(["Macro", ", ".join(result["macro_categories"]),
+                 *(f"**{result['summary'][a['column']]['macro']:.1f}**" for a in arms)])
+    return table(header, rows, 2)
+
+
+def image_gain_table(result: dict | None) -> str:
+    """Accuracy lost with a black image: Instruct's, and the range over the trained arms."""
+    if result is None:
+        return "The category table has not been computed yet.\n"
+    rows = []
+    for row in result["rows"]:
+        gains = {column: cell["image_gain"] for column, cell in row["cells"].items()}
+        trained = [gain for column, gain in gains.items() if not column.startswith("base2|")]
+        rows.append([row["category"], row["display_name"], f"{gains['base2|short']:.1f}",
+                     f"{min(trained):.1f} to {max(trained):.1f}"])
+    return table(["Category", "Benchmark", "Instruct", "Trained arms"], rows, 2)
+
+
 def reach_table(reach: dict | None) -> str:
     """Instruct's pass@8 on open-answer questions against each method's greedy end point."""
     if reach is None:
@@ -811,7 +840,10 @@ def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
     beyond = load_result(root / "results", "beyond-accuracy.json")
     reach = load_result(root / "results", "reach.json")
     ledger = load_result(root / "results", "ledger.json")
+    category_result = load_result(root / "results", "categories.json")
     blocks = {
+        "categories": categories_table(category_result),
+        "image-gain": image_gain_table(category_result),
         "cards": cards_table(ledger),
         "reach": reach_table(reach),
         "matched": matrix_table(matched, cells),

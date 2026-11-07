@@ -233,7 +233,7 @@ body.present .counter { display: block; position: fixed; z-index: 6; font-family
 <section class="slide" id="highlights">
   <h2>Highlights</h2>
   <div class="highlights">
-    <div class="hl"><div class="fig">{{cq.base.r}}<span class="to">→</span>{{cq.grpo.r}}<span class="unit">ChartQA, reasoning prompt, 2B</span></div><p><b>Where reasoning pays, RL wins and keeps it.</b> GRPO ends {{cq.oversft}} points above SFT's best on the same questions, with answers still {{cq.grpo.tok}} tokens long.</p></div>
+    <div class="hl"><div class="fig">{{cq.base.r}}<span class="to">→</span>{{cq.grpo.r}}<span class="unit">ChartQA, reasoning prompt, 2B</span></div><p><b>Where reasoning pays, RL wins and keeps it.</b> GRPO ends {{cq.oversft}} points above SFT on short answers and {{cq.traces.self.lead}} above SFT on reasoning traces.</p></div>
     <div class="hl"><div class="fig">{{ph.vqav2.base.tok}}<span class="to">→</span>{{ph.vqav2.grpor.tok}}<span class="unit">VQAv2, tokens per answer, reasoning prompt</span></div><p><b>Where it doesn't, RL changes form, not ability.</b> GRPO deletes the reasoning and lands where short answers already were ({{ph.vqav2.grpor.r}}% against {{ph.vqav2.base.s}}%).</p></div>
     <div class="hl"><div class="fig">{{ba.slk8.grpo.blackgain}}<span class="to">vs</span>{{ba.slk8.sft.blackgain}}<span class="unit">SLAKE 8B, points of gain that survive a black image, GRPO vs SFT</span></div><p><b>RL's gains come from the image.</b> Of its {{ba.slk8.grpo.gain}}-point gain, {{ba.slk8.grpo.blackgain}} survives without the image; of SFT's {{ba.slk8.sft.gain}}, {{ba.slk8.sft.blackgain}} does.</p></div>
   </div>
@@ -299,7 +299,8 @@ body.present .counter { display: block; position: fixed; z-index: 6; font-family
     {{PASSK_FIG}}
     <figcaption><b>Figure 3. Coverage on ChartQA.</b> pass@k (%) on all 1,250 test questions, 32 samples at temperature 1, official scorer, k on a log scale. Left: models trained with reasoning, scored under the reasoning prompt. Right: short-answer models, scored with short answers.</figcaption>
   </figure>
-  <p class="small">Scope: ChartQA is the one chart source in this study, and SFT in this comparison trains on its short reference answers. A second chart-and-document source and SFT on reasoning traces are the next tests.</p>
+  <p>GRPO also beats SFT on reasoning traces, the strongest SFT baseline we could build. SFT trained on Instruct 2B's own correct reasoning reaches {{cq.traces.self}}%, and on the correct reasoning of the four-times-larger Instruct 8B {{cq.traces.8b}}%, so RL leads by {{cq.traces.self.lead.ci}} and {{cq.traces.8b.lead.ci}} points.</p>
+  <p class="small">ChartQA is the one chart source trained on in this study; a second document source is the next test.</p>
 </section>
 
 <section class="slide" id="form">
@@ -355,7 +356,7 @@ body.present .counter { display: block; position: fixed; z-index: 6; font-family
     <div class="layer" role="listitem"><span class="idx">L8</span><div class="what"><b>Image interventions</b><span class="q">Does the answer come from the image?</span><p>Each model is rescored with a black image and with another question's image; accuracy with a black image counts what a model answers without looking.</p></div><div class="fig"><span class="v">3</span><span class="u">image conditions</span></div></div>
     <div class="layer" role="listitem"><span class="idx">L9</span><div class="what"><b>Beyond accuracy</b><span class="q">How far did training move the model?</span><p>Forward KL from the starting model on its own samples; calibration of the majority answer of 8 samples.</p></div><div class="fig"><span class="v">500 × 8</span><span class="u">questions × samples per model</span></div></div>
   </div>
-  <p class="small">Every table is regenerated from {{h.records}} saved evaluation records, and a test fails when a published table or a quoted number drifts from them. The judge and the audit cost $6.21 in API calls.</p>
+  <p class="small">Every table is regenerated from {{h.records}} saved evaluation records, and a test fails when a published table or a quoted number drifts from them. The judge and the audit cost {{h.api}} in API calls.</p>
 </section>
 
 <section class="slide" id="open">
@@ -368,7 +369,6 @@ body.present .counter { display: block; position: fixed; z-index: 6; font-family
   <ol>
     <li><b>A strategy-by-category map.</b> The same arms on a table grouped into general VQA, reasoning, document and chart, perception and hallucination benchmarks, with an image-gain column for each, plus one new training source each for reasoning and for documents. Predictions for the new sources are written before they train.</li>
     <li><b>Error analysis that names the errors.</b> Rule-based checks on every evaluation and labeled samples at milestones, so each error type can be taken to the literature on reducing it.</li>
-    <li><b>SFT on reasoning traces.</b> The direct test of whether RL's chart gain comes from RL or from its reasoning targets.</li>
     <li><b>Medical imaging as its own milestone,</b> from 2D medical questions to 3D abdominal CT.</li>
   </ol>
 </section>

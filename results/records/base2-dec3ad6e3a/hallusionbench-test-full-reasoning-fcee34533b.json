@@ -1,0 +1,116 @@
+{
+  "schema": "run-record/1",
+  "legacy": false,
+  "model_id": "dec3ad6e3a1c306cd9a470b55b5f1859b34d784e64366f39c36ddea3ae7b9187",
+  "protocol_id": "fcee34533bd95ea4e11fd98758e8bbc5edeaab6ebab5420c90c1354f6bff78ce",
+  "model": {
+    "source": "Qwen/Qwen3-VL-2B-Instruct",
+    "label": "base2",
+    "run": null,
+    "step": null,
+    "weights": {
+      "hub": "Qwen/Qwen3-VL-2B-Instruct",
+      "revision": "89644892e4d85e24eaac8bacfd4f463576704203"
+    }
+  },
+  "protocol": {
+    "dataset": "hallusionbench",
+    "ladder": "benchmark",
+    "role": "test",
+    "tier": "full",
+    "question_limit": null,
+    "prompt": "reasoning",
+    "prompt_text": "{question}\nFirst think step by step inside <think> </think> tags, then write only the final answer inside <answer> </answer> tags.",
+    "max_tokens": 512,
+    "temperature": 0.0,
+    "samples": 1,
+    "image_mode": "original",
+    "max_pixels": 786432,
+    "scorers": {
+      "official": null,
+      "normalized": "exact_match/v1",
+      "project": "yes_no_accuracy/v1"
+    },
+    "extraction": "last_answer_tag_or_full_text",
+    "answer_tag_rule": "raw text contains </answer>",
+    "data": {
+      "subsets": {
+        "hallusionbench_eval": "e266ee1850ecc06c"
+      },
+      "selection_sha256": "5e297b7826bc3e09aec23f4d37c69d28980372d7499bf75ec826839ece0d6c27",
+      "image_groups_sha256": "947607e18c4f1b3115c1015cbe3ea07c395314b8948d304e3d3edd2e6c961009"
+    },
+    "metric_metadata": {
+      "primary": "project",
+      "project": {
+        "name": "yes/no word",
+        "source": "project-defined: the authors grade with GPT-4 (tianyi-lab/HallusionBench utils.py)",
+        "rule": "the first stand-alone yes or no; an answer with neither is wrong"
+      }
+    }
+  },
+  "metrics": {
+    "n": 951,
+    "official": null,
+    "normalized": {
+      "overall": 0.47423764458464773,
+      "by_answer_type": {
+        "VD figure": 0.625,
+        "VD illusion": 0.5902777777777778,
+        "VD math": 0.5555555555555556,
+        "VD ocr": 0.6179775280898876,
+        "VD video": 0.32941176470588235,
+        "VS chart": 0.3230769230769231,
+        "VS map": 0.296875,
+        "VS ocr": 0.3148148148148148,
+        "VS table": 0.5982142857142857
+      }
+    },
+    "project": {
+      "overall": 0.594111461619348,
+      "by_answer_type": {
+        "VD figure": 0.7625,
+        "VD illusion": 0.5902777777777778,
+        "VD math": 0.5833333333333334,
+        "VD ocr": 0.8089887640449438,
+        "VD video": 0.5470588235294118,
+        "VS chart": 0.43846153846153846,
+        "VS map": 0.515625,
+        "VS ocr": 0.48148148148148145,
+        "VS table": 0.6696428571428571
+      }
+    },
+    "mean_output_tokens": 182.28496319663512,
+    "truncated_fraction": 0.060988433228180865,
+    "answer_tag_fraction": 0.9390115667718192,
+    "empty_answer_fraction": 0.0
+  },
+  "provenance": {
+    "code_version": "1d74d44c4a89aafbdae9ca32f927298ab3ca8f84",
+    "uncommitted_changes": false,
+    "source_sha256": {
+      "vqar/eval/__init__.py": "2aa88c809409a57502d0d9b2893e14c3b5bf99d971bceefcc1ed4716ef295f81",
+      "vqar/eval/examples.py": "c05df90499c3fd7c4ff9093f6efc646b0b84ea39a30c4318200afecb9c32d734",
+      "vqar/eval/protocol.py": "9ea52c923b58b4717e9067968ebaf036d7c4756e8f6fbb245c2797d1a0cca67e",
+      "vqar/eval/record.py": "6be2298f531240b01df2feecedd50af2d32a1c17f6029951ddf3f7723834b023",
+      "vqar/eval/runner.py": "a02fc2c0adcb20b03b2045027c85d8c2f57d69ab9a6be1340916e9228434515e",
+      "vqar/inference.py": "f77143773554fbf3710e045220e2efb36d5698035a760094a9aace008bf593bf",
+      "vqar/config.py": "bdfb58f7c6f638a02f133d6c08ed6a03a5603c3b5efc134cc55a8cabef1921f2",
+      "vqar/data.py": "eaac7f78b6134f54f03fdfac45c08ac0afe10d0c869c0728c6bf709c14cc2430",
+      "vqar/metrics.py": "74cdd78a8d14648e018b3986cf26b6a733529cdaf6cc0f518f3b45fe906fa182",
+      "vqar/registry.py": "de18b9dd56da6f911a3dce5cbc92f08e7e903cb55c4660387620d79165c734c3",
+      "vqar/splits.py": "9bd79401409b8f6b440e4bcaed56d158a234412a96ad31abeb6bf23550a99384",
+      "vqar/ood_metrics.py": "9449e0a85c4b7ff3efcbc88264ee1e03d53689c39c2fe030a13887465fa1b226",
+      "vqar/ood.py": "d59220be09094fa5a5ffbb6e791b38ee5b3c8dca0ca381ef64a28bf0f94ccb8f",
+      "uv.lock": "8c79fab440350a15e75e9507c3b5338ecc63beb92fc12c6ef18fbe01122ac323"
+    },
+    "versions": {
+      "torch": "2.11.0+cu129",
+      "transformers": "5.13.0",
+      "vllm": "0.23.0+cu129",
+      "datasets": "5.0.0"
+    },
+    "timestamp": "2026-11-06T22:26:08+00:00",
+    "eval_seconds": 49.7
+  }
+}

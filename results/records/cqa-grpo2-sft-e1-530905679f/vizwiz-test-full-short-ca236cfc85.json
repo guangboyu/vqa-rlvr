@@ -1,0 +1,106 @@
+{
+  "schema": "run-record/1",
+  "legacy": false,
+  "model_id": "530905679fee8971899b1cb0e9989841474c1d43ed3290fa067ccf62885c440d",
+  "protocol_id": "ca236cfc859ab8ba3fa0e20f749184956446396d351937f6b90c6270b636908d",
+  "model": {
+    "source": "/home/guangbo/codes/VQA/checkpoints/merged/cqa_grpo2_sft_e1",
+    "label": "cqa-grpo2-sft-e1",
+    "run": null,
+    "step": null,
+    "weights": {
+      "sha256": "9b16e35704e1df41741486f6a8cb13eff88a44acc16f4436ab627f84fb9ef2e0",
+      "config_sha256": "0809ef389023cc0fd850284d6e4b3bd0f40b398e9407b424b9a553513296e0a8"
+    }
+  },
+  "protocol": {
+    "dataset": "vizwiz",
+    "ladder": "far-ood",
+    "role": "test",
+    "tier": "full",
+    "question_limit": null,
+    "prompt": "short",
+    "prompt_text": "{question}\nAnswer the question using a single word or phrase.",
+    "max_tokens": 64,
+    "temperature": 0.0,
+    "samples": 1,
+    "image_mode": "original",
+    "max_pixels": 786432,
+    "scorers": {
+      "official": "official_vizwiz_accuracy/v1",
+      "normalized": "vqa_accuracy/v1"
+    },
+    "extraction": "last_answer_tag_or_full_text",
+    "answer_tag_rule": "raw text contains </answer>",
+    "data": {
+      "subsets": {
+        "vizwiz_eval": "2d8113f006a9adac"
+      },
+      "selection_sha256": "e50d4804fa57496a5ad90e1bb8dc6665efd18914197b9a7a3c96260795fc4bed",
+      "image_groups_sha256": "4421418a8f9ab6880a18087cbbed41faafa235351a616c37276ce3ed4a084197"
+    },
+    "metric_metadata": {
+      "primary": "official",
+      "official": {
+        "name": "native VizWiz ten-annotator accuracy",
+        "native_source_sha256": "d26ef7ac2db06351444c3531f8d95fd9c454423fbcb9fd5dd984f12281146694",
+        "rule": "normalize prediction with native contractions, compare raw references"
+      }
+    }
+  },
+  "metrics": {
+    "n": 8000,
+    "official": {
+      "overall": 0.4159375,
+      "by_answer_type": {
+        "number": 0.640650406504065,
+        "other": 0.4967106485783312,
+        "unanswerable": 0.13572426641825802,
+        "yes/no": 0.8151862464183381
+      }
+    },
+    "normalized": {
+      "overall": 0.4162125,
+      "by_answer_type": {
+        "number": 0.640650406504065,
+        "other": 0.497007991079725,
+        "unanswerable": 0.136003726129483,
+        "yes/no": 0.8151862464183381
+      }
+    },
+    "mean_output_tokens": 3.69925,
+    "truncated_fraction": 0.0025,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.4159375,
+    "answers_scored_differently": 3
+  },
+  "provenance": {
+    "code_version": "1d74d44c4a89aafbdae9ca32f927298ab3ca8f84",
+    "uncommitted_changes": false,
+    "source_sha256": {
+      "vqar/eval/__init__.py": "2aa88c809409a57502d0d9b2893e14c3b5bf99d971bceefcc1ed4716ef295f81",
+      "vqar/eval/examples.py": "c05df90499c3fd7c4ff9093f6efc646b0b84ea39a30c4318200afecb9c32d734",
+      "vqar/eval/protocol.py": "9ea52c923b58b4717e9067968ebaf036d7c4756e8f6fbb245c2797d1a0cca67e",
+      "vqar/eval/record.py": "6be2298f531240b01df2feecedd50af2d32a1c17f6029951ddf3f7723834b023",
+      "vqar/eval/runner.py": "a02fc2c0adcb20b03b2045027c85d8c2f57d69ab9a6be1340916e9228434515e",
+      "vqar/inference.py": "f77143773554fbf3710e045220e2efb36d5698035a760094a9aace008bf593bf",
+      "vqar/config.py": "bdfb58f7c6f638a02f133d6c08ed6a03a5603c3b5efc134cc55a8cabef1921f2",
+      "vqar/data.py": "eaac7f78b6134f54f03fdfac45c08ac0afe10d0c869c0728c6bf709c14cc2430",
+      "vqar/metrics.py": "74cdd78a8d14648e018b3986cf26b6a733529cdaf6cc0f518f3b45fe906fa182",
+      "vqar/registry.py": "de18b9dd56da6f911a3dce5cbc92f08e7e903cb55c4660387620d79165c734c3",
+      "vqar/splits.py": "9bd79401409b8f6b440e4bcaed56d158a234412a96ad31abeb6bf23550a99384",
+      "vqar/ood_metrics.py": "9449e0a85c4b7ff3efcbc88264ee1e03d53689c39c2fe030a13887465fa1b226",
+      "vqar/ood.py": "d59220be09094fa5a5ffbb6e791b38ee5b3c8dca0ca381ef64a28bf0f94ccb8f",
+      "uv.lock": "8c79fab440350a15e75e9507c3b5338ecc63beb92fc12c6ef18fbe01122ac323"
+    },
+    "versions": {
+      "torch": "2.11.0+cu129",
+      "transformers": "5.13.0",
+      "vllm": "0.23.0+cu129",
+      "datasets": "5.0.0"
+    },
+    "timestamp": "2026-11-07T03:29:17+00:00",
+    "eval_seconds": 308.2
+  }
+}

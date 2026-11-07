@@ -31,6 +31,22 @@
   "resamples": 10000,
   "seed": 0
  },
+ "card-reasoning-sft-8b|cqa-grpo2-base-e1|chartqa|reasoning|official|original|original": {
+  "n": 1250,
+  "delta": 6.64,
+  "low": 4.5600000000000005,
+  "high": 8.72,
+  "resamples": 10000,
+  "seed": 0
+ },
+ "card-reasoning-sft-self|cqa-grpo2-base-e1|chartqa|reasoning|official|original|original": {
+  "n": 1250,
+  "delta": 5.6000000000000005,
+  "low": 3.52,
+  "high": 7.6,
+  "resamples": 10000,
+  "seed": 0
+ },
  "cqa-sft2|cqa-grpo2-sft-e1|chartqa|reasoning|official|original|original": {
   "n": 1250,
   "delta": 13.52,

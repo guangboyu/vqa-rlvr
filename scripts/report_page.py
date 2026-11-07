@@ -128,6 +128,12 @@ best_sft = max(acc(CQ["sft"], "chartqa", prompt) for prompt in ("short", "reason
 put("cq.oversft", f1(acc(CQ["grpo"], "chartqa", "reasoning") - best_sft))
 best_short_aud = max(judge[(arm, "short")]["audited"] for arm in CQ.values())
 put("cq.overshort.aud", f1(judge[(CQ["grpo"], "reasoning")]["audited"] - best_short_aud))
+# SFT on reasoning traces: correct samples from Instruct 2B and from Instruct 8B.
+for name, arm in (("self", "card-reasoning-sft-self"), ("8b", "card-reasoning-sft-8b")):
+    put(f"cq.traces.{name}", f1(acc(arm, "chartqa", "reasoning")))
+    lead = delta(arm, CQ["grpo"], "chartqa", "reasoning")
+    put(f"cq.traces.{name}.lead", f1(lead["delta"]))
+    put(f"cq.traces.{name}.lead.ci", ci(lead))
 d = delta(CQ["sft"], CQ["sftgrpo"], "chartqa", "reasoning")
 put("cq.sftgrpo.gain", f1(d["delta"]))
 
@@ -310,6 +316,16 @@ put("ctrl.acc", f1(control["accuracy"]))
 put("ctrl.base.acc", f1(control["baseline"]))
 put("ctrl.tok", f"{control['tokens']:.0f}")
 put("reach.sets", str(len(reach["rows"])))
+
+# The category table: where Instruct's reasoning beats its short answers.
+table = load("categories.json")
+payoff = {row["dataset"]: row["cells"]["base2|reasoning"]["score"]
+          - row["cells"]["base2|short"]["score"] for row in table["rows"]}
+put("cat.benchmarks", str(len(table["rows"])))
+put("cat.reasoning.pays", str(sum(value > 0.5 for value in payoff.values())))
+put("cat.payoff.mathvista", signed(payoff["mathvista"]))
+put("cat.payoff.chartqa", signed(payoff["chartqa"]))
+put("cat.payoff.vqav2", signed(payoff["vqav2"]))
 put("reach.rl.most", f1(max(reach["verdict"]["rl_above_reach"].values())))
 vision = {row["model"]: row for spec in beyond if spec.get("group") == "vision"
           for row in spec["rows"] if not row.get("missing")}
@@ -340,6 +356,9 @@ put("h.questions", f"{N_questions:,}")
 put("h.sets", str(len(test_sets)))
 put("h.pathvqa", f"{record('base2', 'pathvqa').metrics['n']:,}")
 # Measured once, outside the records: docs/harness/validation.md, results/judge-*.json.
+api_spend = (load("judge-chartqa.json")["spend_usd"]  # the judge's running total
+             + load("judge-audit.json")["cost_usd"] + load("judge-audit-chartqa.json")["cost_usd"])
+put("h.api", f"${api_spend:.2f}")
 put("h.parity", "626,074")
 put("h.misses", "54,060")
 put("h.audited", "800")

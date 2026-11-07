@@ -11,9 +11,10 @@ The answers were already within reach. On open-answer questions Instruct's greed
 <!--n:reach.cq.instruct-->70.2<!--/n-->% while its pass@8 is <!--n:reach.cq.reach-->87.1<!--/n-->%, and GRPO stays level with Instruct at
 pass@32 (<!--n:pk.base.r.32-->91.0<!--/n-->% → <!--n:pk.grpo.32-->91.5<!--/n-->%): it learns to pick what Instruct could already sample.
 
-Scope: ChartQA is the one chart source in this study, and SFT in this comparison trains on its
-short reference answers. A second chart-and-document source and SFT on reasoning traces are the
-next tests.
+GRPO also beats SFT on reasoning traces. SFT on Instruct 2B's own correct reasoning reaches <!--n:cq.traces.self-->74.5<!--/n-->%,
+and on Instruct 8B's <!--n:cq.traces.8b-->73.4<!--/n-->%, so RL leads by <!--n:cq.traces.self.lead.ci-->+5.6 [+3.5, +7.6]<!--/n--> and <!--n:cq.traces.8b.lead.ci-->+6.6 [+4.6, +8.7]<!--/n--> points.
+
+ChartQA is the one chart source trained on in this study; a second document source is the next test.
 
 ## ChartQA: RL where reasoning pays
 

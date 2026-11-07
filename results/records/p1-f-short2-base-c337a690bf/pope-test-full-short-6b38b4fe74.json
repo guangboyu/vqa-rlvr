@@ -1,0 +1,110 @@
+{
+  "schema": "run-record/1",
+  "legacy": false,
+  "model_id": "c337a690bfefa2cbf2338c5b81ff29733106a57b3d9b31270a7131a2981857bf",
+  "protocol_id": "6b38b4fe74e7d826ab0e3a48160339719116bd6a7dbd0fd780886f25fc7ff829",
+  "model": {
+    "source": "/home/guangbo/codes/VQA/checkpoints/merged/p1_f_short2_base",
+    "label": "p1-f-short2-base",
+    "run": null,
+    "step": null,
+    "weights": {
+      "sha256": "b32f5025978ac08aeef080032f2e81a98531a071f33c138e66072ce0db0b2f4d",
+      "config_sha256": "e475ba87af77a77c5b0872f6b32be09a175c534ef17c688c0274fcf9b6dbd9f5"
+    }
+  },
+  "protocol": {
+    "dataset": "pope",
+    "ladder": "benchmark",
+    "role": "test",
+    "tier": "full",
+    "question_limit": null,
+    "prompt": "short",
+    "prompt_text": "{question}\nAnswer the question using a single word or phrase.",
+    "max_tokens": 64,
+    "temperature": 0.0,
+    "samples": 1,
+    "image_mode": "original",
+    "max_pixels": 786432,
+    "scorers": {
+      "official": "pope_accuracy/v1",
+      "normalized": "exact_match/v1"
+    },
+    "extraction": "last_answer_tag_or_full_text",
+    "answer_tag_rule": "raw text contains </answer>",
+    "data": {
+      "subsets": {
+        "pope_eval": "57884e34e9c33b3e"
+      },
+      "selection_sha256": "04b30eb342f096fe48e1684db4c4fd0aef7e0d174e7f47b33cf5f08672898b2e",
+      "image_groups_sha256": "3461ca201b840ad4262ef7562d541d0948cd27774faced008dac6b0ecde76b5a"
+    },
+    "metric_metadata": {
+      "primary": "official",
+      "official": {
+        "name": "POPE yes/no",
+        "source": "RUCAIBox/POPE evaluate.py",
+        "rule": "in the first sentence 'No', 'not' or 'no' reads as no, anything else as yes; precision, recall, F1 and yes ratio are recorded too"
+      }
+    }
+  },
+  "metrics": {
+    "n": 8262,
+    "official": {
+      "overall": 0.8949406923263132,
+      "by_answer_type": {
+        "adversarial": 0.8798111837327524,
+        "popular": 0.8914306463326072,
+        "random": 0.9135802469135802
+      }
+    },
+    "normalized": {
+      "overall": 0.8949406923263132,
+      "by_answer_type": {
+        "adversarial": 0.8798111837327524,
+        "popular": 0.8914306463326072,
+        "random": 0.9135802469135802
+      }
+    },
+    "mean_output_tokens": 2.0,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.8949406923263132,
+    "answers_scored_differently": 0,
+    "yes_no": {
+      "precision": 0.947108796930666,
+      "recall": 0.8366013071895425,
+      "f1": 0.8884318766066838,
+      "yes_ratio": 0.4416606148632292
+    }
+  },
+  "provenance": {
+    "code_version": "1d74d44c4a89aafbdae9ca32f927298ab3ca8f84",
+    "uncommitted_changes": false,
+    "source_sha256": {
+      "vqar/eval/__init__.py": "2aa88c809409a57502d0d9b2893e14c3b5bf99d971bceefcc1ed4716ef295f81",
+      "vqar/eval/examples.py": "c05df90499c3fd7c4ff9093f6efc646b0b84ea39a30c4318200afecb9c32d734",
+      "vqar/eval/protocol.py": "9ea52c923b58b4717e9067968ebaf036d7c4756e8f6fbb245c2797d1a0cca67e",
+      "vqar/eval/record.py": "6be2298f531240b01df2feecedd50af2d32a1c17f6029951ddf3f7723834b023",
+      "vqar/eval/runner.py": "a02fc2c0adcb20b03b2045027c85d8c2f57d69ab9a6be1340916e9228434515e",
+      "vqar/inference.py": "f77143773554fbf3710e045220e2efb36d5698035a760094a9aace008bf593bf",
+      "vqar/config.py": "bdfb58f7c6f638a02f133d6c08ed6a03a5603c3b5efc134cc55a8cabef1921f2",
+      "vqar/data.py": "eaac7f78b6134f54f03fdfac45c08ac0afe10d0c869c0728c6bf709c14cc2430",
+      "vqar/metrics.py": "74cdd78a8d14648e018b3986cf26b6a733529cdaf6cc0f518f3b45fe906fa182",
+      "vqar/registry.py": "de18b9dd56da6f911a3dce5cbc92f08e7e903cb55c4660387620d79165c734c3",
+      "vqar/splits.py": "9bd79401409b8f6b440e4bcaed56d158a234412a96ad31abeb6bf23550a99384",
+      "vqar/ood_metrics.py": "9449e0a85c4b7ff3efcbc88264ee1e03d53689c39c2fe030a13887465fa1b226",
+      "vqar/ood.py": "d59220be09094fa5a5ffbb6e791b38ee5b3c8dca0ca381ef64a28bf0f94ccb8f",
+      "uv.lock": "8c79fab440350a15e75e9507c3b5338ecc63beb92fc12c6ef18fbe01122ac323"
+    },
+    "versions": {
+      "torch": "2.11.0+cu129",
+      "transformers": "5.13.0",
+      "vllm": "0.23.0+cu129",
+      "datasets": "5.0.0"
+    },
+    "timestamp": "2026-11-06T23:29:49+00:00",
+    "eval_seconds": 41.6
+  }
+}

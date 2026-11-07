@@ -258,6 +258,62 @@ so the reward was not gained by answering several ways at once.
 | SFT 8B → short-prompt GRPO | 0.6 · 0.0 · 1.1 | 0.2 · 0.0 · 0.7 | 0.0 · 0.0 · 0.0 | 0.6 · 0.0 · 1.3 |
 <!-- /report:answer-form -->
 
+## Category table
+
+Each arm on all eighteen benchmarks under the prompt it trained with, on clean rows. Rows use the
+authors' scorer where it needs no LLM; MathVista, CharXiv, V* Bench, HR-Bench and HallusionBench use a
+rule-based project scorer, and OmniMedVQA the normalized scorer. Only VQAv2, GQA and ChartQA among these
+were trained on by these arms, so every other row measures transfer. `python -m scripts.categories`.
+
+<!-- report:categories -->
+| Category | Benchmark | Instruct (short) | Instruct (reasoning) | SFT (VQAv2 + GQA, short) | GRPO (VQAv2 + GQA, short) | GRPO, reasoning rollouts (VQAv2 + GQA, reasoning) | SFT → GRPO (VQAv2 + GQA, short) | SFT (ChartQA, short) | GRPO (ChartQA, reasoning) | SFT → GRPO (ChartQA, reasoning) |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| General VQA | MMStar | 51.9 | 50.7 | 56.7 | 52.6 | 45.0 | 57.6 | 56.0 | 55.2 | 55.9 |
+| General VQA | RealWorldQA | 60.1 | 60.1 | 62.4 | 62.9 | 61.8 | 63.4 | 62.1 | 62.2 | 63.4 |
+| General VQA | VQAv2 | 77.9 | 55.1 | 79.9 | 78.6 | 78.3 | 79.8 | 77.4 | 70.3 | 67.0 |
+| General VQA | GQA | 59.5 | 36.1 | 62.3 | 60.3 | 60.2 | 62.5 | 59.7 | 52.1 | 51.1 |
+| General VQA | TextVQA | 80.5 | 69.7 | 80.1 | 81.0 | 80.0 | 80.9 | 79.8 | 75.6 | 76.1 |
+| General VQA | VizWiz | 42.5 | 21.4 | 42.5 | 43.6 | 40.1 | 43.0 | 41.4 | 31.2 | 32.4 |
+| Reasoning | MathVista (testmini) | 52.6 | 57.7 | 56.9 | 52.7 | 48.3 | 58.3 | 59.7 | 57.9 | 61.0 |
+| Reasoning | MMMU (validation) | 41.2 | 41.9 | 42.8 | 40.3 | 33.6 | 43.4 | 42.4 | 45.3 | 42.8 |
+| Document-chart | ChartQA (human) | 65.8 | 69.7 | 65.7 | 66.4 | 63.0 | 65.7 | 68.8 | 80.1 | 79.8 |
+| Document-chart | CharXiv (reasoning) | 30.5 | 27.0 | 29.4 | 31.5 | 30.2 | 31.4 | 30.9 | 29.9 | 29.1 |
+| Document-chart | OCRBench | 81.6 | 81.2 | 76.1 | 81.4 | 80.1 | 78.0 | 80.8 | 78.7 | 76.4 |
+| Document-chart | DocVQA | 89.3 | 85.8 | 89.1 | 89.5 | 88.6 | 89.1 | 89.3 | 86.9 | 86.9 |
+| Perception | V* | 66.1 | 58.6 | 68.8 | 65.6 | 60.8 | 66.7 | 66.7 | 61.3 | 65.6 |
+| Perception | HR-Bench 4K | 64.8 | 62.4 | 65.3 | 65.3 | 63.9 | 67.2 | 65.7 | 66.5 | 66.4 |
+| Hallucination | POPE | 89.6 | 89.0 | 89.3 | 89.5 | 89.7 | 89.7 | 89.6 | 89.2 | 89.5 |
+| Hallucination | HallusionBench | 61.9 | 59.4 | 62.4 | 62.4 | 59.7 | 62.6 | 63.8 | 64.6 | 66.0 |
+| Medical | SLAKE (English) | 49.8 | 40.3 | 50.9 | 47.7 | 53.4 | 51.0 | 50.6 | 47.5 | 47.8 |
+| Medical | OmniMedVQA (held-out collections) | 74.6 | 69.8 | 76.4 | 74.3 | 68.5 | 75.8 | 75.0 | 74.3 | 74.7 |
+| Macro | General VQA, Reasoning, Document-chart, Perception | **60.3** | **56.3** | **61.5** | **60.6** | **57.4** | **62.1** | **61.9** | **60.5** | **60.9** |
+<!-- /report:categories -->
+
+Image gain: short-prompt accuracy minus black-image accuracy on the same questions.
+
+<!-- report:image-gain -->
+| Category | Benchmark | Instruct | Trained arms |
+| --- | --- | ---: | ---: |
+| General VQA | MMStar | 25.8 | 25.4 to 30.1 |
+| General VQA | RealWorldQA | 23.5 | 24.4 to 27.1 |
+| General VQA | VQAv2 | 45.3 | 43.3 to 45.5 |
+| General VQA | GQA | 31.4 | 26.7 to 31.2 |
+| General VQA | TextVQA | 75.8 | 74.5 to 76.0 |
+| General VQA | VizWiz | 34.3 | 33.2 to 34.1 |
+| Reasoning | MathVista (testmini) | 23.9 | 23.4 to 30.0 |
+| Reasoning | MMMU (validation) | 4.9 | 3.9 to 6.9 |
+| Document-chart | ChartQA (human) | 52.4 | 51.4 to 55.8 |
+| Document-chart | CharXiv (reasoning) | 22.7 | 20.9 to 23.8 |
+| Document-chart | OCRBench | 80.1 | 74.9 to 80.1 |
+| Document-chart | DocVQA | 82.5 | 82.2 to 82.7 |
+| Perception | V* | 31.2 | 30.1 to 33.9 |
+| Perception | HR-Bench 4K | 28.4 | 27.9 to 30.9 |
+| Hallucination | POPE | 39.6 | 39.3 to 39.7 |
+| Hallucination | HallusionBench | 12.0 | 12.0 to 14.6 |
+| Medical | SLAKE (English) | 25.2 | 23.1 to 26.1 |
+| Medical | OmniMedVQA (held-out collections) | 31.2 | 30.1 to 31.8 |
+<!-- /report:image-gain -->
+
 ## Declared experiments
 
 Each row is one change against the frozen recipe, with its prediction committed before it ran. Dev rows,
