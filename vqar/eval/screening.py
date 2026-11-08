@@ -114,7 +114,9 @@ DECLARED = {
     # Declared 2026-11-07 from the pinned snapshots. False means no licence could be confirmed: the
     # battery still measures the source, and it fails the license gate until the owner decides.
     "geoqa": Declaration("image", True, "unverified: no licence on the card or in the repository "
-                         "at the pinned revision; processed from Geo170K", False),
+                         "at the pinned revision; processed from Geo170K; used for research with "
+                         "scores published, not data or trained weights (owner, 2026-11-07)",
+                         True),
     "mmk12": Declaration("image", True, "Apache-2.0 LICENSE file in the repository, no card tag; "
                          "the terms of the collected exam questions and images are not stated",
                          True),
@@ -124,10 +126,14 @@ DECLARED = {
                            True),
     "docvqat": Declaration("image", True, "unverified: the Apache-2.0 tag covers lmms-lab's "
                            "reformatted copy; DocVQA's own terms and those of its UCSF Industry "
-                           "Documents images are not confirmed", False),
+                           "Documents images are not confirmed; used for research with "
+                         "scores published, not data or trained weights (owner, 2026-11-07)",
+                         True),
     "infovqa": Declaration("image", True, "unverified: the Apache-2.0 tag covers lmms-lab's "
                            "reformatted copy; InfographicVQA's own terms and those of its "
-                           "web-crawled images are not confirmed", False),
+                           "web-crawled images are not confirmed; used for research with "
+                         "scores published, not data or trained weights (owner, 2026-11-07)",
+                         True),
 }
 
 

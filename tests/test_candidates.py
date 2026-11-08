@@ -59,11 +59,13 @@ class TestRegistry:
         assert all(DATASETS[name].subsets["dev"] == DATASETS[name].subsets["sft"]
                    for name in CANDIDATES if name != "infovqa")
 
-    def test_a_licence_nobody_confirmed_fails_the_gate_until_someone_does(self):
-        assert [name for name in CANDIDATES if not DECLARED[name].license_usable] == [
-            "geoqa", "docvqat", "infovqa"]
-        assert "license" in failed_gates(5_000, DECLARED["geoqa"], {})
-        assert "license" not in failed_gates(5_000, DECLARED["mmk12"], {})
+    def test_unverified_licences_pass_the_gate_only_with_the_owners_decision(self):
+        assert all(DECLARED[name].license_usable for name in CANDIDATES)
+        assert all("owner, 2026-11-07" in DECLARED[name].license
+                   for name in ("geoqa", "docvqat", "infovqa"))
+        assert "license" not in failed_gates(5_000, DECLARED["geoqa"], {})
+        unusable = DECLARED["geoqa"].__class__("image", True, "unverified", False)
+        assert "license" in failed_gates(5_000, unusable, {})
         assert all("unverified" in DECLARED[name].license
                    for name in ("geoqa", "docvqat", "infovqa"))
 
