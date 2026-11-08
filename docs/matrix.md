@@ -328,4 +328,5 @@ official scorer, reasoning prompt; `python -m scripts.cards summarize` writes `r
 | prompt-routing | Photos roll out under the short prompt and charts under the reasoning prompt, on the mixture's pool and 2,844 updates | Holds | not finished | — | — |
 | mix-ratio-90 | 90% charts and 10% photos instead of 65% and 35%, all under the reasoning prompt, 2,844 updates | Does not hold | not finished | — | — |
 | adaptive-prompt | All rollouts under the winning adaptive prompt, on the mixture's pool and 2,844 updates | Does not hold | not finished | — | — |
+| counterfactual-pairs | Score existing arms on VQAv2 complementary pairs: pair accuracy (both right) and same-answer rate (one answer for two images whose answers differ) | Holds | not finished | — | — |
 <!-- /report:cards -->

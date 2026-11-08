@@ -354,6 +354,24 @@
    "final": null,
    "held": null,
    "train_hours": null
+  },
+  {
+   "id": "counterfactual-pairs",
+   "node": "grounding",
+   "question": "When the image contradicts the usual answer, does each method still follow the image?",
+   "recipe": "v1.0",
+   "baseline": "base2",
+   "change": "Score existing arms on VQAv2 complementary pairs: pair accuracy (both right) and same-answer rate (one answer for two images whose answers differ)",
+   "predicted": "Holds. SFT raises the same-answer rate over Instruct, since it also learns which answers are likely for a question; GRPO from Instruct does not, and its pair-accuracy gain is at least its single-question gain.",
+   "holds_if": "SFT's same-answer rate is above Instruct's with a 95% interval above zero, and GRPO's is not",
+   "if_holds": "A new grounding result: RL follows the image when it disagrees with the prior, SFT less so.",
+   "if_not": "Both methods lean on priors alike; grounding differences show only in the black-image test.",
+   "status": "experimental",
+   "why": "",
+   "implies": "",
+   "final": null,
+   "held": null,
+   "train_hours": null
   }
  ]
 }

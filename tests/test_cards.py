@@ -23,6 +23,8 @@ def test_one_id_names_the_run_and_the_label():
     assert commands(card) == ["uv run --frozen python train_grpo.py --preset grpo_2b_v1 "
                               "--run-dir runs/cards/x --run-name card-x"]
     assert "train_sft.py" in commands({**card, "entry": "train_sft.py"})[0]
+    evaluation = {"id": "y", "kind": "evaluation", "command": "python -m scripts.pairs"}
+    assert commands(evaluation) == ["python -m scripts.pairs"]
 
 
 def test_the_rule_reads_length_and_accuracy():

@@ -40,7 +40,10 @@ def label(card: dict) -> str:
 
 
 def commands(card: dict) -> list[str]:
-    """The training line; the trainer scores its adapters on dev rows at the end."""
+    """The training line (the trainer scores its adapters on dev rows at the end), or an
+    evaluation card's own command."""
+    if card.get("kind") == "evaluation":
+        return [card["command"]]
     entry = card.get("entry", "train_grpo.py")
     return [shlex.join(["uv", "run", "--frozen", "python", entry, *card["train"],
                         "--run-dir", f"runs/cards/{card['id']}", "--run-name", label(card)])]
