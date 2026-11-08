@@ -1,0 +1,982 @@
+{
+ "auditor": "vqar.judge.AUDIT_MODEL",
+ "effort": "low",
+ "per_side": 50,
+ "seed": 0,
+ "prompt": "You are checking an automatic grader of visual question answering.\nQuestion: {question}\nReference answers from human annotators (they sometimes disagree): {golds}\nCandidate answer: {prediction}\n\nLooking at the image, is the candidate a correct final answer to the question, one a careful human grader would accept? Accept synonyms, paraphrases, singular or plural, and capitalization differences. Do not accept an answer that is wrong for the image, only partly right, or unfinished reasoning instead of a final answer. Reply with exactly one word: yes or no.",
+ "false_reject": "share of audited reward-wrong answers the auditor accepts",
+ "false_accept": "share of audited reward-right answers the auditor rejects",
+ "sources": {
+  "infovqa": {
+   "record": "infovqa-rl-dev-reasoning-t1k8-e14585a1ad.json",
+   "protocol_id": "e14585a1ad590d0062d62c6d9cb67616f638949e1d13735773a7e93adb7fd4a6",
+   "model": "base2",
+   "responses": {
+    "right": 2473,
+    "wrong": 1461,
+    "partial": 0,
+    "no answer": 66
+   },
+   "false_reject": {
+    "drawn": 50,
+    "audited": 50,
+    "overruled": 9,
+    "rate": 0.18,
+    "interval": [
+     0.0977008273245379,
+     0.3079631945470261
+    ]
+   },
+   "false_accept": {
+    "drawn": 50,
+    "audited": 50,
+    "overruled": 2,
+    "rate": 0.04,
+    "interval": [
+     0.011038652660826577,
+     0.13460337877954667
+    ]
+   },
+   "by_form": {
+    "right": {
+     "number": {
+      "drawn": 24,
+      "audited": 24,
+      "overruled": 1,
+      "rate": 0.041666666666666664,
+      "interval": [
+       0.007393265354805126,
+       0.20242226248842232
+      ]
+     },
+     "text": {
+      "drawn": 26,
+      "audited": 26,
+      "overruled": 1,
+      "rate": 0.038461538461538464,
+      "interval": [
+       0.0068218089769898765,
+       0.18893176991958405
+      ]
+     }
+    },
+    "wrong": {
+     "number": {
+      "drawn": 27,
+      "audited": 27,
+      "overruled": 4,
+      "rate": 0.14814814814814814,
+      "interval": [
+       0.059158318596448906,
+       0.32479063346829484
+      ]
+     },
+     "text": {
+      "drawn": 23,
+      "audited": 23,
+      "overruled": 5,
+      "rate": 0.21739130434782608,
+      "interval": [
+       0.09663835601719065,
+       0.4190388018273492
+      ]
+     }
+    }
+   },
+   "cost_usd": 0.320002,
+   "disagreements": {
+    "right": [
+     {
+      "qid": "84748",
+      "sample": 3,
+      "form": "number",
+      "question": "When did the cricket bat start resembling a wooden turner?",
+      "answers": [
+       "1750"
+      ],
+      "prediction": "1750",
+      "reward": 1.0,
+      "auditor": false
+     },
+     {
+      "qid": "90305",
+      "sample": 2,
+      "form": "text",
+      "question": "What is the total \"minimum height and length\" of Javan Rhinos?",
+      "answers": [
+       "3.5m"
+      ],
+      "prediction": "2.5m",
+      "reward": 1.0,
+      "auditor": false
+     }
+    ],
+    "wrong": [
+     {
+      "qid": "79914",
+      "sample": 4,
+      "form": "number",
+      "question": "What percent more of antibody estimate should Wuhan reach to attain herd immunity requirement?",
+      "answers": [
+       "50%",
+       "50.0%"
+      ],
+      "prediction": "50 percentage points",
+      "reward": 0.0,
+      "auditor": true
+     },
+     {
+      "qid": "65990",
+      "sample": 3,
+      "form": "number",
+      "question": "How many out of five where fined for speeding in Victoria ?",
+      "answers": [
+       "4"
+      ],
+      "prediction": "1",
+      "reward": 0.0,
+      "auditor": true
+     },
+     {
+      "qid": "88386",
+      "sample": 3,
+      "form": "number",
+      "question": "What is the percentage of Asian males and Asian females, taken together?",
+      "answers": [
+       "2.5%"
+      ],
+      "prediction": "2.49%",
+      "reward": 0.0,
+      "auditor": true
+     },
+     {
+      "qid": "71637",
+      "sample": 6,
+      "form": "number",
+      "question": "How many people in 100 use android phones?",
+      "answers": [
+       "25"
+      ],
+      "prediction": "25/100",
+      "reward": 0.0,
+      "auditor": true
+     },
+     {
+      "qid": "80713",
+      "sample": 5,
+      "form": "text",
+      "question": "In which response stage does normal life continue to resume in the community?",
+      "answers": [
+       "Stage 5"
+      ],
+      "prediction": "THE NEW NORMAL",
+      "reward": 0.0,
+      "auditor": true
+     }
+    ]
+   },
+   "items": [
+    {
+     "qid": "85676",
+     "sample": 6,
+     "form": "number",
+     "side": "right",
+     "prediction": "95%",
+     "auditor": true
+    },
+    {
+     "qid": "84545",
+     "sample": 7,
+     "form": "number",
+     "side": "right",
+     "prediction": "2011",
+     "auditor": true
+    },
+    {
+     "qid": "73821",
+     "sample": 7,
+     "form": "number",
+     "side": "right",
+     "prediction": "68%",
+     "auditor": true
+    },
+    {
+     "qid": "74824",
+     "sample": 4,
+     "form": "number",
+     "side": "right",
+     "prediction": "18%",
+     "auditor": true
+    },
+    {
+     "qid": "69998",
+     "sample": 3,
+     "form": "number",
+     "side": "right",
+     "prediction": "80%",
+     "auditor": true
+    },
+    {
+     "qid": "68012",
+     "sample": 7,
+     "form": "number",
+     "side": "right",
+     "prediction": "70%",
+     "auditor": true
+    },
+    {
+     "qid": "86582",
+     "sample": 5,
+     "form": "number",
+     "side": "right",
+     "prediction": "68%",
+     "auditor": true
+    },
+    {
+     "qid": "81483",
+     "sample": 3,
+     "form": "number",
+     "side": "right",
+     "prediction": "17,243.7",
+     "auditor": true
+    },
+    {
+     "qid": "87671",
+     "sample": 3,
+     "form": "number",
+     "side": "right",
+     "prediction": "97%",
+     "auditor": true
+    },
+    {
+     "qid": "89968",
+     "sample": 2,
+     "form": "number",
+     "side": "right",
+     "prediction": "38%",
+     "auditor": true
+    },
+    {
+     "qid": "73853",
+     "sample": 6,
+     "form": "number",
+     "side": "right",
+     "prediction": "1998",
+     "auditor": true
+    },
+    {
+     "qid": "71169",
+     "sample": 4,
+     "form": "number",
+     "side": "right",
+     "prediction": "15",
+     "auditor": true
+    },
+    {
+     "qid": "79024",
+     "sample": 5,
+     "form": "number",
+     "side": "right",
+     "prediction": "856",
+     "auditor": true
+    },
+    {
+     "qid": "89871",
+     "sample": 2,
+     "form": "number",
+     "side": "right",
+     "prediction": "6%",
+     "auditor": true
+    },
+    {
+     "qid": "70278",
+     "sample": 7,
+     "form": "number",
+     "side": "right",
+     "prediction": "65%",
+     "auditor": true
+    },
+    {
+     "qid": "69312",
+     "sample": 5,
+     "form": "number",
+     "side": "right",
+     "prediction": "225",
+     "auditor": true
+    },
+    {
+     "qid": "72952",
+     "sample": 0,
+     "form": "number",
+     "side": "right",
+     "prediction": "1",
+     "auditor": true
+    },
+    {
+     "qid": "84748",
+     "sample": 3,
+     "form": "number",
+     "side": "right",
+     "prediction": "1750",
+     "auditor": false
+    },
+    {
+     "qid": "89322",
+     "sample": 1,
+     "form": "number",
+     "side": "right",
+     "prediction": "11%",
+     "auditor": true
+    },
+    {
+     "qid": "68708",
+     "sample": 2,
+     "form": "number",
+     "side": "right",
+     "prediction": "11%",
+     "auditor": true
+    },
+    {
+     "qid": "82763",
+     "sample": 3,
+     "form": "number",
+     "side": "right",
+     "prediction": "50%",
+     "auditor": true
+    },
+    {
+     "qid": "71717",
+     "sample": 0,
+     "form": "number",
+     "side": "right",
+     "prediction": "80%",
+     "auditor": true
+    },
+    {
+     "qid": "80155",
+     "sample": 0,
+     "form": "number",
+     "side": "right",
+     "prediction": "13%",
+     "auditor": true
+    },
+    {
+     "qid": "81168",
+     "sample": 1,
+     "form": "number",
+     "side": "right",
+     "prediction": "2",
+     "auditor": true
+    },
+    {
+     "qid": "69021",
+     "sample": 0,
+     "form": "text",
+     "side": "right",
+     "prediction": "25.1 billion",
+     "auditor": true
+    },
+    {
+     "qid": "75318",
+     "sample": 1,
+     "form": "text",
+     "side": "right",
+     "prediction": "Ecstasy",
+     "auditor": true
+    },
+    {
+     "qid": "90652",
+     "sample": 5,
+     "form": "text",
+     "side": "right",
+     "prediction": "8 August 1990",
+     "auditor": true
+    },
+    {
+     "qid": "81709",
+     "sample": 1,
+     "form": "text",
+     "side": "right",
+     "prediction": "Smartphone or Mobile Phone",
+     "auditor": true
+    },
+    {
+     "qid": "84710",
+     "sample": 3,
+     "form": "text",
+     "side": "right",
+     "prediction": "Dead ball",
+     "auditor": true
+    },
+    {
+     "qid": "84390",
+     "sample": 1,
+     "form": "text",
+     "side": "right",
+     "prediction": "Outfield",
+     "auditor": true
+    },
+    {
+     "qid": "77687",
+     "sample": 4,
+     "form": "text",
+     "side": "right",
+     "prediction": "Jan",
+     "auditor": true
+    },
+    {
+     "qid": "83803",
+     "sample": 6,
+     "form": "text",
+     "side": "right",
+     "prediction": "Grilled Cheese",
+     "auditor": true
+    },
+    {
+     "qid": "74551",
+     "sample": 7,
+     "form": "text",
+     "side": "right",
+     "prediction": "staffnurse.com",
+     "auditor": true
+    },
+    {
+     "qid": "89191",
+     "sample": 5,
+     "form": "text",
+     "side": "right",
+     "prediction": "Custom Built, Joomla, Drupal",
+     "auditor": true
+    },
+    {
+     "qid": "75670",
+     "sample": 0,
+     "form": "text",
+     "side": "right",
+     "prediction": "Dolby Digital",
+     "auditor": true
+    },
+    {
+     "qid": "85520",
+     "sample": 5,
+     "form": "text",
+     "side": "right",
+     "prediction": "H2O",
+     "auditor": true
+    },
+    {
+     "qid": "74556",
+     "sample": 6,
+     "form": "text",
+     "side": "right",
+     "prediction": "Give a tour of the site.",
+     "auditor": true
+    },
+    {
+     "qid": "83657",
+     "sample": 5,
+     "form": "text",
+     "side": "right",
+     "prediction": "carbohydrates",
+     "auditor": true
+    },
+    {
+     "qid": "79400",
+     "sample": 3,
+     "form": "text",
+     "side": "right",
+     "prediction": "Dispose of tissue after use",
+     "auditor": true
+    },
+    {
+     "qid": "87557",
+     "sample": 0,
+     "form": "text",
+     "side": "right",
+     "prediction": "Washington DC",
+     "auditor": true
+    },
+    {
+     "qid": "73275",
+     "sample": 1,
+     "form": "text",
+     "side": "right",
+     "prediction": "blue",
+     "auditor": true
+    },
+    {
+     "qid": "67138",
+     "sample": 7,
+     "form": "text",
+     "side": "right",
+     "prediction": "CO2",
+     "auditor": true
+    },
+    {
+     "qid": "74565",
+     "sample": 6,
+     "form": "text",
+     "side": "right",
+     "prediction": "5. Natural rebellion",
+     "auditor": true
+    },
+    {
+     "qid": "72562",
+     "sample": 1,
+     "form": "text",
+     "side": "right",
+     "prediction": "Pizza",
+     "auditor": true
+    },
+    {
+     "qid": "86020",
+     "sample": 2,
+     "form": "text",
+     "side": "right",
+     "prediction": "1. A sense of community & frequent community celebrations",
+     "auditor": true
+    },
+    {
+     "qid": "73446",
+     "sample": 2,
+     "form": "text",
+     "side": "right",
+     "prediction": "Yellow",
+     "auditor": true
+    },
+    {
+     "qid": "71430",
+     "sample": 2,
+     "form": "text",
+     "side": "right",
+     "prediction": "48.8 million",
+     "auditor": true
+    },
+    {
+     "qid": "90305",
+     "sample": 2,
+     "form": "text",
+     "side": "right",
+     "prediction": "2.5m",
+     "auditor": false
+    },
+    {
+     "qid": "75445",
+     "sample": 0,
+     "form": "text",
+     "side": "right",
+     "prediction": "Periscope",
+     "auditor": true
+    },
+    {
+     "qid": "90159",
+     "sample": 2,
+     "form": "text",
+     "side": "right",
+     "prediction": "India",
+     "auditor": true
+    },
+    {
+     "qid": "89877",
+     "sample": 5,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "85.1",
+     "auditor": false
+    },
+    {
+     "qid": "70017",
+     "sample": 4,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "16-34",
+     "auditor": false
+    },
+    {
+     "qid": "79914",
+     "sample": 4,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "50 percentage points",
+     "auditor": true
+    },
+    {
+     "qid": "70479",
+     "sample": 6,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "15.6%",
+     "auditor": false
+    },
+    {
+     "qid": "85795",
+     "sample": 3,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "4",
+     "auditor": false
+    },
+    {
+     "qid": "89957",
+     "sample": 1,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "37,547.9",
+     "auditor": false
+    },
+    {
+     "qid": "77799",
+     "sample": 7,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "1",
+     "auditor": false
+    },
+    {
+     "qid": "70656",
+     "sample": 3,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "25",
+     "auditor": false
+    },
+    {
+     "qid": "68165",
+     "sample": 4,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "22,047",
+     "auditor": false
+    },
+    {
+     "qid": "84865",
+     "sample": 4,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "28",
+     "auditor": false
+    },
+    {
+     "qid": "69695",
+     "sample": 3,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "9",
+     "auditor": false
+    },
+    {
+     "qid": "72686",
+     "sample": 0,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "17",
+     "auditor": false
+    },
+    {
+     "qid": "88439",
+     "sample": 0,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "+15.18%",
+     "auditor": false
+    },
+    {
+     "qid": "86609",
+     "sample": 7,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "23%",
+     "auditor": false
+    },
+    {
+     "qid": "76575",
+     "sample": 3,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "6%",
+     "auditor": false
+    },
+    {
+     "qid": "87182",
+     "sample": 6,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "70%",
+     "auditor": false
+    },
+    {
+     "qid": "76028",
+     "sample": 1,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "8",
+     "auditor": false
+    },
+    {
+     "qid": "91037",
+     "sample": 2,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "54,384",
+     "auditor": false
+    },
+    {
+     "qid": "65990",
+     "sample": 3,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "1",
+     "auditor": true
+    },
+    {
+     "qid": "76178",
+     "sample": 0,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "2%",
+     "auditor": false
+    },
+    {
+     "qid": "84990",
+     "sample": 1,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "10",
+     "auditor": false
+    },
+    {
+     "qid": "67226",
+     "sample": 1,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "4",
+     "auditor": false
+    },
+    {
+     "qid": "86696",
+     "sample": 7,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "4",
+     "auditor": false
+    },
+    {
+     "qid": "77591",
+     "sample": 7,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "2",
+     "auditor": false
+    },
+    {
+     "qid": "88386",
+     "sample": 3,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "2.49%",
+     "auditor": true
+    },
+    {
+     "qid": "85357",
+     "sample": 0,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "6",
+     "auditor": false
+    },
+    {
+     "qid": "71637",
+     "sample": 6,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "25/100",
+     "auditor": true
+    },
+    {
+     "qid": "80713",
+     "sample": 5,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "THE NEW NORMAL",
+     "auditor": true
+    },
+    {
+     "qid": "86842",
+     "sample": 3,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "Find a style that elongates your torso and/or legs. Draw attention to your best features and away from any problem areas.",
+     "auditor": false
+    },
+    {
+     "qid": "67138",
+     "sample": 3,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "gas",
+     "auditor": false
+    },
+    {
+     "qid": "66056",
+     "sample": 0,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "you're a regular, meaning you're familiar with the bar's routine and you've successfully adapted to the new system.",
+     "auditor": true
+    },
+    {
+     "qid": "85337",
+     "sample": 6,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "Divisive",
+     "auditor": false
+    },
+    {
+     "qid": "77250",
+     "sample": 4,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "Heavy reliance on restaurants",
+     "auditor": false
+    },
+    {
+     "qid": "83222",
+     "sample": 3,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "20%",
+     "auditor": false
+    },
+    {
+     "qid": "74690",
+     "sample": 1,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "Introverts and extraverts have the same happiness level.",
+     "auditor": false
+    },
+    {
+     "qid": "88972",
+     "sample": 3,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "Red",
+     "auditor": false
+    },
+    {
+     "qid": "78903",
+     "sample": 1,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "Miscellaneous",
+     "auditor": false
+    },
+    {
+     "qid": "70602",
+     "sample": 7,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "Fiest Bowl",
+     "auditor": false
+    },
+    {
+     "qid": "73446",
+     "sample": 3,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "Green",
+     "auditor": false
+    },
+    {
+     "qid": "79676",
+     "sample": 0,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "The best material mask to be worn during the COVID-19 pandemic is a medical-grade mask, specifically a surgical mask or N95 respirator. A surgical mask is a common and effective option for the public, as it provides protection against respiratory droplets and is readily available. An N95 respirator is a more advanced form of mask that offers superior filtration and is recommended by health authorities for high-risk individuals and healthcare workers. However, for the general public, a surgical mask is the preferred choice due to its availability and effectiveness.",
+     "auditor": true
+    },
+    {
+     "qid": "73101",
+     "sample": 2,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "24,000,000",
+     "auditor": true
+    },
+    {
+     "qid": "72562",
+     "sample": 5,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "Ice Cream",
+     "auditor": false
+    },
+    {
+     "qid": "86160",
+     "sample": 0,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "The world is flat",
+     "auditor": false
+    },
+    {
+     "qid": "75339",
+     "sample": 2,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "My children",
+     "auditor": false
+    },
+    {
+     "qid": "66889",
+     "sample": 7,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "8000",
+     "auditor": false
+    },
+    {
+     "qid": "85122",
+     "sample": 1,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "Self-Publishing",
+     "auditor": false
+    },
+    {
+     "qid": "77687",
+     "sample": 3,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "Dec",
+     "auditor": false
+    },
+    {
+     "qid": "66919",
+     "sample": 5,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "$252,427,000",
+     "auditor": false
+    },
+    {
+     "qid": "70204",
+     "sample": 4,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "drugs or alcohol to cope with discrimination",
+     "auditor": true
+    },
+    {
+     "qid": "79395",
+     "sample": 4,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "Wash hands with soap and water for at least 20 seconds",
+     "auditor": false
+    }
+   ]
+  }
+ }
+}

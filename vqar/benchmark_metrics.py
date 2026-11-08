@@ -344,14 +344,24 @@ def charxiv_accuracy(prediction: str, answers: list[str]) -> float:
 def anls_match(prediction: str, answers: list[str]) -> float:
     """DocVQA's ANLS at the authors' threshold, as a reward: any credit counts as right. Spans a
     little off pass by design; a reference with no letters (a number, date or time) must match,
-    since one digit off is a wrong answer that ANLS would pay ('2020' for '2021')."""
+    since one digit off is a wrong answer that ANLS would pay ('2020' for '2021'), and a span
+    with numbers counts only when the answer has the same numbers ('2.5m' for '3.5m' fails)."""
     spans = []
     for answer in answers:
-        if any(character.isalpha() for character in answer):
+        if not any(character.isalpha() for character in answer):
+            if _same_figure(prediction, answer):
+                return 1.0
+        elif _span_numbers(answer) == _span_numbers(prediction):
             spans.append(answer)
-        elif _same_figure(prediction, answer):
-            return 1.0
     return float(bool(spans) and docvqa_anls(prediction, spans) > 0)
+
+
+_SPAN_NUMBER = re.compile(r"\d+(?:[.,]\d+)*")
+
+
+def _span_numbers(text: str) -> list[str]:
+    """The numbers in a text, in any order, thousands separators dropped ('8 to 12' = '12-8')."""
+    return sorted(number.replace(",", "") for number in _SPAN_NUMBER.findall(text))
 
 
 def _same_figure(prediction: str, answer: str) -> bool:

@@ -363,6 +363,14 @@ class TestAnlsReward:
         assert anls_match("2021", ["2021", "the year"]) == 1
         assert anls_match("the yeat", ["2021", "the year"]) == 1
 
+    def test_a_span_with_numbers_needs_the_same_numbers(self):
+        # From the InfoVQA checker audit and screen: ANLS paid these wrong figures.
+        assert anls_match("2.5m", ["3.5m"]) == 0
+        assert anls_match("Ages 13 to 17", ["Ages 8 to 12"]) == 0
+        assert anls_match("Ages 8 to 12", ["Ages 8 to 12"]) == 1
+        assert anls_match("ages 8-12", ["Ages 8 to 12"]) == 1
+        assert anls_match("1,500 people", ["1500 people"]) == 1
+
 
 class TestRewardPath:
     def reward(self, dataset, response, answers, prompt="reasoning"):
