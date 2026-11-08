@@ -307,3 +307,21 @@ def test_writing_one_dataset_updates_its_row_and_keeps_the_others(tmp_path):
         ("gqa", "rejected"), ("slake", "passed")]
     assert merged([row("gqa", "passed")], tmp_path / "missing") == [row("gqa", "passed")]
 
+
+def test_a_long_budget_screen_tests_the_image_under_the_reasoning_prompt():
+    from vqar.eval.screening import battery, failed_gates
+
+    cells = battery("chartqa", max_tokens=2048)
+    assert cells.reasoning.max_tokens == 2048 and cells.sampled.max_tokens == 2048
+    black = cells.reasoning_black
+    assert (black.prompt, black.image_mode) == ("reasoning", "black")
+    assert battery("chartqa").reasoning_black is None
+    order = list(cells.protocols())
+    assert order.index("reasoning") < order.index("reasoning_black")
+    small = {"low": 2.0, "high": 5.0}
+    large = {"low": 12.0, "high": 20.0}
+    measures = {"image_dependence": small, "wrong_image_dependence": small}
+    assert "image needed" in failed_gates(5_000, None, measures)
+    assert "image needed" not in failed_gates(
+        5_000, None, {**measures, "reasoning_image_dependence": large})
+

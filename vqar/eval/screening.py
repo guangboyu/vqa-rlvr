@@ -151,6 +151,9 @@ class Battery:
     first: Protocol | None = None  # multi-image datasets: the first image only
     none: Protocol | None = None  # multi-image datasets: no image at all
     sampled_short: Protocol | None = None  # short-answer RL's learnability
+    # A long-budget screen also blacks out the image under the reasoning prompt, for data whose
+    # short answers are themselves cut off (math), where the short-prompt test reads nothing.
+    reasoning_black: Protocol | None = None
 
     @property
     def role(self) -> str:
@@ -167,8 +170,8 @@ class Battery:
                  "reasoning": self.reasoning, "direct": self.direct, "stepwise": self.stepwise,
                  "sampled": self.sampled}
         cells.update({name: protocol for name, protocol in (
-            ("sampled_short", self.sampled_short), ("first", self.first),
-            ("none", self.none)) if protocol})
+            ("reasoning_black", self.reasoning_black), ("sampled_short", self.sampled_short),
+            ("first", self.first), ("none", self.none)) if protocol})
         return cells
 
 
@@ -177,11 +180,14 @@ def pool_role(dataset: str) -> str | None:
     return next((role for role in ("rl", "sft") if role in DATASETS[dataset].subsets), None)
 
 
-def battery(dataset: str, tier: str = TIER, validate_on_test: bool = False) -> Battery | None:
+def battery(dataset: str, tier: str = TIER, validate_on_test: bool = False,
+            max_tokens: int | None = None) -> Battery | None:
     """The battery on the dataset's training pool; None when it has none.
 
     With `validate_on_test`, a dataset without a training pool is screened on its test role
     instead, to check the module against a known answer. It still fails the pool gate.
+    `max_tokens` gives the reasoning cells a longer budget and adds a black image under the
+    reasoning prompt; the image gate then reads that pair.
     """
     role = pool_role(dataset) or ("test" if validate_on_test else None)
     if role is None:
@@ -189,17 +195,20 @@ def battery(dataset: str, tier: str = TIER, validate_on_test: bool = False) -> B
     greedy = {"dataset": dataset, "role": role, "tier": tier,
               "screening": role in TRAINING_ROLES}
     multi = DATASETS[dataset].max_images > 1
+    long = {"max_tokens": max_tokens} if max_tokens else {}
     return Battery(
         short=Protocol(prompt="short", **greedy),
-        reasoning=Protocol(prompt="reasoning", **greedy),
+        reasoning=Protocol(prompt="reasoning", **greedy, **long),
         black=Protocol(prompt="short", image_mode="black", **greedy),
         swapped=Protocol(prompt="short", image_mode="swapped", **greedy),
-        direct=Protocol(prompt="direct", **greedy),
-        stepwise=Protocol(prompt="stepwise", **greedy),
+        direct=Protocol(prompt="direct", **greedy, **long),
+        stepwise=Protocol(prompt="stepwise", **greedy, **long),
+        reasoning_black=(Protocol(prompt="reasoning", image_mode="black", **greedy, **long)
+                         if max_tokens else None),
         first=Protocol(prompt="short", image_mode="first", **greedy) if multi else None,
         none=Protocol(prompt="short", image_mode="none", **greedy) if multi else None,
         sampled=Protocol(dataset, prompt="reasoning", role=role, tier=tier,
-                         max_tokens=SAMPLED_MAX_TOKENS, temperature=TEMPERATURE,
+                         max_tokens=max_tokens or SAMPLED_MAX_TOKENS, temperature=TEMPERATURE,
                          samples=SAMPLES),
         sampled_short=Protocol(dataset, prompt="short", role=role, tier=tier,
                                temperature=TEMPERATURE, samples=SAMPLES),
@@ -289,6 +298,7 @@ def measure(records: dict[str, RunRecord]) -> dict:
     pairs = {"reasoning_payoff": ("short", "reasoning"),
              "matched_payoff": ("direct", "stepwise"),
              "image_dependence": ("black", "short"),
+             "reasoning_image_dependence": ("reasoning_black", "reasoning"),
              "wrong_image_dependence": ("swapped", "short"),
              "multi_image_gain": ("first", "short"),
              "text_only_drop": ("none", "short")}
@@ -306,7 +316,10 @@ def mean(values: dict[str, float]) -> float:
 def failed_gates(pool_size: int, declaration: Declaration | None, measures: dict) -> list[str]:
     """The gates any way of training needs. A measure not yet taken fails nothing."""
     short = measures.get("short_accuracy")
-    drops = [measures.get(name) for name in ("image_dependence", "wrong_image_dependence")]
+    # A long-budget screen reads the image under the reasoning prompt (see battery()).
+    names = (("reasoning_image_dependence",) if "reasoning_image_dependence" in measures
+             else ("image_dependence", "wrong_image_dependence"))
+    drops = [measures.get(name) for name in names]
     checks = {
         "training questions": pool_size >= MIN_POOL_QUESTIONS,
         "split separable": declaration is not None and declaration.split_separable,

@@ -27,8 +27,10 @@ from vqar.registry import DATASETS
 OUTPUT = ROOT / "results" / "screening"
 
 
-def batteries(datasets: list[str], tier: str, validate_on_test: bool) -> dict:
-    return {dataset: battery(dataset, tier, validate_on_test) for dataset in datasets}
+def batteries(datasets: list[str], tier: str, validate_on_test: bool,
+              max_tokens: int | None = None) -> dict:
+    return {dataset: battery(dataset, tier, validate_on_test, max_tokens)
+            for dataset in datasets}
 
 
 def show(label: str, model, planned: dict, data_dir: Path, records_dir: Path) -> None:
@@ -111,6 +113,9 @@ def main():
     mode.add_argument("--from-records", action="store_true",
                       help="build the table from existing records only; no GPU")
     parser.add_argument("--out", type=Path, default=OUTPUT)
+    parser.add_argument("--max-tokens", type=int, default=None,
+                        help="longer reasoning budget, with a black image under the reasoning "
+                        "prompt as the image test (for data whose answers run long)")
     parser.add_argument("--batch-size", type=int, default=128)
     parser.add_argument("--max-model-len", type=int, default=4096)
     parser.add_argument("--data-dir", type=Path, default=DATA_DIR)
@@ -124,7 +129,7 @@ def main():
     if not (args.dry_run or args.from_records) and len(args.arms) != 1:
         parser.error("generation loads one model per run; pass a single arm")
     try:
-        planned = batteries(args.datasets, args.tier, args.validate_on_test)
+        planned = batteries(args.datasets, args.tier, args.validate_on_test, args.max_tokens)
     except ValueError as error:
         parser.error(str(error))
 
