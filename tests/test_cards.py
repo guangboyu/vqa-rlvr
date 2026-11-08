@@ -37,6 +37,19 @@ def test_the_rule_reads_length_and_accuracy():
     assert not held({**base, "tokens": 10, "delta": -1.0}, {"max_delta": -2.0})
 
 
+def test_a_band_rule_reads_both_sides():
+    band = {"min_delta": -2.0, "max_delta": 2.0}
+    assert held({"delta": 1.9}, band) and held({"delta": -2.0}, band)
+    assert not held({"delta": 2.1}, band) and not held({"delta": -2.1}, band)
+
+
+def test_a_starting_model_baseline_reads_its_dev_records_as_step_zero():
+    from scripts.cards import ROOT, baseline_records
+    found = baseline_records({"baseline_label": "base2", "dataset": "vqav2"}, ROOT)
+    assert {(0, "short"), (0, "reasoning")} <= set(found)
+    assert all(r.protocol["role"] == "dev" for r in found.values())
+
+
 def test_a_card_without_records_reads_as_not_finished(tmp_path):
     row = summarize_card({"id": "x", "change": "c", "predicted": "p"}, 0.5, tmp_path)
     assert row["final"] is None and row["held"] is None

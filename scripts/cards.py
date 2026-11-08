@@ -3,7 +3,9 @@
 A card in experiments.toml ([[cards]]) holds the question, the change, the baseline, what was
 predicted and what each outcome means. One id names everything: run directory runs/cards/<id>,
 run name and record label card-<id>. Trainers score their kept adapters on dev rows when they
-finish, so a card reads dev rows only; test rows stay for reported arms.
+finish, so a card reads dev rows only; test rows stay for reported arms. The baseline is another
+run (baseline_run) or a starting model's records in results/records (baseline_label, read as
+step 0); cards compare under the reasoning prompt unless they name another (prompt).
 
     python -m scripts.cards commands <id>   # the training line for the GPU
     python -m scripts.cards summarize       # results/ledger.json, from saved dev records
@@ -78,28 +80,50 @@ def compare(reference: RunRecord, candidate: RunRecord) -> dict:
             **paired_bootstrap(*scores)}
 
 
+def labeled_dev_records(records_dir: Path, wanted: str, dataset: str) -> dict:
+    """A starting model's greedy dev records on original images, by prompt, as step 0."""
+    found = {}
+    for path in record_files(records_dir):
+        record = RunRecord.load(path)
+        protocol = record.protocol
+        if (record.model.get("label") == wanted and protocol["dataset"] == dataset
+                and protocol["role"] == "dev" and protocol["tier"] == "dev"
+                and protocol["samples"] == 1 and protocol["image_mode"] == "original"):
+            found[(0, protocol["prompt"])] = record
+    return found
+
+
+def baseline_records(card: dict, root: Path = ROOT) -> dict:
+    if "baseline_run" in card:
+        return dev_records(root / card["baseline_run"], card.get("dataset"))
+    if "baseline_label" in card:
+        return labeled_dev_records(root / "results" / "records", card["baseline_label"],
+                                   card["dataset"])
+    return {}
+
+
 def held(final: dict, rule: dict) -> bool:
     """Whether the card's committed rule read true at the end of the run."""
-    checks = {"min_token_ratio": final["tokens"] >= rule.get("min_token_ratio", 0)
-                                 * final["baseline_tokens"],
-              "max_accuracy_drop": final["delta"] >= -rule.get("max_accuracy_drop", 0),
-              "max_delta": final["delta"] <= rule.get("max_delta", 0)}
-    return all(checks[name] for name in rule)
+    checks = {"min_token_ratio": lambda v: final["tokens"] >= v * final["baseline_tokens"],
+              "max_accuracy_drop": lambda v: final["delta"] >= -v,
+              "min_delta": lambda v: final["delta"] >= v,
+              "max_delta": lambda v: final["delta"] <= v}
+    return all(checks[name](value) for name, value in rule.items())
 
 
 def summarize_card(card: dict, floor: float, root: Path = ROOT) -> dict:
     row = {key: card.get(key, "") for key in TEXT_FIELDS}
     run = run_dir(card, root)
     records = dev_records(run, card.get("dataset"))
-    baseline = (dev_records(root / card["baseline_run"], card.get("dataset"))
-                if "baseline_run" in card else {})
-    finals = [step for step, prompt in records if prompt == PROMPT]
-    if not finals or not baseline:
+    baseline = baseline_records(card, root)
+    prompt = card.get("prompt", PROMPT)
+    finals = [step for step, kind in records if kind == prompt]
+    bases = [step for step, kind in baseline if kind == prompt]
+    if not finals or not bases:
         return {**row, "final": None, "held": None, "train_hours": train_hours(run)}
-    last_baseline = max(step for step, prompt in baseline if prompt == PROMPT)
-    final = compare(baseline[(last_baseline, PROMPT)], records[(max(finals), PROMPT)])
-    return {**row, "final": final, "final_step": max(finals), "baseline_step": last_baseline,
-            "curve": curve(records), "baseline_curve": curve(baseline),
+    final = compare(baseline[(max(bases), prompt)], records[(max(finals), prompt)])
+    return {**row, "final": final, "final_step": max(finals), "baseline_step": max(bases),
+            "curve": curve(records, prompt), "baseline_curve": curve(baseline, prompt),
             "held": held(final, card["holds"]) if "holds" in card else None,
             "verdict": verdict(final, floor), "noise_floor": floor,
             "train_hours": train_hours(run)}
