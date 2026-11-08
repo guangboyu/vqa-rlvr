@@ -84,15 +84,23 @@ with varied rewards over 1,000 updates.
 | `base2` | DeepTumorVQA (whole-volume montage) | short | 500 | 8 | 61.6 | 23.6 | 14.8 |
 | `base2` | DeepTumorVQA (debiased options) | reasoning | 500 | 8 | 57.2 | 30.6 | 12.2 |
 | `base2` | DeepTumorVQA (debiased options) | short | 500 | 8 | 64.4 | 24.4 | 11.2 |
+| `base2` | DocVQA (train) | reasoning | 500 | 8 | 20.8 | 5.0 | 74.2 |
+| `base2` | DocVQA (train) | short | 500 | 8 | 12.0 | 4.6 | 83.4 |
+| `base2` | GEOQA (R1V train) | reasoning | 500 | 8 | 30.6 | 56.8 | 12.6 |
+| `base2` | GEOQA (R1V train) | short | 500 | 8 | 26.2 | 69.6 | 4.2 |
 | `base2` | GQA | reasoning | 500 | 8 | 42.0 | 26.6 | 31.4 |
 | `base2` | GQA | short | 500 | 8 | 33.4 | 19.2 | 47.4 |
 | `base2` | GQA | reasoning | 2,500 | 8 | 44.5 | 26.0 | 29.5 |
 | `base2` | GQA | short | 2,500 | 8 | 35.5 | 19.1 | 45.4 |
 | `base2` | GQA | reasoning | 5,000 | 8 | 45.0 | 24.3 | 30.7 |
+| `base2` | InfographicVQA | reasoning | 500 | 8 | 40.2 | 19.4 | 40.4 |
+| `base2` | InfographicVQA | short | 500 | 8 | 33.0 | 20.4 | 46.6 |
 | `base2` | Kvasir-VQA-x1 (atomic) | reasoning | 500 | 8 | 36.8 | 53.8 | 9.4 |
 | `base2` | Kvasir-VQA-x1 (atomic) | short | 500 | 8 | 23.0 | 63.2 | 13.8 |
 | `base2` | MedThinkVQA | reasoning | 500 | 8 | 47.4 | 52.0 | 0.6 |
 | `base2` | MedThinkVQA | short | 500 | 8 | 33.2 | 43.8 | 23.0 |
+| `base2` | MMK12 (train) | reasoning | 500 | 8 | 27.0 | 65.8 | 7.2 |
+| `base2` | MMK12 (train) | short | 500 | 8 | 24.4 | 72.2 | 3.4 |
 | `base2` | OmniMedVQA (open access) | reasoning | 500 | 8 | 52.8 | 8.2 | 39.0 |
 | `base2` | OmniMedVQA (open access) | short | 500 | 8 | 25.6 | 15.8 | 58.6 |
 | `base2` | OmniMedVQA (held-out collections) | reasoning | 500 | 8 | 53.6 | 10.0 | 36.4 |
@@ -101,6 +109,8 @@ with varied rewards over 1,000 updates.
 | `base2` | PathVQA | short | 467 | 8 | 33.8 | 52.5 | 12.8 |
 | `base2` | SLAKE (English) | reasoning | 500 | 8 | 48.8 | 35.0 | 16.2 |
 | `base2` | SLAKE (English) | short | 500 | 8 | 30.4 | 34.6 | 35.0 |
+| `base2` | ViRL39K (one image) | reasoning | 500 | 8 | 38.2 | 47.8 | 14.0 |
+| `base2` | ViRL39K (one image) | short | 500 | 8 | 41.0 | 48.2 | 10.8 |
 | `base2` | VQAv2 | reasoning | 500 | 8 | 47.8 | 19.8 | 32.4 |
 | `base2` | VQAv2 | short | 500 | 8 | 40.6 | 12.4 | 47.0 |
 | `base2` | VQAv2 | reasoning | 2,500 | 8 | 48.9 | 21.3 | 29.8 |

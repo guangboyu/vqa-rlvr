@@ -1,0 +1,121 @@
+{
+  "schema": "run-record/1",
+  "legacy": false,
+  "model_id": "dec3ad6e3a1c306cd9a470b55b5f1859b34d784e64366f39c36ddea3ae7b9187",
+  "protocol_id": "00be7a86caf404ba380f1366bb784e0f589c5950896a8d49d9fc0370e41dd1e7",
+  "model": {
+    "source": "Qwen/Qwen3-VL-2B-Instruct",
+    "label": "base2",
+    "run": null,
+    "step": null,
+    "weights": {
+      "hub": "Qwen/Qwen3-VL-2B-Instruct",
+      "revision": "89644892e4d85e24eaac8bacfd4f463576704203"
+    }
+  },
+  "protocol": {
+    "dataset": "docvqat",
+    "ladder": "in-domain",
+    "role": "rl",
+    "tier": "dev",
+    "question_limit": 500,
+    "prompt": "reasoning",
+    "prompt_text": "{question}\nFirst think step by step inside <think> </think> tags, then write only the final answer inside <answer> </answer> tags.",
+    "max_tokens": 512,
+    "temperature": 0.0,
+    "samples": 1,
+    "image_mode": "original",
+    "max_pixels": 786432,
+    "scorers": {
+      "official": "docvqa_anls/v1",
+      "normalized": "anls_match/v1"
+    },
+    "extraction": "last_answer_tag_or_full_text",
+    "answer_tag_rule": "raw text contains </answer>",
+    "data": {
+      "subsets": {
+        "docvqat_train": "e3bbaf92ab9812de"
+      },
+      "selection_sha256": "a96358940f55082495956d7b9e063b0c332dddbb9c3b231dbdab3e67ea4509d8",
+      "image_groups_sha256": "e4f315361d9a06e27f493afaa738788072b96bfbfc730d11ddaff174ce1789a7"
+    },
+    "metric_metadata": {
+      "primary": "official",
+      "official": {
+        "name": "ANLS, threshold 0.5",
+        "source": "QwenLM/Qwen-VL eval_mm/infographicsvqa_eval.py (the RRC script)",
+        "rule": "one minus the best normalized edit distance, zero below 0.5"
+      },
+      "normalized": {
+        "name": "ANLS at 0.5 as 0 or 1",
+        "source": "project-defined, for a training reward",
+        "rule": "any ANLS credit counts as right"
+      }
+    }
+  },
+  "metrics": {
+    "n": 500,
+    "official": {
+      "overall": 0.9040205153586423,
+      "by_answer_type": {
+        "Image/Photo": 0.75,
+        "Yes/No": 1.0,
+        "figure/diagram": 1.0,
+        "form": 0.9596251773937725,
+        "free_text": 0.7926240426240426,
+        "handwritten": 0.8124520742274366,
+        "layout": 0.9023790378739427,
+        "others": 0.9776223776223777,
+        "table/list": 0.8988183494263349
+      }
+    },
+    "normalized": {
+      "overall": 0.892,
+      "by_answer_type": {
+        "Image/Photo": 0.75,
+        "Yes/No": 1.0,
+        "figure/diagram": 1.0,
+        "form": 0.9421487603305785,
+        "free_text": 0.8181818181818182,
+        "handwritten": 0.7916666666666666,
+        "layout": 0.9130434782608695,
+        "others": 0.9333333333333333,
+        "table/list": 0.8620689655172413
+      }
+    },
+    "mean_output_tokens": 46.664,
+    "truncated_fraction": 0.002,
+    "answer_tag_fraction": 0.994,
+    "empty_answer_fraction": 0.002,
+    "official_on_lowercased_answers": 0.9040205153586423,
+    "answers_scored_differently": 57
+  },
+  "provenance": {
+    "code_version": "8d248fd087ee44c26a3af8a2d47cda3268530d05",
+    "uncommitted_changes": false,
+    "source_sha256": {
+      "vqar/eval/__init__.py": "2aa88c809409a57502d0d9b2893e14c3b5bf99d971bceefcc1ed4716ef295f81",
+      "vqar/eval/examples.py": "c05df90499c3fd7c4ff9093f6efc646b0b84ea39a30c4318200afecb9c32d734",
+      "vqar/eval/protocol.py": "9ea52c923b58b4717e9067968ebaf036d7c4756e8f6fbb245c2797d1a0cca67e",
+      "vqar/eval/record.py": "6be2298f531240b01df2feecedd50af2d32a1c17f6029951ddf3f7723834b023",
+      "vqar/eval/runner.py": "a02fc2c0adcb20b03b2045027c85d8c2f57d69ab9a6be1340916e9228434515e",
+      "vqar/inference.py": "f77143773554fbf3710e045220e2efb36d5698035a760094a9aace008bf593bf",
+      "vqar/config.py": "f38e5381735c716d3ddd52ef52a404f311eaf4381f0ccaed53008fd4b3afc03f",
+      "vqar/data.py": "d56e77a87d69d1fada537581dead8c976d2c6becdc717fb7bc44c85ced9e9e46",
+      "vqar/metrics.py": "74cdd78a8d14648e018b3986cf26b6a733529cdaf6cc0f518f3b45fe906fa182",
+      "vqar/registry.py": "40fba8e615d8d9cdf07742132cc6fe6f8942a20f9769aa4be0ad0fa7222e4f59",
+      "vqar/splits.py": "10ea7cfde1a270a3e7fc458bc04f74b4d01eee9840a02f8b8627d95c9d6bc41e",
+      "vqar/ood_metrics.py": "9449e0a85c4b7ff3efcbc88264ee1e03d53689c39c2fe030a13887465fa1b226",
+      "vqar/ood.py": "d59220be09094fa5a5ffbb6e791b38ee5b3c8dca0ca381ef64a28bf0f94ccb8f",
+      "uv.lock": "8c79fab440350a15e75e9507c3b5338ecc63beb92fc12c6ef18fbe01122ac323"
+    },
+    "versions": {
+      "torch": "2.11.0+cu129",
+      "transformers": "5.13.0",
+      "vllm": "0.23.0+cu129",
+      "datasets": "5.0.0"
+    },
+    "timestamp": "2026-11-08T03:04:31+00:00",
+    "eval_seconds": 45.3
+  }
+}

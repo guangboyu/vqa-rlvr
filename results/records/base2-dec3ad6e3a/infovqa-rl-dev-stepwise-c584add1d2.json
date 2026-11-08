@@ -1,0 +1,105 @@
+{
+  "schema": "run-record/1",
+  "legacy": false,
+  "model_id": "dec3ad6e3a1c306cd9a470b55b5f1859b34d784e64366f39c36ddea3ae7b9187",
+  "protocol_id": "c584add1d2c9c9b40c9e1ea86d1329d1017882302a38f1c99202aa26cc11e6cb",
+  "model": {
+    "source": "Qwen/Qwen3-VL-2B-Instruct",
+    "label": "base2",
+    "run": null,
+    "step": null,
+    "weights": {
+      "hub": "Qwen/Qwen3-VL-2B-Instruct",
+      "revision": "89644892e4d85e24eaac8bacfd4f463576704203"
+    }
+  },
+  "protocol": {
+    "dataset": "infovqa",
+    "ladder": "in-domain",
+    "role": "rl",
+    "tier": "dev",
+    "question_limit": 500,
+    "prompt": "stepwise",
+    "prompt_text": "{question}\nThink step by step inside <think> </think> tags. Then write the final answer as a single word or phrase inside <answer> </answer> tags.",
+    "max_tokens": 512,
+    "temperature": 0.0,
+    "samples": 1,
+    "image_mode": "original",
+    "max_pixels": 786432,
+    "scorers": {
+      "official": "docvqa_anls/v1",
+      "normalized": "anls_match/v1"
+    },
+    "extraction": "last_answer_tag_or_full_text",
+    "answer_tag_rule": "raw text contains </answer>",
+    "data": {
+      "subsets": {
+        "infovqa_train": "1c5f2490d308e698"
+      },
+      "selection_sha256": "8fb2d9d968e048aa848311fae7af961c482b6bf5e98d20b654d24e6f9b6179f6",
+      "image_groups_sha256": "cbe3d81d02c022c76b9606c38d469ed73e563d7d5a738c2231db5e6c0c4f3ad7"
+    },
+    "metric_metadata": {
+      "primary": "official",
+      "official": {
+        "name": "ANLS, threshold 0.5",
+        "source": "QwenLM/Qwen-VL eval_mm/infographicsvqa_eval.py (the RRC script)",
+        "rule": "one minus the best normalized edit distance, zero below 0.5"
+      },
+      "normalized": {
+        "name": "ANLS at 0.5 as 0 or 1",
+        "source": "project-defined, for a training reward",
+        "rule": "any ANLS credit counts as right"
+      }
+    }
+  },
+  "metrics": {
+    "n": 500,
+    "official": {
+      "overall": 0.6873224570691662,
+      "by_answer_type": {
+        "all": 0.6873224570691662
+      }
+    },
+    "normalized": {
+      "overall": 0.666,
+      "by_answer_type": {
+        "all": 0.666
+      }
+    },
+    "mean_output_tokens": 16.078,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.914,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.6873224570691662,
+    "answers_scored_differently": 62
+  },
+  "provenance": {
+    "code_version": "8d248fd087ee44c26a3af8a2d47cda3268530d05",
+    "uncommitted_changes": false,
+    "source_sha256": {
+      "vqar/eval/__init__.py": "2aa88c809409a57502d0d9b2893e14c3b5bf99d971bceefcc1ed4716ef295f81",
+      "vqar/eval/examples.py": "c05df90499c3fd7c4ff9093f6efc646b0b84ea39a30c4318200afecb9c32d734",
+      "vqar/eval/protocol.py": "9ea52c923b58b4717e9067968ebaf036d7c4756e8f6fbb245c2797d1a0cca67e",
+      "vqar/eval/record.py": "6be2298f531240b01df2feecedd50af2d32a1c17f6029951ddf3f7723834b023",
+      "vqar/eval/runner.py": "a02fc2c0adcb20b03b2045027c85d8c2f57d69ab9a6be1340916e9228434515e",
+      "vqar/inference.py": "f77143773554fbf3710e045220e2efb36d5698035a760094a9aace008bf593bf",
+      "vqar/config.py": "f38e5381735c716d3ddd52ef52a404f311eaf4381f0ccaed53008fd4b3afc03f",
+      "vqar/data.py": "d56e77a87d69d1fada537581dead8c976d2c6becdc717fb7bc44c85ced9e9e46",
+      "vqar/metrics.py": "74cdd78a8d14648e018b3986cf26b6a733529cdaf6cc0f518f3b45fe906fa182",
+      "vqar/registry.py": "40fba8e615d8d9cdf07742132cc6fe6f8942a20f9769aa4be0ad0fa7222e4f59",
+      "vqar/splits.py": "10ea7cfde1a270a3e7fc458bc04f74b4d01eee9840a02f8b8627d95c9d6bc41e",
+      "vqar/ood_metrics.py": "9449e0a85c4b7ff3efcbc88264ee1e03d53689c39c2fe030a13887465fa1b226",
+      "vqar/ood.py": "d59220be09094fa5a5ffbb6e791b38ee5b3c8dca0ca381ef64a28bf0f94ccb8f",
+      "uv.lock": "8c79fab440350a15e75e9507c3b5338ecc63beb92fc12c6ef18fbe01122ac323"
+    },
+    "versions": {
+      "torch": "2.11.0+cu129",
+      "transformers": "5.13.0",
+      "vllm": "0.23.0+cu129",
+      "datasets": "5.0.0"
+    },
+    "timestamp": "2026-11-08T03:19:07+00:00",
+    "eval_seconds": 9.0
+  }
+}
