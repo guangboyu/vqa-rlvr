@@ -1,7 +1,8 @@
 #!/bin/bash
 # HPC3: run one evaluation command on an RTX6000 with at most one failure successor.
 # Evaluations cache finished batches, so a successor resumes where its job stopped.
-# Submit with --job-name and --output; create the output directory first.
+# Submit with --job-name and --output; create the output directory first. Successors keep the
+# first job's partition; export HPC_GRES when the first job overrides the GPU type below.
 # Arguments: source-directory python-module-or-script [options].
 #SBATCH --partition=free-gpu32
 #SBATCH --gres=gpu:RTX6000:1
@@ -52,6 +53,7 @@ if [ "$CHAIN_LEFT" -gt 0 ]; then
         NEXT=$(sbatch --parsable --job-name="$SLURM_JOB_NAME" \
         --cpus-per-task="$SLURM_CPUS_PER_TASK" --mem="${SLURM_MEM_PER_NODE}M" \
         --output="$(scontrol show job "$SLURM_JOB_ID" | sed -n 's/^ *StdOut=//p')" \
+        ${SLURM_JOB_PARTITION:+--partition=$SLURM_JOB_PARTITION} ${HPC_GRES:+--gres=$HPC_GRES} \
         --export=ALL,CHAIN_LEFT=$((CHAIN_LEFT - 1)) ${AVOID_NODES:+--exclude=$AVOID_NODES} \
             --dependency=afternotok:"$SLURM_JOB_ID" "$SELF" "$REPO" "$@")
     fi
