@@ -44,7 +44,7 @@ class TestRegistry:
     @pytest.mark.parametrize("name", CANDIDATES)
     def test_each_candidate_trains_and_holds_out_dev(self, name):
         spec = DATASETS[name]
-        assert set(spec.subsets) == {"sft", "rl", "dev"}
+        assert set(spec.subsets) - {"test"} == {"sft", "rl", "dev"}
         assert spec.subsets["sft"] == spec.subsets["rl"]
         assert spec.ladder == "in-domain" and not spec.require_split and spec.max_images == 1
 
@@ -54,10 +54,10 @@ class TestRegistry:
         assert set(DATASETS["docvqa"].subsets) == {"test", "published"}
         assert DATASETS["docvqat"].subsets["dev"] == "docvqat_train"
 
-    def test_infovqa_alone_has_a_released_held_out_split(self):
-        assert DATASETS["infovqa"].subsets["dev"] == "infovqa_val"
+    def test_dev_comes_from_train_and_infovqa_tests_on_its_released_validation_split(self):
+        assert DATASETS["infovqa"].subsets["test"] == "infovqa_val"
         assert all(DATASETS[name].subsets["dev"] == DATASETS[name].subsets["sft"]
-                   for name in CANDIDATES if name != "infovqa")
+                   for name in CANDIDATES)
 
     def test_unverified_licences_pass_the_gate_only_with_the_owners_decision(self):
         assert all(DECLARED[name].license_usable for name in CANDIDATES)

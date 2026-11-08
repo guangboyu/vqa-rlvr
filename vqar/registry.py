@@ -957,8 +957,10 @@ DATASETS: dict[str, DatasetSpec] = {
             name="infovqa", display_name="InfographicVQA",
             category="Document-chart",
             sources={"lmms-lab-encoder/DocVQA": "539088ef8a8ada01ac8e2e6d4e372586748a265e"},
-            subsets={"sft": "infovqa_train", "rl": "infovqa_train", "dev": "infovqa_val"},
-            official_splits=frozenset({"sft", "rl", "dev"}),
+            # Dev is carved from train so the released validation split can be the test role.
+            subsets={"sft": "infovqa_train", "rl": "infovqa_train", "dev": "infovqa_train",
+                     "test": "infovqa_val"},
+            official_splits=frozenset({"sft", "rl", "test"}),
             ladder="in-domain", answer_schema="text or a number read from an infographic; one to "
             "eight accepted answers",
             official=benchmark_metrics.docvqa_anls, normalized=benchmark_metrics.anls_match,

@@ -48,7 +48,7 @@ def test_role_listing_follows_registry_order():
                                           "deeptumor", "deeptumorx", "deeptumorv", "deeptumorff",
                                           "m3dvqa", "vizwiz", "realworldqa", "mmstar", "mathvista",
                                           "mmmu", "charxiv", "ocrbench", "docvqa", "vstar",
-                                          "hrbench4k", "pope", "hallusionbench"]
+                                          "hrbench4k", "pope", "hallusionbench", "infovqa"]
     assert datasets_with_role("published") == ["mmstar", "mathvista", "mmmu", "charxiv",
                                                "ocrbench", "docvqa", "vstar", "hrbench4k", "pope",
                                                "hallusionbench"]

@@ -1,7 +1,7 @@
 {
   "version": "split-files-v1",
-  "held_out_images": 63673,
-  "training_images": 225454,
+  "held_out_images": 63792,
+  "training_images": 225357,
   "training_images_shared_across_subsets": {
     "chartqa_train & virl39k_train": 191,
     "clevrcomp_train & virl39k_train": 7,

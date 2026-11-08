@@ -329,4 +329,7 @@ official scorer, reasoning prompt; `python -m scripts.cards summarize` writes `r
 | mix-ratio-90 | 90% charts and 10% photos instead of 65% and 35%, all under the reasoning prompt, 2,844 updates | Does not hold | 75.8 → 75.4, 179 → 188 tokens | held | 8.3 |
 | adaptive-prompt | All rollouts under the winning adaptive prompt, on the mixture's pool and 2,844 updates | Does not hold | not finished | — | — |
 | counterfactual-pairs | Score existing arms on VQAv2 complementary pairs: pair accuracy (both right) and same-answer rate (one answer for two images whose answers differ) | Holds | not finished | — | — |
+| infovqa-sft | SFT on InfoVQA's sft role, one epoch of short answers | Holds | not finished | — | — |
+| infovqa-grpo | GRPO from Instruct under the short prompt, 2,000 updates, instead of SFT | Holds | not finished | — | — |
+| infovqa-sft-grpo | GRPO from the SFT model, with the same 2,000 updates | Holds | not finished | — | — |
 <!-- /report:cards -->

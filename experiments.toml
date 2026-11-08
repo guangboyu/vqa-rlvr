@@ -1321,3 +1321,80 @@ holds_if = "SFT's same-answer rate is above Instruct's with a 95% interval above
 if_holds = "A new grounding result: RL follows the image when it disagrees with the prior, SFT less so."
 if_not = "Both methods lean on priors alike; grounding differences show only in the black-image test."
 status = "experimental"
+
+# InfoVQA, the Document source that passed the screen (2026-11-07). On 500 pool questions Instruct
+# answers 66.6% greedily under the short prompt and 79.6% with any of 8 samples; reasoning costs
+# 3.4 points. Dev is 502 questions carved from train by whole images; the released validation split
+# (2,801) is the test role, kept for the reported arms. Three arms at 2B on recipe v1.0, compared
+# under the short prompt with ANLS: SFT on the whole sft role (23,443 questions, one epoch,
+# answer-only), GRPO for 2,000 updates (8,000 questions), and SFT → GRPO with the same RL budget.
+# SFT sees about three times as many questions as GRPO; that exposure is reported beside them.
+# GRPO rollouts keep each image's shape within the evaluation pixel budget (--image-fit budget,
+# 4 completions per micro-batch, same 32 per update) instead of v1.0's 608-pixel canvas, which
+# shrinks a median infographic (1000 x 2098) to 0.29 of its size, about 300 pixels wide. SFT and
+# evaluation already use the budget; on ChartQA the budget fit was neutral (knob image-budget).
+[[cards]]
+id = "infovqa-sft"
+node = "form-not-ability"
+question = "How much does answer-only SFT on InfoVQA's training questions add to Instruct?"
+recipe = "v1.0"
+baseline = "base2"
+dataset = "infovqa"
+prompt = "short"
+change = "SFT on InfoVQA's sft role, one epoch of short answers"
+entry = "train_sft.py"
+train = ["--preset", "sft_2b", "--datasets", "infovqa", "--hardware", "24gb", "--max-length", "1536",
+         "--save-total-limit", "0", "--no-wandb"]
+predicted = """Holds. SFT adds at least 3 dev points over Instruct: the text is in the image, so the gain is \
+InfoVQA's answer conventions (which span, units, rounding), which labels teach directly."""
+holds_if = "SFT's dev ANLS is at least Instruct's + 3 points"
+holds = { min_delta = 3.0 }
+baseline_label = "base2"
+if_holds = "SFT is a strong document baseline; GRPO is measured against it."
+if_not = "Instruct already follows InfoVQA's conventions; what is left for either method is sharpening."
+status = "experimental"
+
+[[cards]]
+id = "infovqa-grpo"
+node = "form-not-ability"
+question = "On a document task where reasoning does not pay, does GRPO beat SFT?"
+recipe = "v1.0"
+baseline = "card-infovqa-sft"
+dataset = "infovqa"
+prompt = "short"
+change = "GRPO from Instruct under the short prompt, 2,000 updates, instead of SFT"
+train = ["--preset", "grpo_2b_v1", "--datasets", "infovqa", "--max-steps", "2000", "--rollout-prompt",
+         "short", "--max-completion-length", "64", "--image-fit", "budget", "--batch-size", "4",
+         "--grad-accum", "8", "--hardware", "24gb", "--save-steps", "250", "--save-total-limit", "0",
+         "--no-wandb"]
+predicted = """Holds. GRPO ends within 2 dev points of SFT. Reasoning does not pay here and the short prompt \
+leaves no answer form to change, so RL can only sharpen what Instruct already samples (79.6% with 8 \
+samples against 66.6% greedy), and SFT gets about as far from labels."""
+holds_if = "GRPO's dev ANLS is within 2 points of SFT's"
+holds = { min_delta = -2.0, max_delta = 2.0 }
+baseline_run = "runs/cards/infovqa-sft"
+if_holds = "Documents join photos: where reasoning does not pay, RL and SFT end level."
+if_not = "Above: RL's edge reaches a task where reasoning does not pay, and the root claim widens. Below: labels carry more than sharpening here."
+status = "experimental"
+
+[[cards]]
+id = "infovqa-sft-grpo"
+node = "sft-then-rl"
+question = "Does GRPO add to SFT on InfoVQA?"
+recipe = "v1.0"
+baseline = "card-infovqa-sft"
+dataset = "infovqa"
+prompt = "short"
+change = "GRPO from the SFT model, with the same 2,000 updates"
+train = ["--preset", "grpo_2b_v1", "--model", "checkpoints/merged/card_infovqa_sft", "--datasets",
+         "infovqa", "--max-steps", "2000", "--rollout-prompt", "short", "--max-completion-length", "64",
+         "--image-fit", "budget", "--batch-size", "4", "--grad-accum", "8", "--hardware", "24gb",
+         "--save-steps", "250", "--save-total-limit", "0", "--no-wandb"]
+predicted = """Holds. SFT → GRPO ends between 1 point below and 3 points above SFT on dev: RL sharpens what \
+the SFT model samples, as it added 1.4 on SLAKE."""
+holds_if = "SFT → GRPO's dev ANLS is within -1 to +3 points of SFT's"
+holds = { min_delta = -1.0, max_delta = 3.0 }
+baseline_run = "runs/cards/infovqa-sft"
+if_holds = "RL after SFT polishes, as on SLAKE."
+if_not = "Above: RL adds more after SFT than a polish. Below: RL undoes part of what SFT taught."
+status = "experimental"
