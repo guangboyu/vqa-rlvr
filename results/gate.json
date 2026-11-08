@@ -1,0 +1,135 @@
+{
+ "scorer": "normalized",
+ "role": "dev",
+ "macro_margin": 1.0,
+ "category_margin": 2.0,
+ "specialists": {
+  "arms": {
+   "photos": "p1f-short2-base",
+   "charts": "card-chart-length-control"
+  },
+  "scores": {
+   "photos": 71.38740378417322,
+   "charts": 76.6,
+   "macro": 73.9937018920866
+  }
+ },
+ "questions": {
+  "vqav2": 447,
+  "gqa": 59,
+  "chartqa": 500
+ },
+ "candidates": [
+  {
+   "card": "prompt-routing",
+   "step": 2844,
+   "prompts": {
+    "photos": "short",
+    "charts": "reasoning"
+   },
+   "gate_row": true,
+   "scores": {
+    "photos": 69.46877488340348,
+    "charts": 74.4,
+    "macro": 71.93438744170174
+   },
+   "instruct": {
+    "photos": 68.50946043301862,
+    "charts": 69.39999999999999,
+    "macro": 68.9547302165093
+   },
+   "vs_instruct": {
+    "delta": 2.979657225192432,
+    "low": 1.1881431767337807,
+    "high": 4.89487013233231
+   },
+   "vs_specialists": {
+    "delta": -2.059314450384863,
+    "low": -3.806757289652295,
+    "high": -0.47965722519243165
+   },
+   "category_gaps": {
+    "photos": -1.9186289007697326,
+    "charts": -2.1999999999999886
+   },
+   "beats_instruct": true,
+   "macro_within_margin": false,
+   "categories_within_margin": false,
+   "passes": false
+  },
+  {
+   "card": "mix-ratio-90",
+   "step": 2844,
+   "prompts": {
+    "photos": "reasoning",
+    "charts": "reasoning"
+   },
+   "gate_row": true,
+   "scores": {
+    "photos": 65.07223296553293,
+    "charts": 76.4,
+    "macro": 70.73611648276648
+   },
+   "instruct": {
+    "photos": 58.85564782163577,
+    "charts": 69.39999999999999,
+    "macro": 64.12782391081788
+   },
+   "vs_instruct": {
+    "delta": 6.608292571948585,
+    "low": 3.5133769385356235,
+    "high": 9.693020513403857
+   },
+   "vs_specialists": {
+    "delta": -3.2575854093201384,
+    "low": -6.699958669851743,
+    "high": 0.044314071209188156
+   },
+   "category_gaps": {
+    "photos": -6.315170818640283,
+    "charts": -0.19999999999998863
+   },
+   "beats_instruct": true,
+   "macro_within_margin": false,
+   "categories_within_margin": false,
+   "passes": false
+  },
+  {
+   "card": "mix-ratio-90",
+   "step": 2844,
+   "prompts": {
+    "photos": "short",
+    "charts": "reasoning"
+   },
+   "gate_row": false,
+   "scores": {
+    "photos": 69.13320441360482,
+    "charts": 76.4,
+    "macro": 72.76660220680242
+   },
+   "instruct": {
+    "photos": 68.50946043301862,
+    "charts": 69.39999999999999,
+    "macro": 68.9547302165093
+   },
+   "vs_instruct": {
+    "delta": 3.811871990293103,
+    "low": 1.988143176733781,
+    "high": 5.691529215485534
+   },
+   "vs_specialists": {
+    "delta": -1.2270996852841922,
+    "low": -3.354230083797824,
+    "high": 0.8407158836689039
+   },
+   "category_gaps": {
+    "photos": -2.2541993705684007,
+    "charts": -0.19999999999998863
+   },
+   "beats_instruct": true,
+   "macro_within_margin": false,
+   "categories_within_margin": false,
+   "passes": false
+  }
+ ]
+}

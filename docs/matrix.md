@@ -325,8 +325,8 @@ official scorer, reasoning prompt; `python -m scripts.cards summarize` writes `r
 | chart-length-control | 2,844 updates instead of 1,844 on ChartQA alone: the mixture's horizon and learning-rate schedule | Holds | 75.8 → 75.8, 145 → 179 tokens | held | 9.8 |
 | reasoning-sft-self | SFT on one correct reasoning sample per question from Instruct 2B, instead of GRPO | Holds | 75.8 → 70.2, 145 → 184 tokens | held | 0.3 |
 | reasoning-sft-8b | SFT on one correct reasoning sample per question from Instruct 8B, instead of GRPO | Holds | 75.8 → 71.8, 145 → 213 tokens | held | 0.3 |
-| prompt-routing | Photos roll out under the short prompt and charts under the reasoning prompt, on the mixture's pool and 2,844 updates | Holds | not finished | — | — |
-| mix-ratio-90 | 90% charts and 10% photos instead of 65% and 35%, all under the reasoning prompt, 2,844 updates | Does not hold | not finished | — | — |
+| prompt-routing | Photos roll out under the short prompt and charts under the reasoning prompt, on the mixture's pool and 2,844 updates | Holds | 75.8 → 74.4, 179 → 151 tokens | held | 4.5 |
+| mix-ratio-90 | 90% charts and 10% photos instead of 65% and 35%, all under the reasoning prompt, 2,844 updates | Does not hold | 75.8 → 75.4, 179 → 188 tokens | held | 8.3 |
 | adaptive-prompt | All rollouts under the winning adaptive prompt, on the mixture's pool and 2,844 updates | Does not hold | not finished | — | — |
 | counterfactual-pairs | Score existing arms on VQAv2 complementary pairs: pair accuracy (both right) and same-answer rate (one answer for two images whose answers differ) | Holds | not finished | — | — |
 <!-- /report:cards -->

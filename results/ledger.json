@@ -312,12 +312,151 @@
    "holds_if": "end-of-run ChartQA dev tokens >= 50% of the chart-only control's and dev accuracy >= its accuracy - 2 points",
    "if_holds": "One model can keep both behaviors under routed prompts; apply the 8B gate.",
    "if_not": "Sharing weights is enough to carry the pressure across prompts; a mixed hero run is off the table.",
-   "status": "experimental",
-   "why": "",
-   "implies": "",
-   "final": null,
-   "held": null,
-   "train_hours": null
+   "status": "retired",
+   "why": "Observed: chart answers stay at 151 tokens (84% of chart-only) and ChartQA dev ends 1.4 points below chart-only [-3.8, 1.0]. Proposed: under the short prompt, photo questions have no reasoning to delete, so nothing pushes chart answers shorter.",
+   "implies": "One model keeps both behaviors, but its dev macro is 2.1 points below the specialists' [-3.8, -0.5] and charts are 2.2 below, so it fails the 8B gate (results/gate.json). Specialists go forward.",
+   "final": {
+    "accuracy": 74.4,
+    "baseline": 75.8,
+    "tokens": 150.798,
+    "baseline_tokens": 179.136,
+    "n": 500,
+    "delta": -1.4000000000000001,
+    "low": -3.8,
+    "high": 1.0,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "final_step": 2844,
+   "baseline_step": 2844,
+   "curve": [
+    {
+     "step": 250,
+     "accuracy": 73.2,
+     "tokens": 156.044
+    },
+    {
+     "step": 500,
+     "accuracy": 74.0,
+     "tokens": 172.166
+    },
+    {
+     "step": 750,
+     "accuracy": 74.8,
+     "tokens": 104.948
+    },
+    {
+     "step": 1000,
+     "accuracy": 74.0,
+     "tokens": 133.874
+    },
+    {
+     "step": 1250,
+     "accuracy": 75.4,
+     "tokens": 143.658
+    },
+    {
+     "step": 1500,
+     "accuracy": 74.0,
+     "tokens": 142.494
+    },
+    {
+     "step": 1750,
+     "accuracy": 75.2,
+     "tokens": 145.236
+    },
+    {
+     "step": 2000,
+     "accuracy": 74.4,
+     "tokens": 146.316
+    },
+    {
+     "step": 2250,
+     "accuracy": 75.2,
+     "tokens": 145.366
+    },
+    {
+     "step": 2500,
+     "accuracy": 74.6,
+     "tokens": 151.42
+    },
+    {
+     "step": 2750,
+     "accuracy": 74.2,
+     "tokens": 152.05
+    },
+    {
+     "step": 2844,
+     "accuracy": 74.4,
+     "tokens": 150.798
+    }
+   ],
+   "baseline_curve": [
+    {
+     "step": 250,
+     "accuracy": 72.39999999999999,
+     "tokens": 216.426
+    },
+    {
+     "step": 500,
+     "accuracy": 75.2,
+     "tokens": 150.624
+    },
+    {
+     "step": 750,
+     "accuracy": 75.4,
+     "tokens": 156.676
+    },
+    {
+     "step": 1000,
+     "accuracy": 75.6,
+     "tokens": 157.126
+    },
+    {
+     "step": 1250,
+     "accuracy": 76.6,
+     "tokens": 136.678
+    },
+    {
+     "step": 1500,
+     "accuracy": 75.6,
+     "tokens": 157.486
+    },
+    {
+     "step": 1750,
+     "accuracy": 76.6,
+     "tokens": 165.786
+    },
+    {
+     "step": 2000,
+     "accuracy": 75.4,
+     "tokens": 171.248
+    },
+    {
+     "step": 2250,
+     "accuracy": 75.6,
+     "tokens": 172.516
+    },
+    {
+     "step": 2500,
+     "accuracy": 75.4,
+     "tokens": 182.03
+    },
+    {
+     "step": 2750,
+     "accuracy": 75.4,
+     "tokens": 179.774
+    },
+    {
+     "step": 2844,
+     "accuracy": 75.8,
+     "tokens": 179.136
+    }
+   ],
+   "held": true,
+   "verdict": "0",
+   "noise_floor": 0.5219206680584552,
+   "train_hours": 4.455943611111111
   },
   {
    "id": "mix-ratio-90",
@@ -330,12 +469,151 @@
    "holds_if": "end-of-run ChartQA dev tokens >= 50% of the chart-only control's and dev accuracy >= its accuracy - 2 points",
    "if_holds": "Ratio alone protects chart reasoning; check what it costs on photos.",
    "if_not": "Ratio only delays the collapse; routing is the recipe to carry forward.",
-   "status": "experimental",
-   "why": "",
-   "implies": "",
-   "final": null,
-   "held": null,
-   "train_hours": null
+   "status": "retired",
+   "why": "Observed: chart answers stay at 188 tokens and ChartQA dev ends 0.4 points below chart-only [-3.0, 2.0]; the predicted late collapse did not come. Photos answered under the shared reasoning prompt end 6.3 points below the photo specialist.",
+   "implies": "Ratio alone keeps chart reasoning but costs photos: dev macro is 3.3 points below the specialists' [-6.7, 0.0], so it fails the 8B gate (results/gate.json). Specialists go forward.",
+   "final": {
+    "accuracy": 75.4,
+    "baseline": 75.8,
+    "tokens": 188.022,
+    "baseline_tokens": 179.136,
+    "n": 500,
+    "delta": -0.4,
+    "low": -3.0,
+    "high": 2.0,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "final_step": 2844,
+   "baseline_step": 2844,
+   "curve": [
+    {
+     "step": 250,
+     "accuracy": 72.2,
+     "tokens": 208.498
+    },
+    {
+     "step": 500,
+     "accuracy": 71.8,
+     "tokens": 208.206
+    },
+    {
+     "step": 750,
+     "accuracy": 72.2,
+     "tokens": 175.198
+    },
+    {
+     "step": 1000,
+     "accuracy": 72.6,
+     "tokens": 186.06
+    },
+    {
+     "step": 1250,
+     "accuracy": 73.6,
+     "tokens": 197.876
+    },
+    {
+     "step": 1500,
+     "accuracy": 75.0,
+     "tokens": 165.81
+    },
+    {
+     "step": 1750,
+     "accuracy": 75.4,
+     "tokens": 166.906
+    },
+    {
+     "step": 2000,
+     "accuracy": 77.2,
+     "tokens": 177.594
+    },
+    {
+     "step": 2250,
+     "accuracy": 75.0,
+     "tokens": 187.234
+    },
+    {
+     "step": 2500,
+     "accuracy": 76.0,
+     "tokens": 188.96
+    },
+    {
+     "step": 2750,
+     "accuracy": 75.4,
+     "tokens": 189.004
+    },
+    {
+     "step": 2844,
+     "accuracy": 75.4,
+     "tokens": 188.022
+    }
+   ],
+   "baseline_curve": [
+    {
+     "step": 250,
+     "accuracy": 72.39999999999999,
+     "tokens": 216.426
+    },
+    {
+     "step": 500,
+     "accuracy": 75.2,
+     "tokens": 150.624
+    },
+    {
+     "step": 750,
+     "accuracy": 75.4,
+     "tokens": 156.676
+    },
+    {
+     "step": 1000,
+     "accuracy": 75.6,
+     "tokens": 157.126
+    },
+    {
+     "step": 1250,
+     "accuracy": 76.6,
+     "tokens": 136.678
+    },
+    {
+     "step": 1500,
+     "accuracy": 75.6,
+     "tokens": 157.486
+    },
+    {
+     "step": 1750,
+     "accuracy": 76.6,
+     "tokens": 165.786
+    },
+    {
+     "step": 2000,
+     "accuracy": 75.4,
+     "tokens": 171.248
+    },
+    {
+     "step": 2250,
+     "accuracy": 75.6,
+     "tokens": 172.516
+    },
+    {
+     "step": 2500,
+     "accuracy": 75.4,
+     "tokens": 182.03
+    },
+    {
+     "step": 2750,
+     "accuracy": 75.4,
+     "tokens": 179.774
+    },
+    {
+     "step": 2844,
+     "accuracy": 75.8,
+     "tokens": 179.136
+    }
+   ],
+   "held": true,
+   "verdict": "0",
+   "noise_floor": 0.5219206680584552,
+   "train_hours": 8.269840611111112
   },
   {
    "id": "adaptive-prompt",

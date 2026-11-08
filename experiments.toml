@@ -1183,7 +1183,12 @@ holds = { min_token_ratio = 0.5, max_accuracy_drop = 2.0 }
 baseline_run = "runs/cards/chart-length-control"
 if_holds = "One model can keep both behaviors under routed prompts; apply the 8B gate."
 if_not = "Sharing weights is enough to carry the pressure across prompts; a mixed hero run is off the table."
-status = "experimental"
+status = "retired"
+why = """Observed: chart answers stay at 151 tokens (84% of chart-only) and ChartQA dev ends 1.4 points \
+below chart-only [-3.8, 1.0]. Proposed: under the short prompt, photo questions have no reasoning to \
+delete, so nothing pushes chart answers shorter."""
+implies = """One model keeps both behaviors, but its dev macro is 2.1 points below the specialists' \
+[-3.8, -0.5] and charts are 2.2 below, so it fails the 8B gate (results/gate.json). Specialists go forward."""
 
 [[cards]]
 id = "mix-ratio-90"
@@ -1202,7 +1207,12 @@ holds = { min_token_ratio = 0.5, max_accuracy_drop = 2.0 }
 baseline_run = "runs/cards/chart-length-control"
 if_holds = "Ratio alone protects chart reasoning; check what it costs on photos."
 if_not = "Ratio only delays the collapse; routing is the recipe to carry forward."
-status = "experimental"
+status = "retired"
+why = """Observed: chart answers stay at 188 tokens and ChartQA dev ends 0.4 points below chart-only \
+[-3.0, 2.0]; the predicted late collapse did not come. Photos answered under the shared reasoning \
+prompt end 6.3 points below the photo specialist."""
+implies = """Ratio alone keeps chart reasoning but costs photos: dev macro is 3.3 points below the \
+specialists' [-6.7, 0.0], so it fails the 8B gate (results/gate.json). Specialists go forward."""
 
 # Before this card trains, Instruct 2B answers ChartQA and VQAv2 dev questions under the three
 # adaptive prompts, beside short and reasoning (records in runs/cards/prompt-check). A wording goes
