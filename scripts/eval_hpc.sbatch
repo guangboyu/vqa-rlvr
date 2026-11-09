@@ -23,6 +23,8 @@ export HF_HUB_OFFLINE=1
 export PYTHONPATH="$REPO"
 export PYTHONUNBUFFERED=1
 export TOKENIZERS_PARALLELISM=false
+# A port per job: two jobs on one node both took torch.distributed's default 29500 (EADDRINUSE).
+export MASTER_PORT=$((20000 + SLURM_JOB_ID % 20000))
 
 cancel_unused_successors() {
     code=$?
@@ -60,9 +62,15 @@ if [ "$CHAIN_LEFT" -gt 0 ]; then
 fi
 nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
 
+# The console log goes to node-local disk and a background tail copies it into the job's log
+# on /pub, so a shared-storage stall or write error blocks the copy, not the evaluation.
+CONSOLE="${TMPDIR:-/tmp}/console-$SLURM_JOB_ID.log"
+: > "$CONSOLE"
+tail -n +1 -F "$CONSOLE" 2>/dev/null &
+COPIER=$!
 case "$1" in
-    *.py) .venv/bin/python "$@" & ;;
-    *) .venv/bin/python -m "$@" & ;;
+    *.py) .venv/bin/python "$@" > "$CONSOLE" 2>&1 & ;;
+    *) .venv/bin/python -m "$@" > "$CONSOLE" 2>&1 & ;;
 esac
 PID=$!
 trap 'kill -TERM "$PID" 2>/dev/null || true' TERM
@@ -73,4 +81,6 @@ while [ "$code" -ge 128 ] && kill -0 "$PID" 2>/dev/null; do
     wait "$PID"
     code=$?
 done
+sleep 2  # let the copier reach the end of the console log
+kill "$COPIER" 2>/dev/null || true
 exit "$code"

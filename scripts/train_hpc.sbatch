@@ -30,6 +30,8 @@ export TOKENIZERS_PARALLELISM=false
 export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK:-8}
 export MKL_NUM_THREADS=$OMP_NUM_THREADS
 export OPENBLAS_NUM_THREADS=$OMP_NUM_THREADS
+# A port per job: two jobs on one node both took torch.distributed's default 29500 (EADDRINUSE).
+export MASTER_PORT=$((20000 + SLURM_JOB_ID % 20000))
 
 cancel_unused_successors() {
     code=$?
@@ -87,10 +89,17 @@ if completed; then
             exit 0
         fi
     done
-    .venv/bin/python scripts/evaluate_checkpoints.py "$RUN/checkpoints" &
+    COMMAND=(scripts/evaluate_checkpoints.py "$RUN/checkpoints")
 else
-    .venv/bin/python "$ENTRY" --run-dir "$RUN" --no-wandb "$@" &
+    COMMAND=("$ENTRY" --run-dir "$RUN" --no-wandb "$@")
 fi
+# The console log goes to node-local disk and a background tail copies it into the job's log
+# on /pub, so a shared-storage stall or write error blocks the copy, not the trainer.
+CONSOLE="${TMPDIR:-/tmp}/console-$SLURM_JOB_ID.log"
+: > "$CONSOLE"
+tail -n +1 -F "$CONSOLE" 2>/dev/null &
+COPIER=$!
+.venv/bin/python "${COMMAND[@]}" > "$CONSOLE" 2>&1 &
 PID=$!
 trap 'kill -USR1 "$PID" 2>/dev/null || true' USR1 TERM
 set +e
@@ -104,4 +113,6 @@ if [ "$code" -eq 0 ] && ! completed; then
     # A time-limit warning can stop Trainer cleanly before the planned last step.
     code=75
 fi
+sleep 2  # let the copier reach the end of the console log
+kill "$COPIER" 2>/dev/null || true
 exit "$code"
