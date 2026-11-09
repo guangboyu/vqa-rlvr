@@ -13,6 +13,7 @@ from trl import GRPOTrainer
 from trl.data_utils import prepare_multimodal_messages
 from trl.trainer.utils import nanstd
 
+from vqar import run_log
 from vqar.pools import RefillStream
 from vqar.rl import ScoredGroup, fill_live_groups, refill_draw_records
 
@@ -124,6 +125,5 @@ class RefillGRPOTrainer(GRPOTrainer):
         metrics["refill/live_groups"].append(sum(group.live for group in batch))
         metrics["refill/rounds"].append(len(rounds) - 1)
         if self.draws_path is not None:
-            with self.draws_path.open("a") as file:
-                for record in refill_draw_records(step, rounds, batch):
-                    file.write(json.dumps(record) + "\n")
+            run_log.append(self.draws_path, "".join(
+                json.dumps(record) + "\n" for record in refill_draw_records(step, rounds, batch)))

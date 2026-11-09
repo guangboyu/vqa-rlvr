@@ -182,6 +182,8 @@ def test_the_trainer_trains_on_the_refilled_rows_without_sampling_them_again(
     assert metrics == {"refill/attempted_groups": [4], "refill/live_groups": [2],
                        "refill/rounds": [2]}
 
+    from vqar import run_log
+    run_log.flush()
     records = [json.loads(line) for line in (tmp_path / "prompt_draws.jsonl").open()]
     assert [(r["round"], r["kept"]) for r in records] == [
         (0, [True, True, False, False]), (1, [False, False]), (2, [True, True])]

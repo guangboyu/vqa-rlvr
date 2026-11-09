@@ -17,6 +17,8 @@ from pathlib import Path
 
 from transformers import TrainerCallback
 
+from vqar import run_log
+
 _STOP = {"requested": False}
 
 
@@ -68,8 +70,7 @@ class JsonlMetrics(TrainerCallback):
 
     def _emit(self, **kv):
         kv.setdefault("ts", time.strftime("%Y-%m-%dT%H:%M:%S"))
-        with open(self.path, "a") as f:
-            f.write(json.dumps(kv) + "\n")
+        run_log.append(self.path, json.dumps(kv) + "\n")
 
     def on_train_begin(self, args, state, control, **kwargs):
         self._emit(event="resume" if state.global_step else "start", step=state.global_step)
@@ -89,6 +90,7 @@ class JsonlMetrics(TrainerCallback):
         if not _STOP["requested"]:
             event = "done" if state.global_step >= state.max_steps else "stopped"
             self._emit(step=state.global_step, event=event)
+        run_log.flush()
 
 
 ADAPTER_FILES = ("adapter_model.safetensors", "adapter_config.json")

@@ -11,7 +11,7 @@ from dataclasses import fields, replace
 from functools import wraps
 from pathlib import Path
 
-from vqar import config
+from vqar import config, run_log
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -137,6 +137,7 @@ def run_training(trainer, output: Path, run_dir: Path | None, log_draws: bool = 
     trainer.train(resume_from_checkpoint=last)
     trainer.save_model(str(output))
     write_training_summary(trainer, output)
+    run_log.flush()  # the diagnostics read the draws back
     draws = run_dir / "prompt_draws.jsonl" if run_dir and log_draws else None
     (output / "diagnostics.json").write_text(
         json.dumps(training_diagnostics(trainer.state.log_history, draws), indent=2) + "\n")
@@ -338,8 +339,7 @@ def log_prompt_draws(trainer, path: Path) -> None:
             "step_before_update": trainer.state.global_step,
             "dataset": kwargs["dataset"], "qid": kwargs["qid"], "scores": scores,
         }
-        with path.open("a") as file:
-            file.write(json.dumps(record) + "\n")
+        run_log.append(path, json.dumps(record) + "\n")
         return scores
 
     trainer.reward_funcs[0] = recorded_reward
