@@ -1379,7 +1379,13 @@ holds = { min_delta = -2.0, max_delta = 2.0 }
 baseline_run = "runs/cards/infovqa-sft"
 if_holds = "Documents join photos: where reasoning does not pay, RL and SFT end level."
 if_not = "Above: RL's edge reaches a task where reasoning does not pay, and the root claim widens. Below: labels carry more than sharpening here."
-status = "experimental"
+status = "null"
+why = """Observed: GRPO ends 1.8 dev points below SFT [-4.5, 0.9] and 0.2 below Instruct; dev ANLS stays \
+between 61.6 and 63.7 for all 2,000 updates. Train reward moves 0.63 to 0.65 while groups with one \
+reward for all 8 samples rise from 75% to 89%. Proposed: the sampled spread on a span is noise around \
+one reading, so RL makes the model surer without making it right."""
+implies = """Documents join photos: where reasoning does not pay, RL and SFT end level. Instruct's pass@8 lead \
+over greedy (about 13 points) did not turn into a gain, so headroom alone does not predict RL's."""
 
 [[cards]]
 id = "infovqa-sft-grpo"
@@ -1401,4 +1407,6 @@ holds = { min_delta = -1.0, max_delta = 3.0 }
 baseline_run = "runs/cards/infovqa-sft"
 if_holds = "RL after SFT polishes, as on SLAKE."
 if_not = "Above: RL adds more after SFT than a polish. Below: RL undoes part of what SFT taught."
-status = "experimental"
+status = "null"
+why = "Observed: SFT -> GRPO ends 0.9 dev points above SFT [-1.4, 3.3] (66.1 ANLS), the best InfoVQA arm and 2.5 above Instruct."
+implies = "RL after SFT keeps what SFT taught and adds a little; on infographics neither method moves Instruct far."

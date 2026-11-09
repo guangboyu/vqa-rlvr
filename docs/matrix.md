@@ -330,6 +330,6 @@ official scorer, reasoning prompt; `python -m scripts.cards summarize` writes `r
 | adaptive-prompt | All rollouts under the winning adaptive prompt, on the mixture's pool and 2,844 updates | Does not hold | not finished | — | — |
 | counterfactual-pairs | Score existing arms on VQAv2 complementary pairs: pair accuracy (both right) and same-answer rate (one answer for two images whose answers differ) | Holds | not finished | — | — |
 | infovqa-sft | SFT on InfoVQA's sft role, one epoch of short answers | Holds | 63.6 → 65.2, 5 → 4 tokens | did not hold | 1.4 |
-| infovqa-grpo | GRPO from Instruct under the short prompt, 2,000 updates, instead of SFT | Holds | not finished | — | — |
-| infovqa-sft-grpo | GRPO from the SFT model, with the same 2,000 updates | Holds | not finished | — | — |
+| infovqa-grpo | GRPO from Instruct under the short prompt, 2,000 updates, instead of SFT | Holds | 65.2 → 63.4, 4 → 4 tokens | held | 6.3 |
+| infovqa-sft-grpo | GRPO from the SFT model, with the same 2,000 updates | Holds | 65.2 → 66.1, 4 → 4 tokens | held | 8.7 |
 <!-- /report:cards -->

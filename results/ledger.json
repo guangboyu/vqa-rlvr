@@ -719,12 +719,86 @@
    "holds_if": "GRPO's dev ANLS is within 2 points of SFT's",
    "if_holds": "Documents join photos: where reasoning does not pay, RL and SFT end level.",
    "if_not": "Above: RL's edge reaches a task where reasoning does not pay, and the root claim widens. Below: labels carry more than sharpening here.",
-   "status": "experimental",
-   "why": "",
-   "implies": "",
-   "final": null,
-   "held": null,
-   "train_hours": null
+   "status": "null",
+   "why": "Observed: GRPO ends 1.8 dev points below SFT [-4.5, 0.9] and 0.2 below Instruct; dev ANLS stays between 61.6 and 63.7 for all 2,000 updates. Train reward moves 0.63 to 0.65 while groups with one reward for all 8 samples rise from 75% to 89%. Proposed: the sampled spread on a span is noise around one reading, so RL makes the model surer without making it right.",
+   "implies": "Documents join photos: where reasoning does not pay, RL and SFT end level. Instruct's pass@8 lead over greedy (about 13 points) did not turn into a gain, so headroom alone does not predict RL's.",
+   "final": {
+    "accuracy": 63.419704864050786,
+    "baseline": 65.2495292209804,
+    "tokens": 4.286,
+    "baseline_tokens": 4.406,
+    "n": 500,
+    "delta": -1.82982435692962,
+    "low": -4.528925832208727,
+    "high": 0.9136509937430988,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "final_step": 2000,
+   "baseline_step": 733,
+   "curve": [
+    {
+     "step": 250,
+     "accuracy": 63.0981834284971,
+     "tokens": 4.566
+    },
+    {
+     "step": 500,
+     "accuracy": 63.65484916419509,
+     "tokens": 4.438
+    },
+    {
+     "step": 750,
+     "accuracy": 62.92723011657604,
+     "tokens": 4.44
+    },
+    {
+     "step": 1000,
+     "accuracy": 61.639958320271994,
+     "tokens": 4.286
+    },
+    {
+     "step": 1250,
+     "accuracy": 63.34851438786031,
+     "tokens": 4.336
+    },
+    {
+     "step": 1500,
+     "accuracy": 63.71210117741485,
+     "tokens": 4.304
+    },
+    {
+     "step": 1750,
+     "accuracy": 62.9339905783365,
+     "tokens": 4.29
+    },
+    {
+     "step": 2000,
+     "accuracy": 63.419704864050786,
+     "tokens": 4.286
+    }
+   ],
+   "baseline_curve": [
+    {
+     "step": 250,
+     "accuracy": 66.12747217602735,
+     "tokens": 4.48
+    },
+    {
+     "step": 500,
+     "accuracy": 66.30619588764706,
+     "tokens": 4.352
+    },
+    {
+     "step": 733,
+     "accuracy": 65.2495292209804,
+     "tokens": 4.406
+    }
+   ],
+   "held": true,
+   "verdict": "0",
+   "noise_floor": 0.5219206680584552,
+   "train_hours": 6.312655027777779
   },
   {
    "id": "infovqa-sft-grpo",
@@ -737,12 +811,86 @@
    "holds_if": "SFT \u2192 GRPO's dev ANLS is within -1 to +3 points of SFT's",
    "if_holds": "RL after SFT polishes, as on SLAKE.",
    "if_not": "Above: RL adds more after SFT than a polish. Below: RL undoes part of what SFT taught.",
-   "status": "experimental",
-   "why": "",
-   "implies": "",
-   "final": null,
-   "held": null,
-   "train_hours": null
+   "status": "null",
+   "why": "Observed: SFT -> GRPO ends 0.9 dev points above SFT [-1.4, 3.3] (66.1 ANLS), the best InfoVQA arm and 2.5 above Instruct.",
+   "implies": "RL after SFT keeps what SFT taught and adds a little; on infographics neither method moves Instruct far.",
+   "final": {
+    "accuracy": 66.14232142877262,
+    "baseline": 65.2495292209804,
+    "tokens": 4.396,
+    "baseline_tokens": 4.406,
+    "n": 500,
+    "delta": 0.8927922077922077,
+    "low": -1.4042207792207793,
+    "high": 3.314023268398268,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "final_step": 2000,
+   "baseline_step": 733,
+   "curve": [
+    {
+     "step": 250,
+     "accuracy": 66.34184523829643,
+     "tokens": 4.376
+    },
+    {
+     "step": 500,
+     "accuracy": 66.39641233786352,
+     "tokens": 4.38
+    },
+    {
+     "step": 750,
+     "accuracy": 66.76377164522283,
+     "tokens": 4.42
+    },
+    {
+     "step": 1000,
+     "accuracy": 65.42279761924881,
+     "tokens": 4.392
+    },
+    {
+     "step": 1250,
+     "accuracy": 66.06898809543928,
+     "tokens": 4.38
+    },
+    {
+     "step": 1500,
+     "accuracy": 65.91232142877263,
+     "tokens": 4.344
+    },
+    {
+     "step": 1750,
+     "accuracy": 65.86232142877262,
+     "tokens": 4.402
+    },
+    {
+     "step": 2000,
+     "accuracy": 66.14232142877262,
+     "tokens": 4.396
+    }
+   ],
+   "baseline_curve": [
+    {
+     "step": 250,
+     "accuracy": 66.12747217602735,
+     "tokens": 4.48
+    },
+    {
+     "step": 500,
+     "accuracy": 66.30619588764706,
+     "tokens": 4.352
+    },
+    {
+     "step": 733,
+     "accuracy": 65.2495292209804,
+     "tokens": 4.406
+    }
+   ],
+   "held": true,
+   "verdict": "0",
+   "noise_floor": 0.5219206680584552,
+   "train_hours": 8.66048638888889
   }
  ]
 }
