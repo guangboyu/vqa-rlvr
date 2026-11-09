@@ -68,6 +68,8 @@ def test_prompt_draw_log_preserves_rewards_and_records_resume_step(tmp_path):
     scores = trainer.reward_funcs[0](dataset=["vqa", "vqa"], qid=["a", "a"])
     assert scores == [1.0, 0.0]
     assert trainer.reward_funcs[0].__name__ == "correctness"
+    from vqar import run_log
+    run_log.flush()
     record = json.loads(path.read_text())
     assert record == dict(step_before_update=12, dataset=["vqa", "vqa"],
                           qid=["a", "a"], scores=scores)
