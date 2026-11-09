@@ -1352,7 +1352,11 @@ holds = { min_delta = 3.0 }
 baseline_label = "base2"
 if_holds = "SFT is a strong document baseline; GRPO is measured against it."
 if_not = "Instruct already follows InfoVQA's conventions; what is left for either method is sharpening."
-status = "experimental"
+status = "null"
+why = """Observed: SFT ends 1.6 dev points above Instruct [-1.3, 4.4] (63.6 to 65.2 ANLS; +2.7 at update \
+500), with answers still 4 to 5 tokens. Proposed: Instruct already answers in InfoVQA's form, so labels \
+have little left to teach at this pixel budget."""
+implies = "Answer-only SFT adds little on infographics; GRPO is compared against an SFT arm close to Instruct."
 
 [[cards]]
 id = "infovqa-grpo"
