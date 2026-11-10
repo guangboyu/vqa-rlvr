@@ -1426,6 +1426,10 @@ implies = "RL after SFT keeps what SFT taught and adds a little; on infographics
 # at 2,048 tokens. Rollout images keep their shape within the evaluation budget, as for InfoVQA.
 # ViRL39K has no released test split: reported numbers come from the Reasoning benchmarks
 # (MathVista-mini, MMMU, clean rows), and dev decides the cards.
+# Measured after these cards were committed, before training: on the 500 dev questions (carved
+# by whole image, more multiple choice than the screen pool: 222 vs 144) Instruct scores 40.6
+# short and 43.0 reasoning at 2,048 tokens, so reasoning pays +2.4 there, not +17: +10.0 on
+# number answers and +23.3 on text, -7.6 on multiple choice. Cards read the project rule.
 [[cards]]
 id = "virl39k-sft"
 node = "reasoning-pays"

@@ -53837,6 +53837,100 @@
   {
    "arm": "base2",
    "dataset": "virl39k",
+   "role": "dev",
+   "tier": "dev",
+   "prompt": "reasoning",
+   "image_mode": "original",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 500,
+    "official": null,
+    "normalized": {
+     "overall": 0.43,
+     "by_answer_type": {
+      "(GradeSchool) Geometric": 0.35714285714285715,
+      "(GradeSchool) Non-Geo Math": 0.3977272727272727,
+      "(GradeSchool) Science": 0.3333333333333333,
+      "Broader STEM Topics": 0.5882352941176471,
+      "Commonsense": 0.2857142857142857,
+      "Social Science": 0.5,
+      "Spatial Reasoning": 0.5161290322580645,
+      "Tables/Diagrams/Charts": 0.5670103092783505
+     }
+    },
+    "project": {
+     "overall": 0.43,
+     "by_answer_type": {
+      "(GradeSchool) Geometric": 0.35714285714285715,
+      "(GradeSchool) Non-Geo Math": 0.3977272727272727,
+      "(GradeSchool) Science": 0.3333333333333333,
+      "Broader STEM Topics": 0.5882352941176471,
+      "Commonsense": 0.2857142857142857,
+      "Social Science": 0.5,
+      "Spatial Reasoning": 0.5161290322580645,
+      "Tables/Diagrams/Charts": 0.5670103092783505
+     }
+    },
+    "mean_output_tokens": 907.342,
+    "truncated_fraction": 0.302,
+    "answer_tag_fraction": 0.698,
+    "empty_answer_fraction": 0.0
+   }
+  },
+  {
+   "arm": "base2",
+   "dataset": "virl39k",
+   "role": "dev",
+   "tier": "dev",
+   "prompt": "short",
+   "image_mode": "original",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 500,
+    "official": null,
+    "normalized": {
+     "overall": 0.406,
+     "by_answer_type": {
+      "(GradeSchool) Geometric": 0.3142857142857143,
+      "(GradeSchool) Non-Geo Math": 0.23863636363636365,
+      "(GradeSchool) Science": 0.4880952380952381,
+      "Broader STEM Topics": 0.5882352941176471,
+      "Commonsense": 0.5714285714285714,
+      "Social Science": 0.5,
+      "Spatial Reasoning": 0.5483870967741935,
+      "Tables/Diagrams/Charts": 0.5979381443298969
+     }
+    },
+    "project": {
+     "overall": 0.406,
+     "by_answer_type": {
+      "(GradeSchool) Geometric": 0.3142857142857143,
+      "(GradeSchool) Non-Geo Math": 0.23863636363636365,
+      "(GradeSchool) Science": 0.4880952380952381,
+      "Broader STEM Topics": 0.5882352941176471,
+      "Commonsense": 0.5714285714285714,
+      "Social Science": 0.5,
+      "Spatial Reasoning": 0.5483870967741935,
+      "Tables/Diagrams/Charts": 0.5979381443298969
+     }
+    },
+    "mean_output_tokens": 16.086,
+    "truncated_fraction": 0.176,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0
+   }
+  },
+  {
+   "arm": "base2",
+   "dataset": "virl39k",
    "role": "rl",
    "tier": "dev",
    "prompt": "direct",

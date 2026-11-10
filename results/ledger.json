@@ -28,6 +28,7 @@
    },
    "final_step": 2844,
    "baseline_step": 1844,
+   "scorer": "official",
    "curve": [
     {
      "step": 250,
@@ -165,6 +166,7 @@
    },
    "final_step": 201,
    "baseline_step": 1844,
+   "scorer": "official",
    "curve": [
     {
      "step": 201,
@@ -247,6 +249,7 @@
    },
    "final_step": 193,
    "baseline_step": 1844,
+   "scorer": "official",
    "curve": [
     {
      "step": 193,
@@ -329,6 +332,7 @@
    },
    "final_step": 2844,
    "baseline_step": 2844,
+   "scorer": "official",
    "curve": [
     {
      "step": 250,
@@ -486,6 +490,7 @@
    },
    "final_step": 2844,
    "baseline_step": 2844,
+   "scorer": "official",
    "curve": [
     {
      "step": 250,
@@ -679,6 +684,7 @@
    },
    "final_step": 733,
    "baseline_step": 0,
+   "scorer": "official",
    "curve": [
     {
      "step": 250,
@@ -736,6 +742,7 @@
    },
    "final_step": 2000,
    "baseline_step": 733,
+   "scorer": "official",
    "curve": [
     {
      "step": 250,
@@ -828,6 +835,7 @@
    },
    "final_step": 2000,
    "baseline_step": 733,
+   "scorer": "official",
    "curve": [
     {
      "step": 250,
