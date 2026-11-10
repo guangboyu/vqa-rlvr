@@ -1410,3 +1410,87 @@ if_not = "Above: RL adds more after SFT than a polish. Below: RL undoes part of 
 status = "null"
 why = "Observed: SFT -> GRPO ends 0.9 dev points above SFT [-1.4, 3.3] (66.1 ANLS), the best InfoVQA arm and 2.5 above Instruct."
 implies = "RL after SFT keeps what SFT taught and adds a little; on infographics neither method moves Instruct far."
+
+# ViRL39K, the Reasoning source (owner, 2026-11-09). On 500 pool questions Instruct answers 28.2%
+# under the short prompt and 45.2% when it reasons with up to 2,048 tokens; a black image costs
+# 18.8 points under reasoning. 35% of its reasoning answers still run past 2,048 tokens. The
+# screen counts parse failures among finished answers only (98%); its ranking put MMK12 first
+# on matched payoff, which ranked OmniMedVQA first where RL lost, so the source was chosen on raw
+# payoff (+17.0), learnable share (48% vs 34%) and pool size (33,635 vs 15,031).
+# Working hypothesis under test (owner): where reasoning pays, RL beats SFT; where it does not,
+# SFT matches or beats RL. Charts support the first half and photos, infographics and medicine
+# the second; this is the second dataset for the first half.
+# Arms at 2B on recipe v1.0: answer-only SFT on the whole sft role (one epoch), GRPO under the
+# reasoning prompt with 2,048-token answers for 2,000 updates (8,000 questions), and SFT -> GRPO
+# with the same RL budget. Each arm is compared under its training prompt; reasoning is scored
+# at 2,048 tokens. Rollout images keep their shape within the evaluation budget, as for InfoVQA.
+# ViRL39K has no released test split: reported numbers come from the Reasoning benchmarks
+# (MathVista-mini, MMMU, clean rows), and dev decides the cards.
+[[cards]]
+id = "virl39k-sft"
+node = "reasoning-pays"
+question = "Can answer-only SFT on ViRL39K reach what Instruct gets by reasoning?"
+recipe = "v1.0"
+baseline = "base2"
+dataset = "virl39k"
+prompt = "short"
+baseline_prompt = "reasoning"
+baseline_max_tokens = 2048
+entry = "train_sft.py"
+change = "SFT on ViRL39K's sft role, one epoch of short answers"
+train = ["--preset", "sft_2b", "--datasets", "virl39k", "--hardware", "24gb", "--max-length", "1536",
+         "--save-total-limit", "0", "--no-wandb"]
+predicted = """Holds. SFT under the short prompt ends below Instruct's reasoning score on dev: a final \
+answer to a math problem cannot be read off the image, and answer-only labels teach no steps."""
+holds_if = "SFT's dev score (short prompt) is below Instruct's (reasoning prompt, 2,048 tokens)"
+holds = { max_delta = 0.0 }
+baseline_label = "base2"
+if_holds = "Reasoning carries what labels alone cannot; GRPO is measured against this SFT arm."
+if_not = "Labels teach this task without reasoning, and the reasoning-pays branch weakens."
+status = "experimental"
+
+[[cards]]
+id = "virl39k-grpo"
+node = "reasoning-pays"
+question = "On a second dataset where reasoning pays, does GRPO beat SFT?"
+recipe = "v1.0"
+baseline = "card-virl39k-sft"
+dataset = "virl39k"
+prompt = "reasoning"
+baseline_prompt = "short"
+change = "GRPO from Instruct under the reasoning prompt, 2,048-token answers, 2,000 updates, instead of SFT"
+train = ["--preset", "grpo_2b_v1", "--datasets", "virl39k", "--max-steps", "2000",
+         "--max-completion-length", "2048", "--dev-max-tokens", "2048", "--image-fit", "budget",
+         "--batch-size", "4", "--grad-accum", "8", "--hardware", "24gb", "--save-steps", "250",
+         "--save-total-limit", "0", "--no-wandb"]
+predicted = """Holds. GRPO ends at least 2 dev points above SFT, each under its training prompt: reasoning \
+adds 17 points for Instruct here, RL keeps and sharpens it, and answer-only SFT cannot use it."""
+holds_if = "GRPO's dev score (reasoning, 2,048 tokens) is at least SFT's (short) + 2 points"
+holds = { min_delta = 2.0 }
+baseline_run = "runs/cards/virl39k-sft"
+if_holds = "The chart result repeats on a second reasoning dataset: where reasoning pays, RL beats SFT."
+if_not = "The chart win does not generalize; the root claim narrows to charts."
+status = "experimental"
+
+[[cards]]
+id = "virl39k-sft-grpo"
+node = "sft-then-rl"
+question = "Does GRPO after answer-only SFT bring reasoning back on ViRL39K?"
+recipe = "v1.0"
+baseline = "card-virl39k-sft"
+dataset = "virl39k"
+prompt = "reasoning"
+baseline_prompt = "short"
+change = "GRPO from the SFT model under the reasoning prompt, with the same 2,000 updates"
+train = ["--preset", "grpo_2b_v1", "--model", "checkpoints/merged/card_virl39k_sft", "--datasets",
+         "virl39k", "--max-steps", "2000", "--max-completion-length", "2048", "--dev-max-tokens",
+         "2048", "--image-fit", "budget", "--batch-size", "4", "--grad-accum", "8", "--hardware",
+         "24gb", "--save-steps", "250", "--save-total-limit", "0", "--no-wandb"]
+predicted = """Holds. SFT -> GRPO ends at least 2 dev points above SFT, each under its training prompt, \
+but below GRPO from Instruct: RL can only sharpen the reasoning the SFT model still samples."""
+holds_if = "SFT -> GRPO's dev score (reasoning, 2,048 tokens) is at least SFT's (short) + 2 points"
+holds = { min_delta = 2.0 }
+baseline_run = "runs/cards/virl39k-sft"
+if_holds = "RL restores reasoning after answer-only SFT; the order SFT then RL is safe here too."
+if_not = "Answer-only SFT removed reasoning that RL cannot recover within 2,000 updates."
+status = "experimental"
