@@ -977,6 +977,1032 @@
      "auditor": false
     }
    ]
+  },
+  "virl39k": {
+   "record": "virl39k-rl-dev-reasoning-t1k8-6cc046c376.json",
+   "protocol_id": "6cc046c376b7aefafcda7ea8b760d8f934bf1f5e3baefff806f1e87a959b40de",
+   "model": "base2",
+   "responses": {
+    "right": 1687,
+    "wrong": 699,
+    "partial": 0,
+    "no answer": 1614
+   },
+   "false_reject": {
+    "drawn": 50,
+    "audited": 50,
+    "overruled": 3,
+    "rate": 0.06,
+    "interval": [
+     0.020614596364630478,
+     0.16217343370877002
+    ]
+   },
+   "false_accept": {
+    "drawn": 50,
+    "audited": 50,
+    "overruled": 13,
+    "rate": 0.26,
+    "interval": [
+     0.15871379651367384,
+     0.3955342198899992
+    ]
+   },
+   "by_form": {
+    "right": {
+     "choice": {
+      "drawn": 16,
+      "audited": 16,
+      "overruled": 4,
+      "rate": 0.25,
+      "interval": [
+       0.10181901984237346,
+       0.49498768929398645
+      ]
+     },
+     "number": {
+      "drawn": 26,
+      "audited": 26,
+      "overruled": 9,
+      "rate": 0.34615384615384615,
+      "interval": [
+       0.19412014972852126,
+       0.5377977099036699
+      ]
+     },
+     "text": {
+      "drawn": 7,
+      "audited": 7,
+      "overruled": 0,
+      "rate": 0.0,
+      "interval": [
+       0.0,
+       0.35433884297520657
+      ]
+     },
+     "yes/no": {
+      "drawn": 1,
+      "audited": 1,
+      "overruled": 0,
+      "rate": 0.0,
+      "interval": [
+       0.0,
+       0.7934567085261071
+      ]
+     }
+    },
+    "wrong": {
+     "choice": {
+      "drawn": 13,
+      "audited": 13,
+      "overruled": 0,
+      "rate": 0.0,
+      "interval": [
+       0.0,
+       0.22810184305529166
+      ]
+     },
+     "number": {
+      "drawn": 22,
+      "audited": 22,
+      "overruled": 0,
+      "rate": 0.0,
+      "interval": [
+       1.3877787807814457e-17,
+       0.14865952572596125
+      ]
+     },
+     "text": {
+      "drawn": 14,
+      "audited": 14,
+      "overruled": 2,
+      "rate": 0.14285714285714285,
+      "interval": [
+       0.040093073737921175,
+       0.39941907763863693
+      ]
+     },
+     "yes/no": {
+      "drawn": 1,
+      "audited": 1,
+      "overruled": 1,
+      "rate": 1.0,
+      "interval": [
+       0.20654329147389294,
+       1.0
+      ]
+     }
+    }
+   },
+   "cost_usd": 0.19037,
+   "disagreements": {
+    "right": [
+     {
+      "qid": "Processed-c686efe1-bb68-45f9-95b0-0a9ffe504b93",
+      "sample": 2,
+      "form": "choice",
+      "question": "Look at the following schedule. Chloe is at Palm Tree Island. If she wants to arrive at Rocky Cliffs at 12.15 P.M., what time should she get on the boat?\nChoices:\n(A) 10:00 A.M.\n(B) 11:00 A.M.\n(C) 10:30 A.M.\n(D) 11:30 A.M.",
+      "answers": [
+       "C",
+       "10:30 A.M"
+      ],
+      "prediction": "C",
+      "reward": 1.0,
+      "auditor": false
+     },
+     {
+      "qid": "ScienceQA-197",
+      "sample": 2,
+      "form": "choice",
+      "question": "The diagram below is a model of two solutions. Each pink ball represents one particle of solute.\n\nWhich solution has a higher concentration of pink particles?\nA. Solution B\nB. neither; their concentrations are the same\nC. Solution A",
+      "answers": [
+       "C",
+       "Solution A"
+      ],
+      "prediction": "C. Solution A",
+      "reward": 1.0,
+      "auditor": false
+     },
+     {
+      "qid": "Processed-ddec65f3-e8d6-46ef-9e2d-a7a10357476c",
+      "sample": 2,
+      "form": "choice",
+      "question": "Execute the program flowchart shown in Figure 1. 3-16. If the input values for $m$ and $n$ are 72 and 30 respectively, what is the output value of $n$? Choices: A. 5 B. 6 C. 7 D. 8",
+      "answers": [
+       "B",
+       "6"
+      ],
+      "prediction": "B",
+      "reward": 1.0,
+      "auditor": false
+     },
+     {
+      "qid": "Processed-73fbf9d7-1b2e-4995-85f3-db77ab1740d5",
+      "sample": 4,
+      "form": "choice",
+      "question": "The above graph shows a titration curve of a weak base titrated with a strong acid. The pH was measured with a pH meter after small volumes of 0.075 M HCl were added to 25.0 mL of a weak base. Data from that experiment are shown in the graph. Which of the following describes the base that is being titrated? \n\nA. The base is dibasic since two end points are observed. \nB. The concentration of the base is 0.075 $M$. \nC. The concentration of the base is slightly more than 0.075 $M$. \nD. The concentration of the base is slightly less than 0.075 $M$.",
+      "answers": [
+       "D",
+       "The concentration of the base is slightly less than 0.075 $M$"
+      ],
+      "prediction": "D. The concentration of the base is slightly less than 0.075 M.",
+      "reward": 1.0,
+      "auditor": false
+     },
+     {
+      "qid": "geoqa_plus-8230",
+      "sample": 0,
+      "form": "number",
+      "question": "As shown in the figure, point E is located on the edge AB of the square ABCD. If the length of EB is 1 and the length of EC is 2, then the area of square ABCD is ().",
+      "answers": [
+       "3"
+      ],
+      "prediction": "3",
+      "reward": 1.0,
+      "auditor": false
+     }
+    ],
+    "wrong": [
+     {
+      "qid": "MMK12-2d0b362c-2815-4633-bed7-2295ea92de21",
+      "sample": 1,
+      "form": "text",
+      "question": "The cross-section of a river embankment is shown in the figure. The height of the embankment is 10 meters, and the length of the water-facing slope AB is 26 meters. What is the gradient i of the slope AB?",
+      "answers": [
+       "1:2.4"
+      ],
+      "prediction": "5/12",
+      "reward": 0.0,
+      "auditor": true
+     },
+     {
+      "qid": "MMK12-91d1c13e-55c7-4648-b174-d59b229044a5",
+      "sample": 6,
+      "form": "text",
+      "question": "As shown in the figure, in the Cartesian coordinate system $$xOy$$, $$A(1,1)$$, $$B(2,2)$$, the hyperbola $$y=\\dfrac{k}{x}$$ intersects the line segment $$AB$$. The range of values for $$k$$ is ___.",
+      "answers": [
+       "1 \\leqslant k \\leqslant 4"
+      ],
+      "prediction": "[1,4]",
+      "reward": 0.0,
+      "auditor": true
+     },
+     {
+      "qid": "Processed-7d284465-d4c7-4d69-b792-e38e390d64e6",
+      "sample": 5,
+      "form": "yes/no",
+      "question": "Is there any overlap between Dodger Blue and Medium Mint data points?",
+      "answers": [
+       "No"
+      ],
+      "prediction": "False",
+      "reward": 0.0,
+      "auditor": true
+     }
+    ]
+   },
+   "items": [
+    {
+     "qid": "Processed-2ae0cc6f-9997-4dcf-8fe8-b49d06b3c26f",
+     "sample": 1,
+     "form": "choice",
+     "side": "right",
+     "prediction": "C",
+     "auditor": true
+    },
+    {
+     "qid": "Processed-0db5230f-095e-434b-8db7-dba1b35ccacb",
+     "sample": 3,
+     "form": "choice",
+     "side": "right",
+     "prediction": "A",
+     "auditor": true
+    },
+    {
+     "qid": "Processed-cbc064b0-6480-4450-8218-36d92f4147f4",
+     "sample": 7,
+     "form": "choice",
+     "side": "right",
+     "prediction": "B",
+     "auditor": true
+    },
+    {
+     "qid": "ScienceQA-51474",
+     "sample": 4,
+     "form": "choice",
+     "side": "right",
+     "prediction": "A. Maryland",
+     "auditor": true
+    },
+    {
+     "qid": "R1OneVision-IJSO-2021-7_8_9-25-Biology-7_8_9",
+     "sample": 4,
+     "form": "choice",
+     "side": "right",
+     "prediction": "A. In comparison to type A nephron, the urine produced by a type B nephron is likely to be more concentrated",
+     "auditor": true
+    },
+    {
+     "qid": "Processed-c0571d46-5d50-4a0b-9013-2951de559fab",
+     "sample": 5,
+     "form": "choice",
+     "side": "right",
+     "prediction": "(B)",
+     "auditor": true
+    },
+    {
+     "qid": "Processed-c686efe1-bb68-45f9-95b0-0a9ffe504b93",
+     "sample": 2,
+     "form": "choice",
+     "side": "right",
+     "prediction": "C",
+     "auditor": false
+    },
+    {
+     "qid": "Processed-6b918854-fc8e-410f-992b-8080d43104b0",
+     "sample": 6,
+     "form": "choice",
+     "side": "right",
+     "prediction": "A",
+     "auditor": true
+    },
+    {
+     "qid": "R1OneVision-ACS-2013-9_10_11_12-11-Chemistry-9_10_11_12",
+     "sample": 2,
+     "form": "choice",
+     "side": "right",
+     "prediction": "A",
+     "auditor": true
+    },
+    {
+     "qid": "Processed-967105f2-ac58-4e7c-9754-726b2699698f",
+     "sample": 7,
+     "form": "choice",
+     "side": "right",
+     "prediction": "(B) yes",
+     "auditor": true
+    },
+    {
+     "qid": "ScienceQA-197",
+     "sample": 2,
+     "form": "choice",
+     "side": "right",
+     "prediction": "C. Solution A",
+     "auditor": false
+    },
+    {
+     "qid": "Processed-f3bc128f-45eb-45d0-b588-e87bf5eeb989",
+     "sample": 5,
+     "form": "choice",
+     "side": "right",
+     "prediction": "C",
+     "auditor": true
+    },
+    {
+     "qid": "MMK12-d931bc47-e18f-43dc-ac8f-d5046a294da6",
+     "sample": 5,
+     "form": "choice",
+     "side": "right",
+     "prediction": "C",
+     "auditor": true
+    },
+    {
+     "qid": "Processed-498fce2e-3d23-40b1-8e3b-1ae671f3265a",
+     "sample": 7,
+     "form": "choice",
+     "side": "right",
+     "prediction": "(A)",
+     "auditor": true
+    },
+    {
+     "qid": "Processed-ddec65f3-e8d6-46ef-9e2d-a7a10357476c",
+     "sample": 2,
+     "form": "choice",
+     "side": "right",
+     "prediction": "B",
+     "auditor": false
+    },
+    {
+     "qid": "Processed-73fbf9d7-1b2e-4995-85f3-db77ab1740d5",
+     "sample": 4,
+     "form": "choice",
+     "side": "right",
+     "prediction": "D. The concentration of the base is slightly less than 0.075 M.",
+     "auditor": false
+    },
+    {
+     "qid": "Processed-8e72eae2-4005-4fef-8837-288384eb2fac",
+     "sample": 0,
+     "form": "number",
+     "side": "right",
+     "prediction": "5,873",
+     "auditor": true
+    },
+    {
+     "qid": "geoqa_plus-8230",
+     "sample": 0,
+     "form": "number",
+     "side": "right",
+     "prediction": "3",
+     "auditor": false
+    },
+    {
+     "qid": "Processed-a62d5470-99b0-468c-a07d-8cf36dd359cc",
+     "sample": 7,
+     "form": "number",
+     "side": "right",
+     "prediction": "4",
+     "auditor": true
+    },
+    {
+     "qid": "MMK12-d32f46ec-a581-4a5e-bd93-f49ee75fc294",
+     "sample": 4,
+     "form": "number",
+     "side": "right",
+     "prediction": "100",
+     "auditor": true
+    },
+    {
+     "qid": "MMK12-6d83cb2e-ad37-4d06-bfb6-9b407c198dbc",
+     "sample": 5,
+     "form": "number",
+     "side": "right",
+     "prediction": "5",
+     "auditor": false
+    },
+    {
+     "qid": "MMMath-2586",
+     "sample": 6,
+     "form": "number",
+     "side": "right",
+     "prediction": "110",
+     "auditor": true
+    },
+    {
+     "qid": "MMMath-4348",
+     "sample": 0,
+     "form": "number",
+     "side": "right",
+     "prediction": "9",
+     "auditor": true
+    },
+    {
+     "qid": "Processed-3ffe39c9-378d-44db-8d21-ca8c0259bd32",
+     "sample": 0,
+     "form": "number",
+     "side": "right",
+     "prediction": "3",
+     "auditor": true
+    },
+    {
+     "qid": "K12-9800",
+     "sample": 5,
+     "form": "number",
+     "side": "right",
+     "prediction": "80",
+     "auditor": false
+    },
+    {
+     "qid": "Processed-0b8e2367-6481-4fe8-9841-b2791a8237b8",
+     "sample": 5,
+     "form": "number",
+     "side": "right",
+     "prediction": "-0.5",
+     "auditor": true
+    },
+    {
+     "qid": "MMMath-3708",
+     "sample": 7,
+     "form": "number",
+     "side": "right",
+     "prediction": "38",
+     "auditor": false
+    },
+    {
+     "qid": "Processed-fda0787c-a90a-4f12-a3a5-8721b72c7696",
+     "sample": 3,
+     "form": "number",
+     "side": "right",
+     "prediction": "24",
+     "auditor": false
+    },
+    {
+     "qid": "MMK12-19184e45-09d8-4278-b178-8cf282d16dc5",
+     "sample": 2,
+     "form": "number",
+     "side": "right",
+     "prediction": "49°",
+     "auditor": true
+    },
+    {
+     "qid": "MMK12-294ff8dd-e149-443b-a9a2-1e1081755e7d",
+     "sample": 1,
+     "form": "number",
+     "side": "right",
+     "prediction": "6",
+     "auditor": true
+    },
+    {
+     "qid": "MMK12-1c578d8a-9c2f-4a15-95de-188ca206f1f3",
+     "sample": 6,
+     "form": "number",
+     "side": "right",
+     "prediction": "32",
+     "auditor": true
+    },
+    {
+     "qid": "MMK12-dc49c3fd-6046-426c-85b5-6d58f9c014b6",
+     "sample": 1,
+     "form": "number",
+     "side": "right",
+     "prediction": "-1",
+     "auditor": true
+    },
+    {
+     "qid": "Processed-2d433d91-d19d-4634-9f56-a5b95828966e",
+     "sample": 0,
+     "form": "number",
+     "side": "right",
+     "prediction": "5",
+     "auditor": true
+    },
+    {
+     "qid": "MMK12-5f9b9e7f-90ca-4fc8-b9da-c3a47d8e8818",
+     "sample": 0,
+     "form": "number",
+     "side": "right",
+     "prediction": "16",
+     "auditor": true
+    },
+    {
+     "qid": "Processed-3654465d-9eb6-4a48-972e-f43576c8c4a4",
+     "sample": 2,
+     "form": "number",
+     "side": "right",
+     "prediction": "28",
+     "auditor": false
+    },
+    {
+     "qid": "Processed-0ec11ef5-e579-47db-bf17-0401e6db53a8",
+     "sample": 5,
+     "form": "number",
+     "side": "right",
+     "prediction": "3",
+     "auditor": false
+    },
+    {
+     "qid": "MMMath-4691",
+     "sample": 0,
+     "form": "number",
+     "side": "right",
+     "prediction": "30",
+     "auditor": true
+    },
+    {
+     "qid": "MMK12-3a7457bd-d380-40cb-8b13-2a68621db645",
+     "sample": 2,
+     "form": "number",
+     "side": "right",
+     "prediction": "70",
+     "auditor": true
+    },
+    {
+     "qid": "MMK12-df108a06-cae7-4069-8491-f079a2619642",
+     "sample": 4,
+     "form": "number",
+     "side": "right",
+     "prediction": "2",
+     "auditor": false
+    },
+    {
+     "qid": "MMK12-23365dfa-2139-4841-8310-ec7ffc2e7701",
+     "sample": 2,
+     "form": "number",
+     "side": "right",
+     "prediction": "37",
+     "auditor": true
+    },
+    {
+     "qid": "MMK12-d9dcb685-29d6-4f05-a720-f4a251dfc9a1",
+     "sample": 0,
+     "form": "number",
+     "side": "right",
+     "prediction": "30",
+     "auditor": false
+    },
+    {
+     "qid": "ai2d-17966",
+     "sample": 7,
+     "form": "number",
+     "side": "right",
+     "prediction": "4",
+     "auditor": true
+    },
+    {
+     "qid": "ai2d-228",
+     "sample": 2,
+     "form": "text",
+     "side": "right",
+     "prediction": "E",
+     "auditor": true
+    },
+    {
+     "qid": "ai2d-5013",
+     "sample": 6,
+     "form": "text",
+     "side": "right",
+     "prediction": "D",
+     "auditor": true
+    },
+    {
+     "qid": "Processed-f9beec36-3b91-496e-b525-8e485c9c870d",
+     "sample": 3,
+     "form": "text",
+     "side": "right",
+     "prediction": "\\frac{2}{\\pi}",
+     "auditor": true
+    },
+    {
+     "qid": "Processed-136ade1a-4258-42b5-a8f9-81e7722ea1ca",
+     "sample": 3,
+     "form": "text",
+     "side": "right",
+     "prediction": "64/25",
+     "auditor": true
+    },
+    {
+     "qid": "Processed-efd3335c-a14c-4286-a511-6cf836d1875d",
+     "sample": 2,
+     "form": "text",
+     "side": "right",
+     "prediction": "Sunday",
+     "auditor": true
+    },
+    {
+     "qid": "MMMath-2670",
+     "sample": 0,
+     "form": "text",
+     "side": "right",
+     "prediction": "x > 4",
+     "auditor": true
+    },
+    {
+     "qid": "Processed-30e72dbb-c44f-474e-b041-5a4edb7cfd05",
+     "sample": 3,
+     "form": "text",
+     "side": "right",
+     "prediction": "Purple",
+     "auditor": true
+    },
+    {
+     "qid": "Processed-7d284465-d4c7-4d69-b792-e38e390d64e6",
+     "sample": 1,
+     "form": "yes/no",
+     "side": "right",
+     "prediction": "no",
+     "auditor": true
+    },
+    {
+     "qid": "Processed-48100beb-e3f9-4f71-b52b-dfb11d77e139",
+     "sample": 7,
+     "form": "choice",
+     "side": "wrong",
+     "prediction": "B",
+     "auditor": false
+    },
+    {
+     "qid": "geoqa_plus-6607",
+     "sample": 1,
+     "form": "choice",
+     "side": "wrong",
+     "prediction": "C. 170°",
+     "auditor": false
+    },
+    {
+     "qid": "M3CoT-52499",
+     "sample": 2,
+     "form": "choice",
+     "side": "wrong",
+     "prediction": "B",
+     "auditor": false
+    },
+    {
+     "qid": "Processed-c686efe1-bb68-45f9-95b0-0a9ffe504b93",
+     "sample": 7,
+     "form": "choice",
+     "side": "wrong",
+     "prediction": "(B)",
+     "auditor": false
+    },
+    {
+     "qid": "Processed-37b76884-9d21-4374-b311-00c841137943",
+     "sample": 0,
+     "form": "choice",
+     "side": "wrong",
+     "prediction": "D",
+     "auditor": false
+    },
+    {
+     "qid": "ScienceQA-779",
+     "sample": 5,
+     "form": "choice",
+     "side": "wrong",
+     "prediction": "B. eastern rat snake",
+     "auditor": false
+    },
+    {
+     "qid": "Processed-f5aabe11-2447-4087-9594-a15a5c1468f6",
+     "sample": 3,
+     "form": "choice",
+     "side": "wrong",
+     "prediction": "(B) no",
+     "auditor": false
+    },
+    {
+     "qid": "MMK12-454f118c-b06c-4f35-8e48-c095bc056583",
+     "sample": 2,
+     "form": "choice",
+     "side": "wrong",
+     "prediction": "B",
+     "auditor": false
+    },
+    {
+     "qid": "Processed-fb4bd528-7c8b-467a-a3e0-61525d49f77b",
+     "sample": 6,
+     "form": "choice",
+     "side": "wrong",
+     "prediction": "(A) no",
+     "auditor": false
+    },
+    {
+     "qid": "MMK12-4d523564-8b69-4aaa-b306-06774de4fe6a",
+     "sample": 7,
+     "form": "choice",
+     "side": "wrong",
+     "prediction": "D",
+     "auditor": false
+    },
+    {
+     "qid": "M3CoT-37067",
+     "sample": 4,
+     "form": "choice",
+     "side": "wrong",
+     "prediction": "E",
+     "auditor": false
+    },
+    {
+     "qid": "Processed-bebcd49a-e5a4-4281-9946-6fccf8ec5876",
+     "sample": 2,
+     "form": "choice",
+     "side": "wrong",
+     "prediction": "C",
+     "auditor": false
+    },
+    {
+     "qid": "MMK12-ab8b9960-d290-4140-a8fb-798fb8552aaa",
+     "sample": 3,
+     "form": "choice",
+     "side": "wrong",
+     "prediction": "B",
+     "auditor": false
+    },
+    {
+     "qid": "MMK12-a470e7de-96c9-4c9f-a5e1-58c8450b716c",
+     "sample": 3,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "\\frac{20\\sqrt{3}}{3}",
+     "auditor": false
+    },
+    {
+     "qid": "K12-1570",
+     "sample": 5,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "15",
+     "auditor": false
+    },
+    {
+     "qid": "MMK12-90428b65-f447-4d16-b964-366574280e58",
+     "sample": 7,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "5",
+     "auditor": false
+    },
+    {
+     "qid": "MMK12-f9eca254-61de-4564-a6d3-057c83a9e5f2",
+     "sample": 2,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "3",
+     "auditor": false
+    },
+    {
+     "qid": "Processed-6d979784-2ca3-4660-930c-0014b7e82c9f",
+     "sample": 6,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "9",
+     "auditor": false
+    },
+    {
+     "qid": "MMK12-8fbdf26a-b4e0-4ef4-bb12-e31ccae39bb5",
+     "sample": 0,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "6.76",
+     "auditor": false
+    },
+    {
+     "qid": "MMK12-8fbb3b4f-1b63-469f-828f-90ecc772eb71",
+     "sample": 3,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "120",
+     "auditor": false
+    },
+    {
+     "qid": "Processed-a0957c3c-5220-487f-a958-0f38efdb221b",
+     "sample": 7,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "0.75",
+     "auditor": false
+    },
+    {
+     "qid": "MMK12-46444de1-6e54-4f7c-98d5-29e2cb5574ea",
+     "sample": 1,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "0.61",
+     "auditor": false
+    },
+    {
+     "qid": "Processed-22e9e1f3-1998-4808-83ee-b8f9a24769ab",
+     "sample": 0,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "60°",
+     "auditor": false
+    },
+    {
+     "qid": "Processed-1dfa6d82-2242-4f9a-93fd-f497e326133b",
+     "sample": 6,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "None of the provided data points is a forecast for a future year; the chart only shows data for 2016 and 2021.",
+     "auditor": false
+    },
+    {
+     "qid": "Processed-69a0cdba-0c9a-4046-a690-8a66d8f40e34",
+     "sample": 2,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "51.5",
+     "auditor": false
+    },
+    {
+     "qid": "MMK12Converted-b351b1da-0c9b-4291-be1b-f95d7b9d6313",
+     "sample": 6,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "15",
+     "auditor": false
+    },
+    {
+     "qid": "MMMath-1288",
+     "sample": 5,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "60°",
+     "auditor": false
+    },
+    {
+     "qid": "chartqa-817",
+     "sample": 4,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "2019",
+     "auditor": false
+    },
+    {
+     "qid": "MMK12Converted-81cb9af7-04bc-4732-9adc-a12181ec16ca",
+     "sample": 2,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "1",
+     "auditor": false
+    },
+    {
+     "qid": "MMK12-670cd3c4-93a5-4804-89fa-ee42ac51f2ec",
+     "sample": 7,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "6.7%",
+     "auditor": false
+    },
+    {
+     "qid": "dvqa-11149",
+     "sample": 6,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "95",
+     "auditor": false
+    },
+    {
+     "qid": "MMK12-faa18c3b-75ca-4db5-bbc0-62157cd5da3a",
+     "sample": 2,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "15",
+     "auditor": false
+    },
+    {
+     "qid": "MMK12-da143eb4-6f05-43dd-b74c-930e6c1956bb",
+     "sample": 1,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "56%",
+     "auditor": false
+    },
+    {
+     "qid": "K12-12380",
+     "sample": 0,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "6",
+     "auditor": false
+    },
+    {
+     "qid": "MMK12-23365dfa-2139-4841-8310-ec7ffc2e7701",
+     "sample": 6,
+     "form": "number",
+     "side": "wrong",
+     "prediction": "29",
+     "auditor": false
+    },
+    {
+     "qid": "MMK12-d179907b-280d-4e29-9d71-7897cb594883",
+     "sample": 2,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "(-∞, 1) ∪ (1, +∞)",
+     "auditor": false
+    },
+    {
+     "qid": "MMK12-6193860f-ca29-40c3-9b40-b636d5c8cef4",
+     "sample": 4,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "{2, 4}",
+     "auditor": false
+    },
+    {
+     "qid": "MMK12-dee2cec4-a516-4212-a384-171d83b175dd",
+     "sample": 0,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "4/3",
+     "auditor": false
+    },
+    {
+     "qid": "MMK12-2d0b362c-2815-4633-bed7-2295ea92de21",
+     "sample": 1,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "5/12",
+     "auditor": true
+    },
+    {
+     "qid": "MMK12-56729998-a89f-41bb-84a7-66e209084cd2",
+     "sample": 7,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "800",
+     "auditor": false
+    },
+    {
+     "qid": "ai2d-7967",
+     "sample": 6,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "C",
+     "auditor": false
+    },
+    {
+     "qid": "R1OneVision-GRE-physics-1-college-1-Physics-college",
+     "sample": 5,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "E",
+     "auditor": false
+    },
+    {
+     "qid": "MMK12-d5992450-cb79-48e6-9bce-f9af824bdec3",
+     "sample": 2,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "9/4",
+     "auditor": false
+    },
+    {
+     "qid": "MMK12-91d1c13e-55c7-4648-b174-d59b229044a5",
+     "sample": 6,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "[1,4]",
+     "auditor": true
+    },
+    {
+     "qid": "MMK12-ea6eb9ef-c9d4-493d-8e0a-2143530126b3",
+     "sample": 0,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "x > -1",
+     "auditor": false
+    },
+    {
+     "qid": "ai2d-33350",
+     "sample": 5,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "none of the above",
+     "auditor": false
+    },
+    {
+     "qid": "Processed-d09f4934-7eac-4d53-9a05-7a763c5af8eb",
+     "sample": 6,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "0.8",
+     "auditor": false
+    },
+    {
+     "qid": "MMK12-e9dc6728-935d-44e2-8207-043a636fc338",
+     "sample": 6,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "[0, 2]",
+     "auditor": false
+    },
+    {
+     "qid": "Processed-f204451f-2f8c-4957-ba3d-901b4ea58718",
+     "sample": 0,
+     "form": "text",
+     "side": "wrong",
+     "prediction": "4/243",
+     "auditor": false
+    },
+    {
+     "qid": "Processed-7d284465-d4c7-4d69-b792-e38e390d64e6",
+     "sample": 5,
+     "form": "yes/no",
+     "side": "wrong",
+     "prediction": "False",
+     "auditor": true
+    }
+   ]
   }
  }
 }

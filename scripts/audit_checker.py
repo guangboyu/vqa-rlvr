@@ -212,8 +212,9 @@ def write_report(rows: dict[str, dict], per_side: int, seed: int, output: Path) 
     print(f"wrote {output}")
 
 
-def sampled_record(dataset: str, model, data_dir: Path, records_dir: Path) -> RunRecord | None:
-    protocol = battery(dataset).sampled
+def sampled_record(dataset: str, model, data_dir: Path, records_dir: Path,
+                   max_tokens: int | None = None) -> RunRecord | None:
+    protocol = battery(dataset, max_tokens=max_tokens).sampled
     if protocol.role != "rl":
         raise ValueError(f"{dataset}: its sampled record reads {protocol.role}, not the rl role")
     cell = find_cell(model, protocol, data_dir=data_dir, records_dir=records_dir)
@@ -235,6 +236,8 @@ def main() -> None:
     parser.add_argument("--out", type=Path, default=OUTPUT)
     parser.add_argument("--data-dir", type=Path, default=DATA_DIR)
     parser.add_argument("--records-dir", type=Path, default=RECORDS_DIR)
+    parser.add_argument("--max-tokens", type=int, default=None,
+                        help="the token budget the screen ran with (its --max-tokens)")
     parser.add_argument("--matrix", type=Path, default=ROOT / "experiments.toml")
     parser.add_argument("--ledger", type=Path, default=ROOT / ".judge_cache" / "judge.db",
                         help="the judge's verdicts and spend, which the budget cap reads")
@@ -244,7 +247,7 @@ def main() -> None:
     judge = Judge(cache_path=args.ledger)
     rows = {}
     for dataset in args.sources:
-        record = sampled_record(dataset, model, args.data_dir, args.records_dir)
+        record = sampled_record(dataset, model, args.data_dir, args.records_dir, args.max_tokens)
         if record is None:
             continue
         row = audit_source(record, judge, per_side=args.per_side, seed=args.seed,
