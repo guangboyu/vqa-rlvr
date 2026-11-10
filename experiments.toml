@@ -1451,7 +1451,15 @@ holds = { max_delta = 0.0 }
 baseline_label = "base2"
 if_holds = "Reasoning carries what labels alone cannot; GRPO is measured against this SFT arm."
 if_not = "Labels teach this task without reasoning, and the reasoning-pays branch weakens."
-status = "experimental"
+status = "null"
+why = """Observed: SFT ends 9.8 dev points above Instruct's reasoning score [4.8, 14.8] (43.0 to 52.8) \
+and 12.2 above its short score, with 3-token answers. It gains on every answer form over Instruct's \
+short answers: multiple choice +11.3, numbers +11.9, text +19.7. Proposed: one epoch of 33,635 \
+answers teaches the dataset's answer conventions and answer priors; how much of it needs the image \
+is not measured."""
+implies = """Answer-only SFT is a strong baseline here: GRPO needs about 54.8 on dev, 11.8 above \
+Instruct's reasoning, for its card to hold. A black-image score of the SFT model would show how much \
+of the gain is priors."""
 
 [[cards]]
 id = "virl39k-grpo"

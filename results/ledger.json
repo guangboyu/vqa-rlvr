@@ -911,12 +911,62 @@
    "holds_if": "SFT's dev score (short prompt) is below Instruct's (reasoning prompt, 2,048 tokens)",
    "if_holds": "Reasoning carries what labels alone cannot; GRPO is measured against this SFT arm.",
    "if_not": "Labels teach this task without reasoning, and the reasoning-pays branch weakens.",
-   "status": "experimental",
-   "why": "",
-   "implies": "",
-   "final": null,
-   "held": null,
-   "train_hours": null
+   "status": "null",
+   "why": "Observed: SFT ends 9.8 dev points above Instruct's reasoning score [4.8, 14.8] (43.0 to 52.8) and 12.2 above its short score, with 3-token answers. It gains on every answer form over Instruct's short answers: multiple choice +11.3, numbers +11.9, text +19.7. Proposed: one epoch of 33,635 answers teaches the dataset's answer conventions and answer priors; how much of it needs the image is not measured.",
+   "implies": "Answer-only SFT is a strong baseline here: GRPO needs about 54.8 on dev, 11.8 above Instruct's reasoning, for its card to hold. A black-image score of the SFT model would show how much of the gain is priors.",
+   "final": {
+    "accuracy": 52.800000000000004,
+    "baseline": 43.0,
+    "tokens": 2.868,
+    "baseline_tokens": 907.342,
+    "n": 500,
+    "delta": 9.8,
+    "low": 4.8,
+    "high": 14.804999999999927,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "final_step": 1052,
+   "baseline_step": 0,
+   "scorer": "project",
+   "curve": [
+    {
+     "step": 250,
+     "accuracy": 50.0,
+     "tokens": 2.984
+    },
+    {
+     "step": 500,
+     "accuracy": 53.0,
+     "tokens": 3.064
+    },
+    {
+     "step": 750,
+     "accuracy": 53.0,
+     "tokens": 2.844
+    },
+    {
+     "step": 1000,
+     "accuracy": 53.6,
+     "tokens": 2.892
+    },
+    {
+     "step": 1052,
+     "accuracy": 52.800000000000004,
+     "tokens": 2.868
+    }
+   ],
+   "baseline_curve": [
+    {
+     "step": 0,
+     "accuracy": 43.0,
+     "tokens": 907.342
+    }
+   ],
+   "held": false,
+   "verdict": "+",
+   "noise_floor": 0.5219206680584552,
+   "train_hours": 4.163653861111111
   },
   {
    "id": "virl39k-grpo",
