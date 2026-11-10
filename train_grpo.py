@@ -93,6 +93,9 @@ def main() -> None:
                         "(PAPO-style; default 0: off)")
     parser.add_argument("--epsilon-high", type=float, default=None,
                         help="upper clip of the policy ratio (DAPO clip-higher uses 0.28)")
+    parser.add_argument("--dev-max-tokens", type=int, default=None,
+                        help="token budget of the rollout prompt's dev evaluation "
+                        "(default: the prompt's own)")
     parser.add_argument("--rollout-prompt", choices=sorted(PROMPTS), default=None,
                         help="template the rollouts answer; its answer rule scores them")
     parser.add_argument("--route-prompts", nargs="+", default=None, metavar="DATASET=TEMPLATE",

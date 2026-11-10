@@ -22,11 +22,12 @@ ROLLOUT_TEMPERATURE = 1.0
 
 def rollout_context(preset) -> int:
     """vLLM's context for rollouts: 2,048 tokens (about 850 image tokens, the prompt and the
-    completion), or room for a larger image budget's vision tokens plus 1,024."""
+    completion), or room for a larger image budget's vision tokens plus 1,024, and in either
+    case room for the image, a 384-token prompt and the longest completion."""
     max_pixels = getattr(preset, "max_pixels", config.MAX_PIXELS)
-    if max_pixels <= config.MAX_PIXELS:
-        return 2048
-    return max_pixels // config.PIXELS_PER_TOKEN + 1024
+    image = max_pixels // config.PIXELS_PER_TOKEN
+    base = 2048 if max_pixels <= config.MAX_PIXELS else image + 1024
+    return max(base, image + 384 + preset.max_completion_length)
 
 
 def fit_rl_image(image, image_fit: str = "canvas", canvas_size: int = config.RL_IMAGE_SIZE,

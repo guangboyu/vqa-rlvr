@@ -200,3 +200,5 @@ def test_rollout_context_grows_with_the_pixel_budget():
     preset = config.GRPO_PRESETS["grpo_2b_main"]
     assert rollout_context(preset) == 2048
     assert rollout_context(replace(preset, max_pixels=2_097_152)) == 2048 + 1024
+    # A long completion gets room beside the image and the prompt.
+    assert rollout_context(replace(preset, max_completion_length=2048)) == 768 + 384 + 2048

@@ -51,6 +51,20 @@ def test_dev_cells_cover_every_kept_step_prompt_and_dev_dataset(tmp_path):
     assert len(cells) == 8
     assert {(m.label, m.run) for m, _ in cells} == {("grpo-smoke", "grpo-smoke")}
     assert all(p.role == "dev" and p.tier == "dev" for _, p in cells)
+    assert all(p.max_tokens is None for _, p in cells)
+
+
+def test_a_long_dev_budget_applies_to_the_rollout_prompt_only(tmp_path):
+    from scripts.evaluate_checkpoints import dev_cells
+
+    config = {"policy_model": "Qwen/Qwen3-VL-2B-Instruct",
+              "preset": {"name": "grpo_2b_v1", "datasets": ["vqav2"], "rollout_prompt": "reasoning",
+                         "dev_max_tokens": 2048},
+              "training_args": {"run_name": "math"}}
+    write_adapter(tmp_path / "adapters" / "step-250", b"w")
+    cells = dev_cells(tmp_path, config, ["short", "reasoning"], "dev")
+    budgets = {p.prompt: p.max_tokens for _, p in cells}
+    assert budgets == {"short": None, "reasoning": 2048}
 
 
 class Echo:
