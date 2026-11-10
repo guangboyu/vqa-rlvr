@@ -190,6 +190,7 @@ def test_training_loop_keeps_adapters_and_writes_diagnostics(tmp_path, max_steps
     assert run_training(trainer, output, tmp_path, log_draws=True) is completed
     assert trainer.callbacks == ["KeepAdapters", "PreemptCallback", "JsonlMetrics"]
     assert trainer.resumed_from is None and trainer.saved == str(output)
+    assert trainer.create_model_card(model_name="run") is None  # no per-save package scan
     diagnostics = json.loads((output / "diagnostics.json").read_text())
     assert diagnostics["logged"] == [{"step": 1, "loss": 0.5}]
     assert json.loads((output / "run_summary.json").read_text())["completed"] is completed

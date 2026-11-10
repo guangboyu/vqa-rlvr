@@ -123,6 +123,10 @@ def run_training(trainer, output: Path, run_dir: Path | None, log_draws: bool = 
     from vqar.preemption import JsonlMetrics, KeepAdapters, PreemptCallback, install_signal_flag
 
     install_signal_flag()
+    # TRL writes a model card at every save, which reads every installed package's metadata.
+    # On the cluster that metadata sits on shared storage, and one failed read ended a run
+    # (PackageNotFoundError for torch, ViRL39K GRPO, 2026-11-10). The card is never used.
+    trainer.create_model_card = lambda *args, **kwargs: None
     # Keep the adapter copy before the completion marker, so a complete checkpoint
     # always has its curve point.
     trainer.add_callback(KeepAdapters())

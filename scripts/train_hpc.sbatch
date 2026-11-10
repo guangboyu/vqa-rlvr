@@ -32,6 +32,8 @@ export MKL_NUM_THREADS=$OMP_NUM_THREADS
 export OPENBLAS_NUM_THREADS=$OMP_NUM_THREADS
 # A port per job: two jobs on one node both took torch.distributed's default 29500 (EADDRINUSE).
 export MASTER_PORT=$((20000 + SLURM_JOB_ID % 20000))
+# Compute nodes have no internet: vLLM's usage reporting thread only fails there.
+export VLLM_NO_USAGE_STATS=1 DO_NOT_TRACK=1
 
 cancel_unused_successors() {
     code=$?
