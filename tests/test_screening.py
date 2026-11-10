@@ -149,6 +149,14 @@ def test_parse_rate_follows_the_reward_answer_rule():
     assert screening.parse_rate(lines, "short") == 1.0
 
 
+def test_an_answer_cut_off_by_the_token_limit_does_not_count_against_the_parse_rate():
+    lines = [{"raw": "<answer>2</answer>", "finish_reason": "stop"},
+             {"raw": "First, the angle", "finish_reason": "length"},
+             {"raw": "no tag", "finish_reason": "stop"}]
+    assert screening.parse_rate(lines, "reasoning") == 0.5
+    assert screening.parse_rate(lines[1:2], "reasoning") == 0.0
+
+
 def test_gates_and_their_boundaries():
     failed_gates, good = screening.failed_gates, screening.DECLARED["gqa"]
     assert failed_gates(2_000, good, {"parse_rate": 0.95, "short_accuracy": 0.899}) == []

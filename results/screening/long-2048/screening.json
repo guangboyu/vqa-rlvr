@@ -20,6 +20,128 @@
  "rows": [
   {
    "model": "base2",
+   "dataset": "mmk12",
+   "display_name": "MMK12 (train)",
+   "role": "rl",
+   "validation_only": false,
+   "tier": "dev",
+   "pool_questions": 15031,
+   "declared": {
+    "split_unit": "image",
+    "split_separable": true,
+    "license": "Apache-2.0 LICENSE file in the repository, no card tag; the terms of the collected exam questions and images are not stated",
+    "license_usable": true
+   },
+   "samples": 8,
+   "pass_at_1": 0.283,
+   "pass_at_k": 0.464,
+   "rl_headroom": {
+    "n": 500,
+    "delta": 18.099999999999998,
+    "low": 15.55,
+    "high": 20.7,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "learnable_share": 0.338,
+   "parse_rate": 0.9830084957521239,
+   "finished_share": 0.50025,
+   "short_samples": 8,
+   "short_pass_at_1": 0.101,
+   "short_pass_at_k": 0.278,
+   "short_rl_headroom": {
+    "n": 500,
+    "delta": 17.7,
+    "low": 14.874375,
+    "high": 20.7,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "short_learnable_share": 0.244,
+   "questions": 500,
+   "short_accuracy": 0.144,
+   "reasoning_accuracy": 0.304,
+   "direct_accuracy": 0.208,
+   "stepwise_accuracy": 0.324,
+   "reasoning_behavior": {
+    "mean_output_tokens": 1158.14,
+    "truncated_fraction": 0.446,
+    "answer_tag_fraction": 0.55
+   },
+   "direct_behavior": {
+    "mean_output_tokens": 228.388,
+    "truncated_fraction": 0.08,
+    "answer_tag_fraction": 0.912
+   },
+   "stepwise_behavior": {
+    "mean_output_tokens": 1155.772,
+    "truncated_fraction": 0.432,
+    "answer_tag_fraction": 0.564
+   },
+   "reasoning_payoff": {
+    "n": 500,
+    "delta": 16.0,
+    "low": 11.4,
+    "high": 20.4,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "matched_payoff": {
+    "n": 500,
+    "delta": 11.600000000000001,
+    "low": 7.3999999999999995,
+    "high": 15.8,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "image_dependence": {
+    "n": 500,
+    "delta": 2.8000000000000003,
+    "low": 0.4,
+    "high": 5.2,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "reasoning_image_dependence": {
+    "n": 500,
+    "delta": 15.6,
+    "low": 11.4,
+    "high": 19.8,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "wrong_image_dependence": {
+    "n": 500,
+    "delta": 4.3999999999999995,
+    "low": 1.7999999999999998,
+    "high": 7.199999999999999,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "failed_gates": [],
+   "routes": {
+    "reasoning": [],
+    "short": [
+     "learnable"
+    ]
+   },
+   "status": "passed",
+   "missing": [],
+   "records": {
+    "short": "results/records/budget-2048/base2-dec3ad6e3a/mmk12-rl-dev-short-e70af13cb6.json",
+    "black": "results/records/budget-2048/base2-dec3ad6e3a/mmk12-rl-dev-short-black-8d512f21f2.json",
+    "swapped": "results/records/budget-2048/base2-dec3ad6e3a/mmk12-rl-dev-short-swapped-c3eb25091e.json",
+    "reasoning": "results/records/budget-2048/base2-dec3ad6e3a/mmk12-rl-dev-reasoning-5d96fae153.json",
+    "direct": "results/records/budget-2048/base2-dec3ad6e3a/mmk12-rl-dev-direct-e359c6a71c.json",
+    "stepwise": "results/records/budget-2048/base2-dec3ad6e3a/mmk12-rl-dev-stepwise-39d1c2837d.json",
+    "sampled": "results/records/budget-2048/base2-dec3ad6e3a/mmk12-rl-dev-reasoning-t1k8-966d0bfd57.json",
+    "reasoning_black": "results/records/budget-2048/base2-dec3ad6e3a/mmk12-rl-dev-reasoning-black-8e38f0b98e.json",
+    "sampled_short": "results/records/budget-2048/base2-dec3ad6e3a/mmk12-rl-dev-short-t1k8-ee6e161e68.json"
+   },
+   "rank": 1
+  },
+  {
+   "model": "base2",
    "dataset": "virl39k",
    "display_name": "ViRL39K (one image)",
    "role": "rl",
@@ -44,7 +166,8 @@
     "seed": 0
    },
    "learnable_share": 0.482,
-   "parse_rate": 0.5965,
+   "parse_rate": 0.9770679770679771,
+   "finished_share": 0.6105,
    "short_samples": 8,
    "short_pass_at_1": 0.24975,
    "short_pass_at_k": 0.518,
@@ -119,9 +242,7 @@
    },
    "failed_gates": [],
    "routes": {
-    "reasoning": [
-     "parse rate"
-    ],
+    "reasoning": [],
     "short": []
    },
    "status": "passed",
@@ -137,7 +258,7 @@
     "reasoning_black": "results/records/budget-2048/base2-dec3ad6e3a/virl39k-rl-dev-reasoning-black-796de2952d.json",
     "sampled_short": "results/records/budget-2048/base2-dec3ad6e3a/virl39k-rl-dev-short-t1k8-7a770c1052.json"
    },
-   "rank": 1
+   "rank": 2
   },
   {
    "model": "base2",
@@ -165,7 +286,8 @@
     "seed": 0
    },
    "learnable_share": 0.39,
-   "parse_rate": 0.48725,
+   "parse_rate": 0.9964212678936605,
+   "finished_share": 0.489,
    "short_samples": 8,
    "short_pass_at_1": 0.132,
    "short_pass_at_k": 0.304,
@@ -242,9 +364,7 @@
     "image needed"
    ],
    "routes": {
-    "reasoning": [
-     "parse rate"
-    ],
+    "reasoning": [],
     "short": []
    },
    "status": "rejected",
@@ -259,129 +379,6 @@
     "sampled": "results/records/budget-2048/base2-dec3ad6e3a/geoqa-rl-dev-reasoning-t1k8-8a607732d6.json",
     "reasoning_black": "results/records/budget-2048/base2-dec3ad6e3a/geoqa-rl-dev-reasoning-black-407d559e45.json",
     "sampled_short": "results/records/budget-2048/base2-dec3ad6e3a/geoqa-rl-dev-short-t1k8-a99c8db945.json"
-   },
-   "rank": null
-  },
-  {
-   "model": "base2",
-   "dataset": "mmk12",
-   "display_name": "MMK12 (train)",
-   "role": "rl",
-   "validation_only": false,
-   "tier": "dev",
-   "pool_questions": 15031,
-   "declared": {
-    "split_unit": "image",
-    "split_separable": true,
-    "license": "Apache-2.0 LICENSE file in the repository, no card tag; the terms of the collected exam questions and images are not stated",
-    "license_usable": true
-   },
-   "samples": 8,
-   "pass_at_1": 0.283,
-   "pass_at_k": 0.464,
-   "rl_headroom": {
-    "n": 500,
-    "delta": 18.099999999999998,
-    "low": 15.55,
-    "high": 20.7,
-    "resamples": 10000,
-    "seed": 0
-   },
-   "learnable_share": 0.338,
-   "parse_rate": 0.49175,
-   "short_samples": 8,
-   "short_pass_at_1": 0.101,
-   "short_pass_at_k": 0.278,
-   "short_rl_headroom": {
-    "n": 500,
-    "delta": 17.7,
-    "low": 14.874375,
-    "high": 20.7,
-    "resamples": 10000,
-    "seed": 0
-   },
-   "short_learnable_share": 0.244,
-   "questions": 500,
-   "short_accuracy": 0.144,
-   "reasoning_accuracy": 0.304,
-   "direct_accuracy": 0.208,
-   "stepwise_accuracy": 0.324,
-   "reasoning_behavior": {
-    "mean_output_tokens": 1158.14,
-    "truncated_fraction": 0.446,
-    "answer_tag_fraction": 0.55
-   },
-   "direct_behavior": {
-    "mean_output_tokens": 228.388,
-    "truncated_fraction": 0.08,
-    "answer_tag_fraction": 0.912
-   },
-   "stepwise_behavior": {
-    "mean_output_tokens": 1155.772,
-    "truncated_fraction": 0.432,
-    "answer_tag_fraction": 0.564
-   },
-   "reasoning_payoff": {
-    "n": 500,
-    "delta": 16.0,
-    "low": 11.4,
-    "high": 20.4,
-    "resamples": 10000,
-    "seed": 0
-   },
-   "matched_payoff": {
-    "n": 500,
-    "delta": 11.600000000000001,
-    "low": 7.3999999999999995,
-    "high": 15.8,
-    "resamples": 10000,
-    "seed": 0
-   },
-   "image_dependence": {
-    "n": 500,
-    "delta": 2.8000000000000003,
-    "low": 0.4,
-    "high": 5.2,
-    "resamples": 10000,
-    "seed": 0
-   },
-   "reasoning_image_dependence": {
-    "n": 500,
-    "delta": 15.6,
-    "low": 11.4,
-    "high": 19.8,
-    "resamples": 10000,
-    "seed": 0
-   },
-   "wrong_image_dependence": {
-    "n": 500,
-    "delta": 4.3999999999999995,
-    "low": 1.7999999999999998,
-    "high": 7.199999999999999,
-    "resamples": 10000,
-    "seed": 0
-   },
-   "failed_gates": [],
-   "routes": {
-    "reasoning": [
-     "parse rate"
-    ],
-    "short": [
-     "learnable"
-    ]
-   },
-   "status": "rejected",
-   "missing": [],
-   "records": {
-    "short": "results/records/budget-2048/base2-dec3ad6e3a/mmk12-rl-dev-short-e70af13cb6.json",
-    "black": "results/records/budget-2048/base2-dec3ad6e3a/mmk12-rl-dev-short-black-8d512f21f2.json",
-    "swapped": "results/records/budget-2048/base2-dec3ad6e3a/mmk12-rl-dev-short-swapped-c3eb25091e.json",
-    "reasoning": "results/records/budget-2048/base2-dec3ad6e3a/mmk12-rl-dev-reasoning-5d96fae153.json",
-    "direct": "results/records/budget-2048/base2-dec3ad6e3a/mmk12-rl-dev-direct-e359c6a71c.json",
-    "stepwise": "results/records/budget-2048/base2-dec3ad6e3a/mmk12-rl-dev-stepwise-39d1c2837d.json",
-    "sampled": "results/records/budget-2048/base2-dec3ad6e3a/mmk12-rl-dev-reasoning-t1k8-966d0bfd57.json",
-    "reasoning_black": "results/records/budget-2048/base2-dec3ad6e3a/mmk12-rl-dev-reasoning-black-8e38f0b98e.json",
-    "sampled_short": "results/records/budget-2048/base2-dec3ad6e3a/mmk12-rl-dev-short-t1k8-ee6e161e68.json"
    },
    "rank": null
   }

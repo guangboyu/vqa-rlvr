@@ -46,7 +46,10 @@ VARIANT = "normalized"
 
 # Hard gates, fixed before any candidate is measured.
 MIN_POOL_QUESTIONS = 2_000  # rows in the training pool role
-MIN_PARSE_RATE = 0.95  # sampled reasoning responses the reward's answer rule can read
+# Sampled reasoning responses the reward's answer rule can read, among those that finished
+# within the token limit (owner, 2026-11-09: at 2,048 tokens every unreadable math answer was an
+# unfinished one, and RL scores an unfinished answer 0 either way).
+MIN_PARSE_RATE = 0.95
 MAX_SHORT_ACCURACY = 0.90  # at or above it, the dataset is saturated
 # Added 2026-10-06, before any reasoning candidate was measured (Part 2 plan): the general
 # datasets passed the gates above although reasoning hurt them, so reasoning value, image
@@ -256,10 +259,16 @@ def sampling_measures(counts: dict[str, int], samples: int) -> dict:
     }
 
 
+def finished(lines: list[dict]) -> list[dict]:
+    """Responses that ended before the token limit (records without a finish reason count)."""
+    return [line for line in lines if line.get("finish_reason") != "length"]
+
+
 def parse_rate(lines: list[dict], prompt: str) -> float:
-    """Share of responses from which the reward's answer rule reads a non-empty answer."""
+    """Share of finished responses from which the reward's answer rule reads an answer."""
     rule = PROMPTS[prompt].answer_rule
-    return sum(bool(reward_answer(line["raw"], rule)) for line in lines) / len(lines)
+    done = finished(lines)
+    return sum(bool(reward_answer(line["raw"], rule)) for line in done) / len(done) if done else 0.0
 
 
 def scores(record: RunRecord) -> dict[str, float]:
@@ -276,7 +285,9 @@ def measure(records: dict[str, RunRecord]) -> dict:
         counts = correct_counts(sampled)
         by_question["sampled"] = counts
         result.update(sampling_measures(counts, sampled.protocol["samples"]))
-        result["parse_rate"] = parse_rate(read_lines(sampled), sampled.protocol["prompt"])
+        lines = read_lines(sampled)
+        result["parse_rate"] = parse_rate(lines, sampled.protocol["prompt"])
+        result["finished_share"] = len(finished(lines)) / len(lines)
     if "sampled_short" in records:
         sampled = records["sampled_short"]
         counts = correct_counts(sampled)
