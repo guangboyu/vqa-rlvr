@@ -22,10 +22,11 @@ from pathlib import Path
 from scripts.knobs import train_hours, verdict
 from vqar.eval.paired import paired_bootstrap, question_scores
 from vqar.eval.record import RunRecord, record_files
+from vqar.registry import DATASETS
 
 ROOT = Path(__file__).resolve().parent.parent
 LEDGER = ROOT / "results" / "ledger.json"
-SCORER = "official"
+SCORER = "official"  # unless the dataset's metric metadata names another primary scorer
 PROMPT = "reasoning"
 TEXT_FIELDS = ("id", "node", "question", "recipe", "baseline", "change", "predicted", "holds_if",
                "if_holds", "if_not", "status", "why", "implies")
@@ -66,17 +67,26 @@ def dev_records(run: Path, dataset: str | None = None) -> dict[tuple[int, str], 
     return found
 
 
-def curve(records: dict[tuple[int, str], RunRecord], prompt: str = PROMPT) -> list[dict]:
-    return [{"step": step, "accuracy": 100 * record.metrics[SCORER]["overall"],
+def primary_scorer(dataset: str | None) -> str:
+    """The dataset's reported column: official, or the project rule where no author evaluator
+    exists (the math sources)."""
+    if dataset is None:
+        return SCORER
+    return (DATASETS[dataset].metric_metadata or {}).get("primary", SCORER)
+
+
+def curve(records: dict[tuple[int, str], RunRecord], prompt: str = PROMPT,
+          scorer: str = SCORER) -> list[dict]:
+    return [{"step": step, "accuracy": 100 * record.metrics[scorer]["overall"],
              "tokens": record.metrics["mean_output_tokens"]}
             for (step, kind), record in sorted(records.items()) if kind == prompt]
 
 
-def compare(reference: RunRecord, candidate: RunRecord) -> dict:
+def compare(reference: RunRecord, candidate: RunRecord, scorer: str = SCORER) -> dict:
     """Candidate against reference at their final steps, paired over the same dev questions."""
-    scores = [question_scores(r.predictions_path(), SCORER) for r in (reference, candidate)]
-    return {"accuracy": 100 * candidate.metrics[SCORER]["overall"],
-            "baseline": 100 * reference.metrics[SCORER]["overall"],
+    scores = [question_scores(r.predictions_path(), scorer) for r in (reference, candidate)]
+    return {"accuracy": 100 * candidate.metrics[scorer]["overall"],
+            "baseline": 100 * reference.metrics[scorer]["overall"],
             "tokens": candidate.metrics["mean_output_tokens"],
             "baseline_tokens": reference.metrics["mean_output_tokens"],
             **paired_bootstrap(*scores)}
@@ -130,9 +140,11 @@ def summarize_card(card: dict, floor: float, root: Path = ROOT) -> dict:
     bases = [step for step, kind in baseline if kind == base_prompt]
     if not finals or not bases:
         return {**row, "final": None, "held": None, "train_hours": train_hours(run)}
-    final = compare(baseline[(max(bases), base_prompt)], records[(max(finals), prompt)])
+    scorer = primary_scorer(card.get("dataset"))
+    final = compare(baseline[(max(bases), base_prompt)], records[(max(finals), prompt)], scorer)
     return {**row, "final": final, "final_step": max(finals), "baseline_step": max(bases),
-            "curve": curve(records, prompt), "baseline_curve": curve(baseline, base_prompt),
+            "scorer": scorer, "curve": curve(records, prompt, scorer),
+            "baseline_curve": curve(baseline, base_prompt, scorer),
             "held": held(final, card["holds"]) if "holds" in card else None,
             "verdict": verdict(final, floor), "noise_floor": floor,
             "train_hours": train_hours(run)}

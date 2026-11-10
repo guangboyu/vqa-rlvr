@@ -75,3 +75,10 @@ def test_recipe_v1_is_the_saved_final_rerun_recipe():
     current = json.loads(json.dumps(dump(for_hardware(GRPO_PRESETS["grpo_2b_v1"], "80gb"))))
     assert ({k: v for k, v in current.items() if k not in ignored}
             == {k: v for k, v in saved.items() if k not in ignored})
+
+
+def test_cards_read_the_dataset_primary_scorer():
+    from scripts.cards import primary_scorer
+    assert primary_scorer("chartqa") == "official"
+    assert primary_scorer("infovqa") == "official"
+    assert primary_scorer("virl39k") == "project"  # no author evaluator for the math sources
