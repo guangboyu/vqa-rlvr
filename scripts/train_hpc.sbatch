@@ -92,6 +92,9 @@ if completed; then
     COMMAND=(scripts/evaluate_checkpoints.py "$RUN/checkpoints")
 else
     COMMAND=("$ENTRY" --run-dir "$RUN" --no-wandb "$@")
+    # Checkpoints go to node-local disk and are copied to $RUN in the background
+    # (vqar/checkpoint_mirror.py): saves straight to /pub stalled training for minutes.
+    export VQAR_LOCAL_CHECKPOINTS="${TMPDIR:-/tmp/$(id -un)/$SLURM_JOB_ID}/run"
 fi
 # The console log goes to node-local disk and a background tail copies it into the job's log
 # on /pub, so a shared-storage stall or write error blocks the copy, not the trainer.

@@ -131,10 +131,15 @@ def run_training(trainer, output: Path, run_dir: Path | None, log_draws: bool = 
         trainer.add_callback(JsonlMetrics(str(run_dir / "metrics.jsonl")))
         if log_draws:
             log_prompt_draws(trainer, run_dir / "prompt_draws.jsonl")
+    mirror = mirror_checkpoints(trainer, output) if run_dir else None
     last = last_complete_checkpoint(output)
     if last:
         print(f"resuming from {last}")
-    trainer.train(resume_from_checkpoint=last)
+    try:
+        trainer.train(resume_from_checkpoint=last)
+    finally:
+        if mirror is not None:
+            mirror.flush()
     trainer.save_model(str(output))
     write_training_summary(trainer, output)
     run_log.flush()  # the diagnostics read the draws back
@@ -143,6 +148,23 @@ def run_training(trainer, output: Path, run_dir: Path | None, log_draws: bool = 
         json.dumps(training_diagnostics(trainer.state.log_history, draws), indent=2) + "\n")
     print(f"adapter saved -> {output}")
     return trainer.state.global_step >= trainer.state.max_steps
+
+
+def mirror_checkpoints(trainer, output: Path):
+    """With VQAR_LOCAL_CHECKPOINTS set (node-local disk on the cluster), save checkpoints
+    there and copy them to `output` in the background (vqar.checkpoint_mirror)."""
+    from vqar.checkpoint_mirror import CheckpointMirror, local_root
+
+    root = local_root()
+    if root is None:
+        return None
+    local = root / output.name
+    (local / "completions").mkdir(parents=True, exist_ok=True)  # TRL logs completions there
+    trainer.args.output_dir = str(local)
+    mirror = CheckpointMirror(local, output, trainer.args.save_total_limit)
+    trainer.add_callback(mirror)
+    print(f"checkpoints saved to {local}, copied to {output} in the background")
+    return mirror
 
 
 # Trainer log keys behind each diagnostic; a key appears only when its trainer logs it.
