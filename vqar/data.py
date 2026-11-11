@@ -17,6 +17,7 @@ after materialization; its training views hold dev/evaluation images out while
 allowing SFT training examples to be reused in RL.
 """
 
+import random
 import re
 from collections.abc import Iterator
 
@@ -158,6 +159,39 @@ def load_vqav2_eval(n: int, seed: int) -> Dataset:
     rows = _load_source("lmms-lab/VQAv2", split="validation").shuffle(seed=seed).select(range(n))
     rows = rows.cast_column("image", Image(decode=False))
     return _build(_vqav2_eval_generate, rows=rows)
+
+
+def select_complementary_pairs(pairs: list[list[int]], n: int, seed: int) -> list[list[int]]:
+    """A seeded sample of VQAv2's complementary pairs: one question asked of two similar images
+    whose answers differ (Goyal et al. 2017). Each question appears in at most one pair."""
+    order = list(range(len(pairs)))
+    random.Random(seed).shuffle(order)
+    chosen, used = [], set()
+    for index in order:
+        first, second = pairs[index]
+        if first in used or second in used:
+            continue
+        chosen.append([first, second])
+        used.update((first, second))
+        if len(chosen) == n:
+            return chosen
+    raise ValueError(f"only {len(chosen)} disjoint pairs; asked for {n}")
+
+
+def load_vqav2_pairs(pairs: list[list[int]]) -> Dataset:
+    """Both questions of each pair, from VQAv2's validation split, as dataset vqav2pairs."""
+    wanted = {qid for pair in pairs for qid in pair}
+    rows = _load_source("lmms-lab/VQAv2", split="validation")
+    keep = [i for i, qid in enumerate(rows["question_id"]) if qid in wanted]
+    if len(keep) != len(wanted):
+        raise ValueError(f"found {len(keep)} of {len(wanted)} paired questions")
+    rows = rows.select(keep).cast_column("image", Image(decode=False))
+    return _build(_vqav2_pair_generate, rows=rows)
+
+
+def _vqav2_pair_generate(rows: Dataset) -> Iterator[dict]:
+    for row in _vqav2_eval_generate(rows):
+        yield {**row, "dataset": "vqav2pairs"}
 
 
 def _gqa_image_payloads(images: Dataset, needed: set[str]) -> dict[str, dict]:

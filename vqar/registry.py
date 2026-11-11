@@ -5,8 +5,10 @@ role, how answers are scored, and where the dataset sits on the OOD ladder. Addi
 means adding one entry here plus its loader in `vqar.data`.
 """
 
+import json
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from pathlib import Path
 
 from vqar import benchmark_metrics, metrics
 from vqar.ood_metrics import official_vizwiz_accuracy, project_case_whitespace_em
@@ -380,6 +382,20 @@ def _docvqat(sizes):
     return {"docvqat_train": data.load_docvqat(sizes["rows"])}
 
 
+# The sampled VQAv2 complementary pairs, with the official pairs file's address and hash.
+PAIRS_FILE = Path(__file__).resolve().parent.parent / "data" / "pairs" / "vqav2-complementary.json"
+
+
+def _vqav2pairs(sizes):
+    from vqar import data
+
+    selection = json.loads(PAIRS_FILE.read_text())
+    if len(selection["pairs"]) != sizes["pairs"]:
+        raise ValueError(f"{PAIRS_FILE} holds {len(selection['pairs'])} pairs, "
+                         f"not {sizes['pairs']}")
+    return {"vqav2pairs_eval": data.load_vqav2_pairs(selection["pairs"])}
+
+
 def _infovqa(sizes):
     from vqar import data
 
@@ -456,6 +472,24 @@ DATASETS: dict[str, DatasetSpec] = {
             official_roles=frozenset({"test"}),
             sizes={"sft": 20_000, "rl": 8_000, "eval": 5_000, "train_seed": 42, "eval_seed": 0},
             materialize=_vqav2,
+        ),
+        DatasetSpec(
+            # Evaluation only: one question on two similar images with different answers, so a
+            # model answering from habit gives both the same answer (scripts/pairs.py).
+            name="vqav2pairs",
+            display_name="VQAv2 complementary pairs",
+            category="General VQA",
+            sources={"lmms-lab/VQAv2": "32665d35052eb4a6d4414851c3c829a72754915a"},
+            subsets={"test": "vqav2pairs_eval"},
+            official_splits=frozenset({"test"}),
+            ladder="in-domain",
+            answer_schema="open-ended phrase; ten annotator answers",
+            official=metrics.official_vqa_accuracy,
+            normalized=metrics.vqa_accuracy,
+            official_roles=frozenset({"test"}),
+            sizes={"pairs": 1_000},
+            materialize=_vqav2pairs,
+            require_split=False,
         ),
         DatasetSpec(
             name="gqa",

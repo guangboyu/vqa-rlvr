@@ -1314,7 +1314,7 @@ recipe = "v1.0"
 baseline = "base2"
 change = "Score existing arms on VQAv2 complementary pairs: pair accuracy (both right) and same-answer rate (one answer for two images whose answers differ)"
 train = []
-command = "uv run --frozen python -m scripts.pairs --arms base2 sft2 p1-f-short2-base p1-f-short2-sft p1-f-grpo2-base"
+command = "uv run --frozen python -m scripts.pairs commands  # then each printed run line, then summarize"
 predicted = """Holds. SFT raises the same-answer rate over Instruct, since it also learns which answers are likely for a \
 question; GRPO from Instruct does not, and its pair-accuracy gain is at least its single-question gain."""
 holds_if = "SFT's same-answer rate is above Instruct's with a 95% interval above zero, and GRPO's is not"

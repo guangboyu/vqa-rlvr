@@ -42,7 +42,7 @@ def test_unknown_role_is_rejected():
 
 
 def test_role_listing_follows_registry_order():
-    assert datasets_with_role("test") == ["vqav2", "gqa", "clevr", "textvqa", "chartqa",
+    assert datasets_with_role("test") == ["vqav2", "vqav2pairs", "gqa", "clevr", "textvqa", "chartqa",
                                           "clevrcomp", "medthink", "kvasirx1", "omnimedvqa",
                                           "omnimedx", "slake", "pathvqa", "rexvqa",
                                           "deeptumor", "deeptumorx", "deeptumorv", "deeptumorff",
