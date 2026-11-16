@@ -94869,6 +94869,311 @@
    }
   },
   {
+   "arm": "card-virl39k-grpo",
+   "dataset": "mathvista",
+   "role": "test",
+   "tier": "full",
+   "prompt": "reasoning",
+   "image_mode": "original",
+   "step": 2000,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 996,
+    "official": null,
+    "normalized": {
+     "overall": 0.6495983935742972,
+     "by_answer_type": {
+      "float": 0.425,
+      "integer": 0.5927710843373494,
+      "list": 0.0,
+      "multi_choice": 0.712430426716141
+     }
+    },
+    "project": {
+     "overall": 0.6576305220883534,
+     "by_answer_type": {
+      "float": 0.425,
+      "integer": 0.5903614457831325,
+      "list": 0.0,
+      "multi_choice": 0.7291280148423006
+     }
+    },
+    "mean_output_tokens": 398.90562248995985,
+    "truncated_fraction": 0.04819277108433735,
+    "answer_tag_fraction": 0.9497991967871486,
+    "empty_answer_fraction": 0.0
+   }
+  },
+  {
+   "arm": "card-virl39k-grpo",
+   "dataset": "mmmu",
+   "role": "test",
+   "tier": "full",
+   "prompt": "reasoning",
+   "image_mode": "original",
+   "step": 2000,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 900,
+    "official": {
+     "overall": 0.5044444444444445,
+     "by_answer_type": {
+      "multiple-choice": 0.525383707201889,
+      "open": 0.16981132075471697
+     }
+    },
+    "normalized": {
+     "overall": 0.46111111111111114,
+     "by_answer_type": {
+      "multiple-choice": 0.48288075560802834,
+      "open": 0.11320754716981132
+     }
+    },
+    "mean_output_tokens": 730.38,
+    "truncated_fraction": 0.15222222222222223,
+    "answer_tag_fraction": 0.8466666666666667,
+    "empty_answer_fraction": 0.0022222222222222222,
+    "official_on_lowercased_answers": 0.3088888888888889,
+    "answers_scored_differently": 39
+   }
+  },
+  {
+   "arm": "card-virl39k-grpo",
+   "dataset": "virl39k",
+   "role": "dev",
+   "tier": "dev",
+   "prompt": "reasoning",
+   "image_mode": "black",
+   "step": 2000,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 500,
+    "official": null,
+    "normalized": {
+     "overall": 0.362,
+     "by_answer_type": {
+      "(GradeSchool) Geometric": 0.4,
+      "(GradeSchool) Non-Geo Math": 0.4943181818181818,
+      "(GradeSchool) Science": 0.42857142857142855,
+      "Broader STEM Topics": 0.47058823529411764,
+      "Commonsense": 0.0,
+      "Social Science": 0.3888888888888889,
+      "Spatial Reasoning": 0.16129032258064516,
+      "Tables/Diagrams/Charts": 0.10309278350515463
+     }
+    },
+    "project": {
+     "overall": 0.362,
+     "by_answer_type": {
+      "(GradeSchool) Geometric": 0.4,
+      "(GradeSchool) Non-Geo Math": 0.4943181818181818,
+      "(GradeSchool) Science": 0.42857142857142855,
+      "Broader STEM Topics": 0.47058823529411764,
+      "Commonsense": 0.0,
+      "Social Science": 0.3888888888888889,
+      "Spatial Reasoning": 0.16129032258064516,
+      "Tables/Diagrams/Charts": 0.10309278350515463
+     }
+    },
+    "mean_output_tokens": 602.35,
+    "truncated_fraction": 0.104,
+    "answer_tag_fraction": 0.896,
+    "empty_answer_fraction": 0.0,
+    "paired_with_original": {
+     "n": 500,
+     "original": {
+      "normalized": 0.582
+     },
+     "normalized_answer_changed_fraction": 0.69
+    }
+   }
+  },
+  {
+   "arm": "card-virl39k-grpo",
+   "dataset": "virl39k",
+   "role": "dev",
+   "tier": "dev",
+   "prompt": "reasoning",
+   "image_mode": "original",
+   "step": 2000,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 500,
+    "official": null,
+    "normalized": {
+     "overall": 0.582,
+     "by_answer_type": {
+      "(GradeSchool) Geometric": 0.5285714285714286,
+      "(GradeSchool) Non-Geo Math": 0.5965909090909091,
+      "(GradeSchool) Science": 0.42857142857142855,
+      "Broader STEM Topics": 0.6470588235294118,
+      "Commonsense": 0.8571428571428571,
+      "Social Science": 0.6111111111111112,
+      "Spatial Reasoning": 0.6774193548387096,
+      "Tables/Diagrams/Charts": 0.6597938144329897
+     }
+    },
+    "project": {
+     "overall": 0.582,
+     "by_answer_type": {
+      "(GradeSchool) Geometric": 0.5285714285714286,
+      "(GradeSchool) Non-Geo Math": 0.5965909090909091,
+      "(GradeSchool) Science": 0.42857142857142855,
+      "Broader STEM Topics": 0.6470588235294118,
+      "Commonsense": 0.8571428571428571,
+      "Social Science": 0.6111111111111112,
+      "Spatial Reasoning": 0.6774193548387096,
+      "Tables/Diagrams/Charts": 0.6597938144329897
+     }
+    },
+    "mean_output_tokens": 650.742,
+    "truncated_fraction": 0.086,
+    "answer_tag_fraction": 0.914,
+    "empty_answer_fraction": 0.0
+   }
+  },
+  {
+   "arm": "card-virl39k-sft",
+   "dataset": "mathvista",
+   "role": "test",
+   "tier": "full",
+   "prompt": "short",
+   "image_mode": "original",
+   "step": 1052,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 996,
+    "official": null,
+    "normalized": {
+     "overall": 0.5883534136546185,
+     "by_answer_type": {
+      "float": 0.2,
+      "integer": 0.5301204819277109,
+      "list": 0.0,
+      "multi_choice": 0.6641929499072357
+     }
+    },
+    "project": {
+     "overall": 0.5893574297188755,
+     "by_answer_type": {
+      "float": 0.2,
+      "integer": 0.5325301204819277,
+      "list": 0.0,
+      "multi_choice": 0.6641929499072357
+     }
+    },
+    "mean_output_tokens": 2.3845381526104417,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0
+   }
+  },
+  {
+   "arm": "card-virl39k-sft",
+   "dataset": "mmmu",
+   "role": "test",
+   "tier": "full",
+   "prompt": "short",
+   "image_mode": "original",
+   "step": 1052,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 900,
+    "official": {
+     "overall": 0.47555555555555556,
+     "by_answer_type": {
+      "multiple-choice": 0.4970484061393152,
+      "open": 0.1320754716981132
+     }
+    },
+    "normalized": {
+     "overall": 0.47555555555555556,
+     "by_answer_type": {
+      "multiple-choice": 0.4982290436835891,
+      "open": 0.11320754716981132
+     }
+    },
+    "mean_output_tokens": 2.1633333333333336,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.3,
+    "answers_scored_differently": 2
+   }
+  },
+  {
+   "arm": "card-virl39k-sft",
+   "dataset": "virl39k",
+   "role": "dev",
+   "tier": "dev",
+   "prompt": "short",
+   "image_mode": "black",
+   "step": 1052,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 500,
+    "official": null,
+    "normalized": {
+     "overall": 0.364,
+     "by_answer_type": {
+      "(GradeSchool) Geometric": 0.4714285714285714,
+      "(GradeSchool) Non-Geo Math": 0.3068181818181818,
+      "(GradeSchool) Science": 0.4880952380952381,
+      "Broader STEM Topics": 0.5882352941176471,
+      "Commonsense": 0.14285714285714285,
+      "Social Science": 0.5,
+      "Spatial Reasoning": 0.2903225806451613,
+      "Tables/Diagrams/Charts": 0.25773195876288657
+     }
+    },
+    "project": {
+     "overall": 0.364,
+     "by_answer_type": {
+      "(GradeSchool) Geometric": 0.4714285714285714,
+      "(GradeSchool) Non-Geo Math": 0.3068181818181818,
+      "(GradeSchool) Science": 0.4880952380952381,
+      "Broader STEM Topics": 0.5882352941176471,
+      "Commonsense": 0.14285714285714285,
+      "Social Science": 0.5,
+      "Spatial Reasoning": 0.2903225806451613,
+      "Tables/Diagrams/Charts": 0.25773195876288657
+     }
+    },
+    "mean_output_tokens": 3.108,
+    "truncated_fraction": 0.002,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "paired_with_original": {
+     "n": 500,
+     "original": {
+      "normalized": 0.53
+     },
+     "normalized_answer_changed_fraction": 0.424
+    }
+   }
+  },
+  {
    "arm": "card-virl39k-sft",
    "dataset": "virl39k",
    "role": "dev",
@@ -94913,6 +95218,81 @@
     "truncated_fraction": 0.0,
     "answer_tag_fraction": 0.0,
     "empty_answer_fraction": 0.0
+   }
+  },
+  {
+   "arm": "card-virl39k-sft-grpo",
+   "dataset": "mathvista",
+   "role": "test",
+   "tier": "full",
+   "prompt": "reasoning",
+   "image_mode": "original",
+   "step": 2000,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 996,
+    "official": null,
+    "normalized": {
+     "overall": 0.5662650602409639,
+     "by_answer_type": {
+      "float": 0.2,
+      "integer": 0.5012048192771085,
+      "list": 0.5,
+      "multi_choice": 0.6437847866419295
+     }
+    },
+    "project": {
+     "overall": 0.5672690763052208,
+     "by_answer_type": {
+      "float": 0.2,
+      "integer": 0.5036144578313253,
+      "list": 0.5,
+      "multi_choice": 0.6437847866419295
+     }
+    },
+    "mean_output_tokens": 8.271084337349398,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 1.0,
+    "empty_answer_fraction": 0.0
+   }
+  },
+  {
+   "arm": "card-virl39k-sft-grpo",
+   "dataset": "mmmu",
+   "role": "test",
+   "tier": "full",
+   "prompt": "reasoning",
+   "image_mode": "original",
+   "step": 2000,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 900,
+    "official": {
+     "overall": 0.4488888888888889,
+     "by_answer_type": {
+      "multiple-choice": 0.4722550177095632,
+      "open": 0.07547169811320754
+     }
+    },
+    "normalized": {
+     "overall": 0.45,
+     "by_answer_type": {
+      "multiple-choice": 0.4734356552538371,
+      "open": 0.07547169811320754
+     }
+    },
+    "mean_output_tokens": 7.74,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 1.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.30444444444444446,
+    "answers_scored_differently": 3
    }
   },
   {
