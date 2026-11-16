@@ -1522,3 +1522,31 @@ answers: RL taught the answer tag, not reasoning. It ends 5.0 below GRPO from In
 reads held on the point estimate, but the interval crosses zero and the predicted mechanism failed."""
 implies = """Answer-only SFT removes the reasoning RL needs here; where reasoning pays, start RL from \
 the base model. The opposite of medicine, where SFT then RL was best."""
+
+# The control that settled ChartQA, on ViRL39K (owner, 2026-11-16): SFT on Instruct 2B's own correct
+# reasoning, so the targets hold the information RL has (the model's samples and the checker).
+# Traces: the first 8,000 rl-role questions (GRPO drew 8,000 from the same pool), 8 samples each
+# under the reasoning prompt at rollout temperature and 2,048 tokens, one correct sample kept per
+# question (scripts.build_traces). Reasoning is scored at 2,048 tokens on dev, as for GRPO.
+[[cards]]
+id = "virl39k-reasoning-sft"
+node = "reasoning-pays"
+question = "Does SFT on Instruct's own correct reasoning close GRPO's lead on ViRL39K?"
+recipe = "v1.0"
+baseline = "card-virl39k-grpo"
+dataset = "virl39k"
+prompt = "reasoning"
+entry = "train_sft.py"
+change = "SFT on one correct reasoning sample per question from Instruct 2B, instead of GRPO"
+train = ["--preset", "sft_2b", "--datasets", "virl39k", "--hardware", "24gb", "--save-total-limit",
+         "0", "--no-wandb", "--targets-file", "data/traces/virl39k-base2.jsonl", "--max-length",
+         "3072", "--dev-max-tokens", "2048"]
+predicted = """Holds. GRPO stays at least 2 dev points ahead (SFT on reasoning at or below 57.8). Correct \
+traces keep reasoning and teach finishing, but one offline pass over Instruct's samples cannot \
+sharpen the way 2,000 on-policy updates do; on ChartQA RL led the same control by 5.6."""
+holds_if = "SFT on reasoning ends at least 2 dev points below GRPO (reasoning prompt, 2,048 tokens)"
+holds = { max_delta = -2.0 }
+baseline_run = "runs/cards/virl39k-grpo"
+if_holds = "The math win stands against SFT on the same information RL has: it comes from RL, not from reasoning targets."
+if_not = "Reasoning targets carry the math gain; on ViRL39K the root claim credits reasoning, not RL."
+status = "experimental"

@@ -37,10 +37,9 @@ def dev_cells(output: Path, config: dict, prompts, tier: str) -> list[tuple[Mode
     run = config["training_args"]["run_name"]
     datasets = [d for d in config["preset"]["datasets"] if "dev" in DATASETS[d].subsets]
     long_budget = config["preset"].get("dev_max_tokens")
-    rollout_prompt = config["preset"].get("rollout_prompt")
 
-    def budget(prompt):  # the rollout prompt may be scored at its training length
-        return long_budget if long_budget and prompt == rollout_prompt else None
+    def budget(prompt):  # reasoning may be scored at its training length; short answers never
+        return long_budget if long_budget and prompt != "short" else None
 
     return [
         (ModelRef(config["policy_model"], label=run, run=run, step=step,

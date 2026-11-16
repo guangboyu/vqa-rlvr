@@ -138,6 +138,9 @@ def main() -> None:
                         help="train on black images of each image's size (a no-image control)")
     parser.add_argument("--max-pixels", type=int, default=None,
                         help="pixel budget of the training images (default: the project's)")
+    parser.add_argument("--dev-max-tokens", type=int, default=None,
+                        help="token budget of the reasoning prompt's dev evaluation "
+                        "(default: the prompt's own)")
     parser.add_argument("--max-length", type=int, default=None,
                         help="token budget per training example (raise it with --max-pixels)")
     args = parse_arguments(parser)

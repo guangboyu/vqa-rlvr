@@ -1173,6 +1173,24 @@
    "verdict": "0",
    "noise_floor": 0.5219206680584552,
    "train_hours": 5.625338194444444
+  },
+  {
+   "id": "virl39k-reasoning-sft",
+   "node": "reasoning-pays",
+   "question": "Does SFT on Instruct's own correct reasoning close GRPO's lead on ViRL39K?",
+   "recipe": "v1.0",
+   "baseline": "card-virl39k-grpo",
+   "change": "SFT on one correct reasoning sample per question from Instruct 2B, instead of GRPO",
+   "predicted": "Holds. GRPO stays at least 2 dev points ahead (SFT on reasoning at or below 57.8). Correct traces keep reasoning and teach finishing, but one offline pass over Instruct's samples cannot sharpen the way 2,000 on-policy updates do; on ChartQA RL led the same control by 5.6.",
+   "holds_if": "SFT on reasoning ends at least 2 dev points below GRPO (reasoning prompt, 2,048 tokens)",
+   "if_holds": "The math win stands against SFT on the same information RL has: it comes from RL, not from reasoning targets.",
+   "if_not": "Reasoning targets carry the math gain; on ViRL39K the root claim credits reasoning, not RL.",
+   "status": "experimental",
+   "why": "",
+   "implies": "",
+   "final": null,
+   "held": null,
+   "train_hours": null
   }
  ]
 }

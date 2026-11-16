@@ -335,4 +335,5 @@ official scorer, reasoning prompt; `python -m scripts.cards summarize` writes `r
 | virl39k-sft | SFT on ViRL39K's sft role, one epoch of short answers | Holds | 43.0 → 52.8, 907 → 3 tokens | did not hold | 4.2 |
 | virl39k-grpo | GRPO from Instruct under the reasoning prompt, 2,048-token answers, 2,000 updates, instead of SFT | Holds | 52.8 → 59.8, 3 → 626 tokens | held | 24.0 |
 | virl39k-sft-grpo | GRPO from the SFT model under the reasoning prompt, with the same 2,000 updates | Holds | 52.8 → 54.8, 3 → 13 tokens | held | 5.6 |
+| virl39k-reasoning-sft | SFT on one correct reasoning sample per question from Instruct 2B, instead of GRPO | Holds | not finished | — | — |
 <!-- /report:cards -->

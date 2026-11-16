@@ -54,7 +54,7 @@ def test_dev_cells_cover_every_kept_step_prompt_and_dev_dataset(tmp_path):
     assert all(p.max_tokens is None for _, p in cells)
 
 
-def test_a_long_dev_budget_applies_to_the_rollout_prompt_only(tmp_path):
+def test_a_long_dev_budget_applies_to_reasoning_not_short_answers(tmp_path):
     from scripts.evaluate_checkpoints import dev_cells
 
     config = {"policy_model": "Qwen/Qwen3-VL-2B-Instruct",

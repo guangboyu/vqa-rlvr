@@ -75,6 +75,9 @@ class SFTPreset:
     max_length: int = 1024
     warmup_ratio: float = 0.03
     seed: int = 42
+    # Token budget of the reasoning prompt's dev evaluation; None keeps the prompt's own (512).
+    # SFT on long reasoning traces is scored at the length it was trained to.
+    dev_max_tokens: int | None = None
 
 
 SFT_PRESETS: dict[str, SFTPreset] = {
@@ -121,7 +124,7 @@ class GRPOPreset:
     rollout_prompt: str = "reasoning"  # template the rollouts answer; its answer rule scores them
     # Per-dataset exceptions to rollout_prompt, each "dataset=template".
     route_prompts: tuple[str, ...] = ()
-    # Token budget of the rollout prompt's dev evaluation; None keeps the prompt's own (512 for
+    # Token budget of the reasoning prompts' dev evaluation; None keeps each prompt's own (512 for
     # reasoning). Long math reasoning is scored at the length it was trained to.
     dev_max_tokens: int | None = None
     pool: str | None = None  # a declared pool of rl-role questions; None: the whole role
