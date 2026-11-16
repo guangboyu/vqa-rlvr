@@ -1,0 +1,125 @@
+{
+ "dataset": "vqav2pairs",
+ "pairs": 978,
+ "resamples": 10000,
+ "seed": 0,
+ "right": "full VQA credit (at least 3 of 10 annotators gave the answer)",
+ "rows": [
+  {
+   "arm": "base2",
+   "name": "Instruct 2B",
+   "prompt": "short",
+   "pair_accuracy": 53.987730061349694,
+   "same_answer_rate": 21.983640081799592,
+   "accuracy": 79.73415132924319
+  },
+  {
+   "arm": "base2",
+   "name": "Instruct 2B",
+   "prompt": "reasoning",
+   "pair_accuracy": 27.096114519427406,
+   "same_answer_rate": 16.768916155419223,
+   "accuracy": 57.24948875255619
+  },
+  {
+   "arm": "sft2",
+   "name": "SFT 2B",
+   "prompt": "short",
+   "pair_accuracy": 57.77096114519428,
+   "same_answer_rate": 20.756646216768917,
+   "accuracy": 82.29550102249479,
+   "vs_instruct": {
+    "pair_accuracy": {
+     "delta": 3.783231083844581,
+     "low": 1.9427402862985685,
+     "high": 5.725971370143149
+    },
+    "same_answer_rate": {
+     "delta": -1.2269938650306749,
+     "low": -2.965235173824131,
+     "high": 0.5112474437627812
+    },
+    "accuracy": {
+     "delta": 2.561349693251534,
+     "low": 1.5235173824130885,
+     "high": 3.619631901840493
+    }
+   }
+  },
+  {
+   "arm": "p1-f-short2-base",
+   "name": "Instruct \u2192 short-prompt GRPO",
+   "prompt": "short",
+   "pair_accuracy": 55.010224948875255,
+   "same_answer_rate": 21.676891615541923,
+   "accuracy": 80.65439672801621,
+   "vs_instruct": {
+    "pair_accuracy": {
+     "delta": 1.0224948875255624,
+     "low": -0.10224948875255625,
+     "high": 2.2494887525562373
+    },
+    "same_answer_rate": {
+     "delta": -0.3067484662576687,
+     "low": -1.738241308793456,
+     "high": 1.0224948875255624
+    },
+    "accuracy": {
+     "delta": 0.9202453987730064,
+     "low": 0.24028629856850708,
+     "high": 1.6308793456032724
+    }
+   }
+  },
+  {
+   "arm": "p1-f-short2-sft",
+   "name": "SFT \u2192 short-prompt GRPO",
+   "prompt": "short",
+   "pair_accuracy": 56.95296523517383,
+   "same_answer_rate": 20.756646216768917,
+   "accuracy": 81.91717791411031,
+   "vs_instruct": {
+    "pair_accuracy": {
+     "delta": 2.965235173824131,
+     "low": 1.0224948875255624,
+     "high": 4.805725971370143
+    },
+    "same_answer_rate": {
+     "delta": -1.2269938650306749,
+     "low": -3.067484662576687,
+     "high": 0.6134969325153374
+    },
+    "accuracy": {
+     "delta": 2.1830265848670756,
+     "low": 1.0991820040899798,
+     "high": 3.2617586912065435
+    }
+   }
+  },
+  {
+   "arm": "p1-f-grpo2-base",
+   "name": "Instruct \u2192 GRPO",
+   "prompt": "reasoning",
+   "pair_accuracy": 53.47648261758691,
+   "same_answer_rate": 21.881390593047033,
+   "accuracy": 79.60122699386486,
+   "vs_instruct": {
+    "pair_accuracy": {
+     "delta": 26.380368098159508,
+     "low": 23.210633946830267,
+     "high": 29.550102249488752
+    },
+    "same_answer_rate": {
+     "delta": 5.112474437627812,
+     "low": 2.8629856850715747,
+     "high": 7.464212678936605
+    },
+    "accuracy": {
+     "delta": 22.35173824130882,
+     "low": 20.424207566462183,
+     "high": 24.340746421267916
+    }
+   }
+  }
+ ]
+}

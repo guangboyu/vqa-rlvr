@@ -1320,7 +1320,12 @@ question; GRPO from Instruct does not, and its pair-accuracy gain is at least it
 holds_if = "SFT's same-answer rate is above Instruct's with a 95% interval above zero, and GRPO's is not"
 if_holds = "A new grounding result: RL follows the image when it disagrees with the prior, SFT less so."
 if_not = "Both methods lean on priors alike; grounding differences show only in the black-image test."
-status = "experimental"
+status = "null"
+why = """Observed on 978 pairs (results/pairs.json): SFT's same-answer rate is 1.2 points below \
+Instruct's [-3.0, +0.5], not above; every short-answer model gives one answer to both images 21-22% \
+of the time. SFT has the best pair accuracy (57.8 against Instruct's 54.0, +3.8 [+1.9, +5.7])."""
+implies = """On photos, neither method makes the model answer from habit more than Instruct does. The \
+prior effect seen with black images on medical sets does not show on VQAv2 pairs."""
 
 # InfoVQA, the Document source that passed the screen (2026-11-07). On 500 pool questions Instruct
 # answers 66.6% greedily under the short prompt and 79.6% with any of 8 samples; reasoning costs
@@ -1482,7 +1487,13 @@ holds = { min_delta = 2.0 }
 baseline_run = "runs/cards/virl39k-sft"
 if_holds = "The chart result repeats on a second reasoning dataset: where reasoning pays, RL beats SFT."
 if_not = "The chart win does not generalize; the root claim narrows to charts."
-status = "experimental"
+status = "adopted"
+why = """Observed: GRPO ends 7.0 dev points above SFT [1.8, 12.2] (52.8 to 59.8) and 16.8 above \
+Instruct's reasoning score (43.0). Answers cut off by the 2,048-token limit fall from 30% to 6% and \
+shorten to 626 tokens; dev rises from 51.0 at update 250 to 59.8 at 2,000. The estimate written \
+before the result (52-62 from learning to finish alone) holds."""
+implies = """A second dataset where reasoning pays and RL beats SFT, as predicted: the Milestone 2 \
+replace rule is met. Next control: SFT on reasoning examples, which settled ChartQA."""
 
 [[cards]]
 id = "virl39k-sft-grpo"
@@ -1505,4 +1516,9 @@ holds = { min_delta = 2.0 }
 baseline_run = "runs/cards/virl39k-sft"
 if_holds = "RL restores reasoning after answer-only SFT; the order SFT then RL is safe here too."
 if_not = "Answer-only SFT removed reasoning that RL cannot recover within 2,000 updates."
-status = "experimental"
+status = "null"
+why = """Observed: 54.8 dev under the reasoning prompt, 2.0 above SFT [-1.4, 5.6], with 13-token \
+answers: RL taught the answer tag, not reasoning. It ends 5.0 below GRPO from Instruct. The rule \
+reads held on the point estimate, but the interval crosses zero and the predicted mechanism failed."""
+implies = """Answer-only SFT removes the reasoning RL needs here; where reasoning pays, start RL from \
+the base model. The opposite of medicine, where SFT then RL was best."""

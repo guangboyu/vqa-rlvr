@@ -649,9 +649,9 @@
    "holds_if": "SFT's same-answer rate is above Instruct's with a 95% interval above zero, and GRPO's is not",
    "if_holds": "A new grounding result: RL follows the image when it disagrees with the prior, SFT less so.",
    "if_not": "Both methods lean on priors alike; grounding differences show only in the black-image test.",
-   "status": "experimental",
-   "why": "",
-   "implies": "",
+   "status": "null",
+   "why": "Observed on 978 pairs (results/pairs.json): SFT's same-answer rate is 1.2 points below Instruct's [-3.0, +0.5], not above; every short-answer model gives one answer to both images 21-22% of the time. SFT has the best pair accuracy (57.8 against Instruct's 54.0, +3.8 [+1.9, +5.7]).",
+   "implies": "On photos, neither method makes the model answer from habit more than Instruct does. The prior effect seen with black images on medical sets does not show on VQAv2 pairs.",
    "final": null,
    "held": null,
    "train_hours": null
@@ -979,12 +979,97 @@
    "holds_if": "GRPO's dev score (reasoning, 2,048 tokens) is at least SFT's (short) + 2 points",
    "if_holds": "The chart result repeats on a second reasoning dataset: where reasoning pays, RL beats SFT.",
    "if_not": "The chart win does not generalize; the root claim narrows to charts.",
-   "status": "experimental",
-   "why": "",
-   "implies": "",
-   "final": null,
-   "held": null,
-   "train_hours": null
+   "status": "adopted",
+   "why": "Observed: GRPO ends 7.0 dev points above SFT [1.8, 12.2] (52.8 to 59.8) and 16.8 above Instruct's reasoning score (43.0). Answers cut off by the 2,048-token limit fall from 30% to 6% and shorten to 626 tokens; dev rises from 51.0 at update 250 to 59.8 at 2,000. The estimate written before the result (52-62 from learning to finish alone) holds.",
+   "implies": "A second dataset where reasoning pays and RL beats SFT, as predicted: the Milestone 2 replace rule is met. Next control: SFT on reasoning examples, which settled ChartQA.",
+   "final": {
+    "accuracy": 59.8,
+    "baseline": 52.800000000000004,
+    "tokens": 625.806,
+    "baseline_tokens": 2.868,
+    "n": 500,
+    "delta": 7.000000000000001,
+    "low": 1.7950000000000046,
+    "high": 12.2,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "final_step": 2000,
+   "baseline_step": 1052,
+   "scorer": "project",
+   "curve": [
+    {
+     "step": 250,
+     "accuracy": 51.0,
+     "tokens": 814.608
+    },
+    {
+     "step": 500,
+     "accuracy": 50.8,
+     "tokens": 730.144
+    },
+    {
+     "step": 750,
+     "accuracy": 54.2,
+     "tokens": 739.622
+    },
+    {
+     "step": 1000,
+     "accuracy": 56.39999999999999,
+     "tokens": 761.394
+    },
+    {
+     "step": 1250,
+     "accuracy": 54.6,
+     "tokens": 717.74
+    },
+    {
+     "step": 1500,
+     "accuracy": 58.8,
+     "tokens": 643.026
+    },
+    {
+     "step": 1750,
+     "accuracy": 58.8,
+     "tokens": 622.48
+    },
+    {
+     "step": 2000,
+     "accuracy": 59.8,
+     "tokens": 625.806
+    }
+   ],
+   "baseline_curve": [
+    {
+     "step": 250,
+     "accuracy": 50.0,
+     "tokens": 2.984
+    },
+    {
+     "step": 500,
+     "accuracy": 53.0,
+     "tokens": 3.064
+    },
+    {
+     "step": 750,
+     "accuracy": 53.0,
+     "tokens": 2.844
+    },
+    {
+     "step": 1000,
+     "accuracy": 53.6,
+     "tokens": 2.892
+    },
+    {
+     "step": 1052,
+     "accuracy": 52.800000000000004,
+     "tokens": 2.868
+    }
+   ],
+   "held": true,
+   "verdict": "+",
+   "noise_floor": 0.5219206680584552,
+   "train_hours": 24.043581
   },
   {
    "id": "virl39k-sft-grpo",
@@ -997,12 +1082,97 @@
    "holds_if": "SFT -> GRPO's dev score (reasoning, 2,048 tokens) is at least SFT's (short) + 2 points",
    "if_holds": "RL restores reasoning after answer-only SFT; the order SFT then RL is safe here too.",
    "if_not": "Answer-only SFT removed reasoning that RL cannot recover within 2,000 updates.",
-   "status": "experimental",
-   "why": "",
-   "implies": "",
-   "final": null,
-   "held": null,
-   "train_hours": null
+   "status": "null",
+   "why": "Observed: 54.8 dev under the reasoning prompt, 2.0 above SFT [-1.4, 5.6], with 13-token answers: RL taught the answer tag, not reasoning. It ends 5.0 below GRPO from Instruct. The rule reads held on the point estimate, but the interval crosses zero and the predicted mechanism failed.",
+   "implies": "Answer-only SFT removes the reasoning RL needs here; where reasoning pays, start RL from the base model. The opposite of medicine, where SFT then RL was best.",
+   "final": {
+    "accuracy": 54.800000000000004,
+    "baseline": 52.800000000000004,
+    "tokens": 12.622,
+    "baseline_tokens": 2.868,
+    "n": 500,
+    "delta": 2.0,
+    "low": -1.4000000000000001,
+    "high": 5.6000000000000005,
+    "resamples": 10000,
+    "seed": 0
+   },
+   "final_step": 2000,
+   "baseline_step": 1052,
+   "scorer": "project",
+   "curve": [
+    {
+     "step": 250,
+     "accuracy": 51.800000000000004,
+     "tokens": 8.47
+    },
+    {
+     "step": 500,
+     "accuracy": 50.4,
+     "tokens": 8.332
+    },
+    {
+     "step": 750,
+     "accuracy": 53.6,
+     "tokens": 8.41
+    },
+    {
+     "step": 1000,
+     "accuracy": 53.2,
+     "tokens": 8.48
+    },
+    {
+     "step": 1250,
+     "accuracy": 53.0,
+     "tokens": 8.476
+    },
+    {
+     "step": 1500,
+     "accuracy": 53.6,
+     "tokens": 12.636
+    },
+    {
+     "step": 1750,
+     "accuracy": 54.2,
+     "tokens": 8.524
+    },
+    {
+     "step": 2000,
+     "accuracy": 54.800000000000004,
+     "tokens": 12.622
+    }
+   ],
+   "baseline_curve": [
+    {
+     "step": 250,
+     "accuracy": 50.0,
+     "tokens": 2.984
+    },
+    {
+     "step": 500,
+     "accuracy": 53.0,
+     "tokens": 3.064
+    },
+    {
+     "step": 750,
+     "accuracy": 53.0,
+     "tokens": 2.844
+    },
+    {
+     "step": 1000,
+     "accuracy": 53.6,
+     "tokens": 2.892
+    },
+    {
+     "step": 1052,
+     "accuracy": 52.800000000000004,
+     "tokens": 2.868
+    }
+   ],
+   "held": true,
+   "verdict": "0",
+   "noise_floor": 0.5219206680584552,
+   "train_hours": 5.625338194444444
   }
  ]
 }

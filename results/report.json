@@ -69208,6 +69208,82 @@
   },
   {
    "arm": "base2",
+   "dataset": "vqav2pairs",
+   "role": "test",
+   "tier": "full",
+   "prompt": "reasoning",
+   "image_mode": "original",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 1978,
+    "official": {
+     "overall": 0.5716380182002022,
+     "by_answer_type": {
+      "number": 0.604119850187266,
+      "other": 0.5190170940170941,
+      "yes/no": 0.624
+     }
+    },
+    "normalized": {
+     "overall": 0.6783114256825076,
+     "by_answer_type": {
+      "number": 0.6078651685393259,
+      "other": 0.5425213675213675,
+      "yes/no": 0.8665806451612903
+     }
+    },
+    "mean_output_tokens": 145.52679474216382,
+    "truncated_fraction": 0.03387259858442872,
+    "answer_tag_fraction": 0.955005055611729,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.6773003033367038,
+    "answers_scored_differently": 211
+   }
+  },
+  {
+   "arm": "base2",
+   "dataset": "vqav2pairs",
+   "role": "test",
+   "tier": "full",
+   "prompt": "short",
+   "image_mode": "original",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 1978,
+    "official": {
+     "overall": 0.7965116279069767,
+     "by_answer_type": {
+      "number": 0.6704119850187266,
+      "other": 0.7297008547008547,
+      "yes/no": 0.9206451612903226
+     }
+    },
+    "normalized": {
+     "overall": 0.7970171890798786,
+     "by_answer_type": {
+      "number": 0.6741573033707865,
+      "other": 0.7297008547008547,
+      "yes/no": 0.9206451612903226
+     }
+    },
+    "mean_output_tokens": 2.382709807886754,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.7965116279069767,
+    "answers_scored_differently": 1
+   }
+  },
+  {
+   "arm": "base2",
    "dataset": "vstar",
    "role": "test",
    "tier": "full",
@@ -161930,6 +162006,44 @@
   },
   {
    "arm": "p1-f-grpo2-base",
+   "dataset": "vqav2pairs",
+   "role": "test",
+   "tier": "full",
+   "prompt": "reasoning",
+   "image_mode": "original",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 1978,
+    "official": {
+     "overall": 0.7956521739130434,
+     "by_answer_type": {
+      "number": 0.6857677902621723,
+      "other": 0.7276709401709403,
+      "yes/no": 0.9156129032258065
+     }
+    },
+    "normalized": {
+     "overall": 0.804752275025278,
+     "by_answer_type": {
+      "number": 0.6895131086142322,
+      "other": 0.7447649572649573,
+      "yes/no": 0.9169032258064517
+     }
+    },
+    "mean_output_tokens": 8.493933265925177,
+    "truncated_fraction": 0.0005055611729019212,
+    "answer_tag_fraction": 0.9994944388270981,
+    "empty_answer_fraction": 0.0005055611729019212,
+    "official_on_lowercased_answers": 0.8042467138523761,
+    "answers_scored_differently": 18
+   }
+  },
+  {
+   "arm": "p1-f-grpo2-base",
    "dataset": "vstar",
    "role": "test",
    "tier": "full",
@@ -168294,6 +168408,44 @@
   },
   {
    "arm": "p1-f-short2-base",
+   "dataset": "vqav2pairs",
+   "role": "test",
+   "tier": "full",
+   "prompt": "short",
+   "image_mode": "original",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 1978,
+    "official": {
+     "overall": 0.8063700707785642,
+     "by_answer_type": {
+      "number": 0.700749063670412,
+      "other": 0.7382478632478633,
+      "yes/no": 0.925032258064516
+     }
+    },
+    "normalized": {
+     "overall": 0.8068756319514662,
+     "by_answer_type": {
+      "number": 0.7044943820224719,
+      "other": 0.7382478632478633,
+      "yes/no": 0.925032258064516
+     }
+    },
+    "mean_output_tokens": 2.3245702730030335,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.8063700707785642,
+    "answers_scored_differently": 1
+   }
+  },
+  {
+   "arm": "p1-f-short2-base",
    "dataset": "vstar",
    "role": "test",
    "tier": "full",
@@ -173279,6 +173431,44 @@
     "empty_answer_fraction": 0.0,
     "official_on_lowercased_answers": 0.7983,
     "answers_scored_differently": 1
+   }
+  },
+  {
+   "arm": "p1-f-short2-sft",
+   "dataset": "vqav2pairs",
+   "role": "test",
+   "tier": "full",
+   "prompt": "short",
+   "image_mode": "original",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 1978,
+    "official": {
+     "overall": 0.8178968655207279,
+     "by_answer_type": {
+      "number": 0.7232209737827715,
+      "other": 0.7550213675213676,
+      "yes/no": 0.9264516129032258
+     }
+    },
+    "normalized": {
+     "overall": 0.8178968655207279,
+     "by_answer_type": {
+      "number": 0.7232209737827715,
+      "other": 0.7550213675213676,
+      "yes/no": 0.9264516129032258
+     }
+    },
+    "mean_output_tokens": 2.320020222446916,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.8178968655207279,
+    "answers_scored_differently": 0
    }
   },
   {
@@ -204656,6 +204846,44 @@
     "empty_answer_fraction": 0.0,
     "official_on_lowercased_answers": 0.79874,
     "answers_scored_differently": 1
+   }
+  },
+  {
+   "arm": "sft2",
+   "dataset": "vqav2pairs",
+   "role": "test",
+   "tier": "full",
+   "prompt": "short",
+   "image_mode": "original",
+   "step": null,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 1978,
+    "official": {
+     "overall": 0.8225985844287158,
+     "by_answer_type": {
+      "number": 0.7359550561797753,
+      "other": 0.7585470085470085,
+      "yes/no": 0.9298064516129032
+     }
+    },
+    "normalized": {
+     "overall": 0.8225985844287158,
+     "by_answer_type": {
+      "number": 0.7359550561797753,
+      "other": 0.7585470085470085,
+      "yes/no": 0.9298064516129032
+     }
+    },
+    "mean_output_tokens": 2.3377148634984835,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0,
+    "official_on_lowercased_answers": 0.8225985844287158,
+    "answers_scored_differently": 0
    }
   },
   {

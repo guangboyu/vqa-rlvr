@@ -333,6 +333,6 @@ official scorer, reasoning prompt; `python -m scripts.cards summarize` writes `r
 | infovqa-grpo | GRPO from Instruct under the short prompt, 2,000 updates, instead of SFT | Holds | 65.2 → 63.4, 4 → 4 tokens | held | 6.3 |
 | infovqa-sft-grpo | GRPO from the SFT model, with the same 2,000 updates | Holds | 65.2 → 66.1, 4 → 4 tokens | held | 8.7 |
 | virl39k-sft | SFT on ViRL39K's sft role, one epoch of short answers | Holds | 43.0 → 52.8, 907 → 3 tokens | did not hold | 4.2 |
-| virl39k-grpo | GRPO from Instruct under the reasoning prompt, 2,048-token answers, 2,000 updates, instead of SFT | Holds | not finished | — | — |
-| virl39k-sft-grpo | GRPO from the SFT model under the reasoning prompt, with the same 2,000 updates | Holds | not finished | — | — |
+| virl39k-grpo | GRPO from Instruct under the reasoning prompt, 2,048-token answers, 2,000 updates, instead of SFT | Holds | 52.8 → 59.8, 3 → 626 tokens | held | 24.0 |
+| virl39k-sft-grpo | GRPO from the SFT model under the reasoning prompt, with the same 2,000 updates | Holds | 52.8 → 54.8, 3 → 13 tokens | held | 5.6 |
 <!-- /report:cards -->
