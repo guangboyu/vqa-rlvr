@@ -1,0 +1,110 @@
+{
+  "schema": "run-record/1",
+  "legacy": false,
+  "model_id": "bb32273c9508f076177edced1414384b9f2add870104bf518db9916bfc3acd44",
+  "protocol_id": "42c941cf6ee0820eac0d8f52b0d6bc07a802d17600347c4f8f584acb37fe200d",
+  "model": {
+    "source": "Qwen/Qwen3-VL-2B-Instruct",
+    "label": "card-virl39k-sft",
+    "run": "card-virl39k-sft",
+    "step": 1052,
+    "weights": {
+      "base": {
+        "hub": "Qwen/Qwen3-VL-2B-Instruct",
+        "revision": "89644892e4d85e24eaac8bacfd4f463576704203"
+      },
+      "adapter_sha256": "ba051655be8b76ea995405e943e8aad78df80479991ac4bf8d8427c22cdd5324"
+    },
+    "adapter": "/pub/guangboy/runs/vqa-card-virl39k-sft/checkpoints"
+  },
+  "protocol": {
+    "dataset": "mathvista",
+    "ladder": "benchmark",
+    "role": "test",
+    "tier": "full",
+    "question_limit": null,
+    "prompt": "short",
+    "prompt_text": "{question}\nAnswer the question using a single word or phrase.",
+    "max_tokens": 64,
+    "temperature": 0.0,
+    "samples": 1,
+    "image_mode": "original",
+    "max_pixels": 786432,
+    "scorers": {
+      "official": null,
+      "normalized": "normalized_mixed_accuracy/v1",
+      "project": "mathvista_accuracy/v1"
+    },
+    "extraction": "last_answer_tag_or_full_text",
+    "answer_tag_rule": "raw text contains </answer>",
+    "data": {
+      "subsets": {
+        "mathvista_eval": "db7208ad2179b3b9"
+      },
+      "selection_sha256": "21c6e9dabce492cf8c627cbde35e09b13d83c5a052ec950bccb908147c0852aa",
+      "image_groups_sha256": "2422e00d12f5d35729eb984dad17c0d7e84e0ebc803659764bcfc15fbd22058f"
+    },
+    "metric_metadata": {
+      "primary": "project",
+      "project": {
+        "name": "MathVista by answer type",
+        "source": "project-defined: the authors extract answers with GPT; normalization from lupantech/MathVista evaluation/calculate_score.py",
+        "rule": "options through VLMEvalKit's can_infer; else the last number, truncated for an integer, rounded to the reference's decimals for a float; lists element by element"
+      }
+    }
+  },
+  "metrics": {
+    "n": 996,
+    "official": null,
+    "normalized": {
+      "overall": 0.5883534136546185,
+      "by_answer_type": {
+        "float": 0.2,
+        "integer": 0.5301204819277109,
+        "list": 0.0,
+        "multi_choice": 0.6641929499072357
+      }
+    },
+    "project": {
+      "overall": 0.5893574297188755,
+      "by_answer_type": {
+        "float": 0.2,
+        "integer": 0.5325301204819277,
+        "list": 0.0,
+        "multi_choice": 0.6641929499072357
+      }
+    },
+    "mean_output_tokens": 2.3845381526104417,
+    "truncated_fraction": 0.0,
+    "answer_tag_fraction": 0.0,
+    "empty_answer_fraction": 0.0
+  },
+  "provenance": {
+    "code_version": "8fdf7679fa8370e05336c1b0df972baa21d12a7f",
+    "uncommitted_changes": false,
+    "source_sha256": {
+      "vqar/eval/__init__.py": "2aa88c809409a57502d0d9b2893e14c3b5bf99d971bceefcc1ed4716ef295f81",
+      "vqar/eval/examples.py": "c05df90499c3fd7c4ff9093f6efc646b0b84ea39a30c4318200afecb9c32d734",
+      "vqar/eval/protocol.py": "9ea52c923b58b4717e9067968ebaf036d7c4756e8f6fbb245c2797d1a0cca67e",
+      "vqar/eval/record.py": "6be2298f531240b01df2feecedd50af2d32a1c17f6029951ddf3f7723834b023",
+      "vqar/eval/runner.py": "a02fc2c0adcb20b03b2045027c85d8c2f57d69ab9a6be1340916e9228434515e",
+      "vqar/inference.py": "f77143773554fbf3710e045220e2efb36d5698035a760094a9aace008bf593bf",
+      "vqar/config.py": "0241cd8c5fb3fed49fbbaeb12a3fc2415b58d07867bb3c63e01d7f5452e2efa6",
+      "vqar/data.py": "a980de42fe47274df72663ed690e99686c5eb8ef05f22c341e6eccc5f04e2ceb",
+      "vqar/metrics.py": "74cdd78a8d14648e018b3986cf26b6a733529cdaf6cc0f518f3b45fe906fa182",
+      "vqar/registry.py": "de2fd396918a31eb6a5ef0497d11605091f8820abab4c3733fa7cb49e7f953b1",
+      "vqar/splits.py": "10ea7cfde1a270a3e7fc458bc04f74b4d01eee9840a02f8b8627d95c9d6bc41e",
+      "vqar/ood_metrics.py": "9449e0a85c4b7ff3efcbc88264ee1e03d53689c39c2fe030a13887465fa1b226",
+      "vqar/ood.py": "d59220be09094fa5a5ffbb6e791b38ee5b3c8dca0ca381ef64a28bf0f94ccb8f",
+      "uv.lock": "8c79fab440350a15e75e9507c3b5338ecc63beb92fc12c6ef18fbe01122ac323"
+    },
+    "versions": {
+      "torch": "2.11.0+cu129",
+      "transformers": "5.13.0",
+      "vllm": "0.23.0+cu129",
+      "datasets": "5.0.0"
+    },
+    "timestamp": "2026-11-16T20:38:50+00:00",
+    "eval_seconds": 351.6
+  }
+}
