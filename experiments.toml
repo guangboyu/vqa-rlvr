@@ -1549,4 +1549,11 @@ holds = { max_delta = -2.0 }
 baseline_run = "runs/cards/virl39k-grpo"
 if_holds = "The math win stands against SFT on the same information RL has: it comes from RL, not from reasoning targets."
 if_not = "Reasoning targets carry the math gain; on ViRL39K the root claim credits reasoning, not RL."
-status = "experimental"
+status = "null"
+why = """Observed: SFT on 5,194 of Instruct's own correct reasoning answers (one epoch, 163 updates) \
+ends at 46.8 dev, 13.0 below GRPO [-17.4, -8.6], 3.8 above Instruct's reasoning and 6.0 below \
+answer-only SFT. Its answers still run past 2,048 tokens 29% of the time, against GRPO's 6%. \
+Proposed: imitating finished answers does not teach the model to stop; RL's zero reward for an \
+unfinished answer does."""
+implies = """The math win stands against SFT on the same information RL has, by more than on ChartQA \
+(13.0 against 5.6): it comes from RL, not from reasoning targets."""
