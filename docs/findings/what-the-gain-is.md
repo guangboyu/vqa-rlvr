@@ -7,10 +7,12 @@ raises pass@1 and ends level or behind at pass@32, while SFT raises pass@32
 ([pass@k](#held-out-passk-before-and-after-rl)), as Yue et al. (2025) report for text. Where the answer
 is out of reach, SFT has to go first ([reach](#reach)).
 
-**RL's gains come from the image.** At 8B on SLAKE, with the same training questions,
+**On medical images, RL's gains come from the image.** At 8B on SLAKE, with the same training questions,
 <!--n:ba.slk8.sft.blackgain-->10.4<!--/n--> of SFT's <!--n:ba.slk8.sft.gain-->19.1<!--/n-->-point gain survives a black image, against
 <!--n:ba.slk8.grpo.blackgain-->0.4<!--/n--> of RL's <!--n:ba.slk8.grpo.gain-->10.3<!--/n-->. RL from Instruct answers no more blind than Instruct
-in <!--n:ba.rl.level-->5<!--/n--> of <!--n:ba.rl.settings-->6<!--/n--> settings, and <!--n:ba.rl.most-->+3.2<!--/n--> points in the other.
+in <!--n:ba.rl.level-->5<!--/n--> of <!--n:ba.rl.settings-->6<!--/n--> settings, and <!--n:ba.rl.most-->+3.2<!--/n--> points in the other. Math differs: with a black image,
+<!--n:vr.grpo.blindgain-->10.4<!--/n--> of GRPO's <!--n:vr.grpo.gain-->15.2<!--/n-->-point gain on ViRL39K remains and <!--n:vr.sft.blindgain-->9.6<!--/n--> of SFT's <!--n:vr.sft.gain-->12.4<!--/n-->, because
+most of each gain is answer form, such as finishing within the token budget.
 
 **RL moves the model less.** On medical data its forward KL from Instruct is <!--n:kl.med.lo-->5<!--/n--> to <!--n:kl.med.hi-->16<!--/n-->
 times smaller than SFT's, and on sets no model trained on it keeps a small lead over SFT

@@ -328,6 +328,79 @@ put("cat.payoff.chartqa", signed(payoff["chartqa"]))
 put("cat.payoff.mmmu", signed(payoff["mmmu"]))
 put("cat.payoff.vqav2", signed(payoff["vqav2"]))
 put("reach.rl.most", f1(max(reach["verdict"]["rl_above_reach"].values())))
+
+# Milestone 2 sources. Math: models trained on ViRL39K, scored on MathVista-mini and MMMU test
+# rows, reasoning to 2,048 tokens (Instruct's long-budget records sit in records/budget-2048).
+# Documents: models trained on InfoVQA, scored on its released validation split.
+LONG = load_cells(RESULTS / "records" / "budget-2048", REPO / "data")
+
+
+def any_step(arm, dataset, prompt, role="test", tier="full", cells=None, mode="original"):
+    """The one greedy record of an arm in an image mode, whatever training step it names."""
+    found = [r for c, r in (cells or CELLS).items()
+             if (c.arm, c.dataset, c.prompt, c.role, c.tier, c.image_mode, c.samples)
+             == (arm, dataset, prompt, role, tier, mode, 1) and c.max_pixels == MAX_PIXELS]
+    if len(found) != 1:
+        raise KeyError(f"{len(found)} records for {arm} {dataset} {prompt} {role}")
+    return found[0]
+
+
+def paired(reference, candidate, variant):
+    """candidate − reference over the same questions, cached for clones without predictions."""
+    key = "|".join((reference.path.name, str(reference.model.get("label")),
+                    str(candidate.model.get("label")), variant))
+    paths = [r.predictions_path() for r in (reference, candidate)]
+    if all(path.exists() for path in paths):
+        DELTAS[key] = paired_bootstrap(*(question_scores(path, variant) for path in paths))
+    return DELTAS[key]
+
+
+MATH = {"base": ("base2", "reasoning", LONG), "base.s": ("base2", "short", None),
+        "sft": ("card-virl39k-sft", "short", None),
+        "rsft": ("card-virl39k-reasoning-sft", "reasoning", None),
+        "grpo": ("card-virl39k-grpo", "reasoning", None),
+        "sftgrpo": ("card-virl39k-sft-grpo", "reasoning", None)}
+for short, dataset, variant in (("mv", "mathvista", "project"), ("mm", "mmmu", "official")):
+    found = {name: any_step(arm, dataset, prompt, cells=cells)
+             for name, (arm, prompt, cells) in MATH.items()}
+    for name, record_ in found.items():
+        put(f"{short}.{name}", f1(100 * record_.metrics[variant]["overall"]))
+        put(f"{short}.{name}.tok", f"{record_.metrics['mean_output_tokens']:.0f}")
+    for other in ("sft", "rsft"):
+        d = paired(found[other], found["grpo"], variant)
+        put(f"{short}.grpo_{other}", f1(d["delta"]))
+        put(f"{short}.grpo_{other}.ci", ci(d))
+# Answers cut off at 2,048 tokens on ViRL39K dev: what GRPO learned and SFT on traces did not.
+for name, arm in (("base", "base2"), ("grpo", "card-virl39k-grpo"),
+                  ("rsft", "card-virl39k-reasoning-sft")):
+    cut = any_step(arm, "virl39k", "reasoning", "dev", "dev").metrics["truncated_fraction"]
+    put(f"vr.{name}.cut", f"{100 * cut:.0f}")
+# Points of each method's ViRL39K dev gain that remain with a black image, each against Instruct
+# under the same prompt: most of either gain is answer form, not reading.
+def dev_score(model, prompt, mode):
+    found = any_step(model, "virl39k", prompt, "dev", "dev", mode=mode)
+    return 100 * found.metrics["project"]["overall"]
+
+
+for name, arm, prompt in (("sft", "card-virl39k-sft", "short"),
+                          ("grpo", "card-virl39k-grpo", "reasoning")):
+    put(f"vr.{name}.gain", f1(dev_score(arm, prompt, "original")
+                              - dev_score("base2", prompt, "original")))
+    put(f"vr.{name}.blindgain", f1(dev_score(arm, prompt, "black")
+                                   - dev_score("base2", prompt, "black")))
+INFO = {"base": "base2", "sft": "card-infovqa-sft", "grpo": "card-infovqa-grpo",
+        "sftgrpo": "card-infovqa-sft-grpo"}
+info = {name: any_step(arm, "infovqa", "short") for name, arm in INFO.items()}
+for name, record_ in info.items():
+    put(f"iv.{name}", f1(100 * record_.metrics["official"]["overall"]))
+put("iv.grpo_sft.ci", ci(paired(info["sft"], info["grpo"], "official")))
+put("iv.sftgrpo_sft.ci", ci(paired(info["sft"], info["sftgrpo"], "official")))
+# One model for photos and charts with a prompt per domain (results/ledger.json, gate.json).
+routing = next(card for card in load("ledger.json")["cards"]
+               if card["id"] == "prompt-routing")["final"]
+put("mix.route.tok", f"{routing['tokens']:.0f}")
+put("mix.route.gap", f1(-next(row for row in load("gate.json")["candidates"]
+                             if row["card"] == "prompt-routing")["vs_specialists"]["delta"]))
 vision = {row["model"]: row for spec in beyond if spec.get("group") == "vision"
           for row in spec["rows"] if not row.get("missing")}
 put("vis.papo.black", f1(vision["slk-short2-base-e1-papo"]["black_accuracy"]))
@@ -663,6 +736,14 @@ def overview_table():
                                                           else ""),
                      {"base": acc(base, ds, variant=variant),
                       **{m: acc(a, ds, variant=variant) for m, a in arms.items()}}))
+    math_rows = []
+    for name, short in (("MathVista-mini (trained on ViRL39K)", "mv"),
+                        ("MMMU (trained on ViRL39K)", "mm")):
+        math_rows.append(("Math", name, "reasoning to 2,048 tokens; SFT short answer",
+                          {m: float(N[f"{short}.{m}"]) for m in METHODS}))
+    rows[2:2] = math_rows
+    rows.insert(4, ("Documents", "InfoVQA", "short answer",
+                    {m: float(N[f"iv.{m}"]) for m in METHODS}))
     rows.append(("Unseen", "PathVQA (trained on SLAKE, 2B)", "short answer",
                  {"base": acc("base2", "pathvqa"), "sft": acc("slk-sft2", "pathvqa"),
                   "grpo": acc("slk-short2-base-e1", "pathvqa"),

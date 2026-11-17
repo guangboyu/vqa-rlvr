@@ -79,6 +79,54 @@
   "resamples": 10000,
   "seed": 0
  },
+ "infovqa-test-full-short-ab9e62c868.json|card-infovqa-sft|card-infovqa-grpo|official": {
+  "n": 2801,
+  "delta": -1.1045883868182267,
+  "low": -2.2795944695806782,
+  "high": 0.06864434608349128,
+  "resamples": 10000,
+  "seed": 0
+ },
+ "infovqa-test-full-short-ab9e62c868.json|card-infovqa-sft|card-infovqa-sft-grpo|official": {
+  "n": 2801,
+  "delta": 0.8994569833941174,
+  "low": -0.08520297732402546,
+  "high": 1.9101455046890436,
+  "resamples": 10000,
+  "seed": 0
+ },
+ "mathvista-test-full-reasoning-f4754cd937.json|card-virl39k-reasoning-sft|card-virl39k-grpo|project": {
+  "n": 996,
+  "delta": 4.819277108433735,
+  "low": 2.108433734939759,
+  "high": 7.530120481927711,
+  "resamples": 10000,
+  "seed": 0
+ },
+ "mathvista-test-full-short-42c941cf6e.json|card-virl39k-sft|card-virl39k-grpo|project": {
+  "n": 996,
+  "delta": 6.827309236947792,
+  "low": 3.7148594377510036,
+  "high": 9.939759036144578,
+  "resamples": 10000,
+  "seed": 0
+ },
+ "mmmu-test-full-reasoning-ea8f819c0f.json|card-virl39k-reasoning-sft|card-virl39k-grpo|official": {
+  "n": 900,
+  "delta": 6.888888888888889,
+  "low": 3.6666666666666665,
+  "high": 10.11111111111111,
+  "resamples": 10000,
+  "seed": 0
+ },
+ "mmmu-test-full-short-3a561adfdb.json|card-virl39k-sft|card-virl39k-grpo|official": {
+  "n": 900,
+  "delta": 2.888888888888889,
+  "low": -0.7777777777777778,
+  "high": 6.444444444444445,
+  "resamples": 10000,
+  "seed": 0
+ },
  "omx-sft2|omx-short2-base|pathvqa|short|official|original|original": {
   "n": 2240,
   "delta": 2.2916666666666665,

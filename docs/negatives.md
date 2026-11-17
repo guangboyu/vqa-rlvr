@@ -77,11 +77,23 @@ checklist.
 - **Why (observed):** under the short prompt no model loses more than 0.6 points, so what moves is the response habit.
 - **Implies:** what RL teaches here is mostly how to respond under a prompt.
 
+### Counterfactual pairs on VQAv2
+
+- **Tried:** 978 VQAv2 complementary pairs, one question on two similar images with different
+  answers, for Instruct and the photo models.
+- **Expected:** SFT gives one answer to both images more often than Instruct, since it also learns which
+  answers are likely; RL does not.
+- **Saw:** every short-answer model gives one answer to both images 21–22% of the time; SFT is 1.2 points
+  below Instruct [−3.0, +0.5] and gets both answers right most often (57.8% of pairs against 54.0%).
+- **Why (proposed):** on photos the training labels add little prior that Instruct does not already have.
+- **Implies:** the black-image test stays the measure of what a gain is made of (`results/pairs.json`).
+
 ### One line each
 
 - 16 questions per update for the same questions: 4× fewer steps, −0.8 to −2.3 under the reasoning prompt on photos.
 - Learning rate 3×: within 0.9 points on every cell. 10×: costs accuracy everywhere.
 - Unmerged rollouts: no cell moves more than 0.52 points; kept because they are on-policy.
+- Answer-only SFT before GRPO on math: GRPO learns the answer format and keeps 8-token answers ([math](findings/reasoning-pays.md#math-virl39k)).
 - Eight single-setting changes on ChartQA (loss averaging, KL, reward scaling, response cap, list-aware reward, canvas, image geometry): none beats a same-seed repeat, at 300 updates.
 - A prompt that lets the model decide whether to reason (two wordings and a few-shot form): Instruct wrote longer answers on photos than on charts and lost 4–22 points, so none went on to train.
 - Clip-higher: not run, since with one gradient pass per batch the policy ratio is 1 and the clip never binds.

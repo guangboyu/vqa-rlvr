@@ -1,14 +1,17 @@
-# Open: one model for photos and charts
+# One model for photos and charts
 
-*The [report](https://guangboyu.github.io/vqa-rlvr/report/)'s open question.*
+*One section of the [report](https://guangboyu.github.io/vqa-rlvr/report/).*
 
 Does one model learn when to reason? Trained on photos and charts together, a 2B model kept its chart
 reasoning until update 1,750, lost it by update 2,000, and ended at <!--n:ph.cq.mix.r-->65.9<!--/n-->% on ChartQA against
 <!--n:cq.grpo.r-->80.1<!--/n-->% for the chart-only model, at <!--n:ph.cq.mix.tok-->11<!--/n--> tokens.
 
-The cause is mixing, not training length. A chart-only model trained for the same <!--n:mix.updates-->2,844<!--/n--> updates keeps
-<!--n:ctrl.tok-->179<!--/n-->-token answers and its dev accuracy (<!--n:ctrl.base.acc-->75.8<!--/n-->% → <!--n:ctrl.acc-->75.8<!--/n-->%). Routing prompts by domain is the next
-test.
+The cause is the shared prompt, not training length. A chart-only model trained for the same <!--n:mix.updates-->2,844<!--/n--> updates keeps
+<!--n:ctrl.tok-->179<!--/n-->-token answers and its dev accuracy (<!--n:ctrl.base.acc-->75.8<!--/n-->% → <!--n:ctrl.acc-->75.8<!--/n-->%). Giving each domain its own
+prompt, short answers for photos and reasoning for charts, keeps the chart reasoning in one model
+(<!--n:mix.route.tok-->151<!--/n-->-token answers); its development score is <!--n:mix.route.gap-->2.1<!--/n--> points below the two specialists, so the reported
+models are the specialists. A pool of 90% charts with one reasoning prompt also keeps the chart
+reasoning and costs more on photos (`results/gate.json`, cards `prompt-routing` and `mix-ratio-90`).
 
 ## One model on both families
 

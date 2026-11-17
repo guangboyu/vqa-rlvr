@@ -13,6 +13,12 @@ On SLAKE's open-answer questions Instruct's pass@8 is <!--n:reach.slk2.reach-->5
 SFT can teach the others; the pattern is measured on every set in the [reach table](what-the-gain-is.md#reach),
 and the mechanism itself is untested.
 
+The order is a property of the task. On math, where reasoning pays, answer-only SFT replaces the
+reasoning with <!--n:mv.sft.tok-->2<!--/n-->-token answers, and GRPO started from it learns the answer format rather than
+reasoning: <!--n:mv.sftgrpo.tok-->8<!--/n-->-token answers and <!--n:mv.sftgrpo-->56.7<!--/n-->% on MathVista-mini, against <!--n:mv.grpo-->65.8<!--/n-->% for GRPO from
+Instruct ([math](reasoning-pays.md#math-virl39k)). SFT goes first where the answer is out of reach;
+RL goes first where reasoning pays.
+
 ## Medical images: SFT then RL is the best model, and RL forgets less
 
 Two medical datasets passed the screen ([evaluation](../harness/evaluation.md#dataset-screening)): SLAKE

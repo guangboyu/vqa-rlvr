@@ -226,16 +226,16 @@ body.present .counter { display: block; position: fixed; z-index: 6; font-family
 
   <div class="abstract" id="abstract">
     <span class="label">Abstract</span>
-    When does reinforcement learning with a verifiable reward improve a vision-language model beyond supervised fine-tuning (SFT) on the same data? We train Qwen3-VL at 2B and 8B with SFT, with GRPO and a 0/1 correctness reward, and with SFT followed by GRPO, and score every model through one evaluation harness. The answer depends on what the task pays for. RL mostly sharpens what the model can already sample. Where reasoning pays, it wins: on ChartQA it raises accuracy from {{cq.base.r}}% to {{cq.grpo.r}}%, {{cq.oversft}} points above SFT's best. Where reasoning does not pay, it changes the form of the answer and not the ability behind it: on VQAv2, reasoning answers shrink from {{ph.vqav2.base.tok}} to {{ph.vqav2.grpor.tok}} tokens and end at the level of short answers. Where the answer is out of reach, SFT has to go first, and RL after SFT is the best model. RL's gains also come from the image: at 8B on SLAKE, {{ba.slk8.sft.blackgain}} of SFT's {{ba.slk8.sft.gain}}-point gain survives a black image, against {{ba.slk8.grpo.blackgain}} of RL's {{ba.slk8.grpo.gain}}.
+    When does reinforcement learning with a verifiable reward improve a vision-language model beyond supervised fine-tuning (SFT) on the same data? We train Qwen3-VL at 2B and 8B with SFT, with GRPO and a 0/1 correctness reward, and with SFT followed by GRPO, and score every model through one evaluation harness. The answer depends on what the task pays for. RL mostly sharpens what the model can already sample. Where reasoning pays, it wins on both tasks we trained: on ChartQA it raises accuracy from {{cq.base.r}}% to {{cq.grpo.r}}%, {{cq.oversft}} points above SFT's best, and trained on ViRL39K math it reaches {{mv.grpo}}% on MathVista-mini, {{mv.grpo_sft}} points above SFT and {{mv.grpo_rsft}} above SFT on the model's own correct reasoning. Where reasoning does not pay, it changes the form of the answer and not the ability behind it: on VQAv2, reasoning answers shrink from {{ph.vqav2.base.tok}} to {{ph.vqav2.grpor.tok}} tokens and end at the level of short answers, and on InfoVQA RL and SFT end level. Where the answer is out of reach, SFT has to go first, and RL after SFT is the best model. On medical images RL's gains also come from the image: at 8B on SLAKE, {{ba.slk8.sft.blackgain}} of SFT's {{ba.slk8.sft.gain}}-point gain survives a black image, against {{ba.slk8.grpo.blackgain}} of RL's {{ba.slk8.grpo.gain}}.
   </div>
 </header>
 
 <section class="slide" id="highlights">
   <h2>Highlights</h2>
   <div class="highlights">
-    <div class="hl"><div class="fig">{{cq.base.r}}<span class="to">→</span>{{cq.grpo.r}}<span class="unit">ChartQA, reasoning prompt, 2B</span></div><p><b>Where reasoning pays, RL wins and keeps it.</b> GRPO ends {{cq.oversft}} points above SFT on short answers and {{cq.traces.self.lead}} above SFT on reasoning traces.</p></div>
+    <div class="hl"><div class="fig">{{cq.base.r}}<span class="to">→</span>{{cq.grpo.r}}<span class="unit">ChartQA, reasoning prompt, 2B</span></div><p><b>Where reasoning pays, RL wins and keeps it.</b> GRPO ends {{cq.oversft}} points above SFT on short answers and {{cq.traces.self.lead}} above SFT on reasoning traces. On math it repeats: {{mv.grpo}}% on MathVista-mini, {{mv.grpo_sft}} above SFT.</p></div>
     <div class="hl"><div class="fig">{{ph.vqav2.base.tok}}<span class="to">→</span>{{ph.vqav2.grpor.tok}}<span class="unit">VQAv2, tokens per answer, reasoning prompt</span></div><p><b>Where it doesn't, RL changes form, not ability.</b> GRPO deletes the reasoning and lands where short answers already were ({{ph.vqav2.grpor.r}}% against {{ph.vqav2.base.s}}%).</p></div>
-    <div class="hl"><div class="fig">{{ba.slk8.grpo.blackgain}}<span class="to">vs</span>{{ba.slk8.sft.blackgain}}<span class="unit">SLAKE 8B, points of gain that survive a black image, GRPO vs SFT</span></div><p><b>RL's gains come from the image.</b> Of its {{ba.slk8.grpo.gain}}-point gain, {{ba.slk8.grpo.blackgain}} survives without the image; of SFT's {{ba.slk8.sft.gain}}, {{ba.slk8.sft.blackgain}} does.</p></div>
+    <div class="hl"><div class="fig">{{ba.slk8.grpo.blackgain}}<span class="to">vs</span>{{ba.slk8.sft.blackgain}}<span class="unit">SLAKE 8B, points of gain that survive a black image, GRPO vs SFT</span></div><p><b>On medical images, RL's gains come from the image.</b> Of its {{ba.slk8.grpo.gain}}-point gain, {{ba.slk8.grpo.blackgain}} survives without the image; of SFT's {{ba.slk8.sft.gain}}, {{ba.slk8.sft.blackgain}} does.</p></div>
   </div>
 
   <figure class="wide">
@@ -244,21 +244,21 @@ body.present .counter { display: block; position: fixed; z-index: 6; font-family
       <thead><tr><th></th><th>Test set</th><th class="n">Instruct</th><th class="n">SFT</th><th class="n">GRPO</th><th class="n">SFT → GRPO</th><th>On the row's scale</th></tr></thead>
       <tbody>{{OVERVIEW_ROWS}}</tbody>
     </table></div>
-    <figcaption><b>Figure 1. Results at a glance.</b> Accuracy (%), best value in each row in bold. Instruct is the released Qwen3-VL Instruct model. GRPO is trained with the prompt the row is scored under (step-by-step reasoning for ChartQA, short answers elsewhere); medical and unseen rows use models trained on SLAKE, OmniMedVQA or VQAv2 + GQA as named. OmniMedVQA uses the normalized scorer, every other row the dataset authors' scorer.</figcaption>
+    <figcaption><b>Figure 1. Results at a glance.</b> Accuracy (%), best value in each row in bold. Instruct is the released Qwen3-VL Instruct model. Each model is scored under the prompt it trained with: step-by-step reasoning for GRPO on ChartQA and math (up to 2,048 tokens on math), short answers for SFT and elsewhere. Math rows use models trained on ViRL39K, which has no released test split; medical and unseen rows use models trained on SLAKE, OmniMedVQA or VQAv2 + GQA as named. OmniMedVQA uses the normalized scorer, every other row the dataset authors' scorer.</figcaption>
   </figure>
 </section>
 
 <section class="slide" id="claim">
   <h2><span class="num">1</span>The claim</h2>
   <p>RL with a verifiable reward trains a model on its own samples and pays it only when a program confirms the answer. For language models this step turns a fine-tuned model into a reasoning one. Vision-language models answer a different mix of questions: many are settled by looking rather than deriving, and a reward that checks only the final answer can just as well teach a model to stop thinking. The comparisons that would show when RL helps are rarely run under one recipe, one evaluation and matched data. We run them.</p>
-  <p><b>Whether RL beats SFT depends on what the task pays for. RL mostly sharpens what the model can already sample; where the answer is out of reach, SFT has to go first.</b> Across {{cat.benchmarks}} public benchmarks, the released model's reasoning prompt beats its short prompt on only {{cat.reasoning.pays}}: MathVista ({{cat.payoff.mathvista}} points), ChartQA ({{cat.payoff.chartqa}}) and MMMU ({{cat.payoff.mmmu}}); on VQAv2 the difference is {{cat.payoff.vqav2}}. The rest of this report hangs from that claim, and each branch links to the page with all of its evidence.</p>
+  <p><b>Whether RL beats SFT depends on what the task pays for. RL mostly sharpens what the model can already sample; where the answer is out of reach, SFT has to go first.</b> RL beats SFT on both tasks where reasoning pays, charts and math, and ties it where the answer is read off the image. Across {{cat.benchmarks}} public benchmarks, the released model's reasoning prompt beats its short prompt on only {{cat.reasoning.pays}}: MathVista ({{cat.payoff.mathvista}} points), ChartQA ({{cat.payoff.chartqa}}) and MMMU ({{cat.payoff.mmmu}}); on VQAv2 the difference is {{cat.payoff.vqav2}}. The rest of this report hangs from that claim, and each branch links to the page with all of its evidence.</p>
   <ul class="tree">
-    <li><a href="#reasoning-pays">Reasoning pays</a>: RL wins and keeps the reasoning. <a class="deep" href="https://github.com/guangboyu/vqa-rlvr/blob/main/docs/findings/reasoning-pays.md">evidence</a></li>
+    <li><a href="#reasoning-pays">Reasoning pays</a>: RL wins and keeps the reasoning, on charts and on math. <a class="deep" href="https://github.com/guangboyu/vqa-rlvr/blob/main/docs/findings/reasoning-pays.md">evidence</a></li>
     <li><a href="#form">Reasoning doesn't pay</a>: RL changes form, not ability. <a class="deep" href="https://github.com/guangboyu/vqa-rlvr/blob/main/docs/findings/form-not-ability.md">evidence</a></li>
     <li><a href="#knowledge">Knowledge missing</a>: SFT first, RL polishes. <a class="deep" href="https://github.com/guangboyu/vqa-rlvr/blob/main/docs/findings/sft-then-rl.md">evidence</a></li>
-    <li><a href="#gain">What RL's gain is made of</a>: it needs the image and moves the model less. <a class="deep" href="https://github.com/guangboyu/vqa-rlvr/blob/main/docs/findings/what-the-gain-is.md">evidence</a></li>
+    <li><a href="#gain">What RL's gain is made of</a>: on medical images it needs the image, and it moves the model less. <a class="deep" href="https://github.com/guangboyu/vqa-rlvr/blob/main/docs/findings/what-the-gain-is.md">evidence</a></li>
     <li><a href="#evaluation">Why trust it</a>: the harness every number passes through. <a class="deep" href="https://github.com/guangboyu/vqa-rlvr/blob/main/docs/harness/evaluation.md">evidence</a></li>
-    <li><a href="#open">Open</a>: one model for photos and charts. <a class="deep" href="https://github.com/guangboyu/vqa-rlvr/blob/main/docs/findings/one-model.md">evidence</a></li>
+    <li><a href="#open">One model</a>: photos and charts together. <a class="deep" href="https://github.com/guangboyu/vqa-rlvr/blob/main/docs/findings/one-model.md">evidence</a></li>
   </ul>
 </section>
 
@@ -279,6 +279,8 @@ body.present .counter { display: block; position: fixed; z-index: 6; font-family
     <tbody>
       <tr><td>Photos</td><td>VQAv2 + GQA: 39,458 SFT questions; RL draws 4,000 (1,000 updates) from a 55,438-question pool</td><td>VQAv2 5,000; GQA 12,578; CLEVR counting 3,000</td></tr>
       <tr><td>Charts</td><td>ChartQA human-written questions: 7,376 (one epoch, {{cq.updates}} updates)</td><td>ChartQA 1,250</td></tr>
+      <tr><td>Math</td><td>ViRL39K, one image per question: 33,635 SFT questions; RL draws 8,000 (2,000 updates), reasoning up to 2,048 tokens</td><td>MathVista-mini and MMMU, clean rows</td></tr>
+      <tr><td>Documents</td><td>InfoVQA: 23,443 SFT questions; RL draws 8,000 (2,000 updates), short answers</td><td>InfoVQA validation 2,801</td></tr>
       <tr><td>Medical</td><td>SLAKE (English), one epoch (1,229 RL updates); OmniMedVQA with 17 source collections held out for testing: 62,678 SFT questions, RL draws 4,916</td><td>SLAKE 1,061; OmniMedVQA held-out collections 1,156</td></tr>
       <tr><td>Never trained on</td><td>None</td><td>TextVQA 5,000; VizWiz 8,000; PathVQA {{h.pathvqa}}</td></tr>
     </tbody>
@@ -300,18 +302,20 @@ body.present .counter { display: block; position: fixed; z-index: 6; font-family
     <figcaption><b>Figure 3. Coverage on ChartQA.</b> pass@k (%) on all 1,250 test questions, 32 samples at temperature 1, official scorer, k on a log scale. Left: models trained with reasoning, scored under the reasoning prompt. Right: short-answer models, scored with short answers.</figcaption>
   </figure>
   <p>GRPO also beats SFT on reasoning traces, the strongest SFT baseline we could build. SFT trained on Instruct 2B's own correct reasoning reaches {{cq.traces.self}}%, and on the correct reasoning of the four-times-larger Instruct 8B {{cq.traces.8b}}%, so RL leads by {{cq.traces.self.lead.ci}} and {{cq.traces.8b.lead.ci}} points.</p>
-  <p class="small">ChartQA is the one chart source trained on in this study; a second document source is the next test.</p>
+  <p><b>Math repeats it.</b> Trained on ViRL39K with reasoning of up to 2,048 tokens, GRPO reaches {{mv.grpo}}% on MathVista-mini against {{mv.sft}}% for SFT ({{mv.grpo_sft.ci}} points) and {{mv.base}}% for Instruct, and {{mm.grpo}}% on MMMU. The same control holds: SFT on Instruct's own correct reasoning reaches {{mv.rsft}}% and {{mm.rsft}}%, so RL leads it by {{mv.grpo_rsft.ci}} and {{mm.grpo_rsft.ci}} points. RL also teaches the model to finish. Instruct runs out of tokens on {{vr.base.cut}}% of ViRL39K's development questions; GRPO cuts that to {{vr.grpo.cut}}%, while SFT on finished correct answers stays at {{vr.rsft.cut}}%. A reward of zero for an unfinished answer is the likely reason; copying finished answers gives no such signal.</p>
+  <p>Order matters on this task. Answer-only SFT replaces the reasoning with {{mv.sft.tok}}-token answers, and GRPO started from it learns the answer format rather than reasoning ({{mv.sftgrpo.tok}}-token answers, {{mv.sftgrpo}}% on MathVista-mini). Where reasoning pays, RL starts from the base model.</p>
 </section>
 
 <section class="slide" id="form">
   <h2><span class="num">4</span>Where it doesn't, RL changes form, not ability</h2>
   <p>A 0/1 correctness reward keeps whatever raises the chance of a correct final answer. On photo questions, reasoning lowers it. On VQAv2 under the reasoning prompt, GRPO goes from {{ph.vqav2.base.r}}% at {{ph.vqav2.base.tok}} tokens to {{ph.vqav2.grpor.r}}% at {{ph.vqav2.grpor.tok}} tokens, the level of Instruct's short answers ({{ph.vqav2.base.s}}%). The harness separates the two readings: the exact-match gain of {{ph.vqav2.gain}} points is {{ph.vqav2.audgain}} under the audited judge.</p>
   <p>Short-prompt RL meets SFT on this data rather than passing it, {{ph.vqav2.grpo.s}}% against {{ph.vqav2.sft.s}}% on VQAv2, and it narrows what the model can sample: pass@32 falls from {{hk.base.vqav2.32}}% to {{hk.grpo.vqav2.32}}% while SFT raises it to {{hk.sft.vqav2.32}}%.</p>
+  <p>Infographics behave the same way. On InfoVQA the answer is a span read from the image and reasoning adds nothing, and RL and SFT end level: {{iv.grpo}}% against {{iv.sft}}% ({{iv.grpo_sft.ci}} points), with SFT followed by GRPO at {{iv.sftgrpo}}%.</p>
 </section>
 
 <section class="slide" id="knowledge">
   <h2><span class="num">5</span>Where the answer is out of reach, SFT goes first</h2>
-  <p>On medical images GRPO started from SFT is the best model in all three settings, and SFT beats RL from Instruct in domain. SFT teaches the domain's answers; RL then polishes them, adding {{med.slk2.sftgrpo_sft.v}} points on SLAKE at 2B.</p>
+  <p>On medical images GRPO started from SFT is the best model in all three settings, and SFT beats RL from Instruct in domain. SFT teaches the domain's answers; RL then polishes them, adding {{med.slk2.sftgrpo_sft.v}} points on SLAKE at 2B. The order is a property of the task: on math, where reasoning pays, RL works best from the base model (Section 3).</p>
   <figure class="wide">
     <div class="tbl"><table>
       <thead><tr><th>Trained and tested on</th><th class="n">Instruct</th><th class="n">SFT</th><th class="n">GRPO</th><th class="n">SFT → GRPO</th><th class="n">SFT → GRPO<br>minus SFT</th><th class="n">PathVQA<br>Instruct · SFT · GRPO · SFT → GRPO</th><th class="n">PathVQA<br>GRPO minus SFT</th></tr></thead>
@@ -324,7 +328,7 @@ body.present .counter { display: block; position: fixed; z-index: 6; font-family
 
 <section class="slide" id="gain">
   <h2><span class="num">6</span>What RL's gain is made of</h2>
-  <p>Replacing each image with a black one shows what a model answers without looking. RL from Instruct answers as many questions blind as Instruct in {{ba.rl.level}} of {{ba.rl.settings}} settings, every interval including zero, and {{ba.rl.most}} points in the other. SFT answers more without the image in every setting it trained in. At 8B, {{ba.slk8.sft.blackgain}} of SFT's {{ba.slk8.sft.gain}}-point gain on SLAKE survives a black image, against {{ba.slk8.grpo.blackgain}} of RL's {{ba.slk8.grpo.gain}}. RL improves the answers that depend on the image; SFT also learns which answers are likely for a question.</p>
+  <p>Replacing each image with a black one shows what a model answers without looking. RL from Instruct answers as many questions blind as Instruct in {{ba.rl.level}} of {{ba.rl.settings}} settings, every interval including zero, and {{ba.rl.most}} points in the other. SFT answers more without the image in every setting it trained in. Math is the exception for both: with a black image, {{vr.grpo.blindgain}} of GRPO's {{vr.grpo.gain}}-point gain on ViRL39K remains and {{vr.sft.blindgain}} of SFT's {{vr.sft.gain}}, because most of each gain is answer form, such as finishing within the budget. At 8B, {{ba.slk8.sft.blackgain}} of SFT's {{ba.slk8.sft.gain}}-point gain on SLAKE survives a black image, against {{ba.slk8.grpo.blackgain}} of RL's {{ba.slk8.grpo.gain}}. RL improves the answers that depend on the image; SFT also learns which answers are likely for a question.</p>
   <figure class="wide">
     <div class="legend"><span><i class="sw base"></i>Instruct</span><span><i class="sw sft"></i>SFT</span><span><i class="sw grpo"></i>GRPO</span></div>
     {{BLACK_FIG}}
@@ -360,14 +364,15 @@ body.present .counter { display: block; position: fixed; z-index: 6; font-family
 </section>
 
 <section class="slide" id="open">
-  <h2><span class="num">8</span>Open: one model for photos and charts</h2>
-  <p>Does one model learn when to reason? Trained on photos and charts together, a 2B model kept its chart reasoning until update 1,750, lost it by update 2,000, and ended at {{ph.cq.mix.r}}% on ChartQA against {{cq.grpo.r}}% for the chart-only model. The cause is mixing, not training length: a chart-only model trained for the same {{mix.updates}} updates keeps {{ctrl.tok}}-token answers and its dev accuracy ({{ctrl.base.acc}}% → {{ctrl.acc}}%). Routing prompts by domain is the next test.</p>
+  <h2><span class="num">8</span>One model for photos and charts</h2>
+  <p>Does one model learn when to reason? Trained on photos and charts together under one prompt, a 2B model kept its chart reasoning until update 1,750, lost it by update 2,000, and ended at {{ph.cq.mix.r}}% on ChartQA against {{cq.grpo.r}}% for the chart-only model. The cause is the shared prompt, not training length: a chart-only model trained for the same {{mix.updates}} updates keeps {{ctrl.tok}}-token answers and its dev accuracy ({{ctrl.base.acc}}% → {{ctrl.acc}}%). Giving each domain its own prompt keeps the chart reasoning in one model ({{mix.route.tok}}-token answers), {{mix.route.gap}} points short of the two specialists on development questions, so the reported models are the specialists.</p>
 </section>
 
 <section class="slide" id="future">
   <h2><span class="num">9</span>Next</h2>
   <ol>
-    <li><b>New training sources.</b> The <a href="https://github.com/guangboyu/vqa-rlvr/blob/main/docs/matrix.md#category-table">category table</a> scores every model on {{cat.benchmarks}} benchmarks across general VQA, reasoning, document and chart, perception, hallucination and medical. One new source each for reasoning and documents comes next, with predictions written before they train.</li>
+    <li><b>Scale and seeds.</b> GRPO against SFT at 8B on charts and math, and two more training seeds on the headline comparisons.</li>
+    <li><b>More task types.</b> The <a href="https://github.com/guangboyu/vqa-rlvr/blob/main/docs/matrix.md#category-table">category table</a> scores every model on {{cat.benchmarks}} benchmarks across general VQA, reasoning, document and chart, perception, hallucination and medical; each new training source comes with predictions written before it trains, as math and InfoVQA did.</li>
     <li><b>Error analysis that names the errors.</b> Rule-based checks on every evaluation and labeled samples at milestones, so each error type can be taken to the literature on reducing it.</li>
     <li><b>Medical imaging as its own milestone,</b> from 2D medical questions to 3D abdominal CT.</li>
   </ol>

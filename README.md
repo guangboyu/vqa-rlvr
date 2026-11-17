@@ -5,8 +5,9 @@ supervised fine-tuning on the same data? This repository trains Qwen3-VL at 2B a
 GRPO and a 0/1 correctness reward, and with SFT followed by GRPO, and scores every model through one
 evaluation harness.
 
-**Whether RL beats SFT depends on what the task pays for.** RL mostly sharpens what the model can
-already sample; where the answer is out of reach, SFT has to go first.
+**Whether RL beats SFT depends on what the task pays for.** Where reasoning pays, RL wins: on charts
+and on math. Where the answer is read off the image, the two tie. Where the answer is out of reach,
+SFT has to go first.
 
 Across <!--n:cat.benchmarks-->18<!--/n--> public benchmarks, reasoning beats short answers on only <!--n:cat.reasoning.pays-->3<!--/n-->.
 
@@ -16,28 +17,35 @@ Across <!--n:cat.benchmarks-->18<!--/n--> public benchmarks, reasoning beats sho
 
 - **Where reasoning pays, RL wins and keeps it.** On ChartQA, GRPO raises accuracy from <!--n:cq.base.r-->69.7<!--/n-->% to
   <!--n:cq.grpo.r-->80.1<!--/n-->%, <!--n:cq.oversft-->11.3<!--/n--> points above SFT on short answers and <!--n:cq.traces.self.lead-->5.6<!--/n--> above SFT on reasoning traces,
-  with answers still <!--n:cq.grpo.tok-->162<!--/n--> tokens long.
-  ([evidence](docs/findings/reasoning-pays.md))
+  with answers still <!--n:cq.grpo.tok-->162<!--/n--> tokens long. Math repeats it: trained on ViRL39K, GRPO reaches
+  <!--n:mv.grpo-->65.8<!--/n-->% on MathVista-mini, <!--n:mv.grpo_sft-->6.8<!--/n--> points above SFT and <!--n:mv.grpo_rsft-->4.8<!--/n--> above SFT on the model's own
+  correct reasoning. ([evidence](docs/findings/reasoning-pays.md))
 - **Where it doesn't, RL changes form, not ability.** On VQAv2 under the reasoning prompt, answers go
   from <!--n:ph.vqav2.base.tok-->148<!--/n--> tokens to <!--n:ph.vqav2.grpor.tok-->8<!--/n-->, and accuracy ends at <!--n:ph.vqav2.grpor.r-->78.3<!--/n-->%, the level of
-  short answers (<!--n:ph.vqav2.base.s-->77.9<!--/n-->%). ([evidence](docs/findings/form-not-ability.md))
-- **RL's gains come from the image.** At 8B on SLAKE, <!--n:ba.slk8.sft.blackgain-->10.4<!--/n--> of SFT's <!--n:ba.slk8.sft.gain-->19.1<!--/n-->-point gain
+  short answers (<!--n:ph.vqav2.base.s-->77.9<!--/n-->%). On InfoVQA, RL and SFT end level (<!--n:iv.grpo-->64.7<!--/n-->% against <!--n:iv.sft-->65.8<!--/n-->%).
+  ([evidence](docs/findings/form-not-ability.md))
+- **On medical images, RL's gains come from the image.** At 8B on SLAKE, <!--n:ba.slk8.sft.blackgain-->10.4<!--/n--> of SFT's <!--n:ba.slk8.sft.gain-->19.1<!--/n-->-point gain
   survives a black image, against <!--n:ba.slk8.grpo.blackgain-->0.4<!--/n--> of RL's <!--n:ba.slk8.grpo.gain-->10.3<!--/n-->.
   ([evidence](docs/findings/what-the-gain-is.md))
 
 On medical images, GRPO after SFT is the best model in every setting (<!--n:med.slk2.sftgrpo-->76.2<!--/n-->% on SLAKE at 2B).
 The answers are out of reach at first, so SFT goes first: <!--n:med.slk2.sft-->74.8<!--/n-->% for SFT against
-<!--n:med.slk2.grpo-->65.6<!--/n-->% for GRPO from Instruct. ([evidence](docs/findings/sft-then-rl.md))
+<!--n:med.slk2.grpo-->65.6<!--/n-->% for GRPO from Instruct. On math the order reverses: answer-only SFT removes the reasoning that RL
+needs, so RL starts from the base model. ([evidence](docs/findings/sft-then-rl.md))
 
 Accuracy (%) on fixed test sets, best in each row in bold. Instruct is the released Qwen3-VL Instruct
-model; the other columns were trained on each row's own training data, except the unseen rows, which test
-models trained elsewhere. SFT trains on short reference answers, and there is one training seed per model.
+model; the other columns were trained on each row's own training data, except the math rows (models
+trained on ViRL39K, which has no released test split) and the unseen rows, which test models trained
+elsewhere. SFT trains on short reference answers, and there is one training seed per model.
 
 <!-- report:overview -->
 | Test set | Prompt | Instruct | SFT | GRPO | SFT → GRPO |
 | --- | --- | ---: | ---: | ---: | ---: |
 | ChartQA | reasoning | 69.7 | 66.2 | **80.1** | 79.8 |
 | ChartQA | reasoning, audited judge | 77.2 | 69.8 | **82.6** | 82.0 |
+| MathVista-mini (ViRL39K models) | reasoning to 2,048 tokens; SFT short | 59.3 | 58.9 | **65.8** | 56.7 |
+| MMMU (ViRL39K models) | reasoning to 2,048 tokens; SFT short | 45.6 | 47.6 | **50.4** | 44.9 |
+| InfoVQA | short | 64.3 | 65.8 | 64.7 | **66.7** |
 | SLAKE, 2B | short | 49.8 | 74.8 | 65.6 | **76.2** |
 | SLAKE, 8B | short | 58.1 | 77.2 | 68.3 | **78.2** |
 | OmniMedVQA, held-out collections | short, normalized scorer | 74.6 | 85.0 | 79.1 | **85.6** |
@@ -82,7 +90,7 @@ uv run --frozen uvicorn demo.backend.app:app --port 8000
 
 ## Documentation
 
-- **Findings:** [reasoning pays](docs/findings/reasoning-pays.md), [form, not ability](docs/findings/form-not-ability.md), [SFT first](docs/findings/sft-then-rl.md), [what the gain is made of](docs/findings/what-the-gain-is.md), and the open question of [one model for photos and charts](docs/findings/one-model.md).
+- **Findings:** [reasoning pays](docs/findings/reasoning-pays.md), [form, not ability](docs/findings/form-not-ability.md), [SFT first](docs/findings/sft-then-rl.md), [what the gain is made of](docs/findings/what-the-gain-is.md), and [one model for photos and charts](docs/findings/one-model.md).
 - **[What did not work](docs/negatives.md):** each thing tried, what was expected, what happened and what it implies.
 - **[Do 3D CT benchmarks need the scan?](docs/ct-audit.md)** A separate note: on DeepTumorVQA a text-only rule scores <!--n:au.mc.rule-->60.7<!--/n-->%, and on a debiased version built here GRPO and SFT reach the same accuracy.
 - **Harness:** [method](docs/harness/method.md), [evaluation](docs/harness/evaluation.md), [validation](docs/harness/validation.md), [training evidence](docs/harness/training-evidence.md), [hardware](docs/harness/hardware.md), [monitoring](docs/harness/monitoring.md).

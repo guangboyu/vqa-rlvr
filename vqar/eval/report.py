@@ -729,41 +729,67 @@ def pilot_table(arms: list[Arm], cells: dict, dataset: str) -> str:
                   "Output tokens"], rows, 2)
 
 
-# The README overview: (test set, setting, dataset, prompt, scorer, and the arms trained for it
-# in the order Instruct, SFT, GRPO, SFT → GRPO).
+# The README overview: (test set, setting, dataset, scorer, and the four models in the order
+# Instruct, SFT, GRPO, SFT → GRPO, each as (label, prompt) or (label, prompt, "long") for a
+# record scored at 2,048 tokens, kept in results/records/budget-2048).
+CHARTQA_ARMS = ("base2", "cqa-sft2", "cqa-grpo2-base-e1", "cqa-grpo2-sft-e1")
+PHOTO_ARMS = ("base2", "sft2", "p1-f-short2-base", "p1-f-short2-sft")
+MATH_ARMS = (("base2", "reasoning", "long"), ("card-virl39k-sft", "short"),
+             ("card-virl39k-grpo", "reasoning"), ("card-virl39k-sft-grpo", "reasoning"))
+
+
+def same_prompt(arms, prompt):
+    return tuple((arm, prompt) for arm in arms)
+
+
 OVERVIEW_ROWS = (
-    ("ChartQA", "reasoning", "chartqa", "reasoning", "official",
-     ("base2", "cqa-sft2", "cqa-grpo2-base-e1", "cqa-grpo2-sft-e1")),
-    ("SLAKE, 2B", "short", "slake", "short", "official",
-     ("base2", "slk-sft2", "slk-short2-base-e1", "slk-short2-sft-e1")),
-    ("SLAKE, 8B", "short", "slake", "short", "official",
-     ("base8", "slk-sft8", "slk-short8-base-e1", "slk-short8-sft-e1")),
-    ("OmniMedVQA, held-out collections", "short, normalized scorer", "omnimedx", "short",
-     "normalized", ("base2", "omx-sft2", "omx-short2-base", "omx-short2-sft")),
-    ("PathVQA, unseen (SLAKE 2B models)", "short", "pathvqa", "short", "official",
-     ("base2", "slk-sft2", "slk-short2-base-e1", "slk-short2-sft-e1")),
-    ("TextVQA, unseen (VQAv2 + GQA models)", "short", "textvqa", "short", "official",
-     ("base2", "sft2", "p1-f-short2-base", "p1-f-short2-sft")),
+    ("ChartQA", "reasoning", "chartqa", "official", same_prompt(CHARTQA_ARMS, "reasoning")),
+    ("MathVista-mini (ViRL39K models)", "reasoning to 2,048 tokens; SFT short", "mathvista",
+     "project", MATH_ARMS),
+    ("MMMU (ViRL39K models)", "reasoning to 2,048 tokens; SFT short", "mmmu", "official",
+     MATH_ARMS),
+    ("InfoVQA", "short", "infovqa", "official", same_prompt(
+        ("base2", "card-infovqa-sft", "card-infovqa-grpo", "card-infovqa-sft-grpo"), "short")),
+    ("SLAKE, 2B", "short", "slake", "official", same_prompt(
+        ("base2", "slk-sft2", "slk-short2-base-e1", "slk-short2-sft-e1"), "short")),
+    ("SLAKE, 8B", "short", "slake", "official", same_prompt(
+        ("base8", "slk-sft8", "slk-short8-base-e1", "slk-short8-sft-e1"), "short")),
+    ("OmniMedVQA, held-out collections", "short, normalized scorer", "omnimedx", "normalized",
+     same_prompt(("base2", "omx-sft2", "omx-short2-base", "omx-short2-sft"), "short")),
+    ("PathVQA, unseen (SLAKE 2B models)", "short", "pathvqa", "official", same_prompt(
+        ("base2", "slk-sft2", "slk-short2-base-e1", "slk-short2-sft-e1"), "short")),
+    ("TextVQA, unseen (VQAv2 + GQA models)", "short", "textvqa", "official",
+     same_prompt(PHOTO_ARMS, "short")),
 )
 
 
-def overview_table(cells: dict, chartqa_judge: dict | None, ood: dict | None) -> str:
+def test_records(cells: dict) -> dict:
+    """Greedy original-image test records by (arm, dataset, prompt), whatever the step."""
+    return {(c.arm, c.dataset, c.prompt): record for c, record in cells.items()
+            if (c.role, c.tier, c.image_mode, c.samples) == ("test", "full", "original", 1)
+            and c.max_pixels == MAX_PIXELS}
+
+
+def overview_table(cells: dict, chartqa_judge: dict | None, ood: dict | None,
+                   long_cells: dict | None = None) -> str:
     """The README's results at a glance: Instruct and its three trained versions per test set,
     best in bold; the audited judge's ChartQA score and VizWiz from their result files."""
-    def cell(arm, dataset, prompt, variant):
-        record = cells.get(Cell(arm, dataset, "test", "full", prompt, "original", None))
+    found, long_found = test_records(cells), test_records(long_cells or {})
+
+    def cell(dataset, variant, arm, prompt, budget=None):
+        record = (long_found if budget else found).get((arm, dataset, prompt))
         return None if record is None else 100 * record.metrics[variant]["overall"]
 
-    rows = [(name, setting, [cell(arm, dataset, prompt, variant) for arm in arms])
-            for name, setting, dataset, prompt, variant, arms in OVERVIEW_ROWS]
+    rows = [(name, setting, [cell(dataset, variant, *arm) for arm in arms])
+            for name, setting, dataset, variant, arms in OVERVIEW_ROWS]
     if chartqa_judge:
         audited = {(c["arm"], c["prompt"]): c.get("audited") for c in chartqa_judge["cells"]}
         rows.insert(1, ("ChartQA", "reasoning, audited judge",
-                        [audited.get((arm, "reasoning")) for arm in OVERVIEW_ROWS[0][5]]))
+                        [audited.get((arm, "reasoning")) for arm in CHARTQA_ARMS]))
     if ood:
         vizwiz = {c["arm"]: c["score"] for c in ood["cells"] if c["dataset"] == "vizwiz"}
         rows.append(("VizWiz, unseen (VQAv2 + GQA models)", "short",
-                     [vizwiz.get(arm) for arm in OVERVIEW_ROWS[-1][5]]))
+                     [vizwiz.get(arm) for arm in PHOTO_ARMS]))
     lines = []
     for label, setting, values in rows:
         best = max(v for v in values if v is not None)
@@ -866,7 +892,8 @@ def build(root: Path = ROOT) -> tuple[dict[str, str], dict]:
         "passk-deltas": passk_deltas_table(every_arm, passk),
         "judge": judge_table(arms, judge),
         "judge-deltas": judge_deltas_table(arms, judge),
-        "overview": overview_table(cells, chartqa_judge, ood),
+        "overview": overview_table(cells, chartqa_judge, ood, load_cells(
+            root / "results" / "records" / "budget-2048", root / "data")),
         "chartqa-judge": judge_table(pilot_arms, chartqa_judge),
         "chartqa-judge-deltas": judge_deltas_table(pilot_arms, chartqa_judge),
         "beyond-accuracy": beyond_accuracy_table(every_arm, beyond),

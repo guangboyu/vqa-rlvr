@@ -12,6 +12,13 @@ Short-prompt RL meets SFT on the same data rather than passing it: <!--n:ph.vqav
 <!--n:ph.vqav2.sft.s-->79.9<!--/n-->% on VQAv2 and <!--n:ph.gqa.grpo.s-->60.3<!--/n-->% against <!--n:ph.gqa.sft.s-->62.3<!--/n-->% on GQA. SFT's lead comes mostly
 from seeing more questions; see [SFT on exactly the RL questions](what-the-gain-is.md#sft-on-exactly-the-rl-questions).
 
+Infographics behave the same way. On InfoVQA the answer is a span read from the image and reasoning
+adds nothing, and the three trained models end close together on its 2,801 validation questions:
+SFT <!--n:iv.sft-->65.8<!--/n-->%, GRPO <!--n:iv.grpo-->64.7<!--/n-->% (<!--n:iv.grpo_sft.ci-->−1.1 [−2.3, +0.1]<!--/n--> points from SFT) and SFT → GRPO <!--n:iv.sftgrpo-->66.7<!--/n-->%
+(<!--n:iv.sftgrpo_sft.ci-->+0.9 [−0.1, +1.9]<!--/n-->), from Instruct's <!--n:iv.base-->64.3<!--/n-->%. GRPO rolled out short answers with each image kept in
+shape within the evaluation budget; the cards and their predictions are `infovqa-*` in
+`experiments.toml`.
+
 ## Prompt template × scorer variant
 
 The full test matrix of the Part 1 study: every arm under both prompts on the four

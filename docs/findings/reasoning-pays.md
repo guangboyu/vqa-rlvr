@@ -14,7 +14,43 @@ pass@32 (<!--n:pk.base.r.32-->91.0<!--/n-->% → <!--n:pk.grpo.32-->91.5<!--/n--
 GRPO also beats SFT on reasoning traces. SFT on Instruct 2B's own correct reasoning reaches <!--n:cq.traces.self-->74.5<!--/n-->%,
 and on Instruct 8B's <!--n:cq.traces.8b-->73.4<!--/n-->%, so RL leads by <!--n:cq.traces.self.lead.ci-->+5.6 [+3.5, +7.6]<!--/n--> and <!--n:cq.traces.8b.lead.ci-->+6.6 [+4.6, +8.7]<!--/n--> points.
 
-ChartQA is the one chart source trained on in this study; a second document source is the next test.
+Math repeats it. Trained on ViRL39K with reasoning of up to 2,048 tokens, GRPO reaches <!--n:mv.grpo-->65.8<!--/n-->% on
+MathVista-mini against <!--n:mv.sft-->58.9<!--/n-->% for SFT (<!--n:mv.grpo_sft.ci-->+6.8 [+3.7, +9.9]<!--/n--> points) and leads SFT on Instruct's own correct
+reasoning by <!--n:mv.grpo_rsft.ci-->+4.8 [+2.1, +7.5]<!--/n-->; on MMMU by <!--n:mm.grpo_rsft.ci-->+6.9 [+3.7, +10.1]<!--/n-->. Both results were predicted before
+training ([math](#math-virl39k)).
+
+## Math: ViRL39K
+
+ViRL39K collects math and science questions with one image each; it passed the screen with
+reasoning worth 17 points for Instruct on its training questions and a black image costing 18.8
+under reasoning ([screen](../harness/evaluation.md#dataset-screening)). It has no released test split, so the
+models are scored on the Reasoning benchmarks of the [category table](../matrix.md#category-table),
+clean rows only, with reasoning up to 2,048 tokens. Training follows recipe v1.0 at 2B: one SFT
+epoch on all 33,635 short answers; GRPO from Instruct for 2,000 updates (8,000 questions) with
+2,048-token answers and images kept in shape within the evaluation budget; GRPO from the SFT model
+with the same updates; and SFT on one correct reasoning answer per question sampled from Instruct
+(5,194 of 8,000 questions), the control that settled ChartQA. The predictions were committed with
+the cards before training (`experiments.toml`, cards `virl39k-*`).
+
+| Model | MathVista-mini | MMMU | Tokens (MathVista) |
+| --- | ---: | ---: | ---: |
+| Instruct, reasoning | <!--n:mv.base-->59.3<!--/n--> | <!--n:mm.base-->45.6<!--/n--> | <!--n:mv.base.tok-->530<!--/n--> |
+| SFT, short answers | <!--n:mv.sft-->58.9<!--/n--> | <!--n:mm.sft-->47.6<!--/n--> | <!--n:mv.sft.tok-->2<!--/n--> |
+| SFT on Instruct's correct reasoning | <!--n:mv.rsft-->60.9<!--/n--> | <!--n:mm.rsft-->43.6<!--/n--> | <!--n:mv.rsft.tok-->545<!--/n--> |
+| **GRPO** | **<!--n:mv.grpo-->65.8<!--/n-->** | **<!--n:mm.grpo-->50.4<!--/n-->** | <!--n:mv.grpo.tok-->399<!--/n--> |
+| SFT → GRPO | <!--n:mv.sftgrpo-->56.7<!--/n--> | <!--n:mm.sftgrpo-->44.9<!--/n--> | <!--n:mv.sftgrpo.tok-->8<!--/n--> |
+
+GRPO leads SFT by <!--n:mv.grpo_sft.ci-->+6.8 [+3.7, +9.9]<!--/n--> on MathVista-mini and <!--n:mm.grpo_sft.ci-->+2.9 [−0.8, +6.4]<!--/n--> on MMMU, and SFT on reasoning
+by <!--n:mv.grpo_rsft.ci-->+4.8 [+2.1, +7.5]<!--/n--> and <!--n:mm.grpo_rsft.ci-->+6.9 [+3.7, +10.1]<!--/n-->.
+
+RL also teaches the model to finish. On ViRL39K's development questions Instruct runs out of
+tokens on <!--n:vr.base.cut-->30<!--/n-->% of its answers; GRPO cuts that to <!--n:vr.grpo.cut-->9<!--/n-->%, while SFT on finished correct answers stays
+at <!--n:vr.rsft.cut-->31<!--/n-->%. A reward of zero for an unfinished answer is the likely reason; copying finished answers
+gives no such signal.
+
+Starting RL from the answer-only SFT model does not bring the reasoning back: it learns the answer
+tag and keeps answers of <!--n:mv.sftgrpo.tok-->8<!--/n--> tokens. Where reasoning pays, RL starts from the base model
+([order](sft-then-rl.md)).
 
 ## ChartQA: RL where reasoning pays
 
