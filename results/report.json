@@ -95045,6 +95045,128 @@
    }
   },
   {
+   "arm": "card-virl39k-reasoning-sft",
+   "dataset": "mathvista",
+   "role": "test",
+   "tier": "full",
+   "prompt": "reasoning",
+   "image_mode": "original",
+   "step": 163,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 996,
+    "official": null,
+    "normalized": {
+     "overall": 0.5883534136546185,
+     "by_answer_type": {
+      "float": 0.35,
+      "integer": 0.5807228915662651,
+      "list": 0.0,
+      "multi_choice": 0.614100185528757
+     }
+    },
+    "project": {
+     "overall": 0.6094377510040161,
+     "by_answer_type": {
+      "float": 0.35,
+      "integer": 0.5903614457831325,
+      "list": 0.0,
+      "multi_choice": 0.6456400742115028
+     }
+    },
+    "mean_output_tokens": 545.3825301204819,
+    "truncated_fraction": 0.16265060240963855,
+    "answer_tag_fraction": 0.8293172690763052,
+    "empty_answer_fraction": 0.0
+   }
+  },
+  {
+   "arm": "card-virl39k-reasoning-sft",
+   "dataset": "mmmu",
+   "role": "test",
+   "tier": "full",
+   "prompt": "reasoning",
+   "image_mode": "original",
+   "step": 163,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 900,
+    "official": {
+     "overall": 0.43555555555555553,
+     "by_answer_type": {
+      "multiple-choice": 0.4510035419126328,
+      "open": 0.18867924528301888
+     }
+    },
+    "normalized": {
+     "overall": 0.3511111111111111,
+     "by_answer_type": {
+      "multiple-choice": 0.3659976387249115,
+      "open": 0.11320754716981132
+     }
+    },
+    "mean_output_tokens": 932.4822222222223,
+    "truncated_fraction": 0.3433333333333333,
+    "answer_tag_fraction": 0.6533333333333333,
+    "empty_answer_fraction": 0.0011111111111111111,
+    "official_on_lowercased_answers": 0.3011111111111111,
+    "answers_scored_differently": 76
+   }
+  },
+  {
+   "arm": "card-virl39k-reasoning-sft",
+   "dataset": "virl39k",
+   "role": "dev",
+   "tier": "dev",
+   "prompt": "reasoning",
+   "image_mode": "original",
+   "step": 163,
+   "temperature": 0.0,
+   "samples": 1,
+   "max_pixels": 786432,
+   "legacy": false,
+   "metrics": {
+    "n": 500,
+    "official": null,
+    "normalized": {
+     "overall": 0.472,
+     "by_answer_type": {
+      "(GradeSchool) Geometric": 0.42857142857142855,
+      "(GradeSchool) Non-Geo Math": 0.4090909090909091,
+      "(GradeSchool) Science": 0.40476190476190477,
+      "Broader STEM Topics": 0.7647058823529411,
+      "Commonsense": 0.5714285714285714,
+      "Social Science": 0.6666666666666666,
+      "Spatial Reasoning": 0.5806451612903226,
+      "Tables/Diagrams/Charts": 0.5463917525773195
+     }
+    },
+    "project": {
+     "overall": 0.472,
+     "by_answer_type": {
+      "(GradeSchool) Geometric": 0.42857142857142855,
+      "(GradeSchool) Non-Geo Math": 0.4090909090909091,
+      "(GradeSchool) Science": 0.40476190476190477,
+      "Broader STEM Topics": 0.7647058823529411,
+      "Commonsense": 0.5714285714285714,
+      "Social Science": 0.6666666666666666,
+      "Spatial Reasoning": 0.5806451612903226,
+      "Tables/Diagrams/Charts": 0.5463917525773195
+     }
+    },
+    "mean_output_tokens": 926.4,
+    "truncated_fraction": 0.308,
+    "answer_tag_fraction": 0.69,
+    "empty_answer_fraction": 0.0
+   }
+  },
+  {
    "arm": "card-virl39k-sft",
    "dataset": "mathvista",
    "role": "test",

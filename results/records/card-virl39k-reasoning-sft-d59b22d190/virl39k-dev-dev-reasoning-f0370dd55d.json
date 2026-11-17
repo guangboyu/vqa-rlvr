@@ -1,0 +1,122 @@
+{
+  "schema": "run-record/1",
+  "legacy": false,
+  "model_id": "d59b22d19024483f4f353021424d2a7ea05b6ffe9de0fdbcef3e76e6bf09aef3",
+  "protocol_id": "f0370dd55dca7dbfb3fb18d4f6b89f486813c7e99d1a1f9cb0f27323f70fed7e",
+  "model": {
+    "source": "Qwen/Qwen3-VL-2B-Instruct",
+    "label": "card-virl39k-reasoning-sft",
+    "run": "card-virl39k-reasoning-sft",
+    "step": 163,
+    "weights": {
+      "base": {
+        "hub": "Qwen/Qwen3-VL-2B-Instruct",
+        "revision": "89644892e4d85e24eaac8bacfd4f463576704203"
+      },
+      "adapter_sha256": "771acb1c8aa1cf364795bad64bca83299dbfc83af85337d62d2caeed74c05d6d"
+    },
+    "adapter": "/pub/guangboy/runs/vqa-card-virl39k-reasoning-sft/checkpoints"
+  },
+  "protocol": {
+    "dataset": "virl39k",
+    "ladder": "in-domain",
+    "role": "dev",
+    "tier": "dev",
+    "question_limit": 500,
+    "prompt": "reasoning",
+    "prompt_text": "{question}\nFirst think step by step inside <think> </think> tags, then write only the final answer inside <answer> </answer> tags.",
+    "max_tokens": 2048,
+    "temperature": 0.0,
+    "samples": 1,
+    "image_mode": "original",
+    "max_pixels": 786432,
+    "scorers": {
+      "official": null,
+      "normalized": "math_answer_accuracy/v1",
+      "project": "math_answer_accuracy/v1"
+    },
+    "extraction": "last_answer_tag_or_full_text",
+    "answer_tag_rule": "raw text contains </answer>",
+    "data": {
+      "subsets": {
+        "virl39k_train": "7732b3e13829a45e"
+      },
+      "selection_sha256": "0ad725189c129981207a8919aaf2e2c31f6fda648cb2643f0a872400a45e4ab7",
+      "image_groups_sha256": "25cdbc7f6a6b0eff82c9e850fe7f54b9bb3d4230e51d46b3628cf0a7de3c8963"
+    },
+    "metric_metadata": {
+      "primary": "project",
+      "project": {
+        "name": "math answer equality",
+        "source": "project-defined, for a training reward",
+        "rule": "numbers equal in value after degree, percent and unit marks are stripped; else one TeX-free spelling or VQA-normalized words; options by letter or text"
+      },
+      "normalized": {
+        "same_as": "project",
+        "name": "math answer equality"
+      }
+    }
+  },
+  "metrics": {
+    "n": 500,
+    "official": null,
+    "normalized": {
+      "overall": 0.472,
+      "by_answer_type": {
+        "(GradeSchool) Geometric": 0.42857142857142855,
+        "(GradeSchool) Non-Geo Math": 0.4090909090909091,
+        "(GradeSchool) Science": 0.40476190476190477,
+        "Broader STEM Topics": 0.7647058823529411,
+        "Commonsense": 0.5714285714285714,
+        "Social Science": 0.6666666666666666,
+        "Spatial Reasoning": 0.5806451612903226,
+        "Tables/Diagrams/Charts": 0.5463917525773195
+      }
+    },
+    "project": {
+      "overall": 0.472,
+      "by_answer_type": {
+        "(GradeSchool) Geometric": 0.42857142857142855,
+        "(GradeSchool) Non-Geo Math": 0.4090909090909091,
+        "(GradeSchool) Science": 0.40476190476190477,
+        "Broader STEM Topics": 0.7647058823529411,
+        "Commonsense": 0.5714285714285714,
+        "Social Science": 0.6666666666666666,
+        "Spatial Reasoning": 0.5806451612903226,
+        "Tables/Diagrams/Charts": 0.5463917525773195
+      }
+    },
+    "mean_output_tokens": 926.4,
+    "truncated_fraction": 0.308,
+    "answer_tag_fraction": 0.69,
+    "empty_answer_fraction": 0.0
+  },
+  "provenance": {
+    "code_version": "08ee2667820c37dbd20e4a4d24c0e1d650db38f9",
+    "uncommitted_changes": false,
+    "source_sha256": {
+      "vqar/eval/__init__.py": "2aa88c809409a57502d0d9b2893e14c3b5bf99d971bceefcc1ed4716ef295f81",
+      "vqar/eval/examples.py": "c05df90499c3fd7c4ff9093f6efc646b0b84ea39a30c4318200afecb9c32d734",
+      "vqar/eval/protocol.py": "9ea52c923b58b4717e9067968ebaf036d7c4756e8f6fbb245c2797d1a0cca67e",
+      "vqar/eval/record.py": "6be2298f531240b01df2feecedd50af2d32a1c17f6029951ddf3f7723834b023",
+      "vqar/eval/runner.py": "a02fc2c0adcb20b03b2045027c85d8c2f57d69ab9a6be1340916e9228434515e",
+      "vqar/inference.py": "f77143773554fbf3710e045220e2efb36d5698035a760094a9aace008bf593bf",
+      "vqar/config.py": "17e6bd0ea3e072ee40774a155c9a8ccf3a6612afcb12125098ad480b88ff21b5",
+      "vqar/data.py": "a980de42fe47274df72663ed690e99686c5eb8ef05f22c341e6eccc5f04e2ceb",
+      "vqar/metrics.py": "74cdd78a8d14648e018b3986cf26b6a733529cdaf6cc0f518f3b45fe906fa182",
+      "vqar/registry.py": "de2fd396918a31eb6a5ef0497d11605091f8820abab4c3733fa7cb49e7f953b1",
+      "vqar/splits.py": "10ea7cfde1a270a3e7fc458bc04f74b4d01eee9840a02f8b8627d95c9d6bc41e",
+      "vqar/ood_metrics.py": "9449e0a85c4b7ff3efcbc88264ee1e03d53689c39c2fe030a13887465fa1b226",
+      "vqar/ood.py": "d59220be09094fa5a5ffbb6e791b38ee5b3c8dca0ca381ef64a28bf0f94ccb8f",
+      "uv.lock": "8c79fab440350a15e75e9507c3b5338ecc63beb92fc12c6ef18fbe01122ac323"
+    },
+    "versions": {
+      "torch": "2.11.0+cu129",
+      "transformers": "5.13.0",
+      "vllm": "0.23.0+cu129",
+      "datasets": "5.0.0"
+    },
+    "timestamp": "2026-11-17T10:27:40+00:00",
+    "eval_seconds": 977.5
+  }
+}
