@@ -5,7 +5,9 @@ inert VQAv2 training reward and training pools that shared images with the evalu
 sets. The corrected campaign of September 13 fixed both, with 300-update RL runs sampled
 from adapter-merged weights. The final rerun of late September froze a recipe from
 one-change experiments (1,000 updates, unmerged-adapter rollouts) and retrained every arm
-under it; it supplies every headline number. This page keeps the corrected campaign and
+under it; it supplies the photo, chart and medical numbers. Milestone 2 (November 2026) added
+math (ViRL39K) and infographics (InfoVQA) under the same recipe, each run declared with its
+prediction before training (`[[cards]]` in `experiments.toml`). This page keeps the corrected campaign and
 the July results as labeled history, documents the reward defect in full because the July
 adapters on the Hub were trained with it, and lists every published claim with its
 current status.

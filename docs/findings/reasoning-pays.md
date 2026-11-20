@@ -48,9 +48,8 @@ tokens on <!--n:vr.base.cut-->30<!--/n-->% of its answers; GRPO cuts that to <!-
 at <!--n:vr.rsft.cut-->31<!--/n-->%. A reward of zero for an unfinished answer is the likely reason; copying finished answers
 gives no such signal.
 
-Starting RL from the answer-only SFT model does not bring the reasoning back: it learns the answer
-tag and keeps answers of <!--n:mv.sftgrpo.tok-->8<!--/n--> tokens. Where reasoning pays, RL starts from the base model
-([order](sft-then-rl.md)).
+RL started from the answer-only SFT model learns the answer tag and keeps answers of <!--n:mv.sftgrpo.tok-->8<!--/n--> tokens.
+Where reasoning pays, RL starts from the base model ([order](sft-then-rl.md)).
 
 ## ChartQA: RL where reasoning pays
 
