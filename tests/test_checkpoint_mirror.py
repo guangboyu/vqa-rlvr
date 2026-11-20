@@ -3,8 +3,12 @@
 import shutil
 from types import SimpleNamespace
 
-from vqar.checkpoint_mirror import MARKER, CheckpointMirror
-from vqar.training import last_complete_checkpoint
+import pytest
+
+pytest.importorskip("transformers")  # the mirror is a Trainer callback
+
+from vqar.checkpoint_mirror import MARKER, CheckpointMirror  # noqa: E402
+from vqar.training import last_complete_checkpoint  # noqa: E402
 
 
 def save(local, step, complete=True, adapter=False):
